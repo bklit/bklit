@@ -30,10 +30,6 @@ export const ModuleWorkspaces = () => {
     ? organizations?.find((t) => t.id === hoveredOrganization)
     : activeOrganization;
 
-  const setIsAddProjectDialogOpen = (isOpen: boolean) => {
-    console.log(isOpen);
-  };
-
   return (
     <div className="flex items-start">
       {/* Left Column - Organizations */}
@@ -113,12 +109,11 @@ export const ModuleWorkspaces = () => {
                 </CommandItem>
               ))}
               {hoveredOrganizationData && (
-                <CommandItem
-                  onSelect={() => setIsAddProjectDialogOpen(true)}
-                  className="cursor-pointer"
-                >
-                  <Plus className="mr-2 size-4" />
-                  Add new project
+                <CommandItem className="cursor-pointer" asChild>
+                  <Link href={`/${hoveredOrganizationData.id}/projects/create`}>
+                    <Plus className="mr-2 size-4" />
+                    Add new project
+                  </Link>
                 </CommandItem>
               )}
             </CommandGroup>
