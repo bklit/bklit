@@ -1,6 +1,6 @@
 import { authenticated } from "@/lib/auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
-import { OrganizationDashboard } from "./_components/organization-dashboard";
+import { OrganizationDashboard } from "../_components/organization-dashboard";
 
 export default async function OrganizationDashboardPage({
   params,
