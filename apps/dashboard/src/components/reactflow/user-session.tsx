@@ -388,7 +388,7 @@ export function UserSession({ session }: UserSessionProps) {
   );
 
   return (
-    <div className="w-full h-screen bg-background">
+    <div className="w-full h-[640px] bg-background">
       <ReactFlow
         nodes={nodesState}
         edges={edgesState}

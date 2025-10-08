@@ -11,29 +11,9 @@ import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { getBrowserStats } from "@/actions/analytics-actions";
 import { authClient } from "@/auth/client";
-import { BrowserIcon } from "@/components/icons/browser";
-import { ChromeIcon } from "@/components/icons/chrome";
-import { EdgeIcon } from "@/components/icons/edge";
-import { FirefoxIcon } from "@/components/icons/firefox";
-import { SafariIcon } from "@/components/icons/safari";
 import { useWorkspace } from "@/contexts/workspace-provider";
+import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import type { BrowserStats } from "@/types/analytics";
-
-// Function to get the appropriate icon for each browser
-function getBrowserIcon(browser: string) {
-  switch (browser.toLowerCase()) {
-    case "chrome":
-      return <ChromeIcon size={16} />;
-    case "firefox":
-      return <FirefoxIcon size={16} />;
-    case "safari":
-      return <SafariIcon size={16} />;
-    case "edge":
-      return <EdgeIcon size={16} />;
-    default:
-      return <BrowserIcon size={16} />;
-  }
-}
 
 export function BrowserStatsCard() {
   const { activeProject } = useWorkspace();
