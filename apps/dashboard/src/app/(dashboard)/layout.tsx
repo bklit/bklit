@@ -15,9 +15,9 @@ export default async function DashboardLayout({
 
   return (
     <WorkspaceProvider session={session} organizations={organizations}>
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen ">
         <SiteHeader />
-        <main className="flex-1 flex flex-col">{children}</main>
+        <main className="flex-1 flex flex-col bg-black">{children}</main>
         {modal}
       </div>
     </WorkspaceProvider>

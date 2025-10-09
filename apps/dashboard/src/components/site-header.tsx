@@ -12,8 +12,8 @@ export function SiteHeader() {
   const { data: clientSession } = authClient.useSession();
 
   return (
-    <header className="flex flex-col w-full">
-      <div className="flex w-full items-center justify-between px-4 lg:px-6 border-b py-4">
+    <header className="flex flex-col w-full bg-bklit-900 border-b">
+      <div className="flex w-full items-center justify-between px-4 lg:px-6 py-4">
         <div className="flex items-center gap-4">
           <BklitLogo size={32} />
           <Separator
@@ -38,7 +38,7 @@ export function SiteHeader() {
           )}
         </div>
       </div>
-      <div className="flex w-full items-center justify-between px-4 lg:px-6 border-b py-4">
+      <div className="flex w-full items-center justify-between px-4 lg:px-6 py-4">
         <DashboardNavigation />
       </div>
     </header>

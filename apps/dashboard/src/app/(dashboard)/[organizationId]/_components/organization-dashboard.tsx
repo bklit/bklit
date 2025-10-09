@@ -92,7 +92,7 @@ export const OrganizationDashboard = ({
                       </Tooltip>
                       <Badge
                         variant={
-                          member.role === "owner" ? "default" : "secondary"
+                          member.role === "owner" ? "secondary" : "outline"
                         }
                       >
                         {member.role}

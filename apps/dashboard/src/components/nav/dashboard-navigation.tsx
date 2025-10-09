@@ -46,15 +46,7 @@ export function DashboardNavigation() {
         {resolvedItems.map((item) => (
           <NavigationMenuItem key={item.href}>
             <NavigationMenuLink asChild>
-              <Link
-                href={item.href}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-muted-foreground",
-                )}
-              >
+              <Link href={item.href} data-active={pathname === item.href}>
                 {item.title}
               </Link>
             </NavigationMenuLink>
