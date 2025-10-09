@@ -2,8 +2,8 @@ import { prisma } from "@bklit/db/client";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
-  CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
@@ -79,27 +79,30 @@ export default async function ProjectDashboardPage({
   const { site, userMembership } = siteData;
   return (
     <HydrateClient>
-      <PageHeader title="Site settings" description="Manage your settings." />
+      <PageHeader
+        title="Project settings"
+        description="Manage your projects settings."
+      />
       <div className="container mx-auto py-6 px-4 flex gap-4">
         <div className="w-1/6">
           <ProjectSettingsNavigation params={params} />
         </div>
         <div className="w-5/6">
-          <Card className="card">
+          <Card variant="destructive">
             <CardHeader>
-              <CardTitle>Delete site</CardTitle>
+              <CardTitle>Delete {site.name}</CardTitle>
               <CardDescription>
-                Delete this site and all associated data.
+                Danger zone: Delete this project and all associated data.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardFooter className="space-y-6">
               {userMembership?.role === "owner" && (
                 <DeleteProjectForm
                   projectId={site.id}
                   projectName={site.name}
                 />
               )}
-            </CardContent>
+            </CardFooter>
           </Card>
         </div>
       </div>

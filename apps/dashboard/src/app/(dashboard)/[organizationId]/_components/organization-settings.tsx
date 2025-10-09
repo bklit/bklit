@@ -28,7 +28,7 @@ export const OrganizationSettings = ({
 
   return (
     <div className="space-y-6 prose dark:prose-invert max-w-none">
-      <Card className="card">
+      <Card variant="destructive">
         <CardHeader>
           <CardTitle>Delete organization</CardTitle>
           <CardDescription>
