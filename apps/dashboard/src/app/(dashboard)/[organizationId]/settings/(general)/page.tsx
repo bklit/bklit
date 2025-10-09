@@ -5,7 +5,7 @@ import { authenticated } from "@/lib/auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 import { OrganizationSettings } from "../../_components/organization-settings";
 
-export async function SettingsNavigation({
+export async function WorkspaceSettingsNavigation({
   params,
 }: {
   params: Promise<{ organizationId: string }>;
@@ -42,7 +42,7 @@ export default async function OrganizationSettingsPage({
       />
       <div className="container mx-auto py-6 px-4 flex gap-4">
         <div className="w-1/6">
-          <SettingsNavigation params={params} />
+          <WorkspaceSettingsNavigation params={params} />
         </div>
         <div className="w-5/6">
           <OrganizationSettings organizationId={organizationId} />

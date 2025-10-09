@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { PricingTable } from "@/components/plans/pricing-table";
 import { authenticated } from "@/lib/auth";
 import { api, HydrateClient } from "@/trpc/server";
-import { SettingsNavigation } from "../(general)/page";
+import { WorkspaceSettingsNavigation } from "../(general)/page";
 
 export default async function BillingPage({
   params,
@@ -41,7 +41,7 @@ export default async function BillingPage({
       />
       <div className="container mx-auto py-6 px-4 flex gap-4">
         <div className="w-1/6">
-          <SettingsNavigation params={params} />
+          <WorkspaceSettingsNavigation params={params} />
         </div>
         <div className="w-5/6">
           <BillingSuccessDialog isOpenInitially={showSuccessMessage} />

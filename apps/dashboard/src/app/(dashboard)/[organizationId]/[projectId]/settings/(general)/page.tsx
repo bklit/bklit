@@ -1,4 +1,5 @@
 import { prisma } from "@bklit/db/client";
+import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardContent,
@@ -6,10 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
 import { PageHeader } from "@/components/page-header";
 import { authenticated } from "@/lib/auth";
+import { HydrateClient } from "@/trpc/server";
 
 async function getSiteData(
   projectId: string,
@@ -39,6 +42,22 @@ async function getSiteData(
   return { site, userMembership: site.organization.members[0] };
 }
 
+export async function ProjectSettingsNavigation({
+  params,
+}: {
+  params: Promise<{ organizationId: string; projectId: string }>;
+}) {
+  const { organizationId, projectId } = await params;
+
+  return (
+    <nav className="flex flex-col gap-px">
+      <Link href={`/${organizationId}/${projectId}/settings/`}>
+        <Button variant="ghost">General</Button>
+      </Link>
+    </nav>
+  );
+}
+
 export default async function ProjectDashboardPage({
   params,
 }: {
@@ -59,21 +78,31 @@ export default async function ProjectDashboardPage({
 
   const { site, userMembership } = siteData;
   return (
-    <div className="space-y-6 prose dark:prose-invert max-w-none">
+    <HydrateClient>
       <PageHeader title="Site settings" description="Manage your settings." />
-      <Card className="card">
-        <CardHeader>
-          <CardTitle>Delete site</CardTitle>
-          <CardDescription>
-            Delete this site and all associated data.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {userMembership?.role === "owner" && (
-            <DeleteProjectForm projectId={site.id} projectName={site.name} />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+      <div className="container mx-auto py-6 px-4 flex gap-4">
+        <div className="w-1/6">
+          <ProjectSettingsNavigation params={params} />
+        </div>
+        <div className="w-5/6">
+          <Card className="card">
+            <CardHeader>
+              <CardTitle>Delete site</CardTitle>
+              <CardDescription>
+                Delete this site and all associated data.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {userMembership?.role === "owner" && (
+                <DeleteProjectForm
+                  projectId={site.id}
+                  projectName={site.name}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </HydrateClient>
   );
 }
