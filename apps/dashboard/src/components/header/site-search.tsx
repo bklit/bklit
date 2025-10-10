@@ -14,60 +14,39 @@ import {
   SearchDialogTrigger,
 } from "@bklit/ui/components/search-dialog";
 import { SearchIcon } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSearchData } from "@/hooks/use-search-data";
 
-const currentOrganization = [
-  {
-    heading: "Organization1",
-    items: [
-      {
-        value: "overview",
-        label: "Overview",
-      },
-      {
-        value: "settings",
-        label: "Settings",
-      },
-      {
-        value: "billing",
-        label: "Billing",
-      },
-    ],
-  },
-  {
-    heading: "Organization1 projects",
-    items: [
-      {
-        value: "project-1",
-        label: "Project 1",
-      },
-      {
-        value: "project-2",
-        label: "Project 2",
-      },
-    ],
-  },
-];
-
-const searchItems = [
-  {
-    heading: "Your organizations",
-    items: [
-      {
-        value: "organization-1",
-        label: "Organization 1",
-      },
-      {
-        value: "organization-2",
-        label: "Organization 2",
-      },
-    ],
-  },
-];
+interface SearchItem {
+  value: string;
+  label: string;
+  href: string;
+}
 
 export function SiteSearch() {
-  const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const { currentOrganization, allOrganizations, isLoading } = useSearchData();
+
+  const handleSelect = (href: string) => {
+    setOpen(false);
+    router.push(href);
+  };
+
+  // Add keyboard shortcut support
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <SearchDialog open={open} onOpenChange={setOpen}>
       <SearchDialogTrigger>
@@ -79,9 +58,14 @@ export function SiteSearch() {
             />
             <span>Search&hellip;</span>
           </div>
-          <kbd className="flex items-center justify-center w-6 h-6 text-xs font-mono border border-bklit-500 rounded-[4px] text-muted-foreground">
-            F
-          </kbd>
+          <div className="flex items-center gap-1 font-semibold">
+            <kbd className="inline-flex items-center justify-center w-fit h-6 px-1.5 font-sans text-xs border border-bklit-500 rounded-[4px] text-muted-foreground/70 group-hover:text-muted-foreground transition">
+              ⌘
+            </kbd>
+            <kbd className="inline-flex items-center justify-center w-fit h-6 px-1.5 font-sans text-xs border border-bklit-500 rounded-[4px] text-muted-foreground/70 group-hover:text-muted-foreground transition">
+              K
+            </kbd>
+          </div>
         </div>
       </SearchDialogTrigger>
       <SearchDialogContent>
@@ -95,39 +79,41 @@ export function SiteSearch() {
             </kbd>
           </div>
           <CommandList>
-            <CommandEmpty>No framework found.</CommandEmpty>
-            {currentOrganization.map((item) => (
-              <CommandGroup heading={item.heading}>
-                {item.items.map((item) => (
-                  <CommandItem
-                    key={item.value}
-                    value={item.value}
-                    onSelect={(currentValue) => {
-                      setValue(currentValue === value ? "" : currentValue);
-                      setOpen(false);
-                    }}
-                  >
-                    {item.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
-            {searchItems.map((item) => (
-              <CommandGroup heading={item.heading}>
-                {item.items.map((item) => (
-                  <CommandItem
-                    key={item.value}
-                    value={item.value}
-                    onSelect={(currentValue) => {
-                      setValue(currentValue === value ? "" : currentValue);
-                      setOpen(false);
-                    }}
-                  >
-                    {item.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
+            <CommandEmpty>
+              {isLoading ? "Loading..." : "No results found."}
+            </CommandEmpty>
+            <div className="pt-2 space-y-1">
+              {currentOrganization.map((group) => (
+                <CommandGroup key={group.heading} heading={group.heading}>
+                  {group.items.map((item: SearchItem) => (
+                    <CommandItem
+                      key={item.value}
+                      value={item.value}
+                      onSelect={() => {
+                        handleSelect(item.href);
+                      }}
+                    >
+                      {item.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))}
+              {allOrganizations.map((group) => (
+                <CommandGroup key={group.heading} heading={group.heading}>
+                  {group.items.map((item: SearchItem) => (
+                    <CommandItem
+                      key={item.value}
+                      value={item.value}
+                      onSelect={() => {
+                        handleSelect(item.href);
+                      }}
+                    >
+                      {item.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))}
+            </div>
           </CommandList>
         </Command>
       </SearchDialogContent>
