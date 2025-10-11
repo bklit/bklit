@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { format, formatDistanceToNow } from "date-fns";
-import { ArrowLeft, Clock, MapPin, Monitor } from "lucide-react";
+import { Clock, MapPin, Monitor } from "lucide-react";
 import Link from "next/link";
 import { getRecentSessions } from "@/actions/session-actions";
 import { PageHeader } from "@/components/page-header";

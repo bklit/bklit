@@ -6,7 +6,6 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@bklit/ui/components/navigation-menu";
-import { cn } from "@bklit/ui/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getNavigationItems, replaceDynamicParams } from "@/lib/navigation";
