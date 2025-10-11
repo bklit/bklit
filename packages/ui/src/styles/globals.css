@@ -42,6 +42,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  --region: var(--bklit-500);
+  --region-hover: var(--bklit-600);
 }
 
 .dark {
@@ -77,6 +80,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  --region: var(--bklit-500);
+  --region-hover: var(--bklit-600);
 
   --bklit-900: oklch(0.1445 0.0047 263.79);
   --bklit-800: oklch(0.1829 0.0083 274.43);
@@ -137,6 +143,9 @@
   --color-bklit-200: var(--bklit-200);
   --color-bklit-100: var(--bklit-100);
   --color-bklit-50: var(--bklit-50);
+
+  --color-region: var(--region);
+  --color-region-hover: var(--region-hover);
 }
 
 @layer base {

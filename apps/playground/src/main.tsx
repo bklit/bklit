@@ -19,6 +19,13 @@ console.log("🔍 Playground: SDK import test", {
   bklitModule: typeof initBklit === "function" ? "✅ Loaded" : "❌ Not loaded",
 });
 
+// Debug: Show which API endpoint is being used
+console.log("🌐 Playground: API Configuration", {
+  ngrokUrl: NGROK_URL || "Not configured",
+  apiHost: API_HOST,
+  usingNgrok: !!NGROK_URL,
+});
+
 // Initialize Bklit SDK
 if (YOUR_PROJECT_ID) {
   console.log("🎯 Playground: Initializing Bklit SDK...", {

@@ -49,4 +49,5 @@ dist/
 .cache
 
 # turbo
-.turbo
+.turbo/
+.turbo.ngrok.pid

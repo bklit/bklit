@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { getPolarSubscriptionsForOrg } from "@/actions/polar-actions";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/page-header";
@@ -23,6 +24,7 @@ export default async function BillingPage({
   const organization = await api.organization.fetch({ id: organizationId });
   const showSuccessMessage = resolvedSearchParams?.purchase === "success";
 
+  // Fetch active subscriptions for the organization
   const subscriptions = await auth.api.subscriptions({
     query: {
       page: 1,
@@ -32,6 +34,9 @@ export default async function BillingPage({
     },
     headers: await headers(),
   });
+
+  // Fetch directly from Polar API for products
+  const directPolarData = await getPolarSubscriptionsForOrg(organizationId);
 
   return (
     <HydrateClient>
@@ -45,9 +50,16 @@ export default async function BillingPage({
         </div>
         <div className="w-5/6">
           <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
-          <div className="mt-12">
-            <PricingTable subscriptions={subscriptions.result.items} />
-          </div>
+
+          <PricingTable
+            subscriptions={subscriptions.result.items}
+            products={
+              directPolarData.success &&
+              directPolarData.data?.products?.result?.items
+                ? directPolarData.data.products.result.items
+                : []
+            }
+          />
         </div>
       </div>
     </HydrateClient>

@@ -1,4 +1,4 @@
-import { initAuth } from "@bklit/auth";
+import { polarConfig as basePolarConfig, initAuth } from "@bklit/auth";
 import { dashboardUrl } from "@bklit/utils/envs";
 import { headers } from "next/headers";
 import { cache } from "react";
@@ -15,3 +15,6 @@ export const auth = initAuth({
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
+
+// Re-export polarConfig for convenience
+export const polarConfig = basePolarConfig;

@@ -13,9 +13,27 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { authEnv } from "../env";
-import plans from "./pricing-plans.json";
+import plansTemplate from "./pricing-plans.json";
 
 const env = authEnv();
+
+// Inject env vars into plans
+const plans = plansTemplate.map((plan) => {
+  if (plan.name === "Free") {
+    return {
+      ...plan,
+      // Free plan may not have a Polar product (users are on free by default)
+      polarProductId: env.POLAR_FREE_PRODUCT_ID || null,
+    };
+  }
+  if (plan.name === "Pro") {
+    return {
+      ...plan,
+      polarProductId: env.POLAR_PRO_PRODUCT_ID,
+    };
+  }
+  return plan;
+});
 
 const polarClient = new Polar({
   accessToken: env.POLAR_ACCESS_TOKEN,
@@ -50,10 +68,13 @@ export function initAuth(options: {
         createCustomerOnSignUp: true,
         use: [
           checkout({
-            products: plans.map((plan) => ({
-              productId: plan.polarProductId,
-              slug: plan.slug,
-            })),
+            // Only include plans that have a Polar product ID
+            products: plans
+              .filter((plan) => plan.polarProductId)
+              .map((plan) => ({
+                productId: plan.polarProductId as string,
+                slug: plan.slug,
+              })),
             successUrl: "/",
             authenticatedUsersOnly: true,
           }),
@@ -84,3 +105,14 @@ export function initAuth(options: {
 
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
+
+// Export Polar configuration
+export const polarConfig = {
+  organizationId: env.POLAR_ORGANIZATION_ID,
+  freeProductId: env.POLAR_FREE_PRODUCT_ID || null,
+  proProductId: env.POLAR_PRO_PRODUCT_ID,
+  serverMode: env.POLAR_SERVER_MODE,
+} as const;
+
+// Export plans with injected IDs
+export { plans };
