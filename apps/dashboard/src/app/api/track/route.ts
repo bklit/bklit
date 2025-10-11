@@ -2,6 +2,7 @@ import { prisma } from "@bklit/db/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { createOrUpdateSession } from "@/actions/session-actions";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
+import { isMobileDevice } from "@/lib/user-agent";
 import type { GeoLocation } from "@/types/geo";
 
 interface TrackingPayload {
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
               lon: locationData?.lon,
               timezone: locationData?.timezone,
               isp: locationData?.isp,
-              mobile: locationData?.mobile,
+              mobile: isMobileDevice(payload.userAgent),
               // Link to session using the primary key (id), not the sessionId
               sessionId: session.id,
             },
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
             lon: locationData?.lon,
             timezone: locationData?.timezone,
             isp: locationData?.isp,
-            mobile: locationData?.mobile,
+            mobile: isMobileDevice(payload.userAgent),
             // No session link
             sessionId: null,
           },

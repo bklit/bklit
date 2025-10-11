@@ -1,4 +1,4 @@
-export default async function Layout({
+export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;

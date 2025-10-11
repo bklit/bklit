@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -188,6 +188,8 @@ function generateNodesFromSession(session: SessionData): Node[] {
 
   pageVisits.forEach((visits, urlKey) => {
     const pageView = session.pageViewEvents[visits.firstVisit];
+    if (!pageView) return;
+
     const isFirst = visits.firstVisit === 0;
     const isLast = visits.lastVisit === session.pageViewEvents.length - 1;
 
@@ -249,6 +251,8 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
     const currentPage = session.pageViewEvents[i];
     const nextPage = session.pageViewEvents[i + 1];
 
+    if (!currentPage || !nextPage) continue;
+
     const currentUrlKey = getUrlKey(currentPage.url);
     const nextUrlKey = getUrlKey(nextPage.url);
 
@@ -286,7 +290,11 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
 
   // Create edges with bidirectional markers
   edgeMap.forEach((data, edgeKey) => {
-    const [source, target] = edgeKey.split("->");
+    const edgeParts = edgeKey.split("->");
+    const source = edgeParts[0];
+    const target = edgeParts[1];
+
+    if (!source || !target) return;
 
     const avgTime = Math.round(data.totalTime / data.count);
     const label =
@@ -361,6 +369,11 @@ function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
 }
 
 export function UserSession({ session }: UserSessionProps) {
+  const [height, setHeight] = useState(640);
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const startHeight = useRef(0);
+
   const initialNodes = useMemo(
     () => generateNodesFromSession(session),
     [session],
@@ -382,13 +395,59 @@ export function UserSession({ session }: UserSessionProps) {
     (params: Connection) => {
       const newEdges = addEdge(params, edgesState);
       const newEdge = newEdges[newEdges.length - 1];
-      onEdgesChange([{ type: "add", item: newEdge }]);
+      if (newEdge) {
+        onEdgesChange([{ type: "add", item: newEdge }]);
+      }
     },
     [edgesState, onEdgesChange],
   );
 
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      isDragging.current = true;
+      startY.current = e.clientY;
+      startHeight.current = height;
+      document.body.style.cursor = "ns-resize";
+      document.body.style.userSelect = "none";
+    },
+    [height],
+  );
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging.current) return;
+
+    const deltaY = e.clientY - startY.current;
+    const newHeight = Math.max(
+      200,
+      Math.min(1000, startHeight.current + deltaY),
+    );
+    setHeight(newHeight);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  }, []);
+
+  // Add event listeners for mouse move and up
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [handleMouseMove, handleMouseUp]);
+
   return (
-    <div className="w-full h-screen bg-background">
+    <div
+      className="w-full bg-background relative"
+      style={{ height: `${height}px` }}
+    >
       <ReactFlow
         nodes={nodesState}
         edges={edgesState}
@@ -405,6 +464,12 @@ export function UserSession({ session }: UserSessionProps) {
         <Controls />
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
       </ReactFlow>
+      <button
+        className="absolute -bottom-1 left-0 w-full h-1 bg-border/60 cursor-ns-resize transition border-0 p-0 hover:bg-primary/70 active:bg-primary "
+        onMouseDown={handleMouseDown}
+        aria-label="Resize handle"
+        type="button"
+      />
     </div>
   );
 }

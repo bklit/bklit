@@ -4,6 +4,8 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@bklit/ui/components/breadcrumb";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -17,7 +19,7 @@ import { useWorkspace } from "@/contexts/workspace-provider";
 import { ModuleWorkspaces } from "./module-workspaces";
 
 export function NavWorkspace() {
-  const { activeOrganization } = useWorkspace();
+  const { activeOrganization, activeProject } = useWorkspace();
 
   return (
     <>
@@ -31,21 +33,24 @@ export function NavWorkspace() {
               >
                 <Users className="size-4" />
                 <span>{activeOrganization?.name}</span>
-                <Badge variant="outline">Pro Plan</Badge>
+
+                <Badge variant="default" asChild>
+                  <Link href={`/${activeOrganization?.id}/settings/billing`}>
+                    Pro
+                  </Link>
+                </Badge>
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
 
-          {/* {showSite && (
-						<>
-							<BreadcrumbSeparator />
-							<BreadcrumbItem>
-								<BreadcrumbPage>
-									{isLoadingSites ? "Loading..." : activeProject?.name}
-								</BreadcrumbPage>
-							</BreadcrumbItem>
-						</>
-					)} */}
+          {activeProject && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{activeProject.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
         </BreadcrumbList>
       </Breadcrumb>
 

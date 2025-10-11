@@ -11,6 +11,8 @@ import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
 } from "@bklit/ui/components/chart";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -23,11 +25,11 @@ import type { PieChartData } from "@/types/analytics-cards";
 const chartConfig = {
   desktop: {
     label: "Desktop",
-    color: "var(--color-chart-desktop)",
+    color: "var(--color-chart-1)",
   },
   mobile: {
     label: "Mobile",
-    color: "var(--color-chart-mobile)",
+    color: "var(--color-chart-2)",
   },
 } satisfies ChartConfig;
 
@@ -84,7 +86,7 @@ export function MobileDesktopCard() {
                 />
               ))}
             </Pie>
-            {/* <ChartTooltip content={<ChartTooltipContent />} /> */}
+            <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend
               content={<ChartLegendContent verticalAlign="horizontal" />}
             />

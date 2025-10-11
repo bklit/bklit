@@ -9,7 +9,6 @@ import {
 } from "@bklit/ui/components/card";
 import { useQuery } from "@tanstack/react-query";
 import { DeleteOrganizationForm } from "@/components/forms/delete-team-form";
-import { PageHeader } from "@/components/page-header";
 import { useTRPC } from "@/trpc/react";
 
 export const OrganizationSettings = ({
@@ -29,11 +28,7 @@ export const OrganizationSettings = ({
 
   return (
     <div className="space-y-6 prose dark:prose-invert max-w-none">
-      <PageHeader
-        title="Organization settings"
-        description="Manage your organization settings."
-      />
-      <Card className="card">
+      <Card variant="destructive">
         <CardHeader>
           <CardTitle>Delete organization</CardTitle>
           <CardDescription>

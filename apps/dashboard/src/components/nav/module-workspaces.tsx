@@ -110,7 +110,10 @@ export const ModuleWorkspaces = () => {
               ))}
               {hoveredOrganizationData && (
                 <CommandItem className="cursor-pointer" asChild>
-                  <Link href={`/${hoveredOrganizationData.id}/projects/create`}>
+                  <Link
+                    prefetch
+                    href={`/${hoveredOrganizationData.id}/projects/create`}
+                  >
                     <Plus className="mr-2 size-4" />
                     Add new project
                   </Link>
