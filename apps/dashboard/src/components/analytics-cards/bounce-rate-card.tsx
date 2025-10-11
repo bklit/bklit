@@ -20,11 +20,11 @@ import type { BounceRateData, PieChartData } from "@/types/analytics-cards";
 const chartConfig = {
   bounced: {
     label: "Bounced",
-    color: "#ef4444",
+    color: "var(--color-chart-5)",
   },
   engaged: {
     label: "Engaged",
-    color: "#22c55e",
+    color: "var(--color-chart-1)",
   },
 } satisfies ChartConfig;
 

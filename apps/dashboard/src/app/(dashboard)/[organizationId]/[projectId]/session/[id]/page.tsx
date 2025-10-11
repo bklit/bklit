@@ -11,8 +11,14 @@ import { getSessionById } from "@/actions/session-actions";
 import { PageHeader } from "@/components/page-header";
 import { UserSession } from "@/components/reactflow/user-session";
 import { authenticated } from "@/lib/auth";
-import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
-import { getDeviceIcon } from "@/lib/utils/get-device-icon";
+import {
+  getBrowserFromUserAgent,
+  getBrowserIcon,
+} from "@/lib/utils/get-browser-icon";
+import {
+  getDeviceIcon,
+  getDeviceTypeFromUserAgent,
+} from "@/lib/utils/get-device-icon";
 
 interface SessionPageProps {
   params: Promise<{ organizationId: string; projectId: string; id: string }>;
@@ -35,28 +41,8 @@ function formatDuration(seconds: number | null): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-function getBrowserFromUserAgent(userAgent: string | null): string {
-  if (!userAgent) return "Unknown";
-
-  if (userAgent.includes("Chrome")) return "Chrome";
-  if (userAgent.includes("Firefox")) return "Firefox";
-  if (userAgent.includes("Safari")) return "Safari";
-  if (userAgent.includes("Edge")) return "Edge";
-
-  return "Other";
-}
-
-function getDeviceType(userAgent: string | null): string {
-  if (!userAgent) return "Unknown";
-
-  if (userAgent.includes("Mobile")) return "Mobile";
-  if (userAgent.includes("Tablet")) return "Tablet";
-
-  return "Desktop";
-}
-
 export default async function SessionPage({ params }: SessionPageProps) {
-  const { organizationId, projectId, id } = await params;
+  const { id } = await params;
   await authenticated();
 
   let sessionData: Awaited<ReturnType<typeof getSessionById>>;
@@ -67,7 +53,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
   }
 
   const browser = getBrowserFromUserAgent(sessionData.userAgent);
-  const deviceType = getDeviceType(sessionData.userAgent);
+  const deviceType = getDeviceTypeFromUserAgent(sessionData.userAgent);
 
   return (
     <>
@@ -256,7 +242,15 @@ export default async function SessionPage({ params }: SessionPageProps) {
               <CardTitle>Page Flow</CardTitle>
             </CardHeader>
             <CardContent>
-              <UserSession session={sessionData} />
+              <UserSession
+                session={{
+                  ...sessionData,
+                  site: {
+                    name: sessionData.project.name,
+                    domain: sessionData.project.domain,
+                  },
+                }}
+              />
             </CardContent>
           </Card>
         </div>

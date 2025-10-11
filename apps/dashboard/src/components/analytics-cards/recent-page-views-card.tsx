@@ -30,11 +30,11 @@ export async function RecentPageViewsCard({
       </CardHeader>
       <CardContent>
         {topPages.length > 0 ? (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col">
             {topPages.map((page) => (
               <div
                 key={page.path}
-                className="border-b border-border text-sm flex gap-2 h-6 items-center justify-between last-of-type:border-none "
+                className="border-b border-border text-sm flex gap-2 h-8 items-center justify-between last-of-type:border-none "
               >
                 <div className="text-muted-foreground text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis">
                   {page.path}
