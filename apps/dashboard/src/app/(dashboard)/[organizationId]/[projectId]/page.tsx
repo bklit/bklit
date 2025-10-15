@@ -36,19 +36,19 @@ export default async function AnalyticsPage({
         <Suspense fallback={<RecentPageViewsCardSkeleton />}>
           <RecentPageViewsCard projectId={projectId} userId={session.user.id} />
         </Suspense>
-
+      </div>
+      <Suspense fallback={<WorldMapCardSkeleton />}>
+        <WorldMapCard />
+      </Suspense>
+      <div className="grid gap-4 md:grid-cols-2">
         <Suspense fallback={<MobileDesktopCardSkeleton />}>
           <MobileDesktopCard />
         </Suspense>
-        <BrowserStatsCard />
         <BounceRateCard />
       </div>
-      <div className="grid gap-4">
-        <Suspense fallback={<WorldMapCardSkeleton />}>
-          <WorldMapCard />
-        </Suspense>
-      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
+        <BrowserStatsCard />
         <SessionAnalyticsCard
           projectId={projectId}
           organizationId={organizationId}
