@@ -132,7 +132,7 @@ export function PricingTable({
   };
 
   return (
-    <div className="w-full max-w-4xl flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center w-full gap-6">
       {/* Current Plan Overview Card */}
       <Card className="w-full">
         <CardHeader>
