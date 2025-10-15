@@ -6,7 +6,6 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@bklit/ui/components/navigation-menu";
-import { cn } from "@bklit/ui/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getNavigationItems, replaceDynamicParams } from "@/lib/navigation";
@@ -46,15 +45,7 @@ export function DashboardNavigation() {
         {resolvedItems.map((item) => (
           <NavigationMenuItem key={item.href}>
             <NavigationMenuLink asChild>
-              <Link
-                href={item.href}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-muted-foreground",
-                )}
-              >
+              <Link href={item.href} data-active={pathname === item.href}>
                 {item.title}
               </Link>
             </NavigationMenuLink>

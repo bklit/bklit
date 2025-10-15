@@ -11,6 +11,8 @@ import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
 } from "@bklit/ui/components/chart";
 import { useQuery } from "@tanstack/react-query";
 import { Cell, Pie, PieChart } from "recharts";
@@ -20,11 +22,11 @@ import type { BounceRateData, PieChartData } from "@/types/analytics-cards";
 const chartConfig = {
   bounced: {
     label: "Bounced",
-    color: "#ef4444",
+    color: "var(--color-chart-5)",
   },
   engaged: {
     label: "Engaged",
-    color: "#22c55e",
+    color: "var(--color-chart-1)",
   },
 } satisfies ChartConfig;
 
@@ -98,7 +100,7 @@ export function BounceRateCard() {
                   />
                 ))}
               </Pie>
-              {/* <ChartTooltip content={<ChartTooltipContent />} /> */}
+              <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend
                 content={<ChartLegendContent verticalAlign="horizontal" />}
               />

@@ -4,6 +4,8 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@bklit/ui/components/breadcrumb";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -14,10 +16,18 @@ import {
 import { ChevronsUpDown, Users } from "lucide-react";
 import Link from "next/link";
 import { useWorkspace } from "@/contexts/workspace-provider";
+import { useTeamPlanStatusWithSubscription } from "@/hooks/polar-hooks";
+import { PlanType } from "@/lib/plans";
 import { ModuleWorkspaces } from "./module-workspaces";
 
 export function NavWorkspace() {
-  const { activeOrganization } = useWorkspace();
+  const { activeOrganization, activeProject } = useWorkspace();
+  const { planId, isLoading } = useTeamPlanStatusWithSubscription(
+    activeOrganization?.id || "",
+  );
+
+  const isPro = planId === PlanType.PRO;
+  const planName = isPro ? "Pro" : "Free";
 
   return (
     <>
@@ -31,21 +41,26 @@ export function NavWorkspace() {
               >
                 <Users className="size-4" />
                 <span>{activeOrganization?.name}</span>
-                <Badge variant="outline">Pro Plan</Badge>
+
+                {!isLoading && (
+                  <Badge variant={isPro ? "default" : "secondary"} asChild>
+                    <Link href={`/${activeOrganization?.id}/settings/billing`}>
+                      {planName}
+                    </Link>
+                  </Badge>
+                )}
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
 
-          {/* {showSite && (
-						<>
-							<BreadcrumbSeparator />
-							<BreadcrumbItem>
-								<BreadcrumbPage>
-									{isLoadingSites ? "Loading..." : activeProject?.name}
-								</BreadcrumbPage>
-							</BreadcrumbItem>
-						</>
-					)} */}
+          {activeProject && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{activeProject.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
         </BreadcrumbList>
       </Breadcrumb>
 

@@ -1,10 +1,12 @@
 import { headers } from "next/headers";
+import { getPolarSubscriptionsForOrg } from "@/actions/polar-actions";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/page-header";
 import { PricingTable } from "@/components/plans/pricing-table";
 import { authenticated } from "@/lib/auth";
-import { api } from "@/trpc/server";
+import { api, HydrateClient } from "@/trpc/server";
+import { WorkspaceSettingsNavigation } from "../(general)/page";
 
 export default async function BillingPage({
   params,
@@ -22,6 +24,7 @@ export default async function BillingPage({
   const organization = await api.organization.fetch({ id: organizationId });
   const showSuccessMessage = resolvedSearchParams?.purchase === "success";
 
+  // Fetch active subscriptions for the organization
   const subscriptions = await auth.api.subscriptions({
     query: {
       page: 1,
@@ -32,22 +35,33 @@ export default async function BillingPage({
     headers: await headers(),
   });
 
+  // Fetch directly from Polar API for products
+  const directPolarData = await getPolarSubscriptionsForOrg(organizationId);
+
   return (
-    <div className="space-y-6 prose dark:prose-invert max-w-none">
+    <HydrateClient>
       <PageHeader
-        title={`${organization.name} - Billing`}
+        title="Billing"
         description={`Manage subscription and billing information for ${organization.name}.`}
       />
-
-      <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
-      <div className="mt-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2>Available Plans</h2>
+      <div className="container mx-auto py-6 px-4 flex gap-4">
+        <div className="w-1/6">
+          <WorkspaceSettingsNavigation params={params} />
         </div>
-        <div className="flex justify-center">
-          <PricingTable subscriptions={subscriptions.result.items} />
+        <div className="w-5/6">
+          <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
+
+          <PricingTable
+            subscriptions={subscriptions.result.items}
+            products={
+              directPolarData.success &&
+              directPolarData.data?.products?.result?.items
+                ? directPolarData.data.products.result.items
+                : []
+            }
+          />
         </div>
       </div>
-    </div>
+    </HydrateClient>
   );
 }

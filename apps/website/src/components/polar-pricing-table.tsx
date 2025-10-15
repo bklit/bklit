@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 
-import { Skeleton } from "@bklit/ui/components/skeleton";
 import { AlertCircle, Check, Crown, Star } from "lucide-react";
 import Link from "next/link";
 
@@ -83,40 +82,7 @@ export function PolarPricingTable({
     );
   };
 
-  // if (isLoading) {
-  if (false) {
-    return (
-      <div className="w-full max-w-4xl">
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-          {[1, 2].map((i) => (
-            <Card key={i} className="relative overflow-hidden">
-              <CardHeader className="text-center pb-4">
-                <Skeleton className="h-8 w-32 mx-auto mb-2" />
-                <Skeleton className="h-4 w-48 mx-auto mb-4" />
-                <Skeleton className="h-12 w-24 mx-auto" />
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <Skeleton className="h-16" />
-                  <Skeleton className="h-16" />
-                </div>
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-20" />
-                  {[1, 2, 3, 4].map((j) => (
-                    <Skeleton key={j} className="h-4 w-full" />
-                  ))}
-                </div>
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // if (error || !plans || plans.length === 0) {
-  if (false || !plans || plans.length === 0) {
+  if (!plans || plans.length === 0) {
     return (
       <div className="space-y-4">
         <Alert>
@@ -132,9 +98,6 @@ export function PolarPricingTable({
             persists.
           </p>
           <div className="flex gap-2 justify-center">
-            <Button onClick={() => refetch()} variant="outline">
-              Try Again
-            </Button>
             <Button asChild variant="outline">
               <Link href="/contact">Contact Support</Link>
             </Button>

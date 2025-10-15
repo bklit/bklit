@@ -513,29 +513,27 @@ export async function getMobileDesktopStats(
         throw new Error("Site not found or access denied");
       }
 
-      // Get unique mobile visits by IP
+      // Get unique mobile visits by session (or IP if no session)
       const uniqueMobileVisits = await prisma.pageViewEvent.groupBy({
-        by: ["ip"],
+        by: ["sessionId", "ip"],
         where: {
           projectId,
           mobile: true,
-          ip: { not: null },
         },
         _count: {
-          ip: true,
+          sessionId: true,
         },
       });
 
-      // Get unique desktop visits by IP
+      // Get unique desktop visits by session (or IP if no session)
       const uniqueDesktopVisits = await prisma.pageViewEvent.groupBy({
-        by: ["ip"],
+        by: ["sessionId", "ip"],
         where: {
           projectId,
           mobile: false,
-          ip: { not: null },
         },
         _count: {
-          ip: true,
+          sessionId: true,
         },
       });
 

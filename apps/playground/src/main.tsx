@@ -5,7 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import routes from "./routes";
 import "./index.css";
 
-const YOUR_PROJECT_ID = "cmdvv8os200037mlxq1ypkm27";
+const YOUR_PROJECT_ID = "cmgc9e7qt000d2lebau81dq3s";
 
 // Get the ngrok URL from environment variable
 const NGROK_URL = import.meta.env.VITE_NGROK_URL;
@@ -17,6 +17,13 @@ const API_HOST = NGROK_URL
 console.log("🔍 Playground: SDK import test", {
   initBklit: typeof initBklit,
   bklitModule: typeof initBklit === "function" ? "✅ Loaded" : "❌ Not loaded",
+});
+
+// Debug: Show which API endpoint is being used
+console.log("🌐 Playground: API Configuration", {
+  ngrokUrl: NGROK_URL || "Not configured",
+  apiHost: API_HOST,
+  usingNgrok: !!NGROK_URL,
 });
 
 // Initialize Bklit SDK
