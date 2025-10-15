@@ -22,7 +22,7 @@ export function WorldMapCard() {
 
   return (
     <Card className="p-0 relative">
-      <CardHeader className="absolute top-0 w-full backdrop-blur-md z-10 pt-6 pb-4">
+      <CardHeader className="absolute top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl overflow-clip">
         <CardTitle>World Map</CardTitle>
         <CardDescription>
           A map of the world with the number of page views per country.

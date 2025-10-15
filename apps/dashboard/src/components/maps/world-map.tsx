@@ -255,11 +255,11 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
         width="100%"
         height="100%"
         viewBox="0 0 960 500"
-        className="cursor-grab active:cursor-grabbing border border-border rounded-b-lg"
+        className="cursor-grab active:cursor-grabbing rounded-xl"
       />
 
       {/* Zoom Controls */}
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+      <div className="absolute bottom-4 left-6 z-10 flex flex-col gap-2">
         <Button
           size="icon"
           variant="secondary"
