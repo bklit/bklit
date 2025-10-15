@@ -21,14 +21,14 @@ export function WorldMapCard() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="p-0 relative">
+      <CardHeader className="absolute top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl overflow-clip">
         <CardTitle>World Map</CardTitle>
         <CardDescription>
           A map of the world with the number of page views per country.
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[400px] w-full">
+      <CardContent className="h-[480px] w-full p-0">
         <WorldMap projectId={activeProject.id} userId={session.user.id} />
       </CardContent>
     </Card>

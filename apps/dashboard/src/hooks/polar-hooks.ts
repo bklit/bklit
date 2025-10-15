@@ -14,6 +14,7 @@ export function useTeamSubscription(teamId: string) {
       if (!response.ok) {
         throw new Error("Failed to fetch team subscription");
       }
+      // biome-ignore lint/suspicious/noExplicitAny: Polar pricing table
       return response.json() as Promise<any | null>;
     },
     enabled: !!teamId,
@@ -30,6 +31,7 @@ export function useSubscriptionPlans() {
       if (!response.ok) {
         throw new Error("Failed to fetch subscription plans");
       }
+      // biome-ignore lint/suspicious/noExplicitAny: Polar pricing table
       return response.json() as Promise<any[]>;
     },
     staleTime: 1000 * 60 * 30, // 30 minutes

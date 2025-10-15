@@ -62,9 +62,8 @@ async function SessionAnalyticsContent({
           const browser = getBrowserFromUserAgent(session.userAgent);
           const deviceType = getDeviceTypeFromUserAgent(session.userAgent);
           return (
-            <Item asChild variant="outline">
+            <Item asChild variant="outline" key={session.id}>
               <Link
-                key={session.id}
                 href={`/${organizationId || ""}/${projectId}/session/${session.id}`}
                 className="block"
               >

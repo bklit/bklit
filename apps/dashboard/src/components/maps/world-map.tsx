@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@bklit/ui/components/badge";
+import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardContent,
@@ -10,7 +11,7 @@ import {
 } from "@bklit/ui/components/card";
 import { Separator } from "@bklit/ui/components/separator";
 import * as d3 from "d3";
-import { Monitor, Smartphone } from "lucide-react";
+import { Minus, Monitor, Plus, Smartphone } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 import * as topojson from "topojson-client";
@@ -38,6 +39,25 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
   const [visitData, setVisitData] = useState<CountryVisitData[]>([]);
   const [tooltipData, setTooltipData] = useState<CountryVisitData | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+
+  const handleZoomIn = () => {
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current)
+        .transition()
+        .duration(300)
+        .call(zoomRef.current.scaleBy, 1.5);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current)
+        .transition()
+        .duration(300)
+        .call(zoomRef.current.scaleBy, 0.67);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -77,19 +97,29 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.5, 8])
+      .filter((event) => {
+        // Disable wheel zoom, allow all other events
+        return event.type !== "wheel";
+      })
       .on("zoom", (event) => {
         const { transform } = event;
         g.attr("transform", transform);
 
         // Scale markers with zoom
         g.selectAll(".marker")
-          .attr("r", (d) => {
-            const data = d as CountryVisitData;
-            const totalVisits = Number(data.totalVisits) || 0;
-            return (Math.sqrt(totalVisits / 10) + 3) / transform.k;
-          })
+          .attr(
+            "r",
+            // biome-ignore lint/suspicious/noExplicitAny: D3 data binding types are complex
+            (d: any) => {
+              const totalVisits = Number(d.totalVisits) || 0;
+              return (Math.sqrt(totalVisits / 10) + 6) / transform.k;
+            },
+          )
           .attr("stroke-width", 2 / transform.k);
       });
+
+    // Store zoom behavior in ref for button access
+    zoomRef.current = zoom;
 
     svg.call(zoom);
 
@@ -213,10 +243,7 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
   }, [visitData]);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-full bg-card-background"
-    >
+    <div ref={containerRef} className="relative w-full h-full">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-card-background z-20">
           <div className="text-lg">Loading world map...</div>
@@ -228,8 +255,30 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
         width="100%"
         height="100%"
         viewBox="0 0 960 500"
-        className="cursor-grab active:cursor-grabbing"
+        className="cursor-grab active:cursor-grabbing rounded-xl"
       />
+
+      {/* Zoom Controls */}
+      <div className="absolute bottom-4 left-6 z-10 flex flex-col gap-2">
+        <Button
+          size="icon"
+          variant="secondary"
+          onClick={handleZoomIn}
+          className="shadow-lg"
+          aria-label="Zoom in"
+        >
+          <Plus className="size-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="secondary"
+          onClick={handleZoomOut}
+          className="shadow-lg"
+          aria-label="Zoom out"
+        >
+          <Minus className="size-4" />
+        </Button>
+      </div>
 
       {tooltipData && (
         <Card
