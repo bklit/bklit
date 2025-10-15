@@ -16,6 +16,7 @@ import { AlertCircle, Check, Crown, Star } from "lucide-react";
 import Link from "next/link";
 
 interface PolarPricingTableProps {
+  // biome-ignore lint/suspicious/noExplicitAny: Polar pricing table
   plans: any[];
   currentOrganizationId?: string;
   currentPlanId?: string;
@@ -41,6 +42,7 @@ export function PolarPricingTable({
     return planId === currentPlanId;
   };
 
+  // biome-ignore lint/suspicious/noExplicitAny: Polar pricing table
   const getActionButton = (plan: any) => {
     const isCurrent = isCurrentPlan(plan.id);
 
@@ -157,7 +159,8 @@ export function PolarPricingTable({
                 </h4>
                 <ul className="space-y-2">
                   {plan.benefits.length > 0 ? (
-                    plan.benefits.map((benefit) => (
+                    // biome-ignore lint/suspicious/noExplicitAny: Polar pricing table
+                    plan.benefits.map((benefit: any) => (
                       <li
                         key={benefit.id}
                         className="flex items-center gap-3 text-sm"
