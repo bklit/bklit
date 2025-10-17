@@ -43,10 +43,8 @@ export function NavWorkspace() {
                 <span>{activeOrganization?.name}</span>
 
                 {!isLoading && (
-                  <Badge variant={isPro ? "default" : "secondary"} asChild>
-                    <Link href={`/${activeOrganization?.id}/settings/billing`}>
-                      {planName}
-                    </Link>
+                  <Badge variant={isPro ? "default" : "secondary"}>
+                    {planName}
                   </Badge>
                 )}
               </Link>

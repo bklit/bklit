@@ -35,6 +35,10 @@ export const navigationConfig: NavigationConfig = {
       title: "Settings",
       href: "/[teamId]/[projectId]/settings",
     },
+    {
+      title: "Events",
+      href: "/[teamId]/[projectId]/events",
+    },
   ],
 
   // User level navigation (when at /user/[userId])

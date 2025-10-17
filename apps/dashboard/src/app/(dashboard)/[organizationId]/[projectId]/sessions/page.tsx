@@ -10,6 +10,7 @@ import { Clock, MapPin, Monitor } from "lucide-react";
 import Link from "next/link";
 import { getRecentSessions } from "@/actions/session-actions";
 import { PageHeader } from "@/components/page-header";
+import { Stats } from "@/components/stats";
 import { authenticated } from "@/lib/auth";
 
 interface SessionsPageProps {
@@ -82,65 +83,35 @@ export default async function SessionsPage({
       />
       <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Total Sessions</p>
-                  <p className="text-2xl font-bold">{totalSessions}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Monitor className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Engaged</p>
-                  <p className="text-2xl font-bold">
-                    {sessions.filter((s) => !s.didBounce).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Bounced</p>
-                  <p className="text-2xl font-bold">
-                    {sessions.filter((s) => s.didBounce).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Avg Duration</p>
-                  <p className="text-2xl font-bold">
-                    {formatDuration(
-                      Math.round(
-                        sessions.reduce(
-                          (sum, s) => sum + (s.duration || 0),
-                          0,
-                        ) / sessions.length,
-                      ),
-                    )}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Stats
+          items={[
+            {
+              icon: Clock,
+              name: "Total Sessions",
+              stat: totalSessions,
+            },
+            {
+              icon: Monitor,
+              name: "Engaged",
+              stat: sessions.filter((s) => !s.didBounce).length,
+            },
+            {
+              icon: MapPin,
+              name: "Bounced",
+              stat: sessions.filter((s) => s.didBounce).length,
+            },
+            {
+              icon: Clock,
+              name: "Avg Duration",
+              stat: formatDuration(
+                Math.round(
+                  sessions.reduce((sum, s) => sum + (s.duration || 0), 0) /
+                    sessions.length,
+                ),
+              ),
+            },
+          ]}
+        />
 
         {/* Sessions List */}
         <Card>
