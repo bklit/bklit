@@ -37,7 +37,7 @@ export async function createEvent(data: {
       return { success: false, error: "Forbidden" };
     }
 
-    const existingEvent = await prisma.eventDefinition.findUnique({
+    const existingEventByTrackingId = await prisma.eventDefinition.findUnique({
       where: {
         projectId_trackingId: {
           projectId: data.projectId,
@@ -46,10 +46,26 @@ export async function createEvent(data: {
       },
     });
 
-    if (existingEvent) {
+    if (existingEventByTrackingId) {
       return {
         success: false,
         error: "An event with this tracking ID already exists for this project",
+      };
+    }
+
+    const existingEventByName = await prisma.eventDefinition.findUnique({
+      where: {
+        projectId_name: {
+          projectId: data.projectId,
+          name: data.name,
+        },
+      },
+    });
+
+    if (existingEventByName) {
+      return {
+        success: false,
+        error: "An event with this name already exists for this project",
       };
     }
 
@@ -119,6 +135,24 @@ export async function updateEvent(data: {
           success: false,
           error:
             "An event with this tracking ID already exists for this project",
+        };
+      }
+    }
+
+    if (data.name && data.name !== event.name) {
+      const existingEventByName = await prisma.eventDefinition.findUnique({
+        where: {
+          projectId_name: {
+            projectId: event.projectId,
+            name: data.name,
+          },
+        },
+      });
+
+      if (existingEventByName) {
+        return {
+          success: false,
+          error: "An event with this name already exists for this project",
         };
       }
     }

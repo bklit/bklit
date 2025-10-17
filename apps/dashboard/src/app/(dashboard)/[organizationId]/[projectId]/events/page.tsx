@@ -1,6 +1,17 @@
 "use client";
 
+import type { Prisma } from "@bklit/db/client";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@bklit/ui/components/alert-dialog";
 import { Button } from "@bklit/ui/components/button";
+import { ButtonGroup } from "@bklit/ui/components/button-group";
 import { Calendar as CalendarComponent } from "@bklit/ui/components/calendar";
 import {
   Empty,
@@ -34,9 +45,16 @@ import {
 } from "@bklit/ui/components/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Activity, CalendarIcon, Clock, Monitor, User } from "lucide-react";
+import {
+  Activity,
+  AlertCircle,
+  CalendarIcon,
+  Clock,
+  Monitor,
+  User,
+} from "lucide-react";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
-import { use, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { createEvent, deleteEvent, updateEvent } from "@/actions/event-actions";
 import { PageHeader } from "@/components/page-header";
 import { Stats } from "@/components/stats";
@@ -61,8 +79,16 @@ interface EventListItem {
   recentEvents: Array<{
     id: string;
     timestamp: Date;
-    metadata: unknown;
+    metadata: Prisma.JsonValue | null;
   }>;
+}
+
+function toKebabCase(str: string): string {
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export default function EventsPage({ params }: PageProps) {
@@ -75,6 +101,9 @@ export default function EventsPage({ params }: PageProps) {
   const [editingEvent, setEditingEvent] = useState<EventListItem | null>(null);
   const [openEventsSheet, setOpenEventsSheet] = useState(false);
   const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   // Date range state using nuqs - defaults to last 30 days
   const [dateParams, setDateParams] = useQueryStates(
@@ -87,13 +116,15 @@ export default function EventsPage({ params }: PageProps) {
     },
   );
 
-  // Set default startDate to 30 days ago if not in URL
+  // Set default startDate to 30 days ago if not in URL (only for display/filtering, not for URL)
   const startDate = useMemo(() => {
     if (dateParams.startDate) return dateParams.startDate;
+    // If no filters are set, don't apply default date filter - show all events
+    if (!dateParams.endDate) return undefined;
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
-  }, [dateParams.startDate]);
+  }, [dateParams.startDate, dateParams.endDate]);
 
   const endDate = dateParams.endDate ?? undefined;
 
@@ -106,6 +137,13 @@ export default function EventsPage({ params }: PageProps) {
     setDateParams({ endDate: date ?? null });
   };
 
+  const clearFilters = () => {
+    setDateParams({ startDate: null, endDate: null });
+  };
+
+  const hasActiveFilters =
+    dateParams.startDate !== null || dateParams.endDate !== null;
+
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -117,6 +155,52 @@ export default function EventsPage({ params }: PageProps) {
       endDate,
     }),
   );
+
+  useEffect(() => {
+    if (sheetMode === "create" && name) {
+      const generatedId = toKebabCase(name);
+      setTrackingId(generatedId);
+
+      const duplicateName = events?.some(
+        (event) => event.name.toLowerCase() === name.toLowerCase(),
+      );
+
+      const duplicateTrackingId = events?.some(
+        (event) => event.trackingId === generatedId,
+      );
+
+      if (duplicateName) {
+        setValidationError(
+          "An event with this name already exists. Please choose a different name.",
+        );
+      } else if (duplicateTrackingId) {
+        setValidationError(
+          "An event with this tracking ID already exists. Please choose a different name.",
+        );
+      } else {
+        setValidationError(null);
+      }
+    } else if (sheetMode === "create" && !name) {
+      setTrackingId("");
+      setValidationError(null);
+    }
+  }, [name, events, sheetMode]);
+
+  useEffect(() => {
+    if (sheetMode === "edit" && editingEvent) {
+      // Name is read-only in edit mode, so only check tracking ID
+      const duplicateTrackingId = events?.some(
+        (event) =>
+          event.trackingId === trackingId && event.id !== editingEvent.id,
+      );
+
+      if (duplicateTrackingId) {
+        setValidationError("An event with this tracking ID already exists.");
+      } else {
+        setValidationError(null);
+      }
+    }
+  }, [trackingId, events, sheetMode, editingEvent]);
 
   const createMutation = useMutation({
     mutationFn: async (data: {
@@ -184,6 +268,10 @@ export default function EventsPage({ params }: PageProps) {
       return result;
     },
     onSuccess: () => {
+      setOpenDeleteDialog(false);
+      setOpenEventsSheet(false);
+      setDeleteConfirmation("");
+      setEditingEvent(null);
       queryClient.invalidateQueries({
         queryKey: [["event", "list"]],
       });
@@ -219,13 +307,20 @@ export default function EventsPage({ params }: PageProps) {
 
   const handleDelete = () => {
     if (!editingEvent) return;
+    setOpenDeleteDialog(true);
+  };
 
-    if (
-      confirm(
-        `Are you sure you want to delete "${editingEvent.name}"? This will delete all tracked event data.`,
-      )
-    ) {
-      deleteMutation.mutate({ id: editingEvent.id, organizationId });
+  const confirmDelete = () => {
+    if (!editingEvent || deleteConfirmation !== editingEvent.trackingId) return;
+
+    deleteMutation.mutate({ id: editingEvent.id, organizationId });
+  };
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    setOpenDeleteDialog(open);
+    if (!open) {
+      // Reset confirmation when dialog closes
+      setDeleteConfirmation("");
     }
   };
 
@@ -235,6 +330,7 @@ export default function EventsPage({ params }: PageProps) {
     setName("");
     setDescription("");
     setTrackingId("");
+    setValidationError(null);
     setOpenEventsSheet(true);
   };
 
@@ -244,6 +340,8 @@ export default function EventsPage({ params }: PageProps) {
     setName(event.name);
     setDescription(event.description || "");
     setTrackingId(event.trackingId);
+    setValidationError(null);
+    setDeleteConfirmation("");
     setOpenEventsSheet(true);
   };
 
@@ -255,49 +353,73 @@ export default function EventsPage({ params }: PageProps) {
     <>
       <PageHeader title="Events" description="Manage your events">
         <div className="flex items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="lg"
-                className="justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 size-4" />
-                {startDate && endDate ? (
-                  <>
-                    {format(startDate, "MMM dd, yyyy")} -{" "}
-                    {format(endDate, "MMM dd, yyyy")}
-                  </>
-                ) : startDate ? (
-                  <>{format(startDate, "MMM dd, yyyy")} - Now</>
-                ) : (
-                  "Pick a date range"
-                )}
+          <ButtonGroup>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 size-4" />
+                  {startDate && endDate ? (
+                    <>
+                      {format(startDate, "MMM dd, yyyy")} -{" "}
+                      {format(endDate, "MMM dd, yyyy")}
+                    </>
+                  ) : startDate ? (
+                    <>{format(startDate, "MMM dd, yyyy")} - Now</>
+                  ) : (
+                    "All events"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <CalendarComponent
+                  mode="range"
+                  selected={{
+                    from: startDate,
+                    to: endDate,
+                  }}
+                  onSelect={(range) => {
+                    if (range) {
+                      setStartDate(range.from);
+                      setEndDate(range.to);
+                    }
+                  }}
+                  numberOfMonths={2}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {hasActiveFilters && (
+              <Button variant="outline" size="lg" onClick={clearFilters}>
+                Clear filters
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <CalendarComponent
-                mode="range"
-                selected={{
-                  from: startDate,
-                  to: endDate,
-                }}
-                onSelect={(range) => {
-                  if (range) {
-                    setStartDate(range.from);
-                    setEndDate(range.to);
-                  }
-                }}
-                numberOfMonths={2}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+            )}
+          </ButtonGroup>
           <Button onClick={openCreateSheet}>Create Event</Button>
         </div>
       </PageHeader>
 
-      <Sheet open={openEventsSheet} onOpenChange={setOpenEventsSheet}>
+      <Sheet
+        open={openEventsSheet}
+        onOpenChange={(open) => {
+          // Only allow closing the sheet if the delete dialog is not open
+          if (!open && openDeleteDialog) {
+            return;
+          }
+          setOpenEventsSheet(open);
+          if (!open) {
+            // Reset form state when sheet closes
+            setEditingEvent(null);
+            setName("");
+            setDescription("");
+            setTrackingId("");
+            setValidationError(null);
+          }
+        }}
+      >
         <SheetContent side="right">
           <SheetHeader>
             <SheetTitle>
@@ -313,14 +435,22 @@ export default function EventsPage({ params }: PageProps) {
             className="flex flex-col gap-4 w-full px-4 mt-4"
           >
             <div className="flex flex-col gap-1">
-              <label htmlFor="name">Event Name:</label>
+              <label htmlFor="name">
+                Event Name:
+                {sheetMode === "edit" && (
+                  <span className="text-sm text-muted-foreground ml-2">
+                    (read-only)
+                  </span>
+                )}
+              </label>
               <input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full border p-2 rounded"
+                readOnly={sheetMode === "edit"}
+                className={`w-full border p-2 rounded ${sheetMode === "edit" ? "bg-muted cursor-not-allowed" : ""} ${validationError && sheetMode === "create" ? "border-red-500" : ""}`}
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -334,17 +464,34 @@ export default function EventsPage({ params }: PageProps) {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor="trackingId">Tracking ID:</label>
+              <label htmlFor="trackingId">
+                Tracking ID:
+                {sheetMode === "create" && (
+                  <span className="text-sm text-muted-foreground ml-2">
+                    (auto-generated)
+                  </span>
+                )}
+              </label>
               <input
                 id="trackingId"
                 type="text"
                 value={trackingId}
                 onChange={(e) => setTrackingId(e.target.value)}
                 required
+                readOnly={sheetMode === "create"}
                 placeholder="e.g., evt_signup_click"
-                className="w-full border p-2 rounded"
+                className={`w-full border p-2 rounded ${sheetMode === "create" ? "bg-muted cursor-not-allowed" : ""} ${validationError ? "border-red-500" : ""}`}
               />
             </div>
+
+            {validationError && (
+              <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
+                <AlertCircle className="size-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {validationError}
+                </p>
+              </div>
+            )}
 
             {sheetMode === "edit" && editingEvent && (
               <div className="mt-4 p-4 bg-muted rounded-lg">
@@ -372,7 +519,7 @@ export default function EventsPage({ params }: PageProps) {
               </div>
             )}
           </form>
-          <SheetFooter className="mt-4">
+          <SheetFooter>
             <div className="flex justify-between w-full">
               {sheetMode === "edit" && (
                 <Button
@@ -389,9 +536,10 @@ export default function EventsPage({ params }: PageProps) {
                 form="event-form"
                 type="submit"
                 disabled={
-                  sheetMode === "create"
+                  !!validationError ||
+                  (sheetMode === "create"
                     ? createMutation.isPending
-                    : updateMutation.isPending
+                    : updateMutation.isPending)
                 }
                 className="disabled:opacity-50 ml-auto"
               >
@@ -510,6 +658,59 @@ export default function EventsPage({ params }: PageProps) {
           </Table>
         )}
       </div>
+
+      <AlertDialog
+        open={openDeleteDialog}
+        onOpenChange={handleDeleteDialogChange}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              event <strong>"{editingEvent?.name}"</strong> and all associated
+              tracked event data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <label
+              htmlFor="delete-confirmation"
+              className="text-sm font-medium"
+            >
+              Type{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-sm">
+                {editingEvent?.trackingId}
+              </code>{" "}
+              to confirm:
+            </label>
+            <input
+              id="delete-confirmation"
+              type="text"
+              value={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.value)}
+              placeholder="Enter tracking ID"
+              className="w-full border p-2 rounded mt-2"
+              autoComplete="off"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={
+                deleteConfirmation !== editingEvent?.trackingId ||
+                deleteMutation.isPending
+              }
+              variant="destructive"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Event"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

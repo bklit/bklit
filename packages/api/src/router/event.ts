@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
 
+// @ts-ignore - Complex Prisma types cause inference issues
 export const eventRouter = {
   create: protectedProcedure
     .input(
@@ -39,20 +40,37 @@ export const eventRouter = {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const existingEvent = await ctx.prisma.eventDefinition.findUnique({
-        where: {
-          projectId_trackingId: {
-            projectId: input.projectId,
-            trackingId: input.trackingId,
+      const existingEventByTrackingId =
+        await ctx.prisma.eventDefinition.findUnique({
+          where: {
+            projectId_trackingId: {
+              projectId: input.projectId,
+              trackingId: input.trackingId,
+            },
           },
-        },
-      });
+        });
 
-      if (existingEvent) {
+      if (existingEventByTrackingId) {
         throw new TRPCError({
           code: "CONFLICT",
           message:
             "An event with this tracking ID already exists for this project",
+        });
+      }
+
+      const existingEventByName = await ctx.prisma.eventDefinition.findUnique({
+        where: {
+          projectId_name: {
+            projectId: input.projectId,
+            name: input.name,
+          },
+        },
+      });
+
+      if (existingEventByName) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "An event with this name already exists for this project",
         });
       }
 
@@ -217,6 +235,26 @@ export const eventRouter = {
             code: "CONFLICT",
             message:
               "An event with this tracking ID already exists for this project",
+          });
+        }
+      }
+
+      if (input.name && input.name !== event.name) {
+        const existingEventByName = await ctx.prisma.eventDefinition.findUnique(
+          {
+            where: {
+              projectId_name: {
+                projectId: event.projectId,
+                name: input.name,
+              },
+            },
+          },
+        );
+
+        if (existingEventByName) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "An event with this name already exists for this project",
           });
         }
       }

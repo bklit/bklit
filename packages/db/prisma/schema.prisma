@@ -190,6 +190,7 @@ model EventDefinition {
   trackedEvents TrackedEvent[] // Instances of this event being tracked
 
   @@unique([projectId, trackingId]) // trackingId should be unique per site
+  @@unique([projectId, name]) // event name should be unique per site
   @@index([projectId])
 }
 
