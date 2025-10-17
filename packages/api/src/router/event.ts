@@ -71,6 +71,8 @@ export const eventRouter = {
       z.object({
         projectId: z.string(),
         organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -98,12 +100,23 @@ export const eventRouter = {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              timestamp: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
       const events = await ctx.prisma.eventDefinition.findMany({
         where: {
           projectId: input.projectId,
         },
         include: {
           trackedEvents: {
+            ...(dateFilter && { where: dateFilter }),
             select: {
               id: true,
               timestamp: true,
@@ -119,29 +132,38 @@ export const eventRouter = {
         },
       });
 
-      return events.map((event) => {
-        const eventTypeCounts: Record<string, number> = {};
+      return events
+        .map((event) => {
+          const eventTypeCounts: Record<string, number> = {};
 
-        for (const trackedEvent of event.trackedEvents) {
-          const metadata = trackedEvent.metadata as {
-            eventType?: string;
-          } | null;
-          const eventType = metadata?.eventType || "unknown";
-          eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
-        }
+          for (const trackedEvent of event.trackedEvents) {
+            const metadata = trackedEvent.metadata as {
+              eventType?: string;
+            } | null;
+            const eventType = metadata?.eventType || "unknown";
+            eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
+          }
 
-        return {
-          id: event.id,
-          name: event.name,
-          description: event.description,
-          trackingId: event.trackingId,
-          createdAt: event.createdAt,
-          updatedAt: event.updatedAt,
-          totalCount: event.trackedEvents.length,
-          eventTypeCounts,
-          recentEvents: event.trackedEvents.slice(0, 5),
-        };
-      });
+          return {
+            id: event.id,
+            name: event.name,
+            description: event.description,
+            trackingId: event.trackingId,
+            createdAt: event.createdAt,
+            updatedAt: event.updatedAt,
+            totalCount: event.trackedEvents.length,
+            eventTypeCounts,
+            recentEvents: event.trackedEvents.slice(0, 5),
+          };
+        })
+        .filter((event) => {
+          // When date filters are applied, only show events with tracked events in that range
+          if (input.startDate || input.endDate) {
+            return event.totalCount > 0;
+          }
+          // When no date filters, show all event definitions
+          return true;
+        });
     }),
 
   update: protectedProcedure

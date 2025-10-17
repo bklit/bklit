@@ -1,6 +1,20 @@
 "use client";
 
 import { Button } from "@bklit/ui/components/button";
+import { Calendar as CalendarComponent } from "@bklit/ui/components/calendar";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@bklit/ui/components/empty";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@bklit/ui/components/popover";
 import {
   Sheet,
   SheetContent,
@@ -19,8 +33,10 @@ import {
   TableRow,
 } from "@bklit/ui/components/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Clock, Monitor, User } from "lucide-react";
-import { use, useState } from "react";
+import { format } from "date-fns";
+import { Activity, CalendarIcon, Clock, Monitor, User } from "lucide-react";
+import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { use, useMemo, useState } from "react";
 import { createEvent, deleteEvent, updateEvent } from "@/actions/event-actions";
 import { PageHeader } from "@/components/page-header";
 import { Stats } from "@/components/stats";
@@ -60,6 +76,36 @@ export default function EventsPage({ params }: PageProps) {
   const [openEventsSheet, setOpenEventsSheet] = useState(false);
   const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
 
+  // Date range state using nuqs - defaults to last 30 days
+  const [dateParams, setDateParams] = useQueryStates(
+    {
+      startDate: parseAsIsoDateTime,
+      endDate: parseAsIsoDateTime,
+    },
+    {
+      history: "push",
+    },
+  );
+
+  // Set default startDate to 30 days ago if not in URL
+  const startDate = useMemo(() => {
+    if (dateParams.startDate) return dateParams.startDate;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [dateParams.startDate]);
+
+  const endDate = dateParams.endDate ?? undefined;
+
+  // Helper functions for date picker (ready to use)
+  const setStartDate = (date: Date | undefined) => {
+    setDateParams({ startDate: date ?? null });
+  };
+
+  const setEndDate = (date: Date | undefined) => {
+    setDateParams({ endDate: date ?? null });
+  };
+
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -67,6 +113,8 @@ export default function EventsPage({ params }: PageProps) {
     trpc.event.list.queryOptions({
       projectId,
       organizationId,
+      startDate,
+      endDate,
     }),
   );
 
@@ -90,7 +138,7 @@ export default function EventsPage({ params }: PageProps) {
       setTrackingId("");
       setOpenEventsSheet(false);
       queryClient.invalidateQueries({
-        queryKey: [["event", "list"], { input: { projectId, organizationId } }],
+        queryKey: [["event", "list"]],
       });
     },
     onError: (error: Error) => {
@@ -119,7 +167,7 @@ export default function EventsPage({ params }: PageProps) {
       setDescription("");
       setTrackingId("");
       queryClient.invalidateQueries({
-        queryKey: [["event", "list"], { input: { projectId, organizationId } }],
+        queryKey: [["event", "list"]],
       });
     },
     onError: (error: Error) => {
@@ -137,7 +185,7 @@ export default function EventsPage({ params }: PageProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [["event", "list"], { input: { projectId, organizationId } }],
+        queryKey: [["event", "list"]],
       });
     },
     onError: (error: Error) => {
@@ -206,7 +254,47 @@ export default function EventsPage({ params }: PageProps) {
   return (
     <>
       <PageHeader title="Events" description="Manage your events">
-        <Button onClick={openCreateSheet}>Create Event</Button>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                className="justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 size-4" />
+                {startDate && endDate ? (
+                  <>
+                    {format(startDate, "MMM dd, yyyy")} -{" "}
+                    {format(endDate, "MMM dd, yyyy")}
+                  </>
+                ) : startDate ? (
+                  <>{format(startDate, "MMM dd, yyyy")} - Now</>
+                ) : (
+                  "Pick a date range"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <CalendarComponent
+                mode="range"
+                selected={{
+                  from: startDate,
+                  to: endDate,
+                }}
+                onSelect={(range) => {
+                  if (range) {
+                    setStartDate(range.from);
+                    setEndDate(range.to);
+                  }
+                }}
+                numberOfMonths={2}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Button onClick={openCreateSheet}>Create Event</Button>
+        </div>
       </PageHeader>
 
       <Sheet open={openEventsSheet} onOpenChange={setOpenEventsSheet}>
@@ -344,7 +432,7 @@ export default function EventsPage({ params }: PageProps) {
                 : 0,
             },
             {
-              icon: Calendar,
+              icon: CalendarIcon,
               name: "Interactions today",
               stat:
                 events?.reduce((sum, e) => {
@@ -360,7 +448,21 @@ export default function EventsPage({ params }: PageProps) {
         />
 
         {isLoading && <p>Loading events...</p>}
-        {events && events.length === 0 && <p>No events created yet.</p>}
+        {events && events.length === 0 && (
+          <Empty className="border border-bklit-600 bg-bklit-900">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Activity size={16} />
+              </EmptyMedia>
+              <EmptyTitle>No events found</EmptyTitle>
+            </EmptyHeader>
+            <EmptyContent>
+              <EmptyDescription>
+                No events found for the selected date range.
+              </EmptyDescription>
+            </EmptyContent>
+          </Empty>
+        )}
         {events && events.length > 0 && (
           <Table>
             <TableCaption className="sr-only">
