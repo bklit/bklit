@@ -325,6 +325,7 @@ export function trackEvent(
   trackingId: string,
   eventType: string,
   metadata?: Record<string, unknown>,
+  triggerMethod?: "automatic" | "manual",
 ) {
   if (typeof window === "undefined") {
     console.warn(
@@ -348,7 +349,10 @@ export function trackEvent(
     trackingId,
     eventType,
     timestamp: new Date().toISOString(),
-    metadata: metadata || {},
+    metadata: {
+      ...metadata,
+      triggerMethod: triggerMethod || "manual", // Default to manual if not specified
+    },
     projectId,
     sessionId: currentSessionId || undefined,
   };
@@ -436,7 +440,7 @@ function setupEventTracking() {
         console.log("👆 Bklit SDK: Click event detected", { trackingId });
       }
       if (trackingId) {
-        trackEvent(trackingId, "click");
+        trackEvent(trackingId, "click", {}, "automatic");
       }
     });
 
@@ -451,7 +455,7 @@ function setupEventTracking() {
               });
             }
             if (trackingId) {
-              trackEvent(trackingId, "view");
+              trackEvent(trackingId, "view", {}, "automatic");
             }
             viewObserver.unobserve(element);
           }
@@ -472,7 +476,7 @@ function setupEventTracking() {
           });
         }
         if (trackingId) {
-          trackEvent(trackingId, "hover");
+          trackEvent(trackingId, "hover", {}, "automatic");
         }
       }, 500);
     });
@@ -544,6 +548,7 @@ declare global {
       trackingId: string,
       eventType: string,
       metadata?: Record<string, unknown>,
+      triggerMethod?: "automatic" | "manual",
     ) => void;
     bklitprojectId?: string;
     bklitApiHost?: string;

@@ -71,12 +71,34 @@ export async function POST(request: NextRequest) {
       eventType: payload.eventType,
     };
 
+    // Look up the internal session ID if a client sessionId was provided
+    let internalSessionId: string | undefined;
+    if (payload.sessionId) {
+      const session = await prisma.trackedSession.findUnique({
+        where: {
+          sessionId: payload.sessionId,
+        },
+        select: {
+          id: true,
+        },
+      });
+      internalSessionId = session?.id;
+
+      if (session) {
+        console.log("🔗 API: Session found for event", {
+          clientSessionId: payload.sessionId,
+          internalSessionId: session.id,
+        });
+      }
+    }
+
     await prisma.trackedEvent.create({
       data: {
         timestamp: new Date(payload.timestamp),
         metadata,
         eventDefinitionId: eventDefinition.id,
         projectId: payload.projectId,
+        sessionId: internalSessionId, // Link to TrackedSession if available
       },
     });
 
@@ -84,6 +106,7 @@ export async function POST(request: NextRequest) {
       trackingId: payload.trackingId,
       eventType: payload.eventType,
       eventDefinitionId: eventDefinition.id,
+      sessionLinked: !!internalSessionId,
     });
 
     return createCorsResponse({ message: "Event tracked successfully" }, 200);

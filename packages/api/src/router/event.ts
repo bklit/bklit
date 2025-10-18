@@ -307,6 +307,182 @@ export const eventRouter = {
       });
     }),
 
+  getByTrackingId: protectedProcedure
+    .input(
+      z.object({
+        trackingId: z.string(),
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const event = await ctx.prisma.eventDefinition.findUnique({
+        where: {
+          projectId_trackingId: {
+            projectId: input.projectId,
+            trackingId: input.trackingId,
+          },
+        },
+      });
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              timestamp: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinitionId: event.id,
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          id: true,
+          timestamp: true,
+          metadata: true,
+          createdAt: true,
+          session: {
+            select: {
+              id: true,
+              sessionId: true,
+              userAgent: true,
+              country: true,
+              city: true,
+              startedAt: true,
+              entryPage: true,
+            },
+          },
+        },
+        orderBy: {
+          timestamp: "desc",
+        },
+      });
+
+      const eventTypeCounts: Record<string, number> = {};
+      const timeSeriesData: Record<string, { views: number; clicks: number }> =
+        {};
+
+      // Separate automatic (DOM-triggered) vs manual events
+      // Note: Events without triggerMethod are treated as automatic for backward compatibility
+      const automaticEvents = trackedEvents.filter((e) => {
+        const metadata = e.metadata as { triggerMethod?: string } | null;
+        return metadata?.triggerMethod !== "manual"; // Include automatic and legacy events (undefined/null)
+      });
+
+      for (const trackedEvent of trackedEvents) {
+        const metadata = trackedEvent.metadata as {
+          eventType?: string;
+          triggerMethod?: string;
+        } | null;
+        const eventType = metadata?.eventType || "unknown";
+        eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
+
+        const dateKey = trackedEvent.timestamp.toISOString().split("T")[0];
+        if (dateKey) {
+          if (!timeSeriesData[dateKey]) {
+            timeSeriesData[dateKey] = { views: 0, clicks: 0 };
+          }
+
+          if (eventType === "view") {
+            timeSeriesData[dateKey].views += 1;
+          } else if (eventType === "click") {
+            timeSeriesData[dateKey].clicks += 1;
+          }
+        }
+      }
+
+      const totalSessions = await ctx.prisma.trackedSession.count({
+        where: {
+          projectId: input.projectId,
+          ...(dateFilter && {
+            startedAt: dateFilter.timestamp,
+          }),
+        },
+      });
+
+      // For conversion rate, only count automatic events (DOM-triggered, user-perceived)
+      // Manual JS events may not have been perceived by the user, so they shouldn't count as conversions
+      const automaticEventTimestamps = automaticEvents.map((e) => e.timestamp);
+      const sessionsWithEvent =
+        totalSessions > 0 && automaticEventTimestamps.length > 0
+          ? await ctx.prisma.trackedSession.count({
+              where: {
+                projectId: input.projectId,
+                ...(dateFilter && {
+                  startedAt: dateFilter.timestamp,
+                }),
+                OR: automaticEventTimestamps.map((timestamp) => ({
+                  startedAt: {
+                    gte: new Date(timestamp.getTime() - 5 * 60 * 1000),
+                    lte: new Date(timestamp.getTime() + 5 * 60 * 1000),
+                  },
+                })),
+              },
+            })
+          : 0;
+
+      const conversionRate =
+        totalSessions > 0 ? (sessionsWithEvent / totalSessions) * 100 : 0;
+
+      const timeSeriesArray = Object.entries(timeSeriesData)
+        .map(([date, data]) => ({
+          date,
+          views: data.views,
+          clicks: data.clicks,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      return {
+        id: event.id,
+        name: event.name,
+        description: event.description,
+        trackingId: event.trackingId,
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt,
+        totalCount: trackedEvents.length,
+        eventTypeCounts,
+        recentEvents: trackedEvents.slice(0, 20),
+        timeSeriesData: timeSeriesArray,
+        conversionRate: Number(conversionRate.toFixed(2)),
+        totalSessions,
+        sessionsWithEvent,
+      };
+    }),
+
   stats: protectedProcedure
     .input(
       z.object({

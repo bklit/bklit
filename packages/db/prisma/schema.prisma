@@ -197,7 +197,7 @@ model EventDefinition {
 model TrackedEvent {
   id        String   @id @default(cuid())
   timestamp DateTime // Timestamp from the client when the event occurred
-  metadata  Json? // Any additional data sent with the event
+  metadata  Json? // Any additional data sent with the event (includes triggerMethod: "automatic" | "manual")
   createdAt DateTime @default(now()) // When this record was created in our DB
 
   eventDefinitionId String
@@ -206,9 +206,14 @@ model TrackedEvent {
   projectId String // Denormalized for easier querying of all custom events for a site
   project   Project   @relation(fields: [projectId], references: [id], onDelete: NoAction) // NoAction to prevent multiple cascade paths
 
+  // Session tracking - optional as some events might not be tied to a session
+  sessionId String? // Reference to TrackedSession.id (internal DB id)
+  session   TrackedSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
   @@index([eventDefinitionId])
   @@index([projectId, timestamp])
   @@index([projectId, createdAt])
+  @@index([sessionId])
 }
 
 model TrackedSession {
@@ -224,6 +229,7 @@ model TrackedSession {
 
   // Page flow tracking
   pageViewEvents PageViewEvent[]
+  trackedEvents  TrackedEvent[] // Custom events during this session
 
   // Bounce detection
   didBounce Boolean @default(false) // true if session < 10 seconds
