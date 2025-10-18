@@ -32,6 +32,10 @@ export const navigationConfig: NavigationConfig = {
       href: "/[teamId]/[projectId]/sessions",
     },
     {
+      title: "Events",
+      href: "/[teamId]/[projectId]/events",
+    },
+    {
       title: "Settings",
       href: "/[teamId]/[projectId]/settings",
     },

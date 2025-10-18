@@ -235,6 +235,8 @@ export function initBklit(options: BklitOptions): void {
   if (debug) {
     console.log("🎯 Bklit SDK: SPA navigation tracking enabled");
   }
+
+  setupEventTracking();
 }
 
 // Helper function to generate a unique session ID
@@ -318,10 +320,236 @@ export function trackPageView() {
     });
 }
 
+// Event tracking functionality
+export function trackEvent(
+  trackingId: string,
+  eventType: string,
+  metadata?: Record<string, unknown>,
+  triggerMethod?: "automatic" | "manual",
+) {
+  if (typeof window === "undefined") {
+    console.warn(
+      "❌ Bklit SDK: trackEvent can only be called in browser environment",
+    );
+    return;
+  }
+
+  const projectId = window.bklitprojectId;
+  const apiHost = window.bklitApiHost;
+  const debug = window.bklitDebug || false;
+
+  if (!projectId) {
+    console.warn(
+      "❌ Bklit SDK: No projectId configured. Call initBklit() first.",
+    );
+    return;
+  }
+
+  const data = {
+    trackingId,
+    eventType,
+    timestamp: new Date().toISOString(),
+    metadata: {
+      ...metadata,
+      triggerMethod: triggerMethod || "manual", // Default to manual if not specified
+    },
+    projectId,
+    sessionId: currentSessionId || undefined,
+  };
+
+  if (debug) {
+    console.log("🎯 Bklit SDK: Tracking event...", {
+      trackingId: data.trackingId,
+      eventType: data.eventType,
+      projectId: data.projectId,
+      sessionId: data.sessionId,
+    });
+  }
+
+  const eventApiHost = apiHost
+    ? apiHost.replace("/api/track", "/api/track-event")
+    : getDefaultConfig(window.bklitEnvironment).apiHost.replace(
+        "/api/track",
+        "/api/track-event",
+      );
+
+  fetch(eventApiHost, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+    keepalive: true,
+  })
+    .then((response) => {
+      if (response.ok) {
+        if (debug) {
+          console.log("✅ Bklit SDK: Event tracked successfully!", {
+            trackingId: data.trackingId,
+            eventType: data.eventType,
+            status: response.status,
+          });
+        }
+      } else {
+        console.error("❌ Bklit SDK: Failed to track event", {
+          trackingId: data.trackingId,
+          status: response.status,
+          statusText: response.statusText,
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("❌ Bklit SDK: Error tracking event:", error);
+    });
+}
+
+// Auto-track events with data attributes and IDs
+function setupEventTracking() {
+  if (typeof window === "undefined") return;
+
+  const debug = window.bklitDebug || false;
+  const trackedElements = new WeakSet<Element>();
+
+  function attachEventListeners(element: Element) {
+    if (trackedElements.has(element)) return;
+    trackedElements.add(element);
+
+    const dataEventAttr = element.getAttribute("data-bklit-event");
+    const elementId = element.id;
+
+    let trackingId: string | null = null;
+
+    if (dataEventAttr) {
+      trackingId = dataEventAttr;
+    } else if (elementId?.startsWith("bklit-event-")) {
+      trackingId = elementId.replace("bklit-event-", "");
+    }
+
+    if (!trackingId) return;
+
+    if (debug && trackingId) {
+      console.log("🔗 Bklit SDK: Setting up event tracking (all types)", {
+        trackingId,
+        element: element.tagName,
+      });
+    }
+
+    // Track click events
+    element.addEventListener("click", () => {
+      if (debug) {
+        console.log("👆 Bklit SDK: Click event detected", { trackingId });
+      }
+      if (trackingId) {
+        trackEvent(trackingId, "click", {}, "automatic");
+      }
+    });
+
+    // Track view events with IntersectionObserver
+    const viewObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            if (debug) {
+              console.log("👁️ Bklit SDK: View event detected", {
+                trackingId,
+              });
+            }
+            if (trackingId) {
+              trackEvent(trackingId, "view", {}, "automatic");
+            }
+            viewObserver.unobserve(element);
+          }
+        }
+      },
+      { threshold: 0.5 },
+    );
+    viewObserver.observe(element);
+
+    // Track hover events
+    let hoverTimeout: NodeJS.Timeout | null = null;
+    element.addEventListener("mouseenter", () => {
+      if (hoverTimeout) clearTimeout(hoverTimeout);
+      hoverTimeout = setTimeout(() => {
+        if (debug) {
+          console.log("🖱️ Bklit SDK: Hover event detected", {
+            trackingId,
+          });
+        }
+        if (trackingId) {
+          trackEvent(trackingId, "hover", {}, "automatic");
+        }
+      }, 500);
+    });
+    element.addEventListener("mouseleave", () => {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+        hoverTimeout = null;
+      }
+    });
+  }
+
+  function scanForEventElements() {
+    const dataAttrElements = document.querySelectorAll("[data-bklit-event]");
+    const idElements = document.querySelectorAll("[id^='bklit-event-']");
+
+    dataAttrElements.forEach(attachEventListeners);
+    idElements.forEach(attachEventListeners);
+  }
+
+  scanForEventElements();
+
+  const mutationObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type === "childList") {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+            attachEventListeners(element);
+
+            const childDataAttrElements =
+              element.querySelectorAll("[data-bklit-event]");
+            const childIdElements = element.querySelectorAll(
+              "[id^='bklit-event-']",
+            );
+
+            childDataAttrElements.forEach(attachEventListeners);
+            childIdElements.forEach(attachEventListeners);
+          }
+        });
+      } else if (mutation.type === "attributes") {
+        const element = mutation.target as Element;
+        if (
+          mutation.attributeName === "data-bklit-event" ||
+          mutation.attributeName === "id"
+        ) {
+          attachEventListeners(element);
+        }
+      }
+    }
+  });
+
+  mutationObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["data-bklit-event", "id"],
+  });
+
+  if (debug) {
+    console.log("✅ Bklit SDK: Event tracking setup complete");
+  }
+}
+
 // Store configuration globally for manual tracking
 declare global {
   interface Window {
     trackPageView?: () => void;
+    trackEvent?: (
+      trackingId: string,
+      eventType: string,
+      metadata?: Record<string, unknown>,
+      triggerMethod?: "automatic" | "manual",
+    ) => void;
     bklitprojectId?: string;
     bklitApiHost?: string;
     bklitEnvironment?: "development" | "production";
@@ -331,3 +559,4 @@ declare global {
 
 // Make trackPageView available globally
 window.trackPageView = trackPageView;
+window.trackEvent = trackEvent;

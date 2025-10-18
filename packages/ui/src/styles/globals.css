@@ -48,7 +48,7 @@
 }
 
 .dark {
-  --background: oklch(0, 0, 0);
+  --background: oklch(0 0 0);
   --foreground: oklch(0.985 0 0);
   --card: var(--bklit-900);
   --card-foreground: var(--color-gray-300);
@@ -143,6 +143,17 @@
   --color-bklit-200: var(--bklit-200);
   --color-bklit-100: var(--bklit-100);
   --color-bklit-50: var(--bklit-50);
+
+  --color-brand-50: oklch(97% 0.05 264.376);
+  --color-brand-100: oklch(93% 0.08 264.376);
+  --color-brand-200: oklch(85% 0.12 264.376);
+  --color-brand-300: oklch(73% 0.16 264.376);
+  --color-brand-400: oklch(60% 0.2 264.376);
+  --color-brand-500: oklch(48.8% 0.243 264.376);
+  --color-brand-600: oklch(42% 0.24 264.376);
+  --color-brand-700: oklch(36% 0.22 264.376);
+  --color-brand-800: oklch(28% 0.19 264.376);
+  --color-brand-900: oklch(22% 0.16 264.376);
 
   --color-region: var(--region);
   --color-region-hover: var(--region-hover);
