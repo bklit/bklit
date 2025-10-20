@@ -9,6 +9,8 @@ export const sessionRouter = createTRPCRouter({
         organizationId: z.string(),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(1000).default(10),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -37,14 +39,30 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              startedAt: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
       // Get total count for pagination
       const totalCount = await ctx.prisma.trackedSession.count({
-        where: { projectId: input.projectId },
+        where: {
+          projectId: input.projectId,
+          ...(dateFilter && dateFilter),
+        },
       });
 
       // Get paginated sessions
       const sessions = await ctx.prisma.trackedSession.findMany({
-        where: { projectId: input.projectId },
+        where: {
+          projectId: input.projectId,
+          ...(dateFilter && dateFilter),
+        },
         include: {
           pageViewEvents: {
             orderBy: { timestamp: "asc" },

@@ -21,8 +21,8 @@ import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { parseAsInteger, useQueryStates } from "nuqs";
-import React from "react";
+import { parseAsInteger, parseAsIsoDateTime, useQueryStates } from "nuqs";
+import React, { useMemo } from "react";
 import { useTRPC } from "@/trpc/react";
 
 interface SessionsTableProps {
@@ -77,9 +77,21 @@ export function SessionsTable({
     {
       page: parseAsInteger.withDefault(1),
       limit: parseAsInteger.withDefault(4),
+      startDate: parseAsIsoDateTime,
+      endDate: parseAsIsoDateTime,
     },
     { history: "push" },
   );
+
+  const startDate = useMemo(() => {
+    if (queryParams.startDate) return queryParams.startDate;
+    if (!queryParams.endDate) return undefined;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [queryParams.startDate, queryParams.endDate]);
+
+  const endDate = queryParams.endDate ?? undefined;
 
   const { data: sessionsData, isLoading } = useQuery(
     trpc.session.getRecent.queryOptions({
@@ -87,6 +99,8 @@ export function SessionsTable({
       organizationId,
       page: queryParams.page,
       limit: queryParams.limit,
+      startDate,
+      endDate,
     }),
   );
   return (

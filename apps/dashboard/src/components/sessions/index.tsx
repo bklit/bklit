@@ -1,7 +1,13 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin, Monitor } from "lucide-react";
+import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { useMemo } from "react";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/page-header";
 import { Stats } from "@/components/stats";
-import { api } from "@/trpc/server";
+import { useTRPC } from "@/trpc/react";
 import { SessionsTable } from "./sessions-table";
 
 interface SessionsProps {
@@ -26,24 +32,57 @@ function formatDuration(seconds: number | null): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-export async function Sessions({ organizationId, projectId }: SessionsProps) {
-  // Get sessions using tRPC for stats
-  const sessionsData = await api.session.getRecent({
-    projectId,
-    organizationId,
-    limit: 1000, // Get a large number for stats
-  });
+export function Sessions({ organizationId, projectId }: SessionsProps) {
+  const trpc = useTRPC();
 
-  const totalSessions = sessionsData.totalCount;
-  const allSessions = sessionsData.sessions;
+  // Date range state using nuqs
+  const [dateParams] = useQueryStates(
+    {
+      startDate: parseAsIsoDateTime,
+      endDate: parseAsIsoDateTime,
+    },
+    {
+      history: "push",
+    },
+  );
+
+  const startDate = useMemo(() => {
+    if (dateParams.startDate) return dateParams.startDate;
+    if (!dateParams.endDate) return undefined;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [dateParams.startDate, dateParams.endDate]);
+
+  const endDate = dateParams.endDate ?? undefined;
+
+  // Get sessions using tRPC for stats
+  const { data: sessionsData, isLoading } = useQuery(
+    trpc.session.getRecent.queryOptions({
+      projectId,
+      organizationId,
+      limit: 1000, // Get a large number for stats
+      startDate,
+      endDate,
+    }),
+  );
+
+  const totalSessions = sessionsData?.totalCount || 0;
+  const allSessions = sessionsData?.sessions || [];
 
   return (
     <>
       {/* Header */}
       <PageHeader
         title="Sessions"
-        description={`${totalSessions} total sessions`}
-      />
+        description={
+          isLoading ? "Loading sessions..." : `${totalSessions} total sessions`
+        }
+      >
+        <div className="flex items-center gap-2">
+          <DateRangePicker />
+        </div>
+      </PageHeader>
       <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
         {/* Stats Cards */}
         <Stats
@@ -66,14 +105,17 @@ export async function Sessions({ organizationId, projectId }: SessionsProps) {
             {
               icon: Clock,
               name: "Avg Duration",
-              stat: formatDuration(
-                Math.round(
-                  allSessions.reduce(
-                    (sum: number, s: any) => sum + (s.duration || 0),
-                    0,
-                  ) / allSessions.length,
-                ),
-              ),
+              stat:
+                allSessions.length > 0
+                  ? formatDuration(
+                      Math.round(
+                        allSessions.reduce(
+                          (sum: number, s: any) => sum + (s.duration || 0),
+                          0,
+                        ) / allSessions.length,
+                      ),
+                    )
+                  : "0s",
             },
           ]}
         />
