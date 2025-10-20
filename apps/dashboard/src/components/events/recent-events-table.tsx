@@ -8,6 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@bklit/ui/components/pagination";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import {
   Table,
@@ -25,8 +34,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { Info } from "lucide-react";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
-import { useMemo } from "react";
+import { parseAsInteger, parseAsIsoDateTime, useQueryStates } from "nuqs";
+import React, { useMemo } from "react";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { useTRPC } from "@/trpc/react";
 
@@ -43,23 +52,24 @@ export function RecentEventsTable({
 }: RecentEventsTableProps) {
   const trpc = useTRPC();
 
-  const [dateParams] = useQueryStates(
+  const [queryParams, setQueryParams] = useQueryStates(
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      page: parseAsInteger.withDefault(1),
     },
     { history: "push" },
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (queryParams.startDate) return queryParams.startDate;
+    if (!queryParams.endDate) return undefined;
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
-  }, [dateParams.startDate, dateParams.endDate]);
+  }, [queryParams.startDate, queryParams.endDate]);
 
-  const endDate = dateParams.endDate ?? undefined;
+  const endDate = queryParams.endDate ?? undefined;
 
   const { data: event, isLoading } = useQuery(
     trpc.event.getByTrackingId.queryOptions({
@@ -68,6 +78,8 @@ export function RecentEventsTable({
       organizationId,
       startDate,
       endDate,
+      page: queryParams.page,
+      limit: 4, // 4 results per page for testing
     }),
   );
 
@@ -78,7 +90,7 @@ export function RecentEventsTable({
         <CardDescription>
           {isLoading || !event
             ? "Loading event triggers..."
-            : `Latest ${event.recentEvents.length} event triggers with session context`}
+            : `Showing ${event.recentEvents.length} of ${event.totalCount} event triggers (page ${event.pagination.page} of ${event.pagination.totalPages})`}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -208,6 +220,98 @@ export function RecentEventsTable({
               })}
             </TableBody>
           </Table>
+        )}
+
+        {/* Pagination Controls */}
+        {event && event.pagination.totalPages > 1 && (
+          <div className="flex justify-between items-center w-full gap-4 mt-4">
+            <div className="text-sm text-muted-foreground shrink-0">
+              Showing {(event.pagination.page - 1) * 4 + 1} to{" "}
+              {Math.min(event.pagination.page * 4, event.totalCount)} of{" "}
+              {event.totalCount} results
+            </div>
+            <Pagination className="justify-end">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (event.pagination.hasPreviousPage) {
+                        setQueryParams({ page: event.pagination.page - 1 });
+                      }
+                    }}
+                    className={
+                      !event.pagination.hasPreviousPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+
+                {/* Generate page numbers with ellipsis */}
+                {Array.from(
+                  { length: event.pagination.totalPages },
+                  (_, i) => i + 1,
+                )
+                  .filter((page) => {
+                    const current = event.pagination.page;
+                    const total = event.pagination.totalPages;
+                    // Show first page, last page, current page, and pages around current
+                    return (
+                      page === 1 ||
+                      page === total ||
+                      (page >= current - 1 && page <= current + 1)
+                    );
+                  })
+                  .map((page, index, array) => {
+                    const previousPage = array[index - 1];
+                    const showEllipsisBefore =
+                      index > 0 && previousPage && page - previousPage > 1;
+
+                    return (
+                      <React.Fragment key={page}>
+                        {showEllipsisBefore && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setQueryParams({ page });
+                            }}
+                            isActive={page === event.pagination.page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </React.Fragment>
+                    );
+                  })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (event.pagination.hasNextPage) {
+                        setQueryParams({ page: event.pagination.page + 1 });
+                      }
+                    }}
+                    className={
+                      !event.pagination.hasNextPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         )}
       </CardContent>
     </Card>
