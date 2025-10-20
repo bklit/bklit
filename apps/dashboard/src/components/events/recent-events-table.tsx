@@ -94,52 +94,74 @@ export function RecentEventsTable({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading || !event ? (
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        ) : event.recentEvents.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No events tracked yet
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  Method
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="size-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="font-semibold mb-1">Automatic</p>
+                      <p className="text-xs mb-2">
+                        DOM-triggered events (data-attr, ID). User sees and
+                        interacts with the element. Counts toward conversion.
+                      </p>
+                      <p className="font-semibold mb-1">Manual</p>
+                      <p className="text-xs">
+                        JavaScript-invoked events. May be programmatic, not
+                        user-perceived. Doesn't count toward conversion.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TableHead>
+              <TableHead>Conversion</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Browser</TableHead>
+              <TableHead className="text-right">Time Ago</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              // Show skeleton rows while loading
+              Array.from({ length: 4 }, (_, index) => (
+                <TableRow key={`skeleton-${Date.now()}-${index}`}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-12" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : !event || event.recentEvents.length === 0 ? (
               <TableRow>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>
-                  <div className="flex items-center gap-1">
-                    Method
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="size-3 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        <p className="font-semibold mb-1">Automatic</p>
-                        <p className="text-xs mb-2">
-                          DOM-triggered events (data-attr, ID). User sees and
-                          interacts with the element. Counts toward conversion.
-                        </p>
-                        <p className="font-semibold mb-1">Manual</p>
-                        <p className="text-xs">
-                          JavaScript-invoked events. May be programmatic, not
-                          user-perceived. Doesn't count toward conversion.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TableHead>
-                <TableHead>Conversion</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Browser</TableHead>
-                <TableHead className="text-right">Time Ago</TableHead>
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  No events tracked yet
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {event.recentEvents.map((trackedEvent) => {
+            ) : (
+              event.recentEvents.map((trackedEvent) => {
                 const metadata = trackedEvent.metadata as {
                   eventType?: string;
                   triggerMethod?: string;
@@ -217,10 +239,10 @@ export function RecentEventsTable({
                     </TableCell>
                   </TableRow>
                 );
-              })}
-            </TableBody>
-          </Table>
-        )}
+              })
+            )}
+          </TableBody>
+        </Table>
 
         {/* Pagination Controls */}
         {event && event.pagination.totalPages > 1 && (
