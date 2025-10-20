@@ -11,7 +11,7 @@ import {
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
 
 async function getUserOrganizations(userId: string) {

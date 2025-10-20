@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { UserSession } from "@/components/reactflow/user-session";
 import {
   getBrowserFromUserAgent,

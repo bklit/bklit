@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
 import { HydrateClient } from "@/trpc/server";
 

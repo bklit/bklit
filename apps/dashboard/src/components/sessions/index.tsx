@@ -5,7 +5,7 @@ import { Clock, MapPin, Monitor } from "lucide-react";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
 import { SessionsTable } from "./sessions-table";

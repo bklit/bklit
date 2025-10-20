@@ -1,4 +1,4 @@
-import { SiteHeader } from "@/components/site-header";
+import { SiteHeader } from "@/components/header/site-header";
 import { WorkspaceProvider } from "@/contexts/workspace-provider";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";

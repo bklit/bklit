@@ -7,7 +7,7 @@ import { BklitLogo } from "@/components/icons/bklit";
 import { DashboardNavigation } from "@/components/nav/dashboard-navigation";
 import { NavUser } from "@/components/nav/nav-user";
 import { NavWorkspace } from "@/components/nav/nav-workspace";
-import { SiteSearch } from "./header/site-search";
+import { SiteSearch } from "./site-search";
 
 export function SiteHeader() {
   const { data: clientSession } = authClient.useSession();

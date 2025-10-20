@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { getPolarSubscriptionsForOrg } from "@/actions/polar-actions";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { PricingTable } from "@/components/plans/pricing-table";
 import { authenticated } from "@/lib/auth";
 import { api, HydrateClient } from "@/trpc/server";

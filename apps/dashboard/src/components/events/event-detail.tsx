@@ -54,7 +54,7 @@ import {
 import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import { CopyInput } from "@/components/copy-input";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
 import { RecentEventsTable } from "./recent-events-table";
