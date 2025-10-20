@@ -136,7 +136,7 @@ export function SessionsTable({
             sessionsData.sessions.map((session: any) => (
               <Link
                 key={session.id}
-                href={`/${organizationId}/${projectId}/session/${session.id}`}
+                href={`/${organizationId}/${projectId}/sessions/${session.id}`}
                 className="block"
               >
                 <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors group">

@@ -87,4 +87,63 @@ export const sessionRouter = createTRPCRouter({
         },
       };
     }),
+  getById: protectedProcedure
+    .input(
+      z.object({
+        sessionId: z.string(),
+        projectId: z.string(),
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Check if user has access to the project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      // Get session by ID
+      const session = await ctx.prisma.trackedSession.findFirst({
+        where: {
+          id: input.sessionId,
+          projectId: input.projectId,
+        },
+        include: {
+          pageViewEvents: {
+            orderBy: { timestamp: "asc" },
+          },
+          project: {
+            select: {
+              name: true,
+              domain: true,
+            },
+          },
+        },
+      });
+
+      if (!session) {
+        throw new Error("Session not found");
+      }
+
+      return session;
+    }),
 });
