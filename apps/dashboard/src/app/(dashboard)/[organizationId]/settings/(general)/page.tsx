@@ -1,6 +1,6 @@
 import { Button } from "@bklit/ui/components/button";
 import Link from "next/link";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 import { OrganizationSettings } from "../../_components/organization-settings";

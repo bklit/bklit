@@ -1,16 +1,19 @@
+"use client";
+
 import { Badge } from "@bklit/ui/components/badge";
+import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { notFound } from "next/navigation";
-import { getSessionById } from "@/actions/session-actions";
-import { PageHeader } from "@/components/page-header";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { PageHeader } from "@/components/header/page-header";
 import { UserSession } from "@/components/reactflow/user-session";
-import { authenticated } from "@/lib/auth";
 import {
   getBrowserFromUserAgent,
   getBrowserIcon,
@@ -19,9 +22,12 @@ import {
   getDeviceIcon,
   getDeviceTypeFromUserAgent,
 } from "@/lib/utils/get-device-icon";
+import { useTRPC } from "@/trpc/react";
 
-interface SessionPageProps {
-  params: Promise<{ organizationId: string; projectId: string; id: string }>;
+interface SessionDetailsProps {
+  organizationId: string;
+  projectId: string;
+  sessionId: string;
 }
 
 function formatDuration(seconds: number | null): string {
@@ -41,15 +47,94 @@ function formatDuration(seconds: number | null): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-export default async function SessionPage({ params }: SessionPageProps) {
-  const { id } = await params;
-  await authenticated();
+export function SessionDetails({
+  organizationId,
+  projectId,
+  sessionId,
+}: SessionDetailsProps) {
+  const trpc = useTRPC();
 
-  let sessionData: Awaited<ReturnType<typeof getSessionById>>;
-  try {
-    sessionData = await getSessionById(id);
-  } catch {
-    notFound();
+  const { data: sessionData, isLoading } = useQuery(
+    trpc.session.getById.queryOptions({
+      sessionId,
+      projectId,
+      organizationId,
+    }),
+  );
+
+  if (isLoading) {
+    return (
+      <>
+        <PageHeader
+          title="Session Details"
+          description="Loading session details..."
+        />
+        <div className="container mx-auto py-6 px-4 flex gap-4">
+          <div className="w-3/12 flex flex-col gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-normal">
+                  Session overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Started
+                    </span>
+                    <span className="text-sm font-medium">Loading...</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Duration
+                    </span>
+                    <span className="text-sm font-medium">Loading...</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Pages Viewed
+                    </span>
+                    <span className="text-sm font-medium">Loading...</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Status
+                    </span>
+                    <span className="text-sm font-medium">Loading...</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="w-9/12">
+            <Card>
+              <CardHeader>
+                <CardTitle>Page Flow</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">Loading session data...</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!sessionData) {
+    return (
+      <>
+        <PageHeader title="Session Details" description="Session not found" />
+        <div className="container mx-auto py-6 px-4">
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">Session not found</p>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
   }
 
   const browser = getBrowserFromUserAgent(sessionData.userAgent);
@@ -61,7 +146,16 @@ export default async function SessionPage({ params }: SessionPageProps) {
       <PageHeader
         title="Session Details"
         description={`${sessionData.project.name} • ${sessionData.project.domain}`}
-      />
+      >
+        <div className="flex items-center gap-2">
+          <Link href={`/${organizationId}/${projectId}/sessions`}>
+            <Button variant="ghost" size="lg">
+              <ArrowLeft />
+              Back to Sessions
+            </Button>
+          </Link>
+        </div>
+      </PageHeader>
       <div className="container mx-auto py-6 px-4 flex gap-4">
         <div className="w-3/12 flex flex-col gap-4">
           {/* Session Overview */}

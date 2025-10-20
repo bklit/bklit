@@ -17,7 +17,7 @@ import {
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { useTRPC } from "@/trpc/react";
 
 export const OrganizationDashboard = ({

@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
 import { HydrateClient } from "@/trpc/server";
 
@@ -87,7 +87,7 @@ export default async function ProjectDashboardPage({
         <div className="w-1/6">
           <ProjectSettingsNavigation params={params} />
         </div>
-        <div className="w-5/6">
+        <div className="w-5/6 space-y-4">
           <Card variant="destructive">
             <CardHeader>
               <CardTitle>Delete {site.name}</CardTitle>
@@ -104,6 +104,10 @@ export default async function ProjectDashboardPage({
               )}
             </CardFooter>
           </Card>
+
+          <pre className="whitespace-pre-wrap break-words text-xs overflow-auto max-h-[400px] w-full rounded-md bg-muted p-4">
+            {JSON.stringify(site, null, 2)}
+          </pre>
         </div>
       </div>
     </HydrateClient>
