@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
@@ -30,27 +29,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@bklit/ui/components/popover";
-import { Skeleton } from "@bklit/ui/components/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@bklit/ui/components/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@bklit/ui/components/tooltip";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
 import {
   Activity,
   ArrowLeft,
   BarChart3,
-  Info,
   MousePointerClick,
   SquareCode,
   TrendingUp,
@@ -73,8 +56,8 @@ import { CopyInput } from "@/components/copy-input";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/page-header";
 import { Stats } from "@/components/stats";
-import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { useTRPC } from "@/trpc/react";
+import { RecentEventsTable } from "./recent-events-table";
 
 interface EventDetailProps {
   organizationId: string;
@@ -421,154 +404,11 @@ export function EventDetail({
         </div>
 
         {/* Recent Events Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Events</CardTitle>
-            <CardDescription>
-              {isLoading || !event
-                ? "Loading event triggers..."
-                : `Latest ${event.recentEvents.length} event triggers with session context`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading || !event ? (
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
-            ) : event.recentEvents.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No events tracked yet
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>
-                      <div className="flex items-center gap-1">
-                        Method
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="size-3 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p className="font-semibold mb-1">Automatic</p>
-                            <p className="text-xs mb-2">
-                              DOM-triggered events (data-attr, ID). User sees
-                              and interacts with the element. Counts toward
-                              conversion.
-                            </p>
-                            <p className="font-semibold mb-1">Manual</p>
-                            <p className="text-xs">
-                              JavaScript-invoked events. May be programmatic,
-                              not user-perceived. Doesn't count toward
-                              conversion.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableHead>
-                    <TableHead>Conversion</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Browser</TableHead>
-                    <TableHead className="text-right">Time Ago</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {event.recentEvents.map((trackedEvent) => {
-                    const metadata = trackedEvent.metadata as {
-                      eventType?: string;
-                      triggerMethod?: string;
-                    } | null;
-                    // Legacy events without triggerMethod are treated as automatic
-                    const triggerMethod =
-                      metadata?.triggerMethod || "automatic";
-
-                    // Session data (typed as optional since the relation might not be present)
-                    const session = (
-                      trackedEvent as typeof trackedEvent & {
-                        session?: {
-                          userAgent?: string | null;
-                          country?: string | null;
-                          city?: string | null;
-                        } | null;
-                      }
-                    ).session;
-
-                    // Parse user agent for browser info
-                    const userAgent = session?.userAgent || "";
-                    const browserMatch = userAgent.match(
-                      /(Chrome|Firefox|Safari|Edge|Opera)\/[\d.]+/,
-                    );
-                    const browser = browserMatch
-                      ? browserMatch[1] || "Other"
-                      : userAgent
-                        ? "Other"
-                        : "-";
-
-                    const browserIcon = getBrowserIcon(browser);
-
-                    return (
-                      <TableRow key={trackedEvent.id}>
-                        <TableCell className="font-mono text-sm">
-                          {format(
-                            new Date(trackedEvent.timestamp),
-                            "MMM d, yyyy HH:mm:ss",
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            size="lg"
-                            variant={
-                              triggerMethod === "automatic"
-                                ? "default"
-                                : "secondary"
-                            }
-                            className="capitalize"
-                          >
-                            {triggerMethod}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {triggerMethod === "automatic" ? (
-                            <Badge variant="success" size="lg">
-                              Yes
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" size="lg">
-                              No
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {session?.city && session?.country
-                            ? `${session.city}, ${session.country}`
-                            : session?.country || "-"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <span className="flex items-center gap-2">
-                            {browserIcon} {browser}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-right">
-                          {formatDistanceToNow(
-                            new Date(trackedEvent.timestamp),
-                            {
-                              addSuffix: true,
-                            },
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        <RecentEventsTable
+          organizationId={organizationId}
+          projectId={projectId}
+          trackingId={trackingId}
+        />
       </div>
     </>
   );

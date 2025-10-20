@@ -315,6 +315,8 @@ export const eventRouter = {
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -365,6 +367,15 @@ export const eventRouter = {
             }
           : undefined;
 
+      // Get total count for pagination
+      const totalCount = await ctx.prisma.trackedEvent.count({
+        where: {
+          eventDefinitionId: event.id,
+          ...(dateFilter && dateFilter),
+        },
+      });
+
+      // Get paginated events
       const trackedEvents = await ctx.prisma.trackedEvent.findMany({
         where: {
           eventDefinitionId: event.id,
@@ -390,6 +401,8 @@ export const eventRouter = {
         orderBy: {
           timestamp: "desc",
         },
+        skip: (input.page - 1) * input.limit,
+        take: input.limit,
       });
 
       const eventTypeCounts: Record<string, number> = {};
@@ -473,13 +486,20 @@ export const eventRouter = {
         trackingId: event.trackingId,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
-        totalCount: trackedEvents.length,
+        totalCount: totalCount,
         eventTypeCounts,
-        recentEvents: trackedEvents.slice(0, 20),
+        recentEvents: trackedEvents,
         timeSeriesData: timeSeriesArray,
         conversionRate: Number(conversionRate.toFixed(2)),
         totalSessions,
         sessionsWithEvent,
+        pagination: {
+          page: input.page,
+          limit: input.limit,
+          totalPages: Math.ceil(totalCount / input.limit),
+          hasNextPage: input.page < Math.ceil(totalCount / input.limit),
+          hasPreviousPage: input.page > 1,
+        },
       };
     }),
 
