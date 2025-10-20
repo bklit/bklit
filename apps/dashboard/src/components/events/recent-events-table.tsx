@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
@@ -243,7 +244,8 @@ export function RecentEventsTable({
             )}
           </TableBody>
         </Table>
-
+      </CardContent>
+      <CardFooter>
         {/* Pagination Controls */}
         {event && event.pagination.totalPages > 1 && (
           <div className="flex justify-between items-center w-full gap-4 mt-4">
@@ -335,7 +337,7 @@ export function RecentEventsTable({
             </Pagination>
           </div>
         )}
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }
