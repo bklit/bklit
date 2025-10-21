@@ -10,12 +10,20 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@bklit/ui/components/empty";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@bklit/ui/components/tooltip";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Plus, Settings } from "lucide-react";
+import { Layers2, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/header/page-header";
 import { useTRPC } from "@/trpc/react";
@@ -124,14 +132,28 @@ export const OrganizationDashboard = ({
 
             {organization.projects.length === 0 ? (
               <Card>
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground text-center py-8">
-                    No projects yet.{" "}
-                    {organization.userMembership.role === "owner"
-                      ? "Create your first project to get started."
-                      : "Ask your organization owner to create a project."}
-                  </p>
-                </CardContent>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Layers2 />
+                    </EmptyMedia>
+                    <EmptyTitle>No Projects Yet</EmptyTitle>
+                    <EmptyDescription>
+                      No projects yet.{" "}
+                      {organization.userMembership.role === "owner"
+                        ? "Create your first project to get started."
+                        : "Ask your organization owner to create a project."}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button asChild>
+                      <Link href={`/${organizationId}/projects/create`}>
+                        <Plus size={16} />
+                        Create project
+                      </Link>
+                    </Button>
+                  </EmptyContent>
+                </Empty>
               </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
