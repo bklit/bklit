@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma/client"
@@ -15,37 +9,33 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String       @id
   name          String
-  email         String
+  email         String       @unique
   emailVerified Boolean
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
-  sessions      Session[]
   accounts      Account[]
+  invitations   Invitation[]
+  members       Member[]
+  sessions      Session[]
 
-  members     Member[]
-  invitations Invitation[]
-
-  @@unique([email])
   @@map("user")
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id                   String   @id
+  expiresAt            DateTime
+  token                String   @unique
+  createdAt            DateTime
+  updatedAt            DateTime
+  ipAddress            String?
+  userAgent            String?
+  userId               String
   activeOrganizationId String?
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -54,7 +44,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -64,6 +53,7 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -82,26 +72,26 @@ model Verification {
 model Organization {
   id          String       @id
   name        String
-  slug        String?
+  slug        String?      @unique
   logo        String?
   createdAt   DateTime
   metadata    String?
-  members     Member[]
+  theme       String?
+  projects    Project[]
   invitations Invitation[]
-  projects       Project[]
+  members     Member[]
 
-  @@unique([slug])
   @@map("organization")
 }
 
 model Member {
   id             String       @id
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   role           String
   createdAt      DateTime
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("member")
 }
@@ -109,65 +99,55 @@ model Member {
 model Invitation {
   id             String       @id
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   email          String
   role           String?
   status         String
   expiresAt      DateTime
   inviterId      String
   user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("invitation")
 }
 
 model Project {
-  id        String   @id @default(cuid())
-  name      String
-  domain    String?  @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Team (new relationship)
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  pageViewEvents   PageViewEvent[]
+  id               String            @id @default(cuid())
+  name             String
+  domain           String?           @unique
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  organizationId   String?
   eventDefinitions EventDefinition[]
-  trackedEvents    TrackedEvent[] // All tracked custom events for this site
-  trackedSessions  TrackedSession[] // All tracked sessions for this site
+  pageViewEvents   PageViewEvent[]
+  organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  trackedEvents    TrackedEvent[]
+  trackedSessions  TrackedSession[]
 
   @@index([organizationId])
 }
 
 model PageViewEvent {
-  id        String   @id @default(cuid())
-  url       String
-  timestamp DateTime // The timestamp from the tracking event itself
-  createdAt DateTime @default(now()) // When this record was created in our DB
-
-  // Location data from IP geolocation
-  ip          String?
+  id          String          @id @default(cuid())
+  url         String
+  timestamp   DateTime
+  createdAt   DateTime        @default(now())
+  city        String?
   country     String?
   countryCode String?
-  region      String?
-  regionName  String?
-  city        String?
-  zip         String?
+  ip          String?
+  isp         String?
   lat         Float?
   lon         Float?
-  timezone    String?
-  isp         String?
   mobile      Boolean?
-
-  // Browser data
-  userAgent String? @db.Text
-
-  projectId String
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  // Session tracking
-  sessionId String?
-  session   TrackedSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  region      String?
+  regionName  String?
+  timezone    String?
+  zip         String?
+  userAgent   String?
+  sessionId   String?
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  session     TrackedSession? @relation(fields: [sessionId], references: [id])
 
   @@index([projectId, timestamp])
   @@index([createdAt])
@@ -177,38 +157,32 @@ model PageViewEvent {
 }
 
 model EventDefinition {
-  id          String   @id @default(cuid())
-  name        String // e.g., "Clicked Signup Button"
-  description String? // Optional details
-  trackingId  String // e.g., evt_signup_click - to be used in client-side tracker
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  trackingId    String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  projectId     String
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  trackedEvents TrackedEvent[]
 
-  projectId String
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  trackedEvents TrackedEvent[] // Instances of this event being tracked
-
-  @@unique([projectId, trackingId]) // trackingId should be unique per site
-  @@unique([projectId, name]) // event name should be unique per site
+  @@unique([projectId, trackingId])
+  @@unique([projectId, name])
   @@index([projectId])
 }
 
 model TrackedEvent {
-  id        String   @id @default(cuid())
-  timestamp DateTime // Timestamp from the client when the event occurred
-  metadata  Json? // Any additional data sent with the event (includes triggerMethod: "automatic" | "manual")
-  createdAt DateTime @default(now()) // When this record was created in our DB
-
+  id                String          @id @default(cuid())
+  timestamp         DateTime
+  metadata          Json?
+  createdAt         DateTime        @default(now())
   eventDefinitionId String
+  projectId         String
+  sessionId         String?
   eventDefinition   EventDefinition @relation(fields: [eventDefinitionId], references: [id], onDelete: Cascade)
-
-  projectId String // Denormalized for easier querying of all custom events for a site
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: NoAction) // NoAction to prevent multiple cascade paths
-
-  // Session tracking - optional as some events might not be tied to a session
-  sessionId String? // Reference to TrackedSession.id (internal DB id)
-  session   TrackedSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  project           Project         @relation(fields: [projectId], references: [id], onDelete: NoAction)
+  session           TrackedSession? @relation(fields: [sessionId], references: [id])
 
   @@index([eventDefinitionId])
   @@index([projectId, timestamp])
@@ -217,32 +191,22 @@ model TrackedEvent {
 }
 
 model TrackedSession {
-  id        String @id @default(cuid())
-  sessionId String @unique // Unique session identifier from client
-  projectId String
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  // Core session data
-  startedAt DateTime  @default(now())
-  endedAt   DateTime? // null if session is ongoing
-  duration  Int? // Duration in seconds (null if ongoing)
-
-  // Page flow tracking
+  id             String          @id @default(cuid())
+  sessionId      String          @unique
+  startedAt      DateTime        @default(now())
+  endedAt        DateTime?
+  duration       Int?
+  didBounce      Boolean         @default(false)
+  visitorId      String?
+  entryPage      String
+  exitPage       String?
+  userAgent      String?
+  country        String?
+  city           String?
+  projectId      String
   pageViewEvents PageViewEvent[]
-  trackedEvents  TrackedEvent[] // Custom events during this session
-
-  // Bounce detection
-  didBounce Boolean @default(false) // true if session < 10 seconds
-
-  // Visitor identification (for returning user detection)
-  visitorId String? // Anonymous visitor identifier
-
-  // Basic metadata (from first page view)
-  entryPage String
-  exitPage  String?
-  userAgent String? @db.Text
-  country   String?
-  city      String?
+  trackedEvents  TrackedEvent[]
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId, startedAt])
   @@index([projectId, didBounce])
