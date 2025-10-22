@@ -1,3 +1,3 @@
-export default function OrganizationModal() {
+export default function ProjectCreateModal() {
   return null;
 }
