@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@prisma/client": "catalog:prisma",
+    "@prisma/extension-accelerate": "catalog:prisma",
     "@t3-oss/env-nextjs": "catalog:",
     "zod": "catalog:"
   },

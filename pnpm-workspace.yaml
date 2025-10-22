@@ -18,8 +18,9 @@ catalog:
 
 catalogs:
   prisma:
-    "@prisma/client": ^6.13.0
-    prisma: ^6.13.0
+    "@prisma/extension-accelerate": ^2.0.2
+    "@prisma/client": ^6.18.0
+    prisma: ^6.18.0
 
   react19:
     react: 19.1.0
