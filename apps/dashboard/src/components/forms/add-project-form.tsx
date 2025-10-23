@@ -45,7 +45,6 @@ function SubmitButton() {
 export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
   const { data: activeOrganization } = authClient.useActiveOrganization();
 
-  // Added onSuccess to props
   const [state, formAction] = useActionState(createProjectAction, initialState);
   const [, startTransition] = useTransition();
 
@@ -61,13 +60,12 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
   useEffect(() => {
     if (state.success) {
       toast.success(state.message);
-      form.reset(); // Reset form fields on successful submission
+      form.reset();
       if (onSuccess) {
-        onSuccess(state.newprojectId); // Call onSuccess callback with newprojectId
+        onSuccess(state.newprojectId);
       }
-      // Optionally, you could redirect or close a modal here
+      // TODO: redirect or close a modal here
     } else if (state.message && !state.success && state.errors) {
-      // Display field-specific errors if available
       Object.entries(state.errors).forEach(([key, value]) => {
         if (value && value.length > 0) {
           form.setError(key as keyof AddProjectFormValues, {
@@ -79,20 +77,19 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
     } else if (state.message && !state.success) {
       toast.error(state.message);
     }
-  }, [state, form, onSuccess]); // Added onSuccess to dependency array
+  }, [state, form, onSuccess]);
 
-  // This is the actual function that will be called on submit by react-hook-form
   const onSubmit = (data: AddProjectFormValues) => {
-    // Convert AddProjectFormValues to FormData for the server action
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         formData.append(key, String(value));
       }
     });
-    formData.append("organizationId", activeOrganization?.id);
+    if (activeOrganization?.id) {
+      formData.append("organizationId", activeOrganization.id);
+    }
     startTransition(() => {
-      // Wrap formAction call in startTransition
       formAction(formData);
     });
   };
@@ -133,7 +130,6 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
           )}
         />
         <SubmitButton />
-        {/* This message display might need adjustment if react-hook-form handles all errors now */}
         {state.message && !state.success && !state.errors && (
           <p className="text-sm font-medium text-destructive">
             {state.message}

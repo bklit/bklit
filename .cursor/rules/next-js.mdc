@@ -1,9 +1,9 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+description: refer to the next.js documentation whenever we're using next.js
+alwaysApply: false
 ---
-When working with Next.js we are always using typescript and the latest versions. 
+
+When working with Next.js we are always using typescript and the latest versions. Next.js releases happen often and there may be updated best-practices that you're not currently aware of.
 
 ref: https://nextjs.org/docs
 

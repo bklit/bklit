@@ -24,10 +24,10 @@ import {
   SelectValue,
 } from "@bklit/ui/components/select";
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateOrganizationThemeAction } from "@/actions/organization-actions";
-import { useTRPC } from "@/trpc/react";
 
 const formSchema = z.object({
   theme: z.string().min(1, "Please select a theme."),
@@ -65,7 +65,7 @@ export function UpdateOrganizationThemeForm({
   organizationId,
   currentTheme,
 }: UpdateOrganizationThemeFormProps) {
-  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const form = useForm({
     defaultValues: {
@@ -81,8 +81,9 @@ export function UpdateOrganizationThemeForm({
       );
 
       if (result.success) {
-        // Invalidate the organization query to refetch the updated data
-        await trpc.utils.organization.fetch.invalidate({ id: organizationId });
+        await queryClient.invalidateQueries({
+          queryKey: ["organization", "fetch", { id: organizationId }],
+        });
         toast.success(result.message);
       } else {
         toast.error(result.message);

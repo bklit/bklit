@@ -78,7 +78,6 @@ export function AddOrganizationForm({ onSuccess }: { onSuccess?: () => void }) {
       form.reset();
       onSuccess?.();
       if (state.newOrganizationId) {
-        // Redirect to the new organization
         router.push(`/${state.newOrganizationId}`);
       }
     } else if (state.message && !state.success && state.errors) {
