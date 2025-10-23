@@ -1,5 +1,4 @@
-"use client";
-
+import type { AppRouter } from "@bklit/api";
 import {
   Avatar,
   AvatarFallback,
@@ -12,26 +11,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { useQuery } from "@tanstack/react-query";
+import type { inferRouterOutputs } from "@trpc/server";
 import { DeleteOrganizationForm } from "@/components/forms/delete-team-form";
 import { UpdateOrganizationNameForm } from "@/components/forms/update-organization-name-form";
 import { UpdateOrganizationThemeForm } from "@/components/forms/update-organization-theme-form";
 import { getThemeGradient } from "@/lib/utils/get-organization-theme";
-import { useTRPC } from "@/trpc/react";
+
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type Organization = RouterOutputs["organization"]["fetch"];
 
 export const OrganizationSettings = ({
-  organizationId,
+  organization,
 }: {
-  organizationId: string;
+  organization: Organization;
 }) => {
-  const trpc = useTRPC();
-  const { data: organization, isLoading } = useQuery(
-    trpc.organization.fetch.queryOptions({
-      id: organizationId,
-    }),
-  );
-
-  if (isLoading) return <div>Loading...</div>;
   if (!organization) return <div>Organization not found</div>;
 
   return (
