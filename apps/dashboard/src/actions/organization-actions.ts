@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/auth/server";
 import { authenticated } from "@/lib/auth";
+import { api } from "@/trpc/server";
 
 const createOrganizationSchema = z.object({
   name: z
@@ -208,14 +209,10 @@ export async function updateOrganizationThemeAction(
   }
 
   try {
-    await auth.api.updateOrganization({
-      body: {
-        organizationId,
-        data: {
-          theme: theme,
-        } as any, // Type assertion to bypass better-auth type limitations
-      },
-      headers: await headers(),
+    // Use the tRPC server caller directly
+    await api.organization.update({
+      id: organizationId,
+      theme,
     });
 
     revalidatePath(`/[organizationId]`, "page");
