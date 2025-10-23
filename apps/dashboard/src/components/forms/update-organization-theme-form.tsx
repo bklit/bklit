@@ -154,9 +154,6 @@ export function UpdateOrganizationThemeForm({
       </CardContent>
       <CardFooter>
         <Field orientation="horizontal" className="justify-between">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
-            Reset
-          </Button>
           <Button type="submit" form="update-organization-theme-form">
             Update theme
           </Button>

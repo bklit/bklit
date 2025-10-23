@@ -112,9 +112,6 @@ export function UpdateOrganizationNameForm({
       </CardContent>
       <CardFooter>
         <Field orientation="horizontal" className="justify-between">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
-            Reset
-          </Button>
           <Button type="submit" form="update-organization-name-form">
             Update name
           </Button>
