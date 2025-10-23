@@ -24,6 +24,7 @@ import Link from "next/link";
 import { parseAsInteger, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import React, { useMemo } from "react";
 import { useTRPC } from "@/trpc/react";
+import type { Session } from "./index";
 
 interface SessionsTableProps {
   organizationId: string;
@@ -112,7 +113,7 @@ export function SessionsTable({
         <div className="space-y-3">
           {isLoading || !sessionsData ? (
             <div className="space-y-3">
-              {Array.from({ length: 4 }, (_, i) => (
+              {Array.from({ length: 4 }, () => (
                 <div
                   key={crypto.randomUUID()}
                   className="flex items-center justify-between p-4 rounded-lg border"
@@ -133,7 +134,7 @@ export function SessionsTable({
               No sessions found
             </p>
           ) : (
-            sessionsData.sessions.map((session: any) => (
+            sessionsData.sessions.map((session: Session) => (
               <Link
                 key={session.id}
                 href={`/${organizationId}/${projectId}/sessions/${session.id}`}

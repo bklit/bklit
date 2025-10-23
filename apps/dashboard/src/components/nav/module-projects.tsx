@@ -9,9 +9,15 @@ import {
   CommandItem,
   CommandList,
 } from "@bklit/ui/components/command";
-import { Folder, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useWorkspace } from "@/contexts/workspace-provider";
+
+interface NavProject {
+  id: string;
+  name: string;
+  organizationId: string;
+}
 
 export const ModuleProjects = () => {
   const { activeOrganization, activeProject, onChangeProject } = useWorkspace();
@@ -26,7 +32,7 @@ export const ModuleProjects = () => {
       <CommandList>
         <CommandEmpty>No projects found.</CommandEmpty>
         <CommandGroup>
-          {activeOrganization.projects?.map((project) => (
+          {activeOrganization.projects?.map((project: NavProject) => (
             <CommandItem
               value={project.id}
               key={project.id}

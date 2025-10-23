@@ -10,7 +10,6 @@ import type * as React from "react";
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
-      role="navigation"
       aria-label="pagination"
       data-slot="pagination"
       className={cn("flex w-full", className)}

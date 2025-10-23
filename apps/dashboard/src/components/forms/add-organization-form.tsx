@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import {
   createOrganizationAction,
-  // type OrganizationFormState,
+  type OrganizationFormState,
 } from "@/actions/organization-actions";
 
 const createOrganizationSchema = z.object({
@@ -39,12 +39,6 @@ const createOrganizationSchema = z.object({
 
 type AddOrganizationFormValues = z.infer<typeof createOrganizationSchema>;
 
-const initialState: any = {
-  success: false,
-  message: "",
-  newOrganizationId: undefined,
-};
-
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -56,8 +50,16 @@ function SubmitButton() {
 
 export function AddOrganizationForm({ onSuccess }: { onSuccess?: () => void }) {
   const [state, formAction] = useActionState(
-    createOrganizationAction,
-    initialState,
+    createOrganizationAction as (
+      prevState: OrganizationFormState,
+      formData: FormData,
+    ) => Promise<OrganizationFormState>,
+    {
+      success: false,
+      message: "",
+      newOrganizationId: undefined,
+      errors: {},
+    },
   );
   const [, startTransition] = useTransition();
   const router = useRouter();
@@ -81,7 +83,7 @@ export function AddOrganizationForm({ onSuccess }: { onSuccess?: () => void }) {
       }
     } else if (state.message && !state.success && state.errors) {
       Object.entries(state.errors).forEach(([key, value]) => {
-        if (value && value.length > 0) {
+        if (value && Array.isArray(value) && value.length > 0) {
           form.setError(key as keyof AddOrganizationFormValues, {
             type: "manual",
             message: value[0],

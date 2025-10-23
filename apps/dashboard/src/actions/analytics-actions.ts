@@ -30,14 +30,13 @@ export async function getTopCountries(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -94,14 +93,13 @@ export async function getAnalyticsStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, days } = validation.data;
+  const { projectId, days } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -170,14 +168,13 @@ export async function getRecentPageViews(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, limit } = validation.data;
+  const { projectId, limit } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -219,14 +216,13 @@ export async function getVisitsByCountry(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -311,14 +307,13 @@ export async function getCountryVisitStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -446,12 +441,11 @@ export async function debugCountryCodes(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   const site = await prisma.project.findFirst({
     where: {
       id: projectId,
-      // userId: userId,
     },
   });
 
@@ -498,14 +492,13 @@ export async function getMobileDesktopStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -563,14 +556,13 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, limit } = validation.data;
+  const { projectId, limit } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -624,14 +616,13 @@ export async function getBrowserStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -711,14 +702,13 @@ export async function getSessionAnalytics(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, days } = validation.data;
+  const { projectId, days } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -792,14 +782,13 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -807,11 +796,8 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
         throw new Error("Site not found or access denied");
       }
 
-      // Clean up stale sessions first
       await cleanupStaleSessions();
 
-      // Count active sessions (sessions that haven't ended)
-      // Exclude sessions older than 30 minutes to avoid counting stale sessions
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
       const liveUsers = await prisma.trackedSession.count({

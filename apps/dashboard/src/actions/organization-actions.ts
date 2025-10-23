@@ -6,8 +6,6 @@ import { z } from "zod";
 import { auth } from "@/auth/server";
 import { authenticated } from "@/lib/auth";
 
-import type { UserOrganizationData } from "@/types/user";
-
 const createOrganizationSchema = z.object({
   name: z
     .string()
@@ -21,7 +19,7 @@ const createOrganizationSchema = z.object({
     .optional(),
 });
 
-interface OrganizationFormState {
+export interface OrganizationFormState {
   success: boolean;
   message: string;
   errors?: Record<string, string[]>;
@@ -29,15 +27,17 @@ interface OrganizationFormState {
 }
 
 export async function createOrganizationAction(
-  _prevState: unknown,
+  _prevState: OrganizationFormState,
   formData: FormData,
-): Promise<unknown> {
+): Promise<OrganizationFormState> {
   const session = await authenticated();
 
   if (!session || !session.user || !session.user.id) {
     return {
       success: false,
       message: "User not authenticated.",
+      newOrganizationId: undefined,
+      errors: {},
     };
   }
 
@@ -49,6 +49,7 @@ export async function createOrganizationAction(
       success: false,
       message: "Validation failed.",
       errors: validatedFields.error.flatten().fieldErrors,
+      newOrganizationId: undefined,
     };
   }
 
@@ -71,6 +72,8 @@ export async function createOrganizationAction(
         success: false,
         message:
           "An organization with this name already exists. Please choose a different name.",
+        newOrganizationId: undefined,
+        errors: {},
       };
     }
 
@@ -90,12 +93,15 @@ export async function createOrganizationAction(
       success: true,
       message: "Organization created successfully!",
       newOrganizationId: organization?.id,
+      errors: {},
     };
   } catch (error) {
     console.error("Error creating organization:", error);
     return {
       success: false,
       message: "Failed to create organization. Please try again.",
+      newOrganizationId: undefined,
+      errors: {},
     };
   }
 }
@@ -207,7 +213,7 @@ export async function updateOrganizationThemeAction(
         organizationId,
         data: {
           theme: theme,
-        } as any, // Type assertion to bypass better-auth type limitations
+        } as Record<string, unknown>, // Type assertion to bypass better-auth type limitations
       },
       headers: await headers(),
     });
