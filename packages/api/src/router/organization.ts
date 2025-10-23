@@ -24,9 +24,7 @@ export const organizationRouter = {
           projects: true,
           members: {
             include: {
-              user: {
-                select: { name: true, email: true, image: true },
-              },
+              user: true,
             },
           },
         },

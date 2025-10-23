@@ -1,3 +1,8 @@
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@bklit/ui/components/avatar";
 import { Badge } from "@bklit/ui/components/badge";
 import {
   Breadcrumb,
@@ -18,6 +23,8 @@ import Link from "next/link";
 import { useWorkspace } from "@/contexts/workspace-provider";
 import { useTeamPlanStatusWithSubscription } from "@/hooks/polar-hooks";
 import { PlanType } from "@/lib/plans";
+import { getThemeGradient } from "@/lib/utils/get-organization-theme";
+import { ModuleProjects } from "./module-projects";
 import { ModuleWorkspaces } from "./module-workspaces";
 
 export function NavWorkspace() {
@@ -30,53 +37,62 @@ export function NavWorkspace() {
   const planName = isPro ? "Pro" : "Free";
 
   return (
-    <>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link
-                href={`/${activeOrganization?.id}`}
-                className="flex items-center gap-2"
-              >
-                <Users className="size-4" />
-                <span>{activeOrganization?.name}</span>
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link
+              href={`/${activeOrganization?.id}`}
+              className="flex items-center gap-2"
+            >
+              <Avatar className="size-4">
+                <AvatarImage src={activeOrganization?.logo || ""} />
+                <AvatarFallback
+                  className={getThemeGradient(activeOrganization?.theme)}
+                />
+              </Avatar>
+              <span>{activeOrganization?.name}</span>
 
-                {!isLoading && (
-                  <Badge variant={isPro ? "default" : "secondary"}>
-                    {planName}
-                  </Badge>
-                )}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
+              {!isLoading && (
+                <Badge variant={isPro ? "default" : "secondary"}>
+                  {planName}
+                </Badge>
+              )}
+            </Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
 
-          {activeProject && (
-            <>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{activeProject.name}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </>
-          )}
-        </BreadcrumbList>
-      </Breadcrumb>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <ChevronsUpDown className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="rounded-lg p-0 min-w-max">
+            <ModuleWorkspaces />
+          </PopoverContent>
+        </Popover>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <ChevronsUpDown className="size-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="rounded-lg p-0 min-w-max"
-          side="bottom"
-          align="start"
-          sideOffset={4}
-        >
-          <ModuleWorkspaces />
-        </PopoverContent>
-      </Popover>
-    </>
+        {activeProject && (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{activeProject.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <ChevronsUpDown className="size-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="rounded-lg p-0 min-w-max">
+                <ModuleProjects />
+              </PopoverContent>
+            </Popover>
+          </>
+        )}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }

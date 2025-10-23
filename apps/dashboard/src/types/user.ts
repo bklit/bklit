@@ -26,6 +26,7 @@ export interface UserOrganizationData {
   plan: string;
   role: string;
   siteCount: number;
+  theme: string | null;
   sites: Array<{
     id: string;
     name: string;

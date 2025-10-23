@@ -21,6 +21,7 @@
     "@polar-sh/nextjs": "^0.4.0",
     "@polar-sh/sdk": "^0.34.9",
     "@t3-oss/env-nextjs": "catalog:",
+    "@tanstack/react-form": "^1.23.7",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
