@@ -2,7 +2,7 @@ import { Button } from "@bklit/ui/components/button";
 import Link from "next/link";
 import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { api, HydrateClient } from "@/trpc/server";
 import { OrganizationSettings } from "../../_components/organization-settings";
 
 export async function WorkspaceSettingsNavigation({
@@ -33,7 +33,8 @@ export default async function OrganizationSettingsPage({
   await authenticated();
   const { organizationId } = await params;
 
-  prefetch(trpc.organization.fetch.queryOptions({ id: organizationId }));
+  // Fetch organization data on the server
+  const organization = await api.organization.fetch({ id: organizationId });
 
   return (
     <HydrateClient>
@@ -46,7 +47,7 @@ export default async function OrganizationSettingsPage({
           <WorkspaceSettingsNavigation params={params} />
         </div>
         <div className="w-5/6">
-          <OrganizationSettings organizationId={organizationId} />
+          <OrganizationSettings organization={organization} />
         </div>
       </div>
     </HydrateClient>
