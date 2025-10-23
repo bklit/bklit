@@ -15,6 +15,7 @@
         "POLAR_SERVER_MODE",
         "POLAR_ACCESS_TOKEN",
         "POLAR_WEBHOOK_SECRET",
+        "POLAR_ORGANIZATION_ID",
         "VITE_NGROK_URL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
@@ -52,7 +53,8 @@
       "outputs": []
     },
     "db:generate": {
-      "cache": false
+      "cache": false,
+      "outputs": ["generated/**"]
     },
     "db:migrate": {
       "cache": false,
