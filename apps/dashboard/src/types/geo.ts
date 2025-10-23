@@ -105,12 +105,22 @@ export interface CountryCodeResult {
   };
 }
 
-// Session data with geo information
 export interface SessionData {
+  id: string;
   sessionId: string;
   projectId: string;
+  startedAt: Date;
+  endedAt: Date | null;
+  duration: number | null;
+  didBounce: boolean;
   url: string;
   userAgent?: string;
   country?: string;
   city?: string;
+  pageViewEvents: Array<{
+    id: string;
+    url: string;
+    timestamp: Date;
+    createdAt: Date;
+  }>;
 }

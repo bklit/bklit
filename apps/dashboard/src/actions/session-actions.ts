@@ -118,20 +118,26 @@ export async function getSessionAnalytics(
     });
 
     const totalSessions = sessions.length;
-    const bouncedSessions = sessions.filter((s) => s.didBounce).length;
+    const bouncedSessions = sessions.filter(
+      (s: SessionData) => s.didBounce,
+    ).length;
     const bounceRate =
       totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
 
     const avgSessionDuration =
       sessions.length > 0
-        ? sessions.reduce((sum, s) => sum + (s.duration || 0), 0) /
-          sessions.length
+        ? sessions.reduce(
+            (sum: number, s: SessionData) => sum + (s.duration || 0),
+            0,
+          ) / sessions.length
         : 0;
 
     const avgPageViews =
       sessions.length > 0
-        ? sessions.reduce((sum, s) => sum + s.pageViewEvents.length, 0) /
-          sessions.length
+        ? sessions.reduce(
+            (sum: number, s: SessionData) => sum + s.pageViewEvents.length,
+            0,
+          ) / sessions.length
         : 0;
 
     return {

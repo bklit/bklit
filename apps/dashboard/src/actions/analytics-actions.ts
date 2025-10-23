@@ -12,6 +12,7 @@ import type {
   CountryStats,
   CountryWithCities,
   CountryWithVisits,
+  SessionData,
   TopCountryData,
   TopCountryResult,
 } from "@/types/geo";
@@ -681,22 +682,6 @@ const getSessionAnalyticsSchema = z.object({
   userId: z.string(),
   days: z.number().default(30),
 });
-
-interface SessionData {
-  id: string;
-  sessionId: string;
-  projectId: string;
-  startedAt: Date;
-  endedAt: Date | null;
-  duration: number | null;
-  didBounce: boolean;
-  pageViewEvents: Array<{
-    id: string;
-    url: string;
-    timestamp: Date;
-    createdAt: Date;
-  }>;
-}
 
 export async function getSessionAnalytics(
   params: z.input<typeof getSessionAnalyticsSchema>,
