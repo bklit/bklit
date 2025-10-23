@@ -15,6 +15,16 @@ interface SessionsProps {
   projectId: string;
 }
 
+export interface Session {
+  id: string;
+  startedAt: string;
+  didBounce: boolean;
+  duration: number | null;
+  userAgent: string | null;
+  country: string | null;
+  pageViewEvents: Array<unknown>;
+}
+
 function formatDuration(seconds: number | null): string {
   if (!seconds) return "0s";
 
@@ -95,12 +105,12 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
             {
               icon: Monitor,
               name: "Engaged",
-              stat: allSessions.filter((s: any) => !s.didBounce).length,
+              stat: allSessions.filter((s: Session) => !s.didBounce).length,
             },
             {
               icon: MapPin,
               name: "Bounced",
-              stat: allSessions.filter((s: any) => s.didBounce).length,
+              stat: allSessions.filter((s: Session) => s.didBounce).length,
             },
             {
               icon: Clock,
@@ -110,7 +120,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                   ? formatDuration(
                       Math.round(
                         allSessions.reduce(
-                          (sum: number, s: any) => sum + (s.duration || 0),
+                          (sum: number, s: Session) => sum + (s.duration || 0),
                           0,
                         ) / allSessions.length,
                       ),

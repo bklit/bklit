@@ -12,6 +12,7 @@ import type {
   CountryStats,
   CountryWithCities,
   CountryWithVisits,
+  SessionData,
   TopCountryData,
   TopCountryResult,
 } from "@/types/geo";
@@ -30,14 +31,13 @@ export async function getTopCountries(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -94,14 +94,13 @@ export async function getAnalyticsStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, days } = validation.data;
+  const { projectId, days } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -170,14 +169,13 @@ export async function getRecentPageViews(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, limit } = validation.data;
+  const { projectId, limit } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -219,14 +217,13 @@ export async function getVisitsByCountry(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -286,7 +283,7 @@ export async function getVisitsByCountry(
       );
 
       return countriesWithCities.filter(
-        (country) => country.coordinates !== null,
+        (country: CountryWithCities) => country.coordinates !== null,
       );
     },
     [`${projectId}-visits-by-country`],
@@ -311,14 +308,13 @@ export async function getCountryVisitStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -401,20 +397,9 @@ export async function getCountryVisitStats(
         ),
       );
 
-      // Debug: Log all countries and their coordinate status
-      // console.log(
-      //   "Countries with visits:",
-      //   countriesWithStats.map((c) => ({
-      //     country: c.country,
-      //     countryCode: c.countryCode,
-      //     hasCoordinates: c.coordinates !== null,
-      //     totalVisits: c.totalVisits,
-      //   }))
-      // );
-
       // Temporarily return all countries to debug (including those without coordinates)
       const result = countriesWithStats.sort(
-        (a, b) => b.totalVisits - a.totalVisits,
+        (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits,
       );
 
       console.log(
@@ -446,12 +431,11 @@ export async function debugCountryCodes(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   const site = await prisma.project.findFirst({
     where: {
       id: projectId,
-      // userId: userId,
     },
   });
 
@@ -498,14 +482,13 @@ export async function getMobileDesktopStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -563,14 +546,13 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, limit } = validation.data;
+  const { projectId, limit } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -624,14 +606,13 @@ export async function getBrowserStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -711,14 +692,13 @@ export async function getSessionAnalytics(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId, days } = validation.data;
+  const { projectId, days } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -747,20 +727,26 @@ export async function getSessionAnalytics(
       });
 
       const totalSessions = sessions.length;
-      const bouncedSessions = sessions.filter((s) => s.didBounce).length;
+      const bouncedSessions = sessions.filter(
+        (s: SessionData) => s.didBounce,
+      ).length;
       const bounceRate =
         totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
 
       const avgSessionDuration =
         sessions.length > 0
-          ? sessions.reduce((sum, s) => sum + (s.duration || 0), 0) /
-            sessions.length
+          ? sessions.reduce(
+              (sum: number, s: SessionData) => sum + (s.duration || 0),
+              0,
+            ) / sessions.length
           : 0;
 
       const avgPageViews =
         sessions.length > 0
-          ? sessions.reduce((sum, s) => sum + s.pageViewEvents.length, 0) /
-            sessions.length
+          ? sessions.reduce(
+              (sum: number, s: SessionData) => sum + s.pageViewEvents.length,
+              0,
+            ) / sessions.length
           : 0;
 
       return {
@@ -792,14 +778,13 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
     throw new Error(validation.error.message);
   }
 
-  const { projectId, userId } = validation.data;
+  const { projectId } = validation.data;
 
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
         where: {
           id: projectId,
-          // userId: userId,
         },
       });
 
@@ -807,11 +792,8 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
         throw new Error("Site not found or access denied");
       }
 
-      // Clean up stale sessions first
       await cleanupStaleSessions();
 
-      // Count active sessions (sessions that haven't ended)
-      // Exclude sessions older than 30 minutes to avoid counting stale sessions
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
       const liveUsers = await prisma.trackedSession.count({

@@ -98,17 +98,6 @@ export const OrganizationSettings = ({
           )}
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Organization object</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-sm text-muted-foreground">
-            {JSON.stringify(organization, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
     </div>
   );
 };

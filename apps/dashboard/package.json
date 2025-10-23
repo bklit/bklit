@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo .next dist node_modules",
     "dev": "pnpm with-env next dev --turbopack",
-    "build": "pnpm with-env next build",
+    "build": "pnpm run -F @bklit/db generate && pnpm with-env next build",
     "start": "pnpm with-env next start",
     "with-env": "dotenv -e ../../.env --"
   },

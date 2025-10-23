@@ -11,7 +11,6 @@ export function QueryClientProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // Create a client
   const [queryClient] = React.useState(() => new QueryClient());
 
   return (

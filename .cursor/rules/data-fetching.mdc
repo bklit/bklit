@@ -4,7 +4,7 @@ globs:
 alwaysApply: true
 ---
 
-When fetching data use the [prisma.mdc](mdc:.cursor/rules/prisma.mdc) and check our [schema.prisma](mdc:apps/dashboard/prisma/schema.prisma) file for our datbase models.
+When fetching data use [tRPC](https://trpc.io/docs) and check our [schema.prisma](mdc:apps/dashboard/prisma/schema.prisma) file for our datbase models.
 
 - Always use best typescript/.react practices, wrapping client requests in `Suspense` for example and always use the [skeleton.tsx](mdc:apps/dashboard/src/components/ui/skeleton.tsx) to mock loading data.
 - Avoid using useEffect's where possible.

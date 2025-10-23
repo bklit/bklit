@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@bklit/ui/components/popover";
-import { ChevronsUpDown, Users } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { useWorkspace } from "@/contexts/workspace-provider";
 import { useTeamPlanStatusWithSubscription } from "@/hooks/polar-hooks";
