@@ -1,6 +1,5 @@
 "use server";
 
-import { prisma } from "@bklit/db/client";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
@@ -209,10 +208,14 @@ export async function updateOrganizationThemeAction(
   }
 
   try {
-    // Update the organization theme directly using Prisma
-    await prisma.organization.update({
-      where: { id: organizationId },
-      data: { theme },
+    await auth.api.updateOrganization({
+      body: {
+        organizationId,
+        data: {
+          theme: theme,
+        } as any, // Type assertion to bypass better-auth type limitations
+      },
+      headers: await headers(),
     });
 
     revalidatePath(`/[organizationId]`, "page");
