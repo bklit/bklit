@@ -43,11 +43,3 @@ export function getOrganizationTheme(
 export function getThemeGradient(theme: string | null | undefined): string {
   return getOrganizationTheme(theme).gradient;
 }
-
-export function getThemeBgColor(theme: string | null | undefined): string {
-  return getOrganizationTheme(theme).bgColor;
-}
-
-export function getThemeTextColor(theme: string | null | undefined): string {
-  return getOrganizationTheme(theme).textColor;
-}
