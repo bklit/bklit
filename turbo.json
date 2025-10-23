@@ -18,7 +18,7 @@
         "VITE_NGROK_URL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
-      "dependsOn": ["^build", "^db:generate"],
+      "dependsOn": ["^build", "^generate"],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -51,7 +51,7 @@
       "dependsOn": ["^topo"],
       "outputs": []
     },
-    "db:generate": {
+    "generate": {
       "cache": false
     },
     "db:migrate": {
