@@ -1,18 +1,24 @@
 "use client";
 
+import type { AppRouter } from "@bklit/api";
 import type { Session } from "@bklit/auth";
-import type { UserOrganizations } from "@bklit/db/queries/user";
+import type { inferRouterOutputs } from "@trpc/server";
 import { useParams, useRouter } from "next/navigation";
 import { createContext, type ReactNode, useContext } from "react";
 import { authClient } from "@/auth/client";
 
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type OrganizationsWithProjects = RouterOutputs["organization"]["list"];
+
 interface WorkspaceContextType {
   session: Session;
-  activeOrganization: UserOrganizations[number] | undefined;
-  activeProject: UserOrganizations[number]["projects"][number] | undefined;
+  activeOrganization: OrganizationsWithProjects[number] | undefined;
+  activeProject:
+    | OrganizationsWithProjects[number]["projects"][number]
+    | undefined;
   onChangeOrganization: (organizationId: string) => void;
   onChangeProject: (organizationId: string, projectId: string) => void;
-  organizations: UserOrganizations;
+  organizations: OrganizationsWithProjects;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -21,7 +27,7 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
 
 export const WorkspaceProvider: React.FC<{
   session: Session;
-  organizations: UserOrganizations;
+  organizations: OrganizationsWithProjects;
   children: ReactNode;
 }> = ({ children, session, organizations }) => {
   const { organizationId, projectId } = useParams();
