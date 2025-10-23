@@ -47,7 +47,7 @@ export function useTeamPlanStatusWithSubscription(teamId: string) {
   const { data: teamData } = useQuery({
     queryKey: ["teamPlanStatus", teamId],
     queryFn: async () => {
-      const response = await fetch(`/api/teams/${teamId}/plan-status`);
+      const response = await fetch(`/api/organizations/${teamId}/plan-status`);
       if (!response.ok) {
         throw new Error("Failed to fetch team plan status");
       }

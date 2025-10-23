@@ -2,7 +2,6 @@
 
 import { Separator } from "@bklit/ui/components/separator";
 import { authClient } from "@/auth/client";
-import { ProjectLimitBanner } from "@/components/banners/project-limit-banner";
 import { BklitLogo } from "@/components/icons/bklit";
 import { DashboardNavigation } from "@/components/nav/dashboard-navigation";
 import { NavUser } from "@/components/nav/nav-user";
@@ -30,7 +29,6 @@ export function SiteHeader() {
             <SiteSearch />
           </div>
           <div className="flex items-center gap-1 lg:gap-2">
-            <ProjectLimitBanner />
             {clientSession?.user && (
               <NavUser
                 user={{
