@@ -103,6 +103,7 @@ export function initAuth(options: {
   return betterAuth(config);
 }
 
+export type BetterAuth = typeof betterAuth;
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
 
