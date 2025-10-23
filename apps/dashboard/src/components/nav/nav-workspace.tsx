@@ -21,20 +21,17 @@ import {
 import { ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { useWorkspace } from "@/contexts/workspace-provider";
-import { useTeamPlanStatusWithSubscription } from "@/hooks/polar-hooks";
-import { PlanType } from "@/lib/plans";
 import { getThemeGradient } from "@/lib/utils/get-organization-theme";
 import { ModuleProjects } from "./module-projects";
 import { ModuleWorkspaces } from "./module-workspaces";
 
 export function NavWorkspace() {
   const { activeOrganization, activeProject } = useWorkspace();
-  const { planId, isLoading } = useTeamPlanStatusWithSubscription(
-    activeOrganization?.id || "",
-  );
 
-  const isPro = planId === PlanType.PRO;
-  const planName = isPro ? "Pro" : "Free";
+  // For now, default to Free plan since plan field doesn't exist in schema yet
+  // TODO: Add plan field to Organization model when implementing billing
+  const isPro = false; // Always Free for now
+  const planName = "Free";
 
   return (
     <Breadcrumb>
@@ -53,11 +50,9 @@ export function NavWorkspace() {
               </Avatar>
               <span>{activeOrganization?.name}</span>
 
-              {!isLoading && (
-                <Badge variant={isPro ? "default" : "secondary"}>
-                  {planName}
-                </Badge>
-              )}
+              <Badge variant={isPro ? "default" : "secondary"}>
+                {planName}
+              </Badge>
             </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
