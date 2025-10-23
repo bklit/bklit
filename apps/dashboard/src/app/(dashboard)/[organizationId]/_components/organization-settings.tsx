@@ -55,9 +55,9 @@ export const OrganizationSettings = ({
                 src={organization.logo || ""}
                 alt={organization.name || ""}
               />
-              <AvatarFallback className={getThemeGradient(organization.theme)}>
-                {organization.name?.charAt(0) || "B"}
-              </AvatarFallback>
+              <AvatarFallback
+                className={getThemeGradient(organization.theme)}
+              />
             </Avatar>
             <div className="flex flex-col gap-2">
               <p className="text-sm text-muted-foreground">

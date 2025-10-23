@@ -14,12 +14,13 @@ export async function WorkspaceSettingsNavigation({
 
   return (
     <nav className="flex flex-col gap-px">
-      <Link href={`/${organizationId}/settings/`}>
-        <Button variant="ghost">General</Button>
-      </Link>
-      <Link href={`/${organizationId}/settings/billing`}>
-        <Button variant="ghost">Billing</Button>
-      </Link>
+      <Button variant="ghost" asChild className="justify-start">
+        <Link href={`/${organizationId}/settings/`}>General</Link>
+      </Button>
+
+      <Button variant="ghost" asChild className="justify-start">
+        <Link href={`/${organizationId}/settings/billing`}>Billing</Link>
+      </Button>
     </nav>
   );
 }
