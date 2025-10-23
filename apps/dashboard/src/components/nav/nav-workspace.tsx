@@ -28,10 +28,9 @@ import { ModuleWorkspaces } from "./module-workspaces";
 export function NavWorkspace() {
   const { activeOrganization, activeProject } = useWorkspace();
 
-  // For now, default to Free plan since plan field doesn't exist in schema yet
-  // TODO: Add plan field to Organization model when implementing billing
-  const isPro = false; // Always Free for now
-  const planName = "Free";
+  // Use organization plan from database
+  const isPro = activeOrganization?.plan === "pro";
+  const planName = isPro ? "Pro" : "Free";
 
   return (
     <Breadcrumb>

@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import { getPolarSubscriptionsForOrg } from "@/actions/polar-actions";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/header/page-header";
@@ -17,6 +16,63 @@ export default async function BillingPage({
 }) {
   const { organizationId } = await params;
   const resolvedSearchParams = await searchParams;
+
+  // Handle case where REFERENCE_ID placeholder wasn't replaced
+  if (
+    organizationId === "{REFERENCE_ID}" ||
+    organizationId === "%7BREFERENCE_ID%7D"
+  ) {
+    // Redirect to a page where we can get the organization from user context
+    const session = await authenticated({
+      callbackUrl: `/settings/billing`,
+    });
+
+    // Get user's organizations and use the first one
+    const organizations = await api.organization.list();
+    const organization = organizations[0];
+
+    if (!organization) {
+      return (
+        <div className="container mx-auto py-6 px-4">
+          <PageHeader
+            title="Billing"
+            description="No organization found. Please create an organization first."
+          />
+        </div>
+      );
+    }
+
+    const showSuccessMessage = resolvedSearchParams?.purchase === "success";
+
+    // Fetch active subscriptions for the organization
+    const subscriptions = await auth.api.subscriptions({
+      query: {
+        page: 1,
+        limit: 10,
+        active: true,
+        referenceId: organization.id,
+      },
+      headers: await headers(),
+    });
+
+    return (
+      <HydrateClient>
+        <PageHeader
+          title="Billing"
+          description={`Manage subscription and billing information for ${organization.name}.`}
+        />
+        <div className="container mx-auto py-6 px-4">
+          <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
+
+          <PricingTable
+            organization={organization}
+            subscriptions={subscriptions.result.items}
+          />
+        </div>
+      </HydrateClient>
+    );
+  }
+
   const _session = await authenticated({
     callbackUrl: `/${organizationId}/billing`,
   });
@@ -35,9 +91,6 @@ export default async function BillingPage({
     headers: await headers(),
   });
 
-  // Fetch directly from Polar API for products
-  const directPolarData = await getPolarSubscriptionsForOrg(organizationId);
-
   return (
     <HydrateClient>
       <PageHeader
@@ -52,13 +105,8 @@ export default async function BillingPage({
           <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
 
           <PricingTable
+            organization={organization}
             subscriptions={subscriptions.result.items}
-            products={
-              directPolarData.success &&
-              directPolarData.data?.products?.result?.items
-                ? directPolarData.data.products.result.items
-                : []
-            }
           />
         </div>
       </div>

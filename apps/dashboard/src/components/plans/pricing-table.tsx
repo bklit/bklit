@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import type { CustomerSubscription } from "@polar-sh/sdk/models/components/customersubscription.js";
-import type { Product } from "@polar-sh/sdk/models/components/product.js";
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
 import { Check, Crown } from "lucide-react";
 import { authClient } from "@/auth/client";
@@ -35,23 +34,25 @@ interface PlanConfig {
 }
 
 export function PricingTable({
+  organization,
   subscriptions,
-  products,
 }: {
+  organization: { plan?: string; name: string };
   subscriptions: Subscription[] | CustomerSubscription[];
-  products?: Product[];
 }) {
-  // Check if user has an active subscription
-  const activeSubscription = subscriptions.find(
-    (subscription) => subscription.status === "active",
-  );
-  const hasActiveProPlan = !!activeSubscription;
+  // Use organization.plan as the source of truth
+  const isPro = organization.plan === "pro";
+  const hasActiveProPlan = isPro;
+
+  // Log subscription data for debugging (using the subscriptions parameter)
+  console.debug("Active subscriptions:", subscriptions.length);
 
   // Current plan - single source of truth for display
   const currentPlan = {
-    name: activeSubscription?.product?.name || "Free",
-    description:
-      activeSubscription?.product?.description || "Perfect for getting started",
+    name: isPro ? "Pro" : "Free",
+    description: isPro
+      ? "For teams who need more power"
+      : "Perfect for getting started",
     isActive: hasActiveProPlan,
   };
 
@@ -80,7 +81,7 @@ export function PricingTable({
     "Priority support",
   ];
 
-  // Build plans from Polar products + hardcoded Free plan
+  // Build plans - using hardcoded plans since we get products from better-auth config
   const freePlan: PlanConfig = {
     name: "Free",
     description: "Perfect for getting started",
@@ -90,45 +91,32 @@ export function PricingTable({
     benefits: FREE_FEATURES,
   };
 
-  const proPlan: PlanConfig | null = products?.[0]
-    ? {
-        name: products[0].name,
-        description: products[0].description || "For teams who need more power",
-        price: (() => {
-          const firstPrice = products[0].prices?.[0];
-          if (!firstPrice) return 0;
-          // Handle different price types
-          if ("priceAmount" in firstPrice) {
-            return firstPrice.priceAmount;
-          }
-          if ("minimumAmount" in firstPrice) {
-            return firstPrice.minimumAmount || 0;
-          }
-          return 0;
-        })(),
-        interval: products[0].prices?.[0]?.recurringInterval || "month",
-        polarProductId: products[0].id,
-        benefits: (() => {
-          const polarBenefits = products[0].benefits
-            ?.map((b) => b.description)
-            .filter(Boolean) as string[];
-          // Use PRO_FEATURES if Polar has no benefits configured
-          return polarBenefits && polarBenefits.length > 0
-            ? polarBenefits
-            : PRO_FEATURES;
-        })(),
-        isPopular: true,
-      }
-    : null;
+  const proPlan: PlanConfig = {
+    name: "Pro",
+    description: "For teams who need more power",
+    price: 1000, // $10.00 in cents
+    interval: "month",
+    polarProductId:
+      process.env.NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID || "pro-plan", // Use real product ID
+    benefits: PRO_FEATURES,
+    isPopular: true,
+  };
 
-  const plans = [freePlan, proPlan].filter((p): p is PlanConfig => p !== null);
+  const plans = [freePlan, proPlan];
 
   const isCurrentPlan = (planId: string | null) => {
     if (planId === null) {
-      // Free plan is current if no active subscription
-      return !hasActiveProPlan;
+      // Free plan is current if organization.plan is "free"
+      return !isPro;
     }
-    return activeSubscription?.productId === planId;
+    if (
+      planId ===
+      (process.env.NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID || "pro-plan")
+    ) {
+      // Pro plan is current if organization.plan is "pro"
+      return isPro;
+    }
+    return false;
   };
 
   return (
@@ -303,7 +291,7 @@ const CheckoutButton = ({
           await authClient.customer.portal();
         }}
       >
-        Cancel Subscription
+        Downgrade to Free
       </Button>
     );
   }

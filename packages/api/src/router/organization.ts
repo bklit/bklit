@@ -94,4 +94,38 @@ export const organizationRouter = {
         },
       });
     }),
+
+  updatePlan: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        plan: z.enum(["free", "pro"]),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Verify user is admin of organization
+      const organization = await ctx.prisma.organization.findFirst({
+        where: {
+          id: input.id,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+              role: "admin", // Only admins can change plan
+            },
+          },
+        },
+      });
+
+      if (!organization) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Organization not found or user is not an admin",
+        });
+      }
+
+      return ctx.prisma.organization.update({
+        where: { id: input.id },
+        data: { plan: input.plan },
+      });
+    }),
 } satisfies TRPCRouterRecord;

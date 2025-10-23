@@ -77,10 +77,12 @@ model Organization {
   createdAt   DateTime
   metadata    String?
   theme       String?
+  plan        String       @default("free")
   projects    Project[]
   invitations Invitation[]
   members     Member[]
 
+  @@index([plan])
   @@map("organization")
 }
 
