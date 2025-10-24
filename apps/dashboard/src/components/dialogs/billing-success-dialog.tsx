@@ -82,15 +82,15 @@ export function BillingSuccessDialog({
           <DialogDescription className="text-muted-foreground">
             {isProcessing ? (
               <div className="space-y-2 text-center">
-                <p>Your plan is being automatically updated.</p>
-                <p>This could take up to 30 seconds to complete.</p>
+                <div>Your plan is being automatically updated.</div>
+                <div>This could take up to 30 seconds to complete.</div>
               </div>
             ) : (
               <div className="space-y-2 text-center">
-                <p>
+                <div>
                   Your plan has been successfully updated. Thank you for your
                   purchase!
-                </p>
+                </div>
               </div>
             )}
           </DialogDescription>
