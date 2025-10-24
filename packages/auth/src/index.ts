@@ -76,7 +76,7 @@ export function initAuth(options: {
                 productId: plan.polarProductId as string,
                 slug: plan.slug,
               })),
-            successUrl: "/{REFERENCE_ID}/settings/billing?purchase=success", // TODO: Fix this URL as REFERENCE_ID doesnt work
+            successUrl: "/settings/billing?purchase=success", // Generic success URL, will redirect to correct organization
             authenticatedUsersOnly: true,
           }),
           portal(),
