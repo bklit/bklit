@@ -16,7 +16,7 @@ import {
   CommandList,
 } from "@bklit/ui/components/command";
 import type { inferRouterOutputs } from "@trpc/server";
-import { Plus } from "lucide-react";
+import { CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { useWorkspace } from "@/contexts/workspace-provider";
 import { cn } from "@/lib/utils";
@@ -44,7 +44,7 @@ export const ModuleWorkspaces = () => {
                 value={organization.name}
                 key={organization.id}
                 onSelect={() => onChangeOrganization(organization.id)}
-                className="cursor-pointer"
+                className="cursor-pointer h-10"
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
@@ -72,9 +72,9 @@ export const ModuleWorkspaces = () => {
               </CommandItem>
             );
           })}
-          <CommandItem asChild className="cursor-pointer">
+          <CommandItem asChild className="cursor-pointer h-10 group">
             <Link href="/organizations/create">
-              <Plus className="size-4" />
+              <CirclePlus className="transition duration-100 size-4 text-brand-300 group-hover:text-white" />
               Create new workspace
             </Link>
           </CommandItem>
