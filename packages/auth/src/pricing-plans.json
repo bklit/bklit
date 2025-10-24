@@ -1,45 +1,55 @@
 [
   {
     "name": "Free",
-    "description": "Free plan",
+    "description": "Perfect for getting started",
     "price": 0,
     "interval": "month",
     "slug": "BKLIT-FREE",
     "polarProductId": "",
     "benefits": [
-      { "id": "1", "name": "1000 messages", "description": "1000 messages" },
-      { "id": "2", "name": "1000 users", "description": "1000 users" },
+      { "id": "1", "name": "1 project", "description": "1 project" },
+      { "id": "2", "name": "1 team member", "description": "1 team member" },
       {
         "id": "3",
-        "name": "1000 organizations",
-        "description": "1000 organizations"
+        "name": "Basic analytics",
+        "description": "Basic analytics dashboard"
       },
       {
         "id": "4",
-        "name": "1000 integrations",
-        "description": "1000 integrations"
+        "name": "Core event tracking",
+        "description": "Core event tracking"
       }
     ]
   },
   {
     "name": "Pro",
-    "description": "Pro plan",
+    "description": "For teams who need more power",
     "slug": "BKLIT-PRO",
     "price": 1000,
     "interval": "month",
     "polarProductId": "",
     "benefits": [
-      { "id": "1", "name": "1000 messages", "description": "1000 messages" },
-      { "id": "2", "name": "1000 users", "description": "1000 users" },
+      { "id": "1", "name": "5 projects", "description": "5 projects" },
+      { "id": "2", "name": "5 team members", "description": "5 team members" },
       {
         "id": "3",
-        "name": "1000 organizations",
-        "description": "1000 organizations"
+        "name": "Advanced analytics",
+        "description": "Advanced analytics & insights"
       },
       {
         "id": "4",
-        "name": "1000 integrations",
-        "description": "1000 integrations"
+        "name": "Custom event tracking",
+        "description": "Custom event tracking"
+      },
+      {
+        "id": "5",
+        "name": "Real-time analytics",
+        "description": "Real-time analytics"
+      },
+      {
+        "id": "6",
+        "name": "API access",
+        "description": "API access"
       }
     ]
   }

@@ -14,6 +14,11 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { authEnv } from "../env";
 import plansTemplate from "./pricing-plans.json";
+import {
+  logWebhookPayload,
+  type PolarWebhookPayload,
+  updateOrganizationPlan,
+} from "./webhook-helpers";
 
 const env = authEnv();
 
@@ -75,16 +80,43 @@ export function initAuth(options: {
                 productId: plan.polarProductId as string,
                 slug: plan.slug,
               })),
-            successUrl: "/",
+            successUrl: "/settings/billing?purchase=success", // Generic success URL, will redirect to correct organization
             authenticatedUsersOnly: true,
           }),
           portal(),
           usage(),
           webhooks({
             secret: env.POLAR_WEBHOOK_SECRET,
-            onCustomerStateChanged: async (_payload) => {},
-            onOrderPaid: async (_payload) => {},
-            onPayload: async (_payload) => {},
+            onSubscriptionActive: async (payload: PolarWebhookPayload) => {
+              logWebhookPayload("subscription.active", payload);
+              const referenceId = payload.data?.reference_id;
+              if (referenceId) {
+                await updateOrganizationPlan(referenceId, "pro");
+              }
+            },
+            onSubscriptionCanceled: async (payload: PolarWebhookPayload) => {
+              logWebhookPayload("subscription.canceled", payload);
+              const referenceId = payload.data?.reference_id;
+              if (referenceId) {
+                await updateOrganizationPlan(referenceId, "free");
+              }
+            },
+            onSubscriptionRevoked: async (payload: PolarWebhookPayload) => {
+              logWebhookPayload("subscription.revoked", payload);
+              const referenceId = payload.data?.reference_id;
+              if (referenceId) {
+                await updateOrganizationPlan(referenceId, "free");
+              }
+            },
+            onCustomerStateChanged: async (payload) => {
+              logWebhookPayload("customer.state_changed", payload);
+            },
+            onOrderPaid: async (payload) => {
+              logWebhookPayload("order.paid", payload);
+            },
+            onPayload: async (payload) => {
+              logWebhookPayload("webhook.received", payload);
+            },
           }),
         ],
       }),
