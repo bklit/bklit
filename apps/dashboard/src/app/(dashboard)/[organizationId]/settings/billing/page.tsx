@@ -3,10 +3,11 @@ import { headers } from "next/headers";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/header/page-header";
+import { NavSide } from "@/components/nav/nav-side";
 import { PricingTable } from "@/components/plans/pricing-table";
 import { authenticated } from "@/lib/auth";
+import { workspaceSettingsNavItems } from "@/lib/navigation";
 import { api, HydrateClient } from "@/trpc/server";
-import { WorkspaceSettingsNavigation } from "../(general)/page";
 
 export default async function BillingPage({
   params,
@@ -100,7 +101,7 @@ export default async function BillingPage({
       />
       <div className="container mx-auto py-6 px-4 flex gap-4">
         <div className="w-1/6">
-          <WorkspaceSettingsNavigation params={params} />
+          <NavSide items={workspaceSettingsNavItems(organizationId)} />
         </div>
         <div className="w-5/6">
           <BillingSuccessDialog isOpenInitially={showSuccessMessage} />

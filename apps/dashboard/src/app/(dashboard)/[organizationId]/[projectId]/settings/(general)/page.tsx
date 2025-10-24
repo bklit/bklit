@@ -1,5 +1,4 @@
 import { prisma } from "@bklit/db/client";
-import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardDescription,
@@ -7,11 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
 import { PageHeader } from "@/components/header/page-header";
+import { NavSide } from "@/components/nav/nav-side";
 import { authenticated } from "@/lib/auth";
+import { projectSettingsNavItems } from "@/lib/navigation";
 import { HydrateClient } from "@/trpc/server";
 
 async function getSiteData(
@@ -42,22 +42,6 @@ async function getSiteData(
   return { site, userMembership: site.organization.members[0] };
 }
 
-export async function ProjectSettingsNavigation({
-  params,
-}: {
-  params: Promise<{ organizationId: string; projectId: string }>;
-}) {
-  const { organizationId, projectId } = await params;
-
-  return (
-    <nav className="flex flex-col gap-px">
-      <Link href={`/${organizationId}/${projectId}/settings/`}>
-        <Button variant="ghost">General</Button>
-      </Link>
-    </nav>
-  );
-}
-
 export default async function ProjectDashboardPage({
   params,
 }: {
@@ -79,13 +63,14 @@ export default async function ProjectDashboardPage({
   const { site, userMembership } = siteData;
   return (
     <HydrateClient>
+      {/* TODO: Move all this shit to the layout */}
       <PageHeader
         title="Project settings"
         description="Manage your projects settings."
       />
       <div className="container mx-auto py-6 px-4 flex gap-4">
         <div className="w-1/6">
-          <ProjectSettingsNavigation params={params} />
+          <NavSide items={projectSettingsNavItems(organizationId, projectId)} />
         </div>
         <div className="w-5/6 space-y-4">
           <Card variant="destructive">

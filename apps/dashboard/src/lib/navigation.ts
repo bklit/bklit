@@ -55,7 +55,7 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
 
   // User level: /user/[userId]
   if (segments[0] === "user" && segments.length >= 2) {
-    return navigationConfig.user;
+    return navigationConfig.user || [];
   }
 
   // Site level: /[teamId]/[projectId]/... (but not billing, settings)
@@ -64,12 +64,12 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
     segments[1] !== "billing" &&
     segments[1] !== "settings"
   ) {
-    return navigationConfig.site;
+    return navigationConfig.site || [];
   }
 
   // Team level: /[teamId], /[teamId]/billing, or /[teamId]/settings
   if (segments.length >= 1 && segments[0] !== "user") {
-    return navigationConfig.team;
+    return navigationConfig.team || [];
   }
 
   return [];
@@ -88,4 +88,35 @@ export function replaceDynamicParams(
       .replace("[projectId]", projectId || "")
       .replace("[userId]", userId || ""),
   }));
+}
+
+// Settings navigation for the NavSide component
+import type { NavItem } from "@/components/nav/nav-side";
+
+export function workspaceSettingsNavItems(organizationId: string): NavItem[] {
+  return [
+    {
+      label: "General",
+      href: `/${organizationId}/settings/`,
+      variant: "ghost",
+    },
+    {
+      label: "Billing",
+      href: `/${organizationId}/settings/billing`,
+      variant: "ghost",
+    },
+  ];
+}
+
+export function projectSettingsNavItems(
+  organizationId: string,
+  projectId: string,
+): NavItem[] {
+  return [
+    {
+      label: "General",
+      href: `/${organizationId}/${projectId}/settings/`,
+      variant: "ghost",
+    },
+  ];
 }
