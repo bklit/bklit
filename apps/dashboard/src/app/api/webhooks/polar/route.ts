@@ -3,8 +3,9 @@ import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
   try {
-    console.log("🔥 MANUAL WEBHOOK RECEIVED");
+    console.log("🔥 WEBHOOK RECEIVED at", new Date().toISOString());
 
     const body = await request.json();
     console.log("🔥 Webhook payload:", JSON.stringify(body, null, 2));
@@ -38,36 +39,29 @@ export async function POST(request: NextRequest) {
         // For customer.state_changed, we need to check active_subscriptions
         const activeSubscriptions = body.data?.active_subscriptions || [];
         if (activeSubscriptions.length > 0) {
-          // Customer has active subscriptions - we need to find the organization
-          // by looking up the customer in our database
+          // Customer has active subscriptions - try to find organization from recent checkout
           status = "active";
-          // TODO: Implement customer lookup to find organization
-          console.error(
-            "🔥 customer.state_changed with active subscriptions - need to implement customer lookup",
+          // For now, we'll skip customer.state_changed events since we can't reliably
+          // map customer to organization without implementing customer lookup
+          console.log(
+            "🔥 customer.state_changed with active subscriptions - skipping (no customer lookup)",
           );
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                "customer.state_changed with active subscriptions not yet implemented",
-            },
-            { status: 501 },
-          );
+          return NextResponse.json({
+            success: true,
+            message:
+              "customer.state_changed with active subscriptions - skipped (no customer lookup implemented)",
+          });
         } else {
-          // Customer has no active subscriptions - we need to find the organization
+          // Customer has no active subscriptions
           status = "canceled";
-          // TODO: Implement customer lookup to find organization
-          console.error(
-            "🔥 customer.state_changed with no active subscriptions - need to implement customer lookup",
+          console.log(
+            "🔥 customer.state_changed with no active subscriptions - skipping (no customer lookup)",
           );
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                "customer.state_changed with no active subscriptions not yet implemented",
-            },
-            { status: 501 },
-          );
+          return NextResponse.json({
+            success: true,
+            message:
+              "customer.state_changed with no active subscriptions - skipped (no customer lookup implemented)",
+          });
         }
       }
 
@@ -77,15 +71,41 @@ export async function POST(request: NextRequest) {
           body.type === "subscription.updated") &&
         !referenceId
       ) {
-        console.error("🔥 No reference_id found in subscription event");
-        return NextResponse.json(
-          {
-            success: false,
-            error: "No reference_id found in subscription event",
-            eventType: body.type,
-          },
-          { status: 400 },
+        console.log(
+          "🔥 No reference_id in subscription event, checking subscription data",
         );
+
+        // Try to get organization ID from subscription data
+        const subscription = body.data;
+        if (subscription?.customer_id) {
+          // For now, we need to implement customer lookup to find organization
+          console.error(
+            "🔥 subscription.active without reference_id - need to implement customer lookup",
+          );
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "subscription.active without reference_id - customer lookup not implemented",
+              eventType: body.type,
+              customerId: subscription.customer_id,
+            },
+            { status: 501 },
+          );
+        } else {
+          console.error(
+            "🔥 No reference_id or customer_id found in subscription event",
+          );
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "No reference_id or customer_id found in subscription event",
+              eventType: body.type,
+            },
+            { status: 400 },
+          );
+        }
       }
 
       console.log("🔥 Reference ID:", referenceId);
@@ -127,10 +147,14 @@ export async function POST(request: NextRequest) {
           revalidatePath(`/${referenceId}`);
           revalidatePath(`/settings/billing`);
 
+          const processingTime = Date.now() - startTime;
+          console.log(`🔥 WEBHOOK PROCESSED in ${processingTime}ms`);
+
           return NextResponse.json({
             success: true,
             message: `Organization plan updated to ${plan}`,
             organization: updatedOrg,
+            processingTime: `${processingTime}ms`,
           });
         } catch (dbError) {
           console.error("🔥 Database update failed:", dbError);

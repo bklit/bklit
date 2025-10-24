@@ -1,3 +1,4 @@
+import { unstable_noStore } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
@@ -43,6 +44,11 @@ export default async function BillingPage({
     }
 
     const showSuccessMessage = resolvedSearchParams?.purchase === "success";
+
+    // Force fresh data fetch when success parameter is present
+    if (showSuccessMessage) {
+      unstable_noStore();
+    }
 
     // Fetch active subscriptions for the organization
     const subscriptions = await auth.api.subscriptions({

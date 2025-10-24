@@ -1,6 +1,5 @@
 import type { AppRouter } from "@bklit/api";
 import type { inferRouterOutputs } from "@trpc/server";
-import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth/server";
@@ -69,9 +68,8 @@ export default async function RedirectBillingPage({
   if (!organization) redirect(`/`);
 
   if (showSuccessMessage && organization) {
-    // Revalidate the organization data to ensure fresh data is fetched
-    revalidatePath(`/${organization.id}/settings/billing`);
-    revalidatePath(`/${organization.id}`);
+    // Redirect to organization-specific billing page
+    // Note: Revalidation is handled by the webhook when database is updated
     redirect(`/${organization.id}/settings/billing?purchase=success`);
   }
 
