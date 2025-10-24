@@ -1,4 +1,5 @@
 import { prisma } from "@bklit/db/client";
+import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -8,36 +9,83 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("🔥 Webhook payload:", JSON.stringify(body, null, 2));
 
-    // Handle subscription events
+    // Handle subscription and checkout events
     if (
       body.type === "subscription.active" ||
       body.type === "subscription.updated" ||
-      body.type === "customer.state_changed"
+      body.type === "customer.state_changed" ||
+      body.type === "checkout.updated"
     ) {
       let referenceId = body.data?.reference_id;
       let status = body.data?.status;
-      
+
+      // Handle checkout.updated event structure
+      if (body.type === "checkout.updated") {
+        // For checkout.updated, check if checkout succeeded
+        if (body.data?.status === "succeeded") {
+          status = "active";
+          // Get reference ID from metadata
+          referenceId = body.data?.metadata?.referenceId;
+          console.log("🔥 Checkout succeeded, reference ID:", referenceId);
+        } else {
+          status = "failed";
+          referenceId = body.data?.metadata?.referenceId;
+        }
+      }
+
       // Handle customer.state_changed event structure
       if (body.type === "customer.state_changed") {
         // For customer.state_changed, we need to check active_subscriptions
         const activeSubscriptions = body.data?.active_subscriptions || [];
         if (activeSubscriptions.length > 0) {
-          // Customer has active subscriptions
+          // Customer has active subscriptions - we need to find the organization
+          // by looking up the customer in our database
           status = "active";
-          // Use our organization ID directly since we know it
-          referenceId = "mwjc76ZRB0D67KdCnhEb7LOp6DG5s8FW";
+          // TODO: Implement customer lookup to find organization
+          console.error(
+            "🔥 customer.state_changed with active subscriptions - need to implement customer lookup",
+          );
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "customer.state_changed with active subscriptions not yet implemented",
+            },
+            { status: 501 },
+          );
         } else {
-          // Customer has no active subscriptions
+          // Customer has no active subscriptions - we need to find the organization
           status = "canceled";
-          referenceId = "mwjc76ZRB0D67KdCnhEb7LOp6DG5s8FW";
+          // TODO: Implement customer lookup to find organization
+          console.error(
+            "🔥 customer.state_changed with no active subscriptions - need to implement customer lookup",
+          );
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "customer.state_changed with no active subscriptions not yet implemented",
+            },
+            { status: 501 },
+          );
         }
       }
-      
+
       // Handle subscription events that don't have reference_id
-      if ((body.type === "subscription.active" || body.type === "subscription.updated") && !referenceId) {
-        // For subscription events without reference_id, use our known organization ID
-        referenceId = "mwjc76ZRB0D67KdCnhEb7LOp6DG5s8FW";
-        console.log("🔥 No reference_id in subscription event, using known organization ID");
+      if (
+        (body.type === "subscription.active" ||
+          body.type === "subscription.updated") &&
+        !referenceId
+      ) {
+        console.error("🔥 No reference_id found in subscription event");
+        return NextResponse.json(
+          {
+            success: false,
+            error: "No reference_id found in subscription event",
+            eventType: body.type,
+          },
+          { status: 400 },
+        );
       }
 
       console.log("🔥 Reference ID:", referenceId);
@@ -73,6 +121,11 @@ export async function POST(request: NextRequest) {
           });
 
           console.log("🔥 Successfully updated organization:", updatedOrg);
+
+          // Revalidate the organization pages to ensure fresh data
+          revalidatePath(`/${referenceId}/settings/billing`);
+          revalidatePath(`/${referenceId}`);
+          revalidatePath(`/settings/billing`);
 
           return NextResponse.json({
             success: true,
