@@ -23,11 +23,6 @@ export default async function BillingPage({
     organizationId === "{REFERENCE_ID}" ||
     organizationId === "%7BREFERENCE_ID%7D"
   ) {
-    // Redirect to a page where we can get the organization from user context
-    const session = await authenticated({
-      callbackUrl: `/settings/billing`,
-    });
-
     // Get user's organizations and use the first one
     const organizations = await api.organization.list();
     const organization = organizations[0];

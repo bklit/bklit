@@ -7,6 +7,26 @@ import { prisma } from "@bklit/db/client";
 
 export type PlanType = "free" | "pro";
 
+// Polar webhook payload types
+export interface PolarWebhookPayload {
+  type: string;
+  data: {
+    id?: string;
+    reference_id?: string;
+    status?: string;
+    metadata?: {
+      referenceId?: string;
+    };
+    customer?: {
+      id?: string;
+      external_id?: string;
+      metadata?: {
+        referenceId?: string;
+      };
+    };
+  };
+}
+
 /**
  * Update an organization's plan
  */
@@ -93,7 +113,7 @@ export async function getOrganizationFromReferenceId(
  */
 export function logWebhookPayload(
   eventType: string,
-  payload: Record<string, unknown>,
+  payload: Record<string, unknown> | PolarWebhookPayload,
   organizationId?: string,
 ): void {
   console.log(`[Polar Webhook] ${eventType}`, {

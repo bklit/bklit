@@ -14,7 +14,11 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { authEnv } from "../env";
 import plansTemplate from "./pricing-plans.json";
-import { logWebhookPayload, updateOrganizationPlan } from "./webhook-helpers";
+import {
+  logWebhookPayload,
+  type PolarWebhookPayload,
+  updateOrganizationPlan,
+} from "./webhook-helpers";
 
 const env = authEnv();
 
@@ -83,30 +87,21 @@ export function initAuth(options: {
           usage(),
           webhooks({
             secret: env.POLAR_WEBHOOK_SECRET,
-            onSubscriptionActive: async (payload) => {
-              console.log("🔥 WEBHOOK RECEIVED: subscription.active");
+            onSubscriptionActive: async (payload: PolarWebhookPayload) => {
               logWebhookPayload("subscription.active", payload);
               const referenceId = payload.data?.reference_id;
-              console.log("🔥 Reference ID:", referenceId);
               if (referenceId) {
-                console.log(
-                  "🔥 Updating organization plan to pro for:",
-                  referenceId,
-                );
-                const result = await updateOrganizationPlan(referenceId, "pro");
-                console.log("🔥 Update result:", result);
-              } else {
-                console.log("🔥 No reference_id found in payload");
+                await updateOrganizationPlan(referenceId, "pro");
               }
             },
-            onSubscriptionCanceled: async (payload) => {
+            onSubscriptionCanceled: async (payload: PolarWebhookPayload) => {
               logWebhookPayload("subscription.canceled", payload);
               const referenceId = payload.data?.reference_id;
               if (referenceId) {
                 await updateOrganizationPlan(referenceId, "free");
               }
             },
-            onSubscriptionRevoked: async (payload) => {
+            onSubscriptionRevoked: async (payload: PolarWebhookPayload) => {
               logWebhookPayload("subscription.revoked", payload);
               const referenceId = payload.data?.reference_id;
               if (referenceId) {
@@ -120,7 +115,6 @@ export function initAuth(options: {
               logWebhookPayload("order.paid", payload);
             },
             onPayload: async (payload) => {
-              console.log("🔥 ANY WEBHOOK RECEIVED:", payload);
               logWebhookPayload("webhook.received", payload);
             },
           }),
