@@ -1,33 +1,26 @@
+import type { AppRouter } from "@bklit/api";
+import type { inferRouterOutputs } from "@trpc/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth/server";
-import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
-export default async function BillingPage({
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type Organization = RouterOutputs["organization"]["list"][0];
+
+export default async function RedirectBillingPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedSearchParams = await searchParams;
-
-  const session = await authenticated({
-    callbackUrl: `/settings/billing`,
-  });
-
-  // Get user's organizations
   const organizations = await api.organization.list();
-
-  // Check if we have a purchase success parameter - if so, try to find the organization that was just upgraded
   const showSuccessMessage = resolvedSearchParams?.purchase === "success";
 
-  let organization;
+  let organization: Organization | undefined;
 
   if (showSuccessMessage) {
-    // If this is a success redirect, try to find the organization that was just upgraded
-    // by checking which organization has the most recent subscription activity
     try {
-      // Get all organizations and check their subscription status with timestamps
       const orgsWithSubscriptions = await Promise.all(
         organizations.map(async (org) => {
           const subscriptions = await auth.api.subscriptions({
@@ -40,10 +33,9 @@ export default async function BillingPage({
             headers: await headers(),
           });
 
-          // Get the most recent subscription for this org
           const mostRecentSubscription = subscriptions.result.items[0];
-          const subscriptionCreatedAt = mostRecentSubscription?.created_at
-            ? new Date(mostRecentSubscription.created_at)
+          const subscriptionCreatedAt = mostRecentSubscription?.createdAt
+            ? new Date(mostRecentSubscription.createdAt)
             : null;
 
           return {
@@ -54,7 +46,7 @@ export default async function BillingPage({
         }),
       );
 
-      // Find the organization with the MOST RECENT subscription (most likely the one just upgraded)
+      // Find org with most recent subscription
       const upgradedOrg = orgsWithSubscriptions
         .filter((org) => org.hasActiveSubscription)
         .sort((a, b) => {
@@ -70,17 +62,14 @@ export default async function BillingPage({
       organization = organizations[0];
     }
   } else {
-    // Default to first organization
     organization = organizations[0];
   }
 
   if (!organization) redirect(`/`);
 
-  // Redirect to the organization-specific billing page if we found the upgraded organization
   if (showSuccessMessage && organization) {
     redirect(`/${organization.id}/settings/billing?purchase=success`);
   }
 
-  // If no success message, redirect to first organization's billing page
   redirect(`/${organization.id}/settings/billing`);
 }
