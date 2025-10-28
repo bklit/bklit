@@ -1,17 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
-declare global {
-  interface Window {
-    trackPageView?: () => void;
-    trackEvent?: (
-      trackingId: string,
-      eventType: string,
-      metadata?: Record<string, unknown>,
-    ) => void;
-  }
-}
-
 export default function Home() {
   // Might be able to remove this later
   useEffect(() => {
@@ -28,11 +17,7 @@ export default function Home() {
         <Link to="/">Home</Link> | <Link to="/products">Products</Link>
       </nav>
 
-      <button
-        data-bklit-event="test_me"
-        type="button"
-        onClick={() => console.log("clicked button")}
-      >
+      <button data-bklit-event="test-me" type="button">
         Click Me
       </button>
     </>

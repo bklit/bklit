@@ -37,6 +37,7 @@ if (YOUR_PROJECT_ID) {
     initBklit({
       projectId: YOUR_PROJECT_ID,
       apiHost: API_HOST,
+      debug: true, // Enable debug mode to see event tracking logs
     });
     console.log("✅ Playground: Bklit SDK initialized successfully");
   } catch (error) {

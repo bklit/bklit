@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@bklit/ui/components/alert-dialog";
+import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Empty,
@@ -69,6 +70,7 @@ interface EventListItem {
     id: string;
     timestamp: Date;
     metadata: Prisma.JsonValue | null;
+    sessionId: string | null;
   }>;
 }
 
@@ -120,7 +122,11 @@ export function Events({ organizationId, projectId }: EventsProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const { data: events, isLoading } = useQuery(
+  const {
+    data: events,
+    isLoading,
+    error,
+  } = useQuery(
     trpc.event.list.queryOptions({
       projectId,
       organizationId,
@@ -562,7 +568,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
             </EmptyContent>
           </Empty>
         )}
-        {events && events.length > 0 && (
+        {events && Array.isArray(events) && events.length > 0 && (
           <Table>
             <TableCaption className="sr-only">
               A list of your events
@@ -571,44 +577,74 @@ export function Events({ organizationId, projectId }: EventsProps) {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Tracking ID</TableHead>
-                <TableHead>Interactions</TableHead>
+                <TableHead>Sessions</TableHead>
+                <TableHead>Conversions</TableHead>
                 <TableHead className="text-right">
                   <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {events.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="font-medium">{event.name}</TableCell>
-                  <TableCell>
-                    <code className="text-sm bg-muted px-2 py-1 rounded">
-                      {event.trackingId}
-                    </code>
-                  </TableCell>
-                  <TableCell className="font-mono">
-                    {event.totalCount}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Link
-                        href={`/${organizationId}/${projectId}/events/${event.trackingId}`}
-                      >
-                        <Button variant="outline" size="lg">
-                          View
+              {events.map((event) => {
+                const uniqueSessions = new Set(
+                  event.recentEvents.map((e) => e.sessionId).filter(Boolean),
+                );
+                const conversions =
+                  event.eventTypeCounts &&
+                  typeof event.eventTypeCounts["click"] === "number"
+                    ? event.eventTypeCounts["click"]
+                    : 0;
+                const conversionRate =
+                  uniqueSessions.size > 0
+                    ? (conversions / uniqueSessions.size) * 100
+                    : 0;
+                return (
+                  <TableRow key={event.id}>
+                    <TableCell className="font-medium">{event.name}</TableCell>
+                    <TableCell>
+                      <code className="text-sm bg-muted px-2 py-1 rounded">
+                        {event.trackingId}
+                      </code>
+                    </TableCell>
+                    <TableCell>{uniqueSessions.size}</TableCell>
+                    <TableCell className="font-mono">
+                      <div className="flex items-center gap-2">
+                        {conversions}
+                        <Badge
+                          variant={
+                            conversionRate > 75
+                              ? "success"
+                              : conversionRate > 35
+                                ? "secondary"
+                                : "destructive"
+                          }
+                          size="lg"
+                        >
+                          {conversionRate.toFixed(0)}%
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Link
+                          href={`/${organizationId}/${projectId}/events/${event.trackingId}`}
+                        >
+                          <Button variant="secondary" size="lg">
+                            View
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={() => openEditSheet(event)}
+                        >
+                          Edit
                         </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => openEditSheet(event)}
-                      >
-                        Edit
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

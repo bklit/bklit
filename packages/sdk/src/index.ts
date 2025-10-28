@@ -13,6 +13,8 @@ let currentSessionId: string | null = null; // Keep track of current session
 let lastTrackedUrl: string | null = null; // Track last URL to prevent duplicates
 let lastTrackedTime: number = 0; // Track last tracking time
 const TRACKING_DEBOUNCE_MS = 1000; // Debounce tracking by 1 second
+const SESSION_STORAGE_KEY = "bklit_session_id";
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 export function initBklit(options: BklitOptions): void {
   if (typeof window === "undefined") {
@@ -55,14 +57,27 @@ export function initBklit(options: BklitOptions): void {
 
   // Generate or get existing session ID
   if (!currentSessionId) {
-    currentSessionId = generateSessionId();
-    // Reset tracking state for new session
-    lastTrackedUrl = null;
-    lastTrackedTime = 0;
-    if (debug) {
-      console.log("🆔 Bklit SDK: New session created", {
-        sessionId: currentSessionId,
-      });
+    // Try to get existing session from storage first
+    const storedSessionId = getStoredSessionId();
+    if (storedSessionId) {
+      currentSessionId = storedSessionId;
+      if (debug) {
+        console.log("🔄 Bklit SDK: Restored session from storage", {
+          sessionId: currentSessionId,
+        });
+      }
+    } else {
+      // Create new session
+      currentSessionId = generateSessionId();
+      storeSessionId(currentSessionId);
+      // Reset tracking state for new session
+      lastTrackedUrl = null;
+      lastTrackedTime = 0;
+      if (debug) {
+        console.log("🆔 Bklit SDK: New session created", {
+          sessionId: currentSessionId,
+        });
+      }
     }
   } else if (debug) {
     console.log("🔄 Bklit SDK: Using existing session", {
@@ -245,6 +260,45 @@ function generateSessionId(): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 15);
   return `${timestamp}-${random}`;
+}
+
+// Helper function to get session ID from storage
+function getStoredSessionId(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!stored) return null;
+
+    const { sessionId, timestamp } = JSON.parse(stored);
+    const now = Date.now();
+
+    // Check if session has expired
+    if (now - timestamp > SESSION_TIMEOUT_MS) {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      return null;
+    }
+
+    return sessionId;
+  } catch (error) {
+    console.warn("Bklit SDK: Error reading session from storage:", error);
+    return null;
+  }
+}
+
+// Helper function to store session ID
+function storeSessionId(sessionId: string): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const data = {
+      sessionId,
+      timestamp: Date.now(),
+    };
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.warn("Bklit SDK: Error storing session:", error);
+  }
 }
 
 // Global function for manual page view tracking
@@ -540,6 +594,22 @@ function setupEventTracking() {
   }
 }
 
+// Global function to clear session (useful for testing)
+export function clearBklitSession(): void {
+  if (typeof window === "undefined") return;
+
+  currentSessionId = null;
+  lastTrackedUrl = null;
+  lastTrackedTime = 0;
+
+  try {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    console.log("✅ Bklit SDK: Session cleared");
+  } catch (error) {
+    console.warn("Bklit SDK: Error clearing session:", error);
+  }
+}
+
 // Store configuration globally for manual tracking
 declare global {
   interface Window {
@@ -550,6 +620,7 @@ declare global {
       metadata?: Record<string, unknown>,
       triggerMethod?: "automatic" | "manual",
     ) => void;
+    clearBklitSession?: () => void;
     bklitprojectId?: string;
     bklitApiHost?: string;
     bklitEnvironment?: "development" | "production";
@@ -557,6 +628,7 @@ declare global {
   }
 }
 
-// Make trackPageView available globally
+// Make functions available globally
 window.trackPageView = trackPageView;
 window.trackEvent = trackEvent;
+window.clearBklitSession = clearBklitSession;
