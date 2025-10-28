@@ -246,12 +246,6 @@ export const sessionRouter = createTRPCRouter({
       // Get recent sessions (last 30 seconds by default)
       const since = input.since || new Date(Date.now() - 30 * 1000);
 
-      console.log("🔍 RECENT SESSIONS: Querying for sessions", {
-        projectId: input.projectId,
-        since: since.toISOString(),
-        now: new Date().toISOString(),
-      });
-
       const recentSessions = await ctx.prisma.trackedSession.findMany({
         where: {
           projectId: input.projectId,
@@ -271,16 +265,7 @@ export const sessionRouter = createTRPCRouter({
         orderBy: {
           startedAt: "desc",
         },
-        take: 10, // Limit to prevent too many toasts
-      });
-
-      console.log("🔍 RECENT SESSIONS: Found sessions", {
-        count: recentSessions.length,
-        sessions: recentSessions.map((s) => ({
-          sessionId: s.sessionId,
-          startedAt: s.startedAt.toISOString(),
-          country: s.country,
-        })),
+        take: 10,
       });
 
       return recentSessions;

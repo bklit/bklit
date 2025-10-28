@@ -33,7 +33,6 @@ export function getCountryCoordinates(): CountryCoordinate[] {
 
   try {
     countryCoordinatesCache = countryCoordinatesData as CountryCoordinate[];
-    console.log(`Loaded ${countryCoordinatesCache.length} country coordinates`);
     return countryCoordinatesCache;
   } catch (error) {
     console.error("Error loading country coordinates:", error);
@@ -71,9 +70,7 @@ export function findCountryCoordinates(
   }
 
   if (!found) {
-    console.log(
-      `No coordinates found for country code: ${countryCode} (normalized: ${normalizedCode}, mapped: ${mappedCode})`,
-    );
+    // Country code not found - will use fallback
   }
 
   return found || null;
