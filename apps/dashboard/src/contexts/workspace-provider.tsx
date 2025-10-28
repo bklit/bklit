@@ -2,6 +2,7 @@
 
 import type { AppRouter } from "@bklit/api";
 import type { Session } from "@bklit/auth";
+import { Toaster } from "@bklit/ui/components/sonner";
 import type { inferRouterOutputs } from "@trpc/server";
 import { useParams, useRouter } from "next/navigation";
 import { createContext, type ReactNode, useContext } from "react";
@@ -69,6 +70,7 @@ export const WorkspaceProvider: React.FC<{
       }}
     >
       {children}
+      <Toaster closeButton />
     </WorkspaceContext.Provider>
   );
 };

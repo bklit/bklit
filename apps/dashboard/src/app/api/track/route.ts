@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       projectId: payload.projectId,
       sessionId: payload.sessionId,
       timestamp: payload.timestamp,
+      userAgent: payload.userAgent,
     });
 
     if (!payload.projectId) {
@@ -101,6 +102,9 @@ export async function POST(request: NextRequest) {
             sessionId: session.sessionId,
             sessionDbId: session.id,
             projectId: session.projectId,
+            country: session.country,
+            city: session.city,
+            isNewSession: !session.endedAt,
           });
 
           // DEDUPLICATION: Check for recent identical page view event

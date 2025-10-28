@@ -2,10 +2,16 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  // Might be able to remove this later
+  // Track page view and log to console
   useEffect(() => {
     document.title = "Playground Home | Bklit";
-    if (window.trackPageView) window.trackPageView();
+    console.log("🎯 PLAYGROUND: Tracking page view on home page");
+    if (window.trackPageView) {
+      window.trackPageView();
+      console.log("🎯 PLAYGROUND: trackPageView called successfully");
+    } else {
+      console.warn("🎯 PLAYGROUND: trackPageView function not available");
+    }
   }, []);
   return (
     <>

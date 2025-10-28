@@ -789,6 +789,11 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
 
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
+      console.log("📊 LIVE USERS: Counting active sessions", {
+        projectId,
+        thirtyMinutesAgo: thirtyMinutesAgo.toISOString(),
+      });
+
       const liveUsers = await prisma.trackedSession.count({
         where: {
           projectId,
@@ -797,6 +802,11 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
             gte: thirtyMinutesAgo, // Only count sessions started in last 30 minutes
           },
         },
+      });
+
+      console.log("📊 LIVE USERS: Found active sessions", {
+        projectId,
+        liveUsers,
       });
 
       return liveUsers;
