@@ -14,7 +14,6 @@ import {
 } from "@bklit/ui/components/item";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { Suspense } from "react";
 import { getRecentSessions } from "@/actions/session-actions";
 import {
   getBrowserFromUserAgent,
@@ -25,7 +24,7 @@ import {
   getDeviceTypeFromUserAgent,
 } from "@/lib/utils/get-device-icon";
 import type { SessionAnalyticsCardProps } from "@/types/analytics-cards";
-import { SessionAnalyticsSkeleton } from "./skeletons";
+import { NoDataCard } from "./no-data-card";
 
 function formatDuration(seconds: number | null): string {
   if (!seconds) return "0s";
@@ -44,73 +43,73 @@ function formatDuration(seconds: number | null): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-async function SessionAnalyticsContent({
+export async function SessionAnalyticsCard({
   projectId,
   organizationId,
 }: SessionAnalyticsCardProps) {
   const sessions = await getRecentSessions(projectId, 5);
 
-  return (
-    <div className="space-y-3">
-      {sessions.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No sessions found
-        </p>
-      ) : (
-        sessions.map((session) => {
-          console.log("session 🎃", session);
-          const browser = getBrowserFromUserAgent(session.userAgent);
-          const deviceType = getDeviceTypeFromUserAgent(session.userAgent);
-          return (
-            <Item asChild variant="outline" key={session.id}>
-              <Link
-                href={`/${organizationId || ""}/${projectId}/session/${session.id}`}
-                className="block"
-              >
-                <ItemContent>
-                  <ItemTitle>
-                    {formatDistanceToNow(new Date(session.startedAt), {
-                      addSuffix: true,
-                    })}
-                  </ItemTitle>
-                  <ItemDescription className="flex items-center gap-2">
-                    <span>{session.pageViewEvents.length} pages</span>&bull;
-                    <span>{formatDuration(session.duration)}</span>&bull;
-                    <span>{getBrowserIcon(browser)}</span>&bull;
-                    <span>{getDeviceIcon(deviceType)}</span>
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <Button size="sm" variant="outline">
-                    View
-                  </Button>
-                </ItemActions>
-              </Link>
-            </Item>
-          );
-        })
-      )}
-    </div>
-  );
-}
+  // If no data return empty card
+  if (sessions.length === 0) {
+    return (
+      <NoDataCard
+        title="Recent Sessions"
+        description="The most recent sessions."
+      />
+    );
+  }
 
-export function SessionAnalyticsCard(props: SessionAnalyticsCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>Recent Sessions</CardTitle>
         <Button asChild size="sm" variant="ghost">
-          <Link
-            href={`/${props.organizationId || ""}/${props.projectId}/sessions`}
-          >
+          <Link href={`/${organizationId || ""}/${projectId}/sessions`}>
             View All
           </Link>
         </Button>
       </CardHeader>
       <CardContent>
-        <Suspense fallback={<SessionAnalyticsSkeleton />}>
-          <SessionAnalyticsContent {...props} />
-        </Suspense>
+        <div className="space-y-3">
+          {sessions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No sessions found
+            </p>
+          ) : (
+            sessions.map((session) => {
+              console.log("session 🎃", session);
+              const browser = getBrowserFromUserAgent(session.userAgent);
+              const deviceType = getDeviceTypeFromUserAgent(session.userAgent);
+              return (
+                <Item asChild variant="outline" key={session.id}>
+                  <Link
+                    href={`/${organizationId || ""}/${projectId}/session/${session.id}`}
+                    className="block"
+                  >
+                    <ItemContent>
+                      <ItemTitle>
+                        {formatDistanceToNow(new Date(session.startedAt), {
+                          addSuffix: true,
+                        })}
+                      </ItemTitle>
+                      <ItemDescription className="flex items-center gap-2">
+                        <span>{session.pageViewEvents.length} pages</span>&bull;
+                        <span>{formatDuration(session.duration)}</span>&bull;
+                        <span>{getBrowserIcon(browser)}</span>&bull;
+                        <span>{getDeviceIcon(deviceType)}</span>
+                      </ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                      <Button size="sm" variant="outline">
+                        View
+                      </Button>
+                    </ItemActions>
+                  </Link>
+                </Item>
+              );
+            })
+          )}
+        </div>
       </CardContent>
     </Card>
   );

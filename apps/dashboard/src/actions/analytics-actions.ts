@@ -342,11 +342,9 @@ export async function getCountryVisitStats(
             const countryCode = country.countryCode || "";
             const coordinates = findCountryCoordinates(countryCode);
 
-            // Debug logging to see what country codes we're getting
+            // Skip countries without coordinates
             if (!coordinates) {
-              throw new Error(
-                `No coordinates found for country code: ${countryCode}, country: ${country.country}`,
-              );
+              return null;
             }
 
             // Get mobile vs desktop breakdown
@@ -397,20 +395,15 @@ export async function getCountryVisitStats(
         ),
       );
 
-      // Temporarily return all countries to debug (including those without coordinates)
-      const result = countriesWithStats.sort(
-        (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits,
-      );
-
-      console.log(
-        "Final result:",
-        result.map((c: CountryStats) => ({
-          country: c.country,
-          countryCode: c.countryCode,
-          hasCoordinates: c.coordinates !== null,
-          totalVisits: c.totalVisits,
-        })),
-      );
+      // Filter out countries without coordinates and sort by visits
+      const result = countriesWithStats
+        .filter(
+          (country: CountryStats) =>
+            country !== null && country.coordinates !== null,
+        )
+        .sort(
+          (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits,
+        );
 
       return result;
     },

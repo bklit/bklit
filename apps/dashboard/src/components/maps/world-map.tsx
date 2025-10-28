@@ -192,14 +192,14 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
         const hasCoordinates = d.coordinates !== null;
         const hasValidVisits =
           typeof d.totalVisits === "number" && !Number.isNaN(d.totalVisits);
-        if (!hasCoordinates || !hasValidVisits) {
-          console.warn("Invalid data for marker:", d);
-        }
         return hasCoordinates && hasValidVisits;
       });
 
-      // Get projection from the existing map
-      const projection = d3.geoNaturalEarth1().scale(350).translate([480, 250]); // width/2, height/1.1
+      // Get projection from the existing map (must match the main map projection)
+      const projection = d3
+        .geoNaturalEarth1()
+        .scale(350)
+        .translate([480, 454.5]); // width/2, height/1.1
 
       const markers = g
         .selectAll(".marker")
