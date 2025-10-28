@@ -7,10 +7,7 @@ import { RecentPageViewsCard } from "@/components/analytics-cards/recent-page-vi
 import { SessionAnalyticsCard } from "@/components/analytics-cards/session-analytics-card";
 import { TopCountriesCard } from "@/components/analytics-cards/top-countries-card";
 import { ViewsCard } from "@/components/analytics-cards/views-card";
-import {
-  WorldMapCard,
-  WorldMapCardSkeleton,
-} from "@/components/analytics-cards/world-map-card";
+import { WorldMapCard } from "@/components/analytics-cards/world-map-card";
 import { authenticated } from "@/lib/auth";
 
 export default async function AnalyticsPage({

@@ -122,11 +122,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const {
-    data: events,
-    isLoading,
-    error,
-  } = useQuery(
+  const { data: events, isLoading } = useQuery(
     trpc.event.list.queryOptions({
       projectId,
       organizationId,
@@ -591,8 +587,8 @@ export function Events({ organizationId, projectId }: EventsProps) {
                 );
                 const conversions =
                   event.eventTypeCounts &&
-                  typeof event.eventTypeCounts["click"] === "number"
-                    ? event.eventTypeCounts["click"]
+                  typeof event.eventTypeCounts.click === "number"
+                    ? event.eventTypeCounts.click
                     : 0;
                 const conversionRate =
                   uniqueSessions.size > 0

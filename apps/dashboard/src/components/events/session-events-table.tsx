@@ -33,7 +33,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { parseAsInteger, parseAsIsoDateTime, useQueryStates } from "nuqs";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { useTRPC } from "@/trpc/react";
 
@@ -176,7 +176,7 @@ export function SessionEventsTable({
                   <TableCell className="font-mono text-sm">
                     {session.sessionId === "no-session"
                       ? "No Session"
-                      : session.sessionId.substring(0, 8) + "..."}
+                      : `${session.sessionId.substring(0, 8)}...`}
                   </TableCell>
                   <TableCell>
                     <Badge
