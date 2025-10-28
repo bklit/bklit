@@ -33,6 +33,7 @@ interface WorldMapProps {
 }
 
 export function WorldMap({ projectId, userId }: WorldMapProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +41,11 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
   const [tooltipData, setTooltipData] = useState<CountryVisitData | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+
+  // Ensure component only renders on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleZoomIn = () => {
     if (svgRef.current && zoomRef.current) {
@@ -241,6 +247,17 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
         setIsLoading(false);
       });
   }, [visitData]);
+
+  // Don't render anything on server to prevent hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="relative w-full h-full">
+        <div className="absolute inset-0 flex items-center justify-center bg-card-background z-20">
+          <div className="text-lg">Loading world map...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
