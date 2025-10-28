@@ -33,9 +33,9 @@ export async function BounceRateCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{data.bounceRate}% Bounce Rate</CardTitle>
+        <CardTitle>{Math.round(data.bounceRate)}% Bounce Rate</CardTitle>
         <CardDescription>
-          {data.bouncedSessions} of {data.totalSessions} sessions
+          {data.bouncedSessions} of {data.totalSessions} sessions bounced
         </CardDescription>
       </CardHeader>
       <CardContent>

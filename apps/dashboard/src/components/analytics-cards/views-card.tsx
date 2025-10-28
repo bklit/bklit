@@ -86,12 +86,6 @@ export function ViewsCard({
           <div className="flex justify-between items-center">
             <div>
               <div className="text-2xl font-bold">
-                {initialStats.totalViews.toLocaleString()}
-              </div>
-              <div className="text-sm text-muted-foreground">Total Views</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">
                 {sessionStats.totalSessions.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -100,7 +94,7 @@ export function ViewsCard({
             </div>
             <div>
               <div className="text-2xl font-bold">
-                {sessionStats.bounceRate}%
+                {Math.round(sessionStats.bounceRate)}%
               </div>
               <div className="text-sm text-muted-foreground">Bounce Rate</div>
             </div>

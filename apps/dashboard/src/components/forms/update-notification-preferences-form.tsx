@@ -38,7 +38,7 @@ export function UpdateNotificationPreferencesForm({
 }: UpdateNotificationPreferencesFormProps) {
   const trpc = useTRPC();
 
-  const { data: preferences, isLoading: preferencesLoading } = useQuery(
+  const { data: preferences } = useQuery(
     trpc.notification.getPreferences.queryOptions(
       {
         projectId,
@@ -91,28 +91,12 @@ export function UpdateNotificationPreferencesForm({
     }
   }, [preferences, form]);
 
-  if (preferencesLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Live Visitor Notifications</CardTitle>
-          <CardDescription>
-            Get notified when new visitors arrive on your website in real-time.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="text-muted-foreground">Loading...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Live Visitor Notifications</CardTitle>
+        <CardTitle>Project Notifications</CardTitle>
         <CardDescription>
-          Get notified when new visitors arrive on your website in real-time.
+          Manage your notification preferences for this project.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -131,7 +115,9 @@ export function UpdateNotificationPreferencesForm({
                     <div className="space-y-0.5">
                       <FieldLabel>Live Visitor Toasts</FieldLabel>
                       <FieldDescription>
-                        Show toast notifications when new visitors arrive
+                        {field.state.value
+                          ? "Show toast notifications when new visitors arrive"
+                          : "Hide toast notifications when new visitors arrive"}
                       </FieldDescription>
                     </div>
                     <Switch
@@ -145,16 +131,6 @@ export function UpdateNotificationPreferencesForm({
             </form.Field>
           </FieldGroup>
         </form>
-
-        {form.getFieldValue("liveVisitorToasts") && (
-          <div className="mt-4 rounded-md bg-muted p-3 text-sm text-muted-foreground">
-            <p>
-              You'll receive toast notifications showing the visitor's location
-              and device type when they first arrive on your website.
-              Notifications are debounced to prevent spam.
-            </p>
-          </div>
-        )}
       </CardContent>
       <CardFooter>
         <Field orientation="horizontal" className="justify-between">

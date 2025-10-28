@@ -109,10 +109,6 @@ export default async function ProjectDashboardPage({
               )}
             </CardFooter>
           </Card>
-
-          <pre className="whitespace-pre-wrap break-words text-xs overflow-auto max-h-[400px] w-full rounded-md bg-muted p-4">
-            {JSON.stringify(site, null, 2)}
-          </pre>
         </div>
       </div>
     </HydrateClient>
