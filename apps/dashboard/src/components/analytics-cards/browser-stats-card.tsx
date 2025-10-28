@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Card,
   CardContent,
@@ -7,33 +5,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { Skeleton } from "@bklit/ui/components/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { Compass } from "lucide-react";
 import { getBrowserStats } from "@/actions/analytics-actions";
-import { authClient } from "@/auth/client";
-import { useWorkspace } from "@/contexts/workspace-provider";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
-import type { BrowserStats } from "@/types/analytics";
+import { NoDataCard } from "./no-data-card";
 
-export function BrowserStatsCard() {
-  const { activeProject } = useWorkspace();
-  const { data: session } = authClient.useSession();
+interface BrowserStatsCardProps {
+  projectId: string;
+  userId: string;
+}
 
-  const { data: browserStats, isLoading } = useQuery<BrowserStats[]>({
-    queryKey: ["browser-stats", activeProject?.id],
-    queryFn: () =>
-      getBrowserStats({
-        projectId: activeProject?.id || "",
-        userId: session?.user?.id || "",
-      }),
-    enabled: !!activeProject?.id,
+export async function BrowserStatsCard({
+  projectId,
+  userId,
+}: BrowserStatsCardProps) {
+  const browserStats = await getBrowserStats({
+    projectId,
+    userId,
   });
 
-  if (isLoading || !browserStats) {
-    return <BrowserStatsCardSkeleton />;
-  }
-
   const totalVisits = browserStats.reduce((sum, stat) => sum + stat.count, 0);
+
+  if (totalVisits === 0) {
+    return (
+      <NoDataCard
+        title="Browser Usage"
+        description="Page visits by browser"
+        icon={<Compass size={16} />}
+      />
+    );
+  }
 
   return (
     <Card>
@@ -65,33 +66,6 @@ export function BrowserStatsCard() {
               </div>
             );
           })}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function BrowserStatsCardSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-4 w-48" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Skeleton className="w-3 h-3 rounded-full" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-8" />
-              </div>
-            </div>
-          ))}
         </div>
       </CardContent>
     </Card>

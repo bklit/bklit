@@ -6,9 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { Skeleton } from "@bklit/ui/components/skeleton";
 import { getTopPages } from "@/actions/analytics-actions";
 import type { AnalyticsCardProps } from "@/types/analytics-cards";
+import { NoDataCard } from "./no-data-card";
 
 type RecentPageViewsCardProps = AnalyticsCardProps;
 
@@ -22,6 +22,15 @@ export async function RecentPageViewsCard({
     limit: 5,
   });
 
+  if (topPages.length === 0) {
+    return (
+      <NoDataCard
+        title="Popular Pages"
+        description="The most popular pages by views."
+      />
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -29,45 +38,20 @@ export async function RecentPageViewsCard({
         <CardDescription>The most popular pages by views.</CardDescription>
       </CardHeader>
       <CardContent>
-        {topPages.length > 0 ? (
-          <div className="flex flex-col">
-            {topPages.map((page) => (
-              <div
-                key={page.path}
-                className="border-b border-border text-sm flex gap-2 h-8 items-center justify-between last-of-type:border-none "
-              >
-                <div className="text-muted-foreground text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis">
-                  {page.path}
-                </div>
-                <Badge variant="secondary">
-                  {page.count} view{page.count !== 1 ? "s" : ""}
-                </Badge>
+        <div className="flex flex-col">
+          {topPages.map((page) => (
+            <div
+              key={page.path}
+              className="border-b border-border text-sm flex gap-2 h-8 items-center justify-between last-of-type:border-none "
+            >
+              <div className="text-muted-foreground text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis">
+                {page.path}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p>No page views yet for this project.</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-export function RecentPageViewsCardSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Page Views</CardTitle>
-        <CardDescription>
-          A list of the most recent page views captured.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {[...Array(5)].map((_, index) => {
-            const key = `skeleton-${index}`;
-            return <Skeleton key={key} className="h-12 w-full rounded-md" />;
-          })}
+              <Badge variant="secondary">
+                {page.count} view{page.count !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

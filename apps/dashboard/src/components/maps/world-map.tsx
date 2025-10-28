@@ -33,13 +33,19 @@ interface WorldMapProps {
 }
 
 export function WorldMap({ projectId, userId }: WorldMapProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isMapLoading, setIsMapLoading] = useState(true);
   const [visitData, setVisitData] = useState<CountryVisitData[]>([]);
   const [tooltipData, setTooltipData] = useState<CountryVisitData | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+
+  // Ensure component only renders on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleZoomIn = () => {
     if (svgRef.current && zoomRef.current) {
@@ -66,6 +72,8 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
         setVisitData(data);
       } catch (error) {
         console.error("Error loading visit data:", error);
+        // Set empty array on error so map still renders
+        setVisitData([]);
       }
     };
 
@@ -73,7 +81,7 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
   }, [projectId, userId]);
 
   useEffect(() => {
-    if (!svgRef.current || visitData.length === 0) return;
+    if (!svgRef.current || !isMounted) return;
 
     const svg = d3.select(svgRef.current);
     const width = 960;
@@ -126,7 +134,11 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
     // Load and render world map
     d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
       .then((world) => {
-        if (!world) return;
+        if (!world) {
+          console.error("World map data is null");
+          setIsMapLoading(false);
+          return;
+        }
 
         const countries = topojson.feature(
           // biome-ignore lint/suspicious/noExplicitAny: D3 and TopoJSON types are complex and external
@@ -154,97 +166,124 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
             d3.select(this).attr("fill", "var(--color-region)");
           });
 
-        // Add circle markers for countries with visits
-        const validData = visitData.filter((d) => {
-          const hasCoordinates = d.coordinates !== null;
-          const hasValidVisits =
-            typeof d.totalVisits === "number" && !Number.isNaN(d.totalVisits);
-          if (!hasCoordinates || !hasValidVisits) {
-            console.warn("Invalid data for marker:", d);
-          }
-          return hasCoordinates && hasValidVisits;
-        });
-
-        const markers = g
-          .selectAll(".marker")
-          .data(validData)
-          .enter()
-          .append("circle")
-          .attr("class", "marker")
-          .attr("cx", (d) => projection(d.coordinates || [0, 0])?.[0] || 0)
-          .attr("cy", (d) => projection(d.coordinates || [0, 0])?.[1] || 0)
-          .attr("r", 0)
-          .attr("fill", "var(--card-background)")
-          .attr("stroke", "var(--card-foreground)")
-          .attr("stroke-width", 2)
-          .attr("opacity", 0.8)
-          .style("cursor", "pointer");
-
-        // Animate markers
-        markers
-          .transition()
-          .duration(1000)
-          .delay((_d, i) => i * 100)
-          .attr("r", (d) => {
-            const totalVisits = Number(d.totalVisits) || 0;
-            return Math.sqrt(totalVisits / 10) + 6;
-          });
-
-        // Add tooltip interactions
-        markers
-          .on("mouseover", function (event, d) {
-            // Highlight marker
-            const totalVisits = Number(d.totalVisits) || 0;
-            d3.select(this)
-              .transition()
-              .duration(200)
-              .attr("r", Math.sqrt(totalVisits / 10) + 8)
-              .attr("opacity", 1);
-
-            // Show tooltip
-            const svgRect = svgRef.current?.getBoundingClientRect();
-            const relativeX = event.clientX - (svgRect?.left || 0);
-            const relativeY = event.clientY - (svgRect?.top || 0);
-
-            setTooltipData(d);
-            setTooltipPosition({ x: relativeX, y: relativeY });
-          })
-          .on("mousemove", (event) => {
-            const svgRect = svgRef.current?.getBoundingClientRect();
-            const relativeX = event.clientX - (svgRect?.left || 0);
-            const relativeY = event.clientY - (svgRect?.top || 0);
-
-            setTooltipPosition({ x: relativeX, y: relativeY });
-          })
-          .on("mouseout", function (d) {
-            // Reset marker
-            const totalVisits = Number(d.totalVisits) || 0;
-            d3.select(this)
-              .transition()
-              .duration(200)
-              .attr("r", Math.sqrt(totalVisits / 10) + 6);
-
-            // Restore all countries to normal opacity and color
-            g.selectAll(".country")
-              .transition()
-              .duration(200)
-              .attr("fill", "var(--color-region)");
-
-            // Hide tooltip
-            setTooltipData(null);
-          });
-
-        setIsLoading(false);
+        setIsMapLoading(false);
       })
       .catch((error) => {
         console.error("Error loading world map data:", error);
-        setIsLoading(false);
+        setIsMapLoading(false);
       });
-  }, [visitData]);
+  }, [isMounted]);
+
+  // Separate effect to handle visit data updates and marker rendering
+  useEffect(() => {
+    if (!svgRef.current || !isMounted || isMapLoading) return;
+
+    const svg = d3.select(svgRef.current);
+    const g = svg.select("g");
+
+    if (g.empty()) return;
+
+    // Clear existing markers
+    g.selectAll(".marker").remove();
+
+    // Add circle markers for countries with visits (only if we have data)
+    if (visitData.length > 0) {
+      const validData = visitData.filter((d) => {
+        const hasCoordinates = d.coordinates !== null;
+        const hasValidVisits =
+          typeof d.totalVisits === "number" && !Number.isNaN(d.totalVisits);
+        return hasCoordinates && hasValidVisits;
+      });
+
+      // Get projection from the existing map (must match the main map projection)
+      const projection = d3
+        .geoNaturalEarth1()
+        .scale(350)
+        .translate([480, 454.5]); // width/2, height/1.1
+
+      const markers = g
+        .selectAll(".marker")
+        .data(validData)
+        .enter()
+        .append("circle")
+        .attr("class", "marker")
+        .attr("cx", (d) => projection(d.coordinates || [0, 0])?.[0] || 0)
+        .attr("cy", (d) => projection(d.coordinates || [0, 0])?.[1] || 0)
+        .attr("r", 0)
+        .attr("fill", "var(--card-background)")
+        .attr("stroke", "var(--card-foreground)")
+        .attr("stroke-width", 2)
+        .attr("opacity", 0.8)
+        .style("cursor", "pointer");
+
+      // Animate markers
+      markers
+        .transition()
+        .duration(1000)
+        .delay((_d, i) => i * 100)
+        .attr("r", (d) => {
+          const totalVisits = Number(d.totalVisits) || 0;
+          return Math.sqrt(totalVisits / 10) + 6;
+        });
+
+      // Add tooltip interactions
+      markers
+        .on("mouseover", function (event, d) {
+          // Highlight marker
+          const totalVisits = Number(d.totalVisits) || 0;
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("r", Math.sqrt(totalVisits / 10) + 8)
+            .attr("opacity", 1);
+
+          // Show tooltip
+          const svgRect = svgRef.current?.getBoundingClientRect();
+          const relativeX = event.clientX - (svgRect?.left || 0);
+          const relativeY = event.clientY - (svgRect?.top || 0);
+
+          setTooltipData(d);
+          setTooltipPosition({ x: relativeX, y: relativeY });
+        })
+        .on("mousemove", (event) => {
+          const svgRect = svgRef.current?.getBoundingClientRect();
+          const relativeX = event.clientX - (svgRect?.left || 0);
+          const relativeY = event.clientY - (svgRect?.top || 0);
+
+          setTooltipPosition({ x: relativeX, y: relativeY });
+        })
+        .on("mouseout", function (d) {
+          // Reset marker
+          const totalVisits = Number(d.totalVisits) || 0;
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("r", Math.sqrt(totalVisits / 10) + 6);
+
+          // Restore all countries to normal opacity and color
+          g.selectAll(".country")
+            .transition()
+            .duration(200)
+            .attr("fill", "var(--color-region)");
+
+          // Hide tooltip
+          setTooltipData(null);
+        });
+    }
+  }, [visitData, isMounted, isMapLoading]);
+
+  // Don't render anything on server to prevent hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="relative w-full h-full">
+        <div className="bg-accent animate-pulse rounded-md h-[400px] w-full" />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
-      {isLoading && (
+      {isMapLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-card-background z-20">
           <div className="text-lg">Loading world map...</div>
         </div>

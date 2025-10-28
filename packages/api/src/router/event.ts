@@ -139,6 +139,7 @@ export const eventRouter = {
               id: true,
               timestamp: true,
               metadata: true,
+              sessionId: true,
             },
             orderBy: {
               timestamp: "desc",
@@ -182,6 +183,179 @@ export const eventRouter = {
           // When no date filters, show all event definitions
           return true;
         });
+    }),
+
+  listBySession: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        trackingId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(1000).default(10),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              timestamp: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      // Get the event definition
+      const eventDefinition = await ctx.prisma.eventDefinition.findFirst({
+        where: {
+          projectId: input.projectId,
+          trackingId: input.trackingId,
+        },
+      });
+
+      if (!eventDefinition) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      // Get events grouped by session
+      const sessionEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinitionId: eventDefinition.id,
+          projectId: input.projectId,
+          ...(dateFilter && dateFilter),
+        },
+        include: {
+          session: true,
+        },
+        orderBy: {
+          timestamp: "desc",
+        },
+      });
+
+      // Group events by session
+      const sessionGroups = sessionEvents.reduce(
+        (acc, event) => {
+          const sessionId = event.sessionId || "no-session";
+          if (!acc[sessionId]) {
+            acc[sessionId] = {
+              sessionId,
+              session: event.session,
+              events: [],
+              firstEvent: event,
+              lastEvent: event,
+            };
+          }
+          acc[sessionId].events.push(event);
+          // Update first and last events based on timestamp
+          if (event.timestamp < acc[sessionId].firstEvent.timestamp) {
+            acc[sessionId].firstEvent = event;
+          }
+          if (event.timestamp > acc[sessionId].lastEvent.timestamp) {
+            acc[sessionId].lastEvent = event;
+          }
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            sessionId: string;
+            session: (typeof sessionEvents)[0]["session"];
+            events: typeof sessionEvents;
+            firstEvent: (typeof sessionEvents)[0];
+            lastEvent: (typeof sessionEvents)[0];
+          }
+        >,
+      );
+
+      // Convert to array and sort by last event timestamp
+      const sessionGroupsArray = Object.values(sessionGroups).sort(
+        (a, b) =>
+          new Date(b.lastEvent.timestamp).getTime() -
+          new Date(a.lastEvent.timestamp).getTime(),
+      );
+
+      // Apply pagination
+      const totalCount = sessionGroupsArray.length;
+      const paginatedGroups = sessionGroupsArray.slice(
+        (input.page - 1) * input.limit,
+        input.page * input.limit,
+      );
+
+      // Transform data for display
+      const result = paginatedGroups.map((group) => {
+        const hasClick = group.events.some((event) => {
+          const metadata = event.metadata as { eventType?: string } | null;
+          return metadata?.eventType === "click";
+        });
+
+        const hasView = group.events.some((event) => {
+          const metadata = event.metadata as { eventType?: string } | null;
+          return metadata?.eventType === "view";
+        });
+
+        const hasHover = group.events.some((event) => {
+          const metadata = event.metadata as { eventType?: string } | null;
+          return metadata?.eventType === "hover";
+        });
+
+        // Get the trigger method from the first event
+        const firstEventMetadata = group.firstEvent.metadata as {
+          triggerMethod?: string;
+        } | null;
+        const triggerMethod = firstEventMetadata?.triggerMethod || "automatic";
+
+        return {
+          sessionId: group.sessionId,
+          session: group.session,
+          firstEvent: group.firstEvent,
+          lastEvent: group.lastEvent,
+          hasClick,
+          hasView,
+          hasHover,
+          triggerMethod,
+          totalInteractions: group.events.length,
+          events: group.events,
+        };
+      });
+
+      return {
+        sessions: result,
+        totalCount,
+        pagination: {
+          page: input.page,
+          limit: input.limit,
+          totalPages: Math.ceil(totalCount / input.limit),
+          hasNextPage: input.page < Math.ceil(totalCount / input.limit),
+          hasPreviousPage: input.page > 1,
+        },
+      };
     }),
 
   update: protectedProcedure

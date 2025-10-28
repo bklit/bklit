@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Card,
   CardContent,
@@ -7,62 +5,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { Skeleton } from "@bklit/ui/components/skeleton";
-import { useEffect, useState } from "react";
 import {
   getAnalyticsStats,
   getLiveUsers,
   getSessionAnalytics,
 } from "@/actions/analytics-actions";
-import { useWorkspace } from "@/contexts/workspace-provider";
-import type { AnalyticsStats } from "@/types/analytics";
 import type { SessionAnalyticsSummary } from "@/types/analytics-cards";
 
-export function ViewsCard({ userId }: { userId: string }) {
-  const { activeProject } = useWorkspace();
-  const [stats, setStats] = useState<AnalyticsStats | null>(null);
-  const [sessionStats, setSessionStats] =
-    useState<SessionAnalyticsSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [liveUsers, setLiveUsers] = useState(0);
+interface ViewsCardProps {
+  projectId: string;
+  userId: string;
+}
 
-  useEffect(() => {
-    if (!activeProject?.id) return;
+export async function ViewsCard({ projectId, userId }: ViewsCardProps) {
+  const [stats, sessionData, liveUsers] = await Promise.all([
+    getAnalyticsStats({ projectId, userId }),
+    getSessionAnalytics({ projectId, userId }),
+    getLiveUsers({ projectId, userId }),
+  ]);
 
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const [data, sessionData, liveUsersData] = await Promise.all([
-          getAnalyticsStats({ projectId: activeProject.id, userId }),
-          getSessionAnalytics({ projectId: activeProject.id, userId }),
-          getLiveUsers({ projectId: activeProject.id, userId }),
-        ]);
-        setStats(data);
-        setSessionStats({
-          totalSessions: sessionData.totalSessions,
-          bounceRate: sessionData.bounceRate,
-        });
-        setLiveUsers(liveUsersData);
-      } catch (error) {
-        console.error("Failed to fetch analytics stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-
-    // Set up periodic refresh for live users count (every 30 seconds)
-    const interval = setInterval(() => {
-      getLiveUsers({ projectId: activeProject?.id, userId }).then(setLiveUsers);
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [activeProject?.id, userId]);
-
-  if (loading || !stats || !sessionStats) {
-    return <ViewsCardSkeleton />;
-  }
+  const sessionStats: SessionAnalyticsSummary = {
+    totalSessions: sessionData.totalSessions,
+    bounceRate: sessionData.bounceRate,
+  };
 
   return (
     <Card>
@@ -106,45 +71,6 @@ export function ViewsCard({ userId }: { userId: string }) {
             <div>
               <div className="text-2xl font-bold">{liveUsers}</div>
               <div className="text-sm text-muted-foreground">Live Users</div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function ViewsCardSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Quick Stats</CardTitle>
-        <CardDescription>A quick overview of your app.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <Skeleton className="h-8 w-20 rounded" />
-              <Skeleton className="h-4 w-16 mt-1 rounded" />
-            </div>
-            <div>
-              <Skeleton className="h-8 w-20 rounded" />
-              <Skeleton className="h-4 w-20 mt-1 rounded" />
-            </div>
-            <div>
-              <Skeleton className="h-8 w-20 rounded" />
-              <Skeleton className="h-4 w-20 mt-1 rounded" />
-            </div>
-          </div>
-          <div className="flex justify-between items-center pt-2 border-t">
-            <div>
-              <Skeleton className="h-8 w-20 rounded" />
-              <Skeleton className="h-4 w-20 mt-1 rounded" />
-            </div>
-            <div>
-              <Skeleton className="h-8 w-20 rounded" />
-              <Skeleton className="h-4 w-20 mt-1 rounded" />
             </div>
           </div>
         </div>

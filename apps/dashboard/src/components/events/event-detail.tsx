@@ -57,7 +57,7 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
-import { RecentEventsTable } from "./recent-events-table";
+import { SessionEventsTable } from "./session-events-table";
 
 interface EventDetailProps {
   organizationId: string;
@@ -403,8 +403,8 @@ export function EventDetail({
           </Card>
         </div>
 
-        {/* Recent Events Table */}
-        <RecentEventsTable
+        {/* Session Events Table */}
+        <SessionEventsTable
           organizationId={organizationId}
           projectId={projectId}
           trackingId={trackingId}

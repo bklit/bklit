@@ -87,7 +87,7 @@ export function SiteSearch() {
                 <CommandGroup key={group.heading} heading={group.heading}>
                   {group.items.map((item: SearchItem) => (
                     <CommandItem
-                      key={item.value}
+                      key={item.value + item.label}
                       value={item.value}
                       onSelect={() => {
                         handleSelect(item.href);
@@ -102,7 +102,7 @@ export function SiteSearch() {
                 <CommandGroup key={group.heading} heading={group.heading}>
                   {group.items.map((item: SearchItem) => (
                     <CommandItem
-                      key={item.value}
+                      key={item.value + item.label}
                       value={item.value}
                       onSelect={() => {
                         handleSelect(item.href);

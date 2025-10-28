@@ -8,13 +8,23 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { Skeleton } from "@bklit/ui/components/skeleton";
+import { useEffect, useState } from "react";
 import { authClient } from "@/auth/client";
 import { useWorkspace } from "@/contexts/workspace-provider";
 import { WorldMap } from "../maps/world-map";
 
 export function WorldMapCard() {
+  const [isMounted, setIsMounted] = useState(false);
   const { activeProject } = useWorkspace();
   const { data: session } = authClient.useSession();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <WorldMapCardSkeleton />;
+  }
 
   if (!activeProject?.id || !session?.user?.id) {
     return <WorldMapCardSkeleton />;
