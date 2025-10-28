@@ -51,9 +51,14 @@ export async function ProjectSettingsNavigation({
 
   return (
     <nav className="flex flex-col gap-px">
-      <Link href={`/${organizationId}/${projectId}/settings/`}>
-        <Button variant="ghost">General</Button>
-      </Link>
+      <Button variant="ghost" asChild className="justify-start">
+        <Link href={`/${organizationId}/${projectId}/settings/`}>General</Link>
+      </Button>
+      <Button variant="ghost" asChild className="justify-start">
+        <Link href={`/${organizationId}/${projectId}/settings/notifications`}>
+          Notifications
+        </Link>
+      </Button>
     </nav>
   );
 }

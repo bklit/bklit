@@ -1,4 +1,9 @@
 import { Suspense } from "react";
+import {
+  getAnalyticsStats,
+  getLiveUsers,
+  getSessionAnalytics,
+} from "@/actions/analytics-actions";
 import { BounceRateCard } from "@/components/analytics-cards/bounce-rate-card";
 import { BrowserStatsCard } from "@/components/analytics-cards/browser-stats-card";
 import { MobileDesktopCard } from "@/components/analytics-cards/mobile-desktop-card";
@@ -18,6 +23,20 @@ export default async function AnalyticsPage({
   const { organizationId, projectId } = await params;
   const session = await authenticated();
 
+  const [initialStats, initialSessionData, initialLiveUsers] =
+    await Promise.all([
+      getAnalyticsStats({ projectId, userId: session.user.id }),
+      getSessionAnalytics({ projectId, userId: session.user.id }),
+      getLiveUsers({ projectId, userId: session.user.id }),
+    ]);
+
+  console.log("📊 DASHBOARD: Initial data fetched", {
+    totalViews: initialStats.totalViews,
+    uniqueVisits: initialStats.uniqueVisits,
+    totalSessions: initialSessionData.totalSessions,
+    liveUsers: initialLiveUsers,
+  });
+
   return (
     <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
       <div
@@ -25,7 +44,13 @@ export default async function AnalyticsPage({
       md:grid-cols-2 lg:grid-cols-3"
       >
         <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <ViewsCard projectId={projectId} userId={session.user.id} />
+          <ViewsCard
+            projectId={projectId}
+            organizationId={organizationId}
+            initialStats={initialStats}
+            initialSessionData={initialSessionData}
+            initialLiveUsers={initialLiveUsers}
+          />
         </Suspense>
         <Suspense fallback={<AnalyticsCardSkeleton />}>
           <TopCountriesCard projectId={projectId} userId={session.user.id} />

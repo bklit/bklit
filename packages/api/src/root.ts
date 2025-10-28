@@ -1,5 +1,6 @@
 import { authRouter } from "./router/auth";
 import { eventRouter } from "./router/event";
+import { notificationRouter } from "./router/notification";
 import { organizationRouter } from "./router/organization";
 import { projectRouter } from "./router/project";
 import { sessionRouter } from "./router/session";
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   organization: organizationRouter,
   event: eventRouter,
   session: sessionRouter,
+  notification: notificationRouter,
 }) as const;
 
 // export type definition of API

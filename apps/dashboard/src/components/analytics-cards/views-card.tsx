@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,28 +7,72 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import {
+import { useQuery } from "@tanstack/react-query";
+import type {
   getAnalyticsStats,
-  getLiveUsers,
   getSessionAnalytics,
 } from "@/actions/analytics-actions";
+import { useTRPC } from "@/trpc/react";
 import type { SessionAnalyticsSummary } from "@/types/analytics-cards";
 
 interface ViewsCardProps {
   projectId: string;
-  userId: string;
+  organizationId: string;
+  initialStats: Awaited<ReturnType<typeof getAnalyticsStats>>;
+  initialSessionData: Awaited<ReturnType<typeof getSessionAnalytics>>;
+  initialLiveUsers: number;
 }
 
-export async function ViewsCard({ projectId, userId }: ViewsCardProps) {
-  const [stats, sessionData, liveUsers] = await Promise.all([
-    getAnalyticsStats({ projectId, userId }),
-    getSessionAnalytics({ projectId, userId }),
-    getLiveUsers({ projectId, userId }),
-  ]);
+export function ViewsCard({
+  projectId,
+  organizationId,
+  initialStats,
+  initialSessionData,
+  initialLiveUsers,
+}: ViewsCardProps) {
+  // Use tRPC for real-time live users updates
+  const trpc = useTRPC();
+
+  const {
+    data: liveUsers,
+    isLoading,
+    error,
+  } = useQuery(
+    trpc.session.liveUsers.queryOptions(
+      {
+        projectId,
+        organizationId,
+      },
+      {
+        refetchInterval: 15000, // Poll every 15 seconds (less aggressive)
+        staleTime: 10000, // Consider data stale after 10 seconds
+        initialData: initialLiveUsers, // Use server-side data as initial
+        refetchOnWindowFocus: false, // Don't refetch when window gains focus
+        refetchOnMount: true, // Refetch when component mounts
+        retry: (failureCount, error) => {
+          // Don't retry on abort errors (normal behavior)
+          if (error instanceof Error && error.name === "AbortError") {
+            return false;
+          }
+          return failureCount < 3;
+        },
+      },
+    ),
+  );
+
+  console.log("📊 VIEWS CARD: Rendering with live users", {
+    projectId,
+    organizationId,
+    liveUsers: liveUsers ?? initialLiveUsers,
+    totalViews: initialStats.totalViews,
+    uniqueVisits: initialStats.uniqueVisits,
+    isLoading,
+    error,
+  });
 
   const sessionStats: SessionAnalyticsSummary = {
-    totalSessions: sessionData.totalSessions,
-    bounceRate: sessionData.bounceRate,
+    totalSessions: initialSessionData.totalSessions,
+    bounceRate: initialSessionData.bounceRate,
   };
 
   return (
@@ -40,7 +86,7 @@ export async function ViewsCard({ projectId, userId }: ViewsCardProps) {
           <div className="flex justify-between items-center">
             <div>
               <div className="text-2xl font-bold">
-                {stats.totalViews.toLocaleString()}
+                {initialStats.totalViews.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground">Total Views</div>
             </div>
@@ -62,14 +108,16 @@ export async function ViewsCard({ projectId, userId }: ViewsCardProps) {
           <div className="flex justify-between items-center pt-2 border-t">
             <div>
               <div className="text-2xl font-bold">
-                {stats.uniqueVisits.toLocaleString()}
+                {initialStats.uniqueVisits.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground">
                 Unique Visitors
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold">{liveUsers}</div>
+              <div className="text-2xl font-bold">
+                {isLoading ? "..." : (liveUsers ?? initialLiveUsers)}
+              </div>
               <div className="text-sm text-muted-foreground">Live Users</div>
             </div>
           </div>

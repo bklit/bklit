@@ -214,3 +214,17 @@ model TrackedSession {
   @@index([projectId, didBounce])
   @@index([visitorId])
 }
+
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  userId            String
+  projectId         String
+  liveVisitorToasts Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+  @@map("notification_preference")
+}

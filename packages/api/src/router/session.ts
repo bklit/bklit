@@ -146,4 +146,143 @@ export const sessionRouter = createTRPCRouter({
 
       return session;
     }),
+  liveUsers: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Check if user has access to the project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      // Clean up stale sessions first
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      await ctx.prisma.trackedSession.updateMany({
+        where: {
+          projectId: input.projectId,
+          endedAt: null,
+          startedAt: {
+            lt: thirtyMinutesAgo,
+          },
+        },
+        data: {
+          endedAt: new Date(),
+          duration: 1800, // 30 minutes in seconds
+          didBounce: false,
+        },
+      });
+
+      // Count active sessions
+      const liveUsers = await ctx.prisma.trackedSession.count({
+        where: {
+          projectId: input.projectId,
+          endedAt: null, // Active sessions only
+          startedAt: {
+            gte: thirtyMinutesAgo, // Only count sessions started in last 30 minutes
+          },
+        },
+      });
+
+      return liveUsers;
+    }),
+  recentSessions: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        since: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Check if user has access to the project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      // Get recent sessions (last 30 seconds by default)
+      const since = input.since || new Date(Date.now() - 30 * 1000);
+
+      console.log("🔍 RECENT SESSIONS: Querying for sessions", {
+        projectId: input.projectId,
+        since: since.toISOString(),
+        now: new Date().toISOString(),
+      });
+
+      const recentSessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          startedAt: {
+            gte: since,
+          },
+        },
+        select: {
+          id: true,
+          sessionId: true,
+          startedAt: true,
+          country: true,
+          city: true,
+          userAgent: true,
+          entryPage: true,
+        },
+        orderBy: {
+          startedAt: "desc",
+        },
+        take: 10, // Limit to prevent too many toasts
+      });
+
+      console.log("🔍 RECENT SESSIONS: Found sessions", {
+        count: recentSessions.length,
+        sessions: recentSessions.map((s) => ({
+          sessionId: s.sessionId,
+          startedAt: s.startedAt.toISOString(),
+          country: s.country,
+        })),
+      });
+
+      return recentSessions;
+    }),
 });
