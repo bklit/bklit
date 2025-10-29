@@ -63,6 +63,7 @@ export const pageviewRouter = createTRPCRouter({
           country: true,
           city: true,
           mobile: true,
+          ip: true,
         },
         orderBy: {
           timestamp: "desc",
@@ -82,11 +83,15 @@ export const pageviewRouter = createTRPCRouter({
               title: extractPageTitle(originalUrl),
               path: normalizedUrl,
               viewCount: 0,
+              uniqueUsers: new Set<string>(),
               lastViewed: pageview.timestamp,
               firstViewed: pageview.timestamp,
             };
           }
           acc[normalizedUrl].viewCount += 1;
+          if (pageview.ip) {
+            acc[normalizedUrl].uniqueUsers.add(pageview.ip);
+          }
           if (pageview.timestamp > acc[normalizedUrl].lastViewed) {
             acc[normalizedUrl].lastViewed = pageview.timestamp;
           }
@@ -102,6 +107,7 @@ export const pageviewRouter = createTRPCRouter({
             title: string;
             path: string;
             viewCount: number;
+            uniqueUsers: Set<string>;
             lastViewed: Date;
             firstViewed: Date;
           }
@@ -119,8 +125,28 @@ export const pageviewRouter = createTRPCRouter({
         input.page * input.limit,
       );
 
+      // Transform data to include user metrics
+      const pagesWithUserMetrics = paginatedPages.map((page) => {
+        const uniqueUserCount = page.uniqueUsers.size;
+        const avgViewsPerUser =
+          uniqueUserCount > 0
+            ? (page.viewCount / uniqueUserCount).toFixed(1)
+            : "0.0";
+
+        return {
+          url: page.url,
+          title: page.title,
+          path: page.path,
+          viewCount: page.viewCount,
+          uniqueUserCount,
+          avgViewsPerUser: parseFloat(avgViewsPerUser),
+          lastViewed: page.lastViewed,
+          firstViewed: page.firstViewed,
+        };
+      });
+
       return {
-        pages: paginatedPages,
+        pages: pagesWithUserMetrics,
         totalCount: pageGroupsArray.length,
         pagination: {
           page: input.page,
@@ -398,7 +424,7 @@ function extractPageTitle(url: string): string {
 
     // Convert to title case
     return formatSegment(cleanSegment);
-  } catch (error) {
+  } catch {
     return "Unknown Page";
   }
 }

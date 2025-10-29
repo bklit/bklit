@@ -94,6 +94,8 @@ export function PageviewsTable({
                 <TableHead>Page Title</TableHead>
                 <TableHead>Path</TableHead>
                 <TableHead>Views</TableHead>
+                <TableHead>Users</TableHead>
+                <TableHead>Avg/User</TableHead>
                 <TableHead>Last Viewed</TableHead>
               </TableRow>
             </TableHeader>
@@ -102,10 +104,18 @@ export function PageviewsTable({
                 <TableRow key={page.url}>
                   <TableCell className="font-medium">{page.title}</TableCell>
                   <TableCell className="text-sm text-muted-foreground font-mono">
-                    {page.path}
+                    <code className="py-1 px-2 bg-background border border-border/10 rounded-md">
+                      {page.path}
+                    </code>
                   </TableCell>
                   <TableCell className="text-sm font-medium">
                     {page.viewCount}
+                  </TableCell>
+                  <TableCell className="text-sm font-medium">
+                    {page.uniqueUserCount}
+                  </TableCell>
+                  <TableCell className="text-sm font-medium">
+                    {page.avgViewsPerUser}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     <div className="space-y-1">
