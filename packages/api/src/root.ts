@@ -2,6 +2,7 @@ import { authRouter } from "./router/auth";
 import { eventRouter } from "./router/event";
 import { notificationRouter } from "./router/notification";
 import { organizationRouter } from "./router/organization";
+import { pageviewRouter } from "./router/pageview";
 import { projectRouter } from "./router/project";
 import { sessionRouter } from "./router/session";
 import { createTRPCRouter } from "./trpc";
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
   organization: organizationRouter,
   event: eventRouter,
   session: sessionRouter,
+  pageview: pageviewRouter,
   notification: notificationRouter,
 }) as const;
 
