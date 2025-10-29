@@ -12,6 +12,11 @@ interface TrackingPayload {
   userAgent?: string;
   sessionId?: string;
   referrer?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
 }
 
 // Helper function to create a response with CORS headers
@@ -149,6 +154,13 @@ export async function POST(request: NextRequest) {
               mobile: isMobileDevice(payload.userAgent),
               // Link to session using the primary key (id), not the sessionId
               sessionId: session.id,
+              // Acquisition data
+              referrer: payload.referrer,
+              utmSource: payload.utmSource,
+              utmMedium: payload.utmMedium,
+              utmCampaign: payload.utmCampaign,
+              utmTerm: payload.utmTerm,
+              utmContent: payload.utmContent,
             },
           });
 
