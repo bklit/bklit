@@ -18,12 +18,11 @@
       "require": "./dist/index.js"
     }
   },
-  "dependencies": {},
   "files": [
     "dist"
   ],
   "devDependencies": {
-    "tsup": "^8.0.2",
-    "typescript": "^5.4.5"
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
   }
 }

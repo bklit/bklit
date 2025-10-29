@@ -20,12 +20,12 @@
   },
   "devDependencies": {
     "@bklit/tsconfig": "workspace:*",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.16",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "dotenv-cli": "catalog:",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.16",
     "typescript": "catalog:"
   }
 }
