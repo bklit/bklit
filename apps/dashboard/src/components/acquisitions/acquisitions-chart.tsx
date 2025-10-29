@@ -94,7 +94,9 @@ export function AcquisitionsChart({
       <Card>
         <CardHeader>
           <CardTitle>Acquisitions Over Time</CardTitle>
-          <CardDescription>Top 5 traffic sources over the last 30 days</CardDescription>
+          <CardDescription>
+            Top 5 traffic sources over the last 30 days
+          </CardDescription>
         </CardHeader>
         <CardContent className="h-[250px] flex items-center justify-center">
           <p className="text-sm text-muted-foreground">Loading chart data...</p>
@@ -108,10 +110,14 @@ export function AcquisitionsChart({
       <Card>
         <CardHeader>
           <CardTitle>Acquisitions Over Time</CardTitle>
-          <CardDescription>Top 5 traffic sources over the last 30 days</CardDescription>
+          <CardDescription>
+            Top 5 traffic sources over the last 30 days
+          </CardDescription>
         </CardHeader>
         <CardContent className="h-[250px] flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">No data available for this period.</p>
+          <p className="text-sm text-muted-foreground">
+            No data available for this period.
+          </p>
         </CardContent>
       </Card>
     );
