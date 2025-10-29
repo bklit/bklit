@@ -18,6 +18,8 @@ const badgeVariants = cva(
           "border-transparent bg-teal-900 text-teal-500 [a&]:hover:bg-teal-600 focus-visible:ring-teal-500/20",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        alternative:
+          "border-transparent bg-purple-900 text-purple-300 [a&]:hover:bg-purple-600 focus-visible:ring-purple-500/20",
       },
       size: {
         default: "text-xs px-2 py-0.5",

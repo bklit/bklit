@@ -60,32 +60,6 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
       >
         <div className="flex items-center gap-2">
           <DateRangePicker />
-          <div className="flex gap-2 ml-4">
-            <a
-              href="http://localhost:5173/?utm_source=google&utm_medium=cpc&utm_campaign=test-campaign"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 text-sm font-medium bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              🧪 Test UTM Link
-            </a>
-            <a
-              href="http://localhost:5173/?utm_source=facebook&utm_medium=social&utm_campaign=brand-awareness"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 text-sm font-medium bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-            >
-              📱 Test Social UTM
-            </a>
-            <a
-              href="http://localhost:5173/?utm_source=newsletter&utm_medium=email&utm_campaign=weekly-update"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 text-sm font-medium bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
-            >
-              📧 Test Email UTM
-            </a>
-          </div>
         </div>
       </PageHeader>
       <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
@@ -118,22 +92,6 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
             },
           ]}
         />
-        {/* Test Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-medium text-blue-900 mb-2">
-            🧪 Test Acquisition Data
-          </h3>
-          <p className="text-sm text-blue-700 mb-2">
-            Click the test links above to generate pageviews with UTM
-            parameters, or visit your site from external sites to test referrer
-            tracking.
-          </p>
-          <p className="text-xs text-blue-600">
-            <strong>For referrer testing:</strong> Open your site in a new tab,
-            then visit from Google, Facebook, or other sites to see referrer
-            data.
-          </p>
-        </div>
 
         {/* Acquisitions Chart */}
         <AcquisitionsChart
