@@ -35,13 +35,13 @@ interface AcquisitionsTableProps {
   projectId: string;
 }
 
-const sourceTypeColors = {
-  Direct: "bg-gray-100 text-gray-800",
-  Organic: "bg-green-100 text-green-800",
-  Social: "bg-blue-100 text-blue-800",
-  Paid: "bg-purple-100 text-purple-800",
-  UTM: "bg-orange-100 text-orange-800",
-  Referral: "bg-yellow-100 text-yellow-800",
+const sourceTypeVariants = {
+  Direct: "secondary",
+  Organic: "success",
+  Social: "outline",
+  Paid: "default",
+  UTM: "default",
+  Referral: "alternative",
 } as const;
 
 export function AcquisitionsTable({
@@ -98,8 +98,8 @@ export function AcquisitionsTable({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {Array.from({ length: 5 }, () => (
-              <Skeleton key={crypto.randomUUID()} className="h-12 w-full" />
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
         </CardContent>
@@ -163,22 +163,15 @@ export function AcquisitionsTable({
               {acquisitionsData.acquisitions.map((acquisition) => (
                 <TableRow key={acquisition.source}>
                   <TableCell className="font-medium">
-                    <div className="space-y-1">
-                      <div>{acquisition.source}</div>
-                      {acquisition.source.includes("(") && (
-                        <div className="text-xs text-muted-foreground">
-                          UTM Campaign
-                        </div>
-                      )}
-                    </div>
+                    <div>{acquisition.source}</div>
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant="secondary"
-                      className={
-                        sourceTypeColors[
-                          acquisition.sourceType as keyof typeof sourceTypeColors
-                        ] || "bg-gray-100 text-gray-800"
+                      size="lg"
+                      variant={
+                        sourceTypeVariants[
+                          acquisition.sourceType as keyof typeof sourceTypeVariants
+                        ] || "outline"
                       }
                     >
                       {acquisition.sourceType}
