@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
 
-// @ts-ignore - Complex Prisma types cause inference issues
+// @ts-expect-error - Complex Prisma types cause inference issues
 export const eventRouter = {
   create: protectedProcedure
     .input(

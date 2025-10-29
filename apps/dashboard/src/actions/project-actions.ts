@@ -118,7 +118,7 @@ export async function deleteProjectAction(
 
     return {
       success: true,
-      message: `Project \"${project.name}\" deleted successfully.`,
+      message: `Project "${project.name}" deleted successfully.`,
       // newprojectId is not relevant here, but FormState includes it as optional
     };
   } catch (error) {
