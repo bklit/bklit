@@ -60,7 +60,7 @@ export default function MarketingHomePage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-3 gap-px bg-bklit-600 px-px">
             <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h5 className="text-sm text-left font-bold font-mono">
+              <h5 className="text-lg text-left font-bold font-mono">
                 Real-time analytics
               </h5>
               <p className="text-muted-foreground font-mono text-sm">
