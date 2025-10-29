@@ -65,7 +65,12 @@ export function PageviewsChart({
 
   // Generate chart config for dynamic pages
   const chartConfig: ChartConfig = useMemo(() => {
-    const config: ChartConfig = {};
+    const config: ChartConfig = {
+      total: {
+        label: "Total Views",
+        color: "var(--bklit-500)",
+      },
+    };
 
     // Add individual page configs
     chartData?.topPages.forEach((page, index) => {
@@ -143,6 +148,18 @@ export function PageviewsChart({
         >
           <AreaChart data={chartData.timeSeriesData}>
             <defs>
+              <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-total)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-total)"
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
               {chartData.topPages.map((page) => (
                 <linearGradient
                   key={`fill${page.dataKey}`}
@@ -193,6 +210,16 @@ export function PageviewsChart({
                   indicator="dot"
                 />
               }
+            />
+
+            {/* Total views area - dashed line */}
+            <Area
+              dataKey="total"
+              type="linear"
+              fill="url(#fillTotal)"
+              stroke="var(--color-total)"
+              strokeDasharray="5 5"
+              fillOpacity={0.3}
             />
 
             {/* Individual page areas - overlapping */}
