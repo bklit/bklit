@@ -54,7 +54,7 @@ export function AcquisitionsTable({
     {
       page: {
         defaultValue: 1,
-        parse: (value) => parseInt(value) || 1,
+        parse: (value) => parseInt(value, 10) || 1,
         serialize: (value) => value.toString(),
       },
       startDate: parseAsIsoDateTime,

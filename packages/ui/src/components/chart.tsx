@@ -102,7 +102,6 @@ ${colorConfig
 
   return (
     <style
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: This is a shadcn/ui component that needs to inject CSS dynamically
       dangerouslySetInnerHTML={{
         __html: cssContent,
       }}
