@@ -148,6 +148,12 @@ model PageViewEvent {
   userAgent   String?
   sessionId   String?
   projectId   String
+  referrer    String?
+  utmCampaign String?
+  utmContent  String?
+  utmMedium   String?
+  utmSource   String?
+  utmTerm     String?
   project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
   session     TrackedSession? @relation(fields: [sessionId], references: [id])
 
@@ -156,6 +162,8 @@ model PageViewEvent {
   @@index([country])
   @@index([city])
   @@index([sessionId])
+  @@index([referrer])
+  @@index([utmSource])
 }
 
 model EventDefinition {
