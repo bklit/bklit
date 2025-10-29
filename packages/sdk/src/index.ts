@@ -105,6 +105,14 @@ export function initBklit(options: BklitOptions): void {
     }
 
     try {
+      // Extract UTM parameters from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const utmSource = urlParams.get('utm_source');
+      const utmMedium = urlParams.get('utm_medium');
+      const utmCampaign = urlParams.get('utm_campaign');
+      const utmTerm = urlParams.get('utm_term');
+      const utmContent = urlParams.get('utm_content');
+
       const data = {
         url: currentUrl,
         timestamp: new Date().toISOString(),
@@ -112,6 +120,11 @@ export function initBklit(options: BklitOptions): void {
         userAgent: navigator.userAgent,
         sessionId: currentSessionId,
         referrer: document.referrer || undefined,
+        utmSource: utmSource || undefined,
+        utmMedium: utmMedium || undefined,
+        utmCampaign: utmCampaign || undefined,
+        utmTerm: utmTerm || undefined,
+        utmContent: utmContent || undefined,
         environment: environment,
       };
 
@@ -323,6 +336,13 @@ export function trackPageView() {
 
   // Call the internal trackPageView function
   // We need to recreate it here since it's scoped inside initBklit
+  const urlParams = new URLSearchParams(window.location.search);
+  const utmSource = urlParams.get('utm_source');
+  const utmMedium = urlParams.get('utm_medium');
+  const utmCampaign = urlParams.get('utm_campaign');
+  const utmTerm = urlParams.get('utm_term');
+  const utmContent = urlParams.get('utm_content');
+
   const data = {
     url: window.location.href,
     timestamp: new Date().toISOString(),
@@ -330,6 +350,11 @@ export function trackPageView() {
     userAgent: navigator.userAgent,
     sessionId: currentSessionId,
     referrer: document.referrer || undefined,
+    utmSource: utmSource || undefined,
+    utmMedium: utmMedium || undefined,
+    utmCampaign: utmCampaign || undefined,
+    utmTerm: utmTerm || undefined,
+    utmContent: utmContent || undefined,
     environment: window.bklitEnvironment || "production",
   };
 
