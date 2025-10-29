@@ -1,0 +1,6 @@
+.bklit-hero {
+  background-image: url("/bg.jpg");
+  background-size: contain;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
