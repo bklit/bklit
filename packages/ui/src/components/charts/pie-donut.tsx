@@ -5,13 +5,7 @@ import NumberFlow from "@number-flow/react";
 import { type ReactElement, useEffect, useId, useMemo, useState } from "react";
 import { Cell, Pie, PieChart, Sector } from "recharts";
 import type { PieSectorDataItem } from "recharts/types/polar/Pie";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "../chart";
+import { type ChartConfig, ChartContainer, ChartLegend } from "../chart";
 
 type PieDatum = { name: string; value: number; label?: string };
 
@@ -63,7 +57,7 @@ export function PieDonut({
       if (second) map[second] = "var(--chart-negative)";
       for (let i = 2; i < data.length; i++) {
         const key = data[i]?.name;
-        if (key) map[key] = `var(--chart-${(i % 5 || 1) as number})`;
+        if (key) map[key] = `var(--chart-${((i % 5) + 1) as number})`;
       }
       return map;
     }
@@ -109,22 +103,6 @@ export function PieDonut({
     return "";
   }, [hoverKey]);
 
-  const nameToIndex = useMemo(() => {
-    const map: Record<string, number> = {};
-    data.forEach((d, idx) => {
-      map[d.name] = idx;
-    });
-    return map;
-  }, [data]);
-  const activeIndex = hoverKey
-    ? (nameToIndex[hoverKey] ?? undefined)
-    : undefined;
-
-  // Recharts typing: use any to allow activeIndex/activeShape
-  // Cast to a generic component to allow passing extended props used by Recharts at runtime
-  // biome-ignore lint/suspicious/noExplicitAny: Recharts component generic typing
-  const RechartsPieAny = Pie as unknown as (props: any) => ReactElement;
-
   return (
     <div className="grid grid-cols-1 grid-rows-1 aspect-square max-h-[250px] mx-auto justify-center items-center">
       <div className="col-start-1 row-start-1 flex justify-center items-center">
@@ -134,11 +112,7 @@ export function PieDonut({
           className={cn("mx-auto aspect-square max-h-[250px]", className)}
         >
           <PieChart accessibilityLayer>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <RechartsPieAny
+            <Pie
               data={data}
               dataKey="value"
               nameKey="name"
@@ -168,7 +142,6 @@ export function PieDonut({
                   }
                 }
               }}
-              activeIndex={activeIndex}
               activeShape={({
                 outerRadius = 0,
                 ...props
@@ -184,7 +157,7 @@ export function PieDonut({
                   className="transition"
                 />
               ))}
-            </RechartsPieAny>
+            </Pie>
             {showLegend ? (
               <ChartLegend
                 content={(legendProps: unknown) => {

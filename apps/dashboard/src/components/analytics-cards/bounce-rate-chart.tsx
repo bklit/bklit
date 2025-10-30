@@ -21,7 +21,7 @@ export function BounceRateChart({
     <PieDonut
       data={chartData}
       variant="positive-negative"
-      className="min-h-[200px] w-full"
+      className="min-h-[250px] w-full"
       centerLabel={{ showTotal: true, suffix: "sessions" }}
     />
   );

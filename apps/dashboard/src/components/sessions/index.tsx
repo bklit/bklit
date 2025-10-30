@@ -114,17 +114,30 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
             {
               icon: Clock,
               name: "Avg Duration",
-              stat:
-                allSessions.length > 0
-                  ? formatDuration(
-                      Math.round(
-                        (allSessions as any[]).reduce(
-                          (sum: number, s) => sum + (s.duration || 0),
-                          0,
-                        ) / allSessions.length,
-                      ),
-                    )
-                  : "0s",
+              stat: (() => {
+                if (allSessions.length === 0) return 0;
+
+                const avgSeconds =
+                  (allSessions as any[]).reduce(
+                    (sum: number, s) => sum + (s.duration || 0),
+                    0,
+                  ) / allSessions.length;
+
+                return avgSeconds < 60
+                  ? Math.round(avgSeconds)
+                  : Math.ceil(avgSeconds / 60);
+              })(),
+              suffix: (() => {
+                if (allSessions.length === 0) return "s";
+
+                const avgSeconds =
+                  (allSessions as any[]).reduce(
+                    (sum: number, s) => sum + (s.duration || 0),
+                    0,
+                  ) / allSessions.length;
+
+                return avgSeconds < 60 ? "s" : "m";
+              })(),
             },
           ]}
         />{" "}

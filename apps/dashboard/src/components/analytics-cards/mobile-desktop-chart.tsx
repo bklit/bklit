@@ -18,7 +18,7 @@ export function MobileDesktopChart({
   return (
     <PieDonut
       data={chartData}
-      className="min-h-[200px] w-full"
+      className="min-h-[250px] w-full"
       centerLabel={{ showTotal: true, suffix: "unique visits" }}
     />
   );
