@@ -12,6 +12,7 @@ import {
 } from "@bklit/ui/components/alert-dialog";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@bklit/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -46,6 +47,7 @@ import {
   Clock,
   Monitor,
   User,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
@@ -56,6 +58,12 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
+import { EventsChart } from "./events-chart";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@bklit/ui/components/tooltip";
 
 interface EventListItem {
   id: string;
@@ -121,6 +129,16 @@ export function Events({ organizationId, projectId }: EventsProps) {
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
+  // Total sessions in range for conversion rate baseline
+  const { data: sessionsStats } = useQuery(
+    trpc.session.getStats.queryOptions({
+      projectId,
+      organizationId,
+      startDate,
+      endDate,
+    }),
+  );
 
   const { data: events, isLoading } = useQuery(
     trpc.event.list.queryOptions({
@@ -534,6 +552,8 @@ export function Events({ organizationId, projectId }: EventsProps) {
           ]}
         />
 
+        <EventsChart organizationId={organizationId} projectId={projectId} />
+
         {isLoading && (
           <div className="space-y-4">
             <Empty className="border border-bklit-600 bg-bklit-900">
@@ -565,34 +585,65 @@ export function Events({ organizationId, projectId }: EventsProps) {
           </Empty>
         )}
         {events && Array.isArray(events) && events.length > 0 && (
-          <Table>
-            <TableCaption className="sr-only">
-              A list of your events
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Tracking ID</TableHead>
-                <TableHead>Sessions</TableHead>
-                <TableHead>Conversions</TableHead>
-                <TableHead className="text-right">
-                  <span className="sr-only">Actions</span>
+          <Card>
+            <CardHeader>
+              <CardTitle>Events</CardTitle>
+              <CardDescription>A list of your events</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableCaption className="sr-only">
+                  A list of your events
+                </TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Tracking ID</TableHead>
+                    <TableHead>Total Sessions</TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-2">
+                        Sessions with Event
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="size-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Number of unique sessions that triggered this specific event.<br />
+                            Multiple triggers within the same session count as one.
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableHead>
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    Conversion Rate
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="size-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Conversion rate = sessions with event / total sessions in range.<br />
+                        One conversion per session maximum.
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+                    <TableHead className="text-right">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
               {events.map((event) => {
-                const uniqueSessions = new Set(
-                  event.recentEvents.map((e) => e.sessionId).filter(Boolean),
-                );
-                const conversions =
-                  event.eventTypeCounts &&
-                  typeof event.eventTypeCounts.click === "number"
-                    ? event.eventTypeCounts.click
-                    : 0;
+                const uniqueSessionsCount = event.uniqueSessionsCount ?? 0;
+                // One conversion per session
+                const conversions = uniqueSessionsCount;
+                // Conversion rate: sessions with event / total sessions in range
+                // This shows what percentage of all sessions triggered this event
+                const totalSessionsInRange = sessionsStats?.totalSessions ?? 0;
                 const conversionRate =
-                  uniqueSessions.size > 0
-                    ? (conversions / uniqueSessions.size) * 100
+                  totalSessionsInRange > 0
+                    ? (uniqueSessionsCount / totalSessionsInRange) * 100
                     : 0;
                 return (
                   <TableRow key={event.id}>
@@ -602,23 +653,21 @@ export function Events({ organizationId, projectId }: EventsProps) {
                         {event.trackingId}
                       </code>
                     </TableCell>
-                    <TableCell>{uniqueSessions.size}</TableCell>
+                    <TableCell>{totalSessionsInRange}</TableCell>
+                    <TableCell>{uniqueSessionsCount}</TableCell>
                     <TableCell className="font-mono">
-                      <div className="flex items-center gap-2">
-                        {conversions}
-                        <Badge
-                          variant={
-                            conversionRate > 75
-                              ? "success"
-                              : conversionRate > 35
-                                ? "secondary"
-                                : "destructive"
-                          }
-                          size="lg"
-                        >
-                          {conversionRate.toFixed(0)}%
-                        </Badge>
-                      </div>
+                      <Badge
+                        variant={
+                          conversionRate > 75
+                            ? "success"
+                            : conversionRate > 35
+                              ? "secondary"
+                              : "destructive"
+                        }
+                        size="lg"
+                      >
+                        {conversionRate.toFixed(0)}%
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
@@ -643,6 +692,8 @@ export function Events({ organizationId, projectId }: EventsProps) {
               })}
             </TableBody>
           </Table>
+            </CardContent>
+          </Card>
         )}
       </div>
 

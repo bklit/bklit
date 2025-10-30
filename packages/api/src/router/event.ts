@@ -3,7 +3,6 @@ import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
 
-// @ts-expect-error - Complex Prisma types cause inference issues
 export const eventRouter = {
   create: protectedProcedure
     .input(
@@ -154,6 +153,7 @@ export const eventRouter = {
       return events
         .map((event) => {
           const eventTypeCounts: Record<string, number> = {};
+          const sessionIds = new Set<string>();
 
           for (const trackedEvent of event.trackedEvents) {
             const metadata = trackedEvent.metadata as {
@@ -161,6 +161,9 @@ export const eventRouter = {
             } | null;
             const eventType = metadata?.eventType || "unknown";
             eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
+            if (trackedEvent.sessionId) {
+              sessionIds.add(trackedEvent.sessionId);
+            }
           }
 
           return {
@@ -171,6 +174,7 @@ export const eventRouter = {
             createdAt: event.createdAt,
             updatedAt: event.updatedAt,
             totalCount: event.trackedEvents.length,
+            uniqueSessionsCount: sessionIds.size,
             eventTypeCounts,
             recentEvents: event.trackedEvents.slice(0, 5),
           };
@@ -621,26 +625,28 @@ export const eventRouter = {
         },
       });
 
-      // For conversion rate, only count automatic events (DOM-triggered, user-perceived)
-      // Manual JS events may not have been perceived by the user, so they shouldn't count as conversions
-      const automaticEventTimestamps = automaticEvents.map((e) => e.timestamp);
-      const sessionsWithEvent =
-        totalSessions > 0 && automaticEventTimestamps.length > 0
-          ? await ctx.prisma.trackedSession.count({
-              where: {
-                projectId: input.projectId,
-                ...(dateFilter && {
-                  startedAt: dateFilter.timestamp,
-                }),
-                OR: automaticEventTimestamps.map((timestamp) => ({
-                  startedAt: {
-                    gte: new Date(timestamp.getTime() - 5 * 60 * 1000),
-                    lte: new Date(timestamp.getTime() + 5 * 60 * 1000),
-                  },
-                })),
-              },
-            })
-          : 0;
+      // Count ALL unique sessions that triggered this event (not just paginated results)
+      const allTrackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinitionId: event.id,
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          session: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      const sessionIds = new Set<string>();
+      for (const trackedEvent of allTrackedEvents) {
+        if (trackedEvent.session?.id) {
+          sessionIds.add(trackedEvent.session.id);
+        }
+      }
+      const sessionsWithEvent = sessionIds.size;
 
       const conversionRate =
         totalSessions > 0 ? (sessionsWithEvent / totalSessions) * 100 : 0;
@@ -731,6 +737,191 @@ export const eventRouter = {
         totalCount: event.trackedEvents.length,
         eventTypeCounts,
         recentEvents: event.trackedEvents.slice(0, 10),
+      };
+    }),
+
+  getTimeSeries: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              timestamp: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinition: { projectId: input.projectId },
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          timestamp: true,
+          metadata: true,
+        },
+        orderBy: { timestamp: "asc" },
+      });
+
+      const eventCountsByDay = trackedEvents.reduce(
+        (acc, event) => {
+          const dateKey = event.timestamp.toISOString().split("T")[0] ?? "";
+          if (!acc[dateKey]) {
+            acc[dateKey] = { total: 0, automatic: 0, manual: 0 };
+          }
+          acc[dateKey].total += 1;
+
+          const metadata = event.metadata as { triggerMethod?: string } | null;
+          if (metadata?.triggerMethod === "manual") {
+            acc[dateKey].manual += 1;
+          } else {
+            acc[dateKey].automatic += 1;
+          }
+          return acc;
+        },
+        {} as Record<
+          string,
+          { total: number; automatic: number; manual: number }
+        >,
+      );
+
+      const endDate = input.endDate || new Date();
+      const startDate =
+        input.startDate ||
+        (() => {
+          const d = new Date(endDate);
+          d.setDate(d.getDate() - 30);
+          return d;
+        })();
+
+      const dateRange: string[] = [];
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const timeSeriesData = dateRange.map((date) => ({
+        date,
+        total: eventCountsByDay[date]?.total || 0,
+        automatic: eventCountsByDay[date]?.automatic || 0,
+        manual: eventCountsByDay[date]?.manual || 0,
+      }));
+
+      return { timeSeriesData };
+    }),
+
+  getStats: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              timestamp: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinition: { projectId: input.projectId },
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          metadata: true,
+          session: {
+            select: {
+              userAgent: true,
+              pageViewEvents: {
+                select: { mobile: true },
+                orderBy: { timestamp: "asc" },
+              },
+            },
+          },
+        },
+      });
+
+      const totalEvents = trackedEvents.length;
+      let automaticEvents = 0;
+      let manualEvents = 0;
+      let mobileEvents = 0;
+      let desktopEvents = 0;
+
+      for (const event of trackedEvents) {
+        const metadata = event.metadata as { triggerMethod?: string } | null;
+        if (metadata?.triggerMethod === "manual") {
+          manualEvents += 1;
+        } else {
+          automaticEvents += 1;
+        }
+
+        const isMobile =
+          event.session?.pageViewEvents.some((e) => e.mobile) ||
+          (event.session?.userAgent
+            ? /Mobile|Android|iPhone|iPad/.test(event.session.userAgent)
+            : false);
+        if (isMobile) mobileEvents += 1;
+        else desktopEvents += 1;
+      }
+
+      return {
+        totalEvents,
+        automaticEvents,
+        manualEvents,
+        mobileEvents,
+        desktopEvents,
       };
     }),
 } satisfies TRPCRouterRecord;
