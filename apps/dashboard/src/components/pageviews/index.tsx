@@ -1,8 +1,15 @@
 "use client";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@bklit/ui/components/select";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, Globe, Monitor, Smartphone } from "lucide-react";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsIsoDateTime, parseAsString, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
@@ -16,14 +23,17 @@ interface PageviewsProps {
   projectId: string;
 }
 
+type ViewMode = "all" | "entry-points";
+
 export function Pageviews({ organizationId, projectId }: PageviewsProps) {
   const trpc = useTRPC();
 
-  // Date range state using nuqs
-  const [dateParams] = useQueryStates(
+  // Date range and view mode state using nuqs
+  const [dateParams, setDateParams] = useQueryStates(
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      viewMode: parseAsString.withDefault("all"),
     },
     {
       history: "push",
@@ -39,6 +49,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
   }, [dateParams.startDate, dateParams.endDate]);
 
   const endDate = dateParams.endDate ?? undefined;
+  const viewMode = dateParams.viewMode as ViewMode;
 
   // Get pageview stats using tRPC
   const { data: statsData, isLoading: statsLoading } = useQuery(
@@ -50,18 +61,46 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
     }),
   );
 
+  // Get entry points data when in entry-points mode
+  const { data: entryPointsData, isLoading: entryPointsLoading } = useQuery({
+    ...trpc.pageview.getEntryPoints.queryOptions({
+      projectId,
+      organizationId,
+      startDate,
+      endDate,
+    }),
+    enabled: viewMode === "entry-points",
+  });
+
+  const isLoading =
+    statsLoading || (viewMode === "entry-points" && entryPointsLoading);
+
   return (
     <>
       {/* Header */}
       <PageHeader
         title="Pageviews"
         description={
-          statsLoading
+          isLoading
             ? "Loading pageviews..."
-            : `${statsData?.totalViews || 0} total pageviews`
+            : viewMode === "entry-points"
+              ? `${entryPointsData?.entryPages?.length || 0} unique entry points`
+              : `${statsData?.totalViews || 0} total pageviews`
         }
       >
         <div className="flex items-center gap-2">
+          <Select
+            value={viewMode}
+            onValueChange={(value) => setDateParams({ viewMode: value })}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select view mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Pageviews</SelectItem>
+              <SelectItem value="entry-points">Entry Points</SelectItem>
+            </SelectContent>
+          </Select>
           <DateRangePicker />
         </div>
       </PageHeader>
@@ -71,32 +110,64 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
           items={[
             {
               icon: Eye,
-              name: "Total Pageviews",
-              stat: statsData?.totalViews || 0,
+              name:
+                viewMode === "entry-points"
+                  ? "Entry Points"
+                  : "Total Pageviews",
+              stat:
+                viewMode === "entry-points"
+                  ? entryPointsData?.entryPages?.length || 0
+                  : statsData?.totalViews || 0,
             },
             {
               icon: Globe,
-              name: "Unique Pages",
-              stat: statsData?.uniquePages || 0,
+              name: viewMode === "entry-points" ? "Sessions" : "Unique Pages",
+              stat:
+                viewMode === "entry-points"
+                  ? entryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.sessions,
+                      0,
+                    ) || 0
+                  : statsData?.uniquePages || 0,
             },
             {
               icon: Smartphone,
               name: "Mobile Views",
-              stat: statsData?.mobileViews || 0,
+              stat:
+                viewMode === "entry-points"
+                  ? entryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.mobileSessions,
+                      0,
+                    ) || 0
+                  : statsData?.mobileViews || 0,
             },
             {
               icon: Monitor,
               name: "Desktop Views",
-              stat: statsData?.desktopViews || 0,
+              stat:
+                viewMode === "entry-points"
+                  ? entryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.desktopSessions,
+                      0,
+                    ) || 0
+                  : statsData?.desktopViews || 0,
             },
           ]}
         />
 
         {/* Pageviews Chart */}
-        <PageviewsChart organizationId={organizationId} projectId={projectId} />
+        <PageviewsChart
+          organizationId={organizationId}
+          projectId={projectId}
+          viewMode={viewMode}
+        />
 
         {/* Pageviews List */}
-        <PageviewsTable organizationId={organizationId} projectId={projectId} />
+        <PageviewsTable
+          organizationId={organizationId}
+          projectId={projectId}
+          viewMode={viewMode}
+        />
       </div>
     </>
   );
