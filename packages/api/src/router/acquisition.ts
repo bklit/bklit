@@ -186,6 +186,8 @@ export const acquisitionRouter = createTRPCRouter({
         organicTraffic,
         socialTraffic,
         paidTraffic,
+        mobileViews,
+        desktopViews,
       ] = await Promise.all([
         ctx.prisma.pageViewEvent.count({
           where: {
@@ -230,6 +232,20 @@ export const acquisitionRouter = createTRPCRouter({
             utmSource: { not: null },
           },
         }),
+        ctx.prisma.pageViewEvent.count({
+          where: {
+            projectId: input.projectId,
+            mobile: true,
+            ...(dateFilter && dateFilter),
+          },
+        }),
+        ctx.prisma.pageViewEvent.count({
+          where: {
+            projectId: input.projectId,
+            mobile: false,
+            ...(dateFilter && dateFilter),
+          },
+        }),
       ]);
 
       return {
@@ -238,6 +254,8 @@ export const acquisitionRouter = createTRPCRouter({
         organicTraffic,
         socialTraffic,
         paidTraffic,
+        mobileViews,
+        desktopViews,
         uniqueSources: 0, // Will be calculated from the acquisitions data
       };
     }),
@@ -298,7 +316,7 @@ export const acquisitionRouter = createTRPCRouter({
       const acquisitionGroups = pageviews.reduce(
         (acc, pageview) => {
           const source = getAcquisitionSource(pageview);
-          const dateKey = pageview.timestamp.toISOString().split("T")[0];
+          const dateKey = pageview.timestamp.toISOString().split("T")[0] ?? "";
 
           if (!acc[source]) {
             acc[source] = {};
@@ -348,7 +366,7 @@ export const acquisitionRouter = createTRPCRouter({
       const dateRange: string[] = [];
       const currentDate = new Date(startDate);
       while (currentDate <= endDate) {
-        dateRange.push(currentDate.toISOString().split("T")[0]);
+        dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
