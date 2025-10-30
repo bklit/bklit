@@ -3,7 +3,6 @@ import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
 
-// @ts-expect-error - Complex Prisma types cause inference issues
 export const eventRouter = {
   create: protectedProcedure
     .input(
@@ -154,6 +153,7 @@ export const eventRouter = {
       return events
         .map((event) => {
           const eventTypeCounts: Record<string, number> = {};
+          const sessionIds = new Set<string>();
 
           for (const trackedEvent of event.trackedEvents) {
             const metadata = trackedEvent.metadata as {
@@ -161,6 +161,9 @@ export const eventRouter = {
             } | null;
             const eventType = metadata?.eventType || "unknown";
             eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
+            if (trackedEvent.sessionId) {
+              sessionIds.add(trackedEvent.sessionId);
+            }
           }
 
           return {
@@ -171,6 +174,7 @@ export const eventRouter = {
             createdAt: event.createdAt,
             updatedAt: event.updatedAt,
             totalCount: event.trackedEvents.length,
+            uniqueSessionsCount: sessionIds.size,
             eventTypeCounts,
             recentEvents: event.trackedEvents.slice(0, 5),
           };
@@ -328,8 +332,27 @@ export const eventRouter = {
         // Get the trigger method from the first event
         const firstEventMetadata = group.firstEvent.metadata as {
           triggerMethod?: string;
+          selectorType?: string;
+          source?: string;
         } | null;
-        const triggerMethod = firstEventMetadata?.triggerMethod || "automatic";
+        let triggerType: "data-attr" | "id" | "programmatic" = "programmatic";
+        if (
+          firstEventMetadata?.selectorType === "data-attr" ||
+          firstEventMetadata?.selectorType === "dataAttr"
+        ) {
+          triggerType = "data-attr";
+        } else if (firstEventMetadata?.selectorType === "id") {
+          triggerType = "id";
+        } else if (
+          firstEventMetadata?.triggerMethod === "manual" ||
+          firstEventMetadata?.source === "sdk"
+        ) {
+          triggerType = "programmatic";
+        } else if (firstEventMetadata?.triggerMethod === "automatic") {
+          triggerType = "data-attr";
+        } else {
+          triggerType = "programmatic";
+        }
 
         return {
           sessionId: group.sessionId,
@@ -339,7 +362,7 @@ export const eventRouter = {
           hasClick,
           hasView,
           hasHover,
-          triggerMethod,
+          triggerType,
           totalInteractions: group.events.length,
           events: group.events,
         };
@@ -582,18 +605,19 @@ export const eventRouter = {
       const eventTypeCounts: Record<string, number> = {};
       const timeSeriesData: Record<string, { views: number; clicks: number }> =
         {};
+      const typeSeries: Record<
+        string,
+        { dataAttr: number; id: number; programmatic: number }
+      > = {};
 
-      // Separate automatic (DOM-triggered) vs manual events
-      // Note: Events without triggerMethod are treated as automatic for backward compatibility
-      const automaticEvents = trackedEvents.filter((e) => {
-        const metadata = e.metadata as { triggerMethod?: string } | null;
-        return metadata?.triggerMethod !== "manual"; // Include automatic and legacy events (undefined/null)
-      });
+      // Build time series and type series (data-attr, id, programmatic)
 
       for (const trackedEvent of trackedEvents) {
         const metadata = trackedEvent.metadata as {
           eventType?: string;
           triggerMethod?: string;
+          selectorType?: string;
+          source?: string;
         } | null;
         const eventType = metadata?.eventType || "unknown";
         eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
@@ -609,6 +633,30 @@ export const eventRouter = {
           } else if (eventType === "click") {
             timeSeriesData[dateKey].clicks += 1;
           }
+
+          // classify trigger type
+          let triggerType: "dataAttr" | "id" | "programmatic" = "programmatic";
+          if (
+            metadata?.selectorType === "data-attr" ||
+            metadata?.selectorType === "dataAttr"
+          ) {
+            triggerType = "dataAttr";
+          } else if (metadata?.selectorType === "id") {
+            triggerType = "id";
+          } else if (
+            metadata?.triggerMethod === "manual" ||
+            metadata?.source === "sdk"
+          ) {
+            triggerType = "programmatic";
+          } else if (metadata?.triggerMethod === "automatic") {
+            // Default automatic to data-attr when selectorType is not provided
+            triggerType = "dataAttr";
+          }
+
+          if (!typeSeries[dateKey]) {
+            typeSeries[dateKey] = { dataAttr: 0, id: 0, programmatic: 0 };
+          }
+          typeSeries[dateKey][triggerType] += 1;
         }
       }
 
@@ -621,26 +669,28 @@ export const eventRouter = {
         },
       });
 
-      // For conversion rate, only count automatic events (DOM-triggered, user-perceived)
-      // Manual JS events may not have been perceived by the user, so they shouldn't count as conversions
-      const automaticEventTimestamps = automaticEvents.map((e) => e.timestamp);
-      const sessionsWithEvent =
-        totalSessions > 0 && automaticEventTimestamps.length > 0
-          ? await ctx.prisma.trackedSession.count({
-              where: {
-                projectId: input.projectId,
-                ...(dateFilter && {
-                  startedAt: dateFilter.timestamp,
-                }),
-                OR: automaticEventTimestamps.map((timestamp) => ({
-                  startedAt: {
-                    gte: new Date(timestamp.getTime() - 5 * 60 * 1000),
-                    lte: new Date(timestamp.getTime() + 5 * 60 * 1000),
-                  },
-                })),
-              },
-            })
-          : 0;
+      // Count ALL unique sessions that triggered this event (not just paginated results)
+      const allTrackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinitionId: event.id,
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          session: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      const sessionIds = new Set<string>();
+      for (const trackedEvent of allTrackedEvents) {
+        if (trackedEvent.session?.id) {
+          sessionIds.add(trackedEvent.session.id);
+        }
+      }
+      const sessionsWithEvent = sessionIds.size;
 
       const conversionRate =
         totalSessions > 0 ? (sessionsWithEvent / totalSessions) * 100 : 0;
@@ -650,6 +700,9 @@ export const eventRouter = {
           date,
           views: data.views,
           clicks: data.clicks,
+          dataAttr: typeSeries[date]?.dataAttr || 0,
+          id: typeSeries[date]?.id || 0,
+          programmatic: typeSeries[date]?.programmatic || 0,
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -731,6 +784,187 @@ export const eventRouter = {
         totalCount: event.trackedEvents.length,
         eventTypeCounts,
         recentEvents: event.trackedEvents.slice(0, 10),
+      };
+    }),
+
+  getTimeSeries: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              timestamp: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinition: { projectId: input.projectId },
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          timestamp: true,
+          metadata: true,
+        },
+        orderBy: { timestamp: "asc" },
+      });
+
+      const eventCountsByDay = trackedEvents.reduce(
+        (acc, event) => {
+          const dateKey = event.timestamp.toISOString().split("T")[0] ?? "";
+          if (!acc[dateKey]) {
+            acc[dateKey] = { total: 0, views: 0, clicks: 0 };
+          }
+          acc[dateKey].total += 1;
+
+          const metadata = event.metadata as { eventType?: string } | null;
+          const type = metadata?.eventType || "unknown";
+          if (type === "view") acc[dateKey].views += 1;
+          if (type === "click") acc[dateKey].clicks += 1;
+
+          return acc;
+        },
+        {} as Record<string, { total: number; views: number; clicks: number }>,
+      );
+
+      const endDate = input.endDate || new Date();
+      const startDate =
+        input.startDate ||
+        (() => {
+          const d = new Date(endDate);
+          d.setDate(d.getDate() - 30);
+          return d;
+        })();
+
+      const dateRange: string[] = [];
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const timeSeriesData = dateRange.map((date) => ({
+        date,
+        total: eventCountsByDay[date]?.total || 0,
+        views: eventCountsByDay[date]?.views || 0,
+        clicks: eventCountsByDay[date]?.clicks || 0,
+      }));
+
+      return { timeSeriesData };
+    }),
+
+  getStats: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              timestamp: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinition: { projectId: input.projectId },
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          metadata: true,
+          session: {
+            select: {
+              userAgent: true,
+              pageViewEvents: {
+                select: { mobile: true },
+                orderBy: { timestamp: "asc" },
+              },
+            },
+          },
+        },
+      });
+
+      const totalEvents = trackedEvents.length;
+      let automaticEvents = 0;
+      let manualEvents = 0;
+      let mobileEvents = 0;
+      let desktopEvents = 0;
+
+      for (const event of trackedEvents) {
+        const metadata = event.metadata as { triggerMethod?: string } | null;
+        if (metadata?.triggerMethod === "manual") {
+          manualEvents += 1;
+        } else {
+          automaticEvents += 1;
+        }
+
+        const isMobile =
+          event.session?.pageViewEvents.some((e) => e.mobile) ||
+          (event.session?.userAgent
+            ? /Mobile|Android|iPhone|iPad/.test(event.session.userAgent)
+            : false);
+        if (isMobile) mobileEvents += 1;
+        else desktopEvents += 1;
+      }
+
+      return {
+        totalEvents,
+        automaticEvents,
+        manualEvents,
+        mobileEvents,
+        desktopEvents,
       };
     }),
 } satisfies TRPCRouterRecord;

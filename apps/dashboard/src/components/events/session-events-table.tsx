@@ -148,7 +148,7 @@ export function SessionEventsTable({
           <TableHeader>
             <TableRow>
               <TableHead>Session</TableHead>
-              <TableHead>Method</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Conversion</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Browser</TableHead>
@@ -179,17 +179,19 @@ export function SessionEventsTable({
                       : `${session.sessionId.substring(0, 8)}...`}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      size="lg"
-                      variant={
-                        session.triggerMethod === "automatic"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className="capitalize"
-                    >
-                      {session.triggerMethod}
-                    </Badge>
+                    {session.hasClick ? (
+                      <Badge variant="success" size="lg">
+                        Clicked
+                      </Badge>
+                    ) : session.hasView ? (
+                      <Badge variant="secondary" size="lg">
+                        Viewed
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" size="lg">
+                        -
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Tooltip>

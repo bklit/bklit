@@ -13,6 +13,13 @@ import {
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@bklit/ui/components/card";
+import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -38,12 +45,18 @@ import {
   TableHeader,
   TableRow,
 } from "@bklit/ui/components/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@bklit/ui/components/tooltip";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   AlertCircle,
   CalendarIcon,
   Clock,
+  Info,
   Monitor,
   User,
 } from "lucide-react";
@@ -56,6 +69,7 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
+import { EventsChart } from "./events-chart";
 
 interface EventListItem {
   id: string;
@@ -121,6 +135,16 @@ export function Events({ organizationId, projectId }: EventsProps) {
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
+  // Total sessions in range for conversion rate baseline
+  const { data: sessionsStats } = useQuery(
+    trpc.session.getStats.queryOptions({
+      projectId,
+      organizationId,
+      startDate,
+      endDate,
+    }),
+  );
 
   const { data: events, isLoading } = useQuery(
     trpc.event.list.queryOptions({
@@ -534,6 +558,8 @@ export function Events({ organizationId, projectId }: EventsProps) {
           ]}
         />
 
+        <EventsChart organizationId={organizationId} projectId={projectId} />
+
         {isLoading && (
           <div className="space-y-4">
             <Empty className="border border-bklit-600 bg-bklit-900">
@@ -565,84 +591,123 @@ export function Events({ organizationId, projectId }: EventsProps) {
           </Empty>
         )}
         {events && Array.isArray(events) && events.length > 0 && (
-          <Table>
-            <TableCaption className="sr-only">
-              A list of your events
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Tracking ID</TableHead>
-                <TableHead>Sessions</TableHead>
-                <TableHead>Conversions</TableHead>
-                <TableHead className="text-right">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.map((event) => {
-                const uniqueSessions = new Set(
-                  event.recentEvents.map((e) => e.sessionId).filter(Boolean),
-                );
-                const conversions =
-                  event.eventTypeCounts &&
-                  typeof event.eventTypeCounts.click === "number"
-                    ? event.eventTypeCounts.click
-                    : 0;
-                const conversionRate =
-                  uniqueSessions.size > 0
-                    ? (conversions / uniqueSessions.size) * 100
-                    : 0;
-                return (
-                  <TableRow key={event.id}>
-                    <TableCell className="font-medium">{event.name}</TableCell>
-                    <TableCell>
-                      <code className="text-sm bg-muted px-2 py-1 rounded">
-                        {event.trackingId}
-                      </code>
-                    </TableCell>
-                    <TableCell>{uniqueSessions.size}</TableCell>
-                    <TableCell className="font-mono">
+          <Card>
+            <CardHeader>
+              <CardTitle>Events</CardTitle>
+              <CardDescription>A list of your events</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableCaption className="sr-only">
+                  A list of your events
+                </TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Tracking ID</TableHead>
+                    <TableHead>Total Sessions</TableHead>
+                    <TableHead>
                       <div className="flex items-center gap-2">
-                        {conversions}
-                        <Badge
-                          variant={
-                            conversionRate > 75
-                              ? "success"
-                              : conversionRate > 35
-                                ? "secondary"
-                                : "destructive"
-                          }
-                          size="lg"
-                        >
-                          {conversionRate.toFixed(0)}%
-                        </Badge>
+                        Sessions with Event
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="size-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Number of unique sessions that triggered this
+                            specific event.
+                            <br />
+                            Multiple triggers within the same session count as
+                            one.
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Link
-                          href={`/${organizationId}/${projectId}/events/${event.trackingId}`}
-                        >
-                          <Button variant="secondary" size="lg">
-                            View
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => openEditSheet(event)}
-                        >
-                          Edit
-                        </Button>
+                    </TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-2">
+                        Conversion Rate
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="size-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Conversion rate = sessions with event / total
+                            sessions in range.
+                            <br />
+                            One conversion per session maximum.
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {events.map((event) => {
+                    const uniqueSessionsCount = event.uniqueSessionsCount ?? 0;
+                    // One conversion per session
+                    const conversions = uniqueSessionsCount;
+                    // Conversion rate: sessions with event / total sessions in range
+                    // This shows what percentage of all sessions triggered this event
+                    const totalSessionsInRange =
+                      sessionsStats?.totalSessions ?? 0;
+                    const conversionRate =
+                      totalSessionsInRange > 0
+                        ? (uniqueSessionsCount / totalSessionsInRange) * 100
+                        : 0;
+                    return (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">
+                          {event.name}
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-sm bg-muted px-2 py-1 rounded">
+                            {event.trackingId}
+                          </code>
+                        </TableCell>
+                        <TableCell>{totalSessionsInRange}</TableCell>
+                        <TableCell>{uniqueSessionsCount}</TableCell>
+                        <TableCell className="font-mono">
+                          <Badge
+                            variant={
+                              conversionRate > 75
+                                ? "success"
+                                : conversionRate > 35
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                            size="lg"
+                          >
+                            {conversionRate.toFixed(0)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Link
+                              href={`/${organizationId}/${projectId}/events/${event.trackingId}`}
+                            >
+                              <Button variant="secondary" size="lg">
+                                View
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              onClick={() => openEditSheet(event)}
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         )}
       </div>
 
