@@ -2,6 +2,167 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const sessionRouter = createTRPCRouter({
+  getTimeSeries: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              startedAt: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const sessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          startedAt: true,
+          didBounce: true,
+        },
+        orderBy: { startedAt: "asc" },
+      });
+
+      const sessionCountsByDay = sessions.reduce(
+        (acc, s) => {
+          const dateKey = s.startedAt.toISOString().split("T")[0] ?? "";
+          if (!acc[dateKey]) {
+            acc[dateKey] = { total: 0, engaged: 0, bounced: 0 };
+          }
+          acc[dateKey].total += 1;
+          if (s.didBounce) {
+            acc[dateKey].bounced += 1;
+          } else {
+            acc[dateKey].engaged += 1;
+          }
+          return acc;
+        },
+        {} as Record<
+          string,
+          { total: number; engaged: number; bounced: number }
+        >,
+      );
+
+      const endDate = input.endDate || new Date();
+      const startDate =
+        input.startDate ||
+        (() => {
+          const d = new Date(endDate);
+          d.setDate(d.getDate() - 30);
+          return d;
+        })();
+
+      const dateRange: string[] = [];
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const timeSeriesData = dateRange.map((date) => ({
+        date,
+        total: sessionCountsByDay[date]?.total || 0,
+        engaged: sessionCountsByDay[date]?.engaged || 0,
+        bounced: sessionCountsByDay[date]?.bounced || 0,
+      }));
+
+      return { timeSeriesData };
+    }),
+
+  getStats: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              startedAt: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const sessions = await ctx.prisma.trackedSession.findMany({
+        where: { projectId: input.projectId, ...(dateFilter && dateFilter) },
+        select: {
+          id: true,
+          startedAt: true,
+          userAgent: true,
+          pageViewEvents: {
+            select: { mobile: true },
+            orderBy: { timestamp: "asc" },
+          },
+        },
+      });
+
+      const totalSessions = sessions.length;
+      let mobileSessions = 0;
+      let desktopSessions = 0;
+
+      for (const s of sessions) {
+        const isMobile =
+          s.pageViewEvents.some((e) => e.mobile) ||
+          (s.userAgent
+            ? /Mobile|Android|iPhone|iPad/.test(s.userAgent)
+            : false);
+        if (isMobile) mobileSessions += 1;
+        else desktopSessions += 1;
+      }
+
+      return { totalSessions, mobileSessions, desktopSessions };
+    }),
   getRecent: protectedProcedure
     .input(
       z.object({

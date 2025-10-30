@@ -8,6 +8,7 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
+import { SessionsChart } from "./sessions-chart";
 import { SessionsTable } from "./sessions-table";
 
 interface SessionsProps {
@@ -82,7 +83,6 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
   return (
     <>
-      {/* Header */}
       <PageHeader
         title="Sessions"
         description={
@@ -94,7 +94,6 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
         </div>
       </PageHeader>
       <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
-        {/* Stats Cards */}
         <Stats
           items={[
             {
@@ -105,12 +104,12 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
             {
               icon: Monitor,
               name: "Engaged",
-              stat: allSessions.filter((s: Session) => !s.didBounce).length,
+              stat: (allSessions as any[]).filter((s) => !s.didBounce).length,
             },
             {
               icon: MapPin,
               name: "Bounced",
-              stat: allSessions.filter((s: Session) => s.didBounce).length,
+              stat: (allSessions as any[]).filter((s) => s.didBounce).length,
             },
             {
               icon: Clock,
@@ -119,8 +118,8 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                 allSessions.length > 0
                   ? formatDuration(
                       Math.round(
-                        allSessions.reduce(
-                          (sum: number, s: Session) => sum + (s.duration || 0),
+                        (allSessions as any[]).reduce(
+                          (sum: number, s) => sum + (s.duration || 0),
                           0,
                         ) / allSessions.length,
                       ),
@@ -128,9 +127,8 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                   : "0s",
             },
           ]}
-        />
-
-        {/* Sessions List */}
+        />{" "}
+        <SessionsChart organizationId={organizationId} projectId={projectId} />
         <SessionsTable organizationId={organizationId} projectId={projectId} />
       </div>
     </>
