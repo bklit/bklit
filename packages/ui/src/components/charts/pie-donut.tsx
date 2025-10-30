@@ -2,8 +2,8 @@
 
 import { cn } from "@bklit/ui/lib/utils";
 import NumberFlow from "@number-flow/react";
-import { type ReactElement, useId, useMemo, useState } from "react";
-import { Cell, Label, Pie, PieChart, Sector } from "recharts";
+import { type ReactElement, useEffect, useId, useMemo, useState } from "react";
+import { Cell, Pie, PieChart, Sector } from "recharts";
 import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import {
   type ChartConfig,
@@ -30,7 +30,7 @@ interface PieDonutProps {
 
 export function PieDonut({
   data,
-  innerRadius = 60,
+  innerRadius = 54,
   outerRadius = 80,
   showLegend = true,
   variant = "default",
@@ -40,11 +40,17 @@ export function PieDonut({
 }: PieDonutProps) {
   const [hoverKey, setHoverKey] = useState<string | undefined>(undefined);
   const chartId = useId().replace(/:/g, "");
+  const [displayValue, setDisplayValue] = useState<number>(0);
 
   const total = useMemo(
     () => data.reduce((acc, d) => acc + (Number(d.value) || 0), 0),
     [data],
   );
+
+  // Initialize displayValue with total
+  useEffect(() => {
+    setDisplayValue(total);
+  }, [total]);
 
   const resolvedColors = useMemo(() => {
     if (colors) return colors;
@@ -78,8 +84,30 @@ export function PieDonut({
     return config;
   }, [data, resolvedColors]);
 
-  const onLegendEnter = (value?: string) => setHoverKey(value);
-  const onLegendLeave = () => setHoverKey(undefined);
+  const onLegendEnter = (value?: string) => {
+    setHoverKey(value);
+    if (value) {
+      const hovered = data.find((d) => d.name === value);
+      if (hovered && total > 0) {
+        setDisplayValue(Math.round((hovered.value / total) * 100));
+      }
+    } else {
+      setDisplayValue(total);
+    }
+  };
+
+  const onLegendLeave = () => {
+    setHoverKey(undefined);
+    setDisplayValue(total);
+  };
+
+  // Calculate the suffix to display
+  const displaySuffix = useMemo(() => {
+    if (hoverKey) {
+      return "%";
+    }
+    return "";
+  }, [hoverKey]);
 
   const nameToIndex = useMemo(() => {
     const map: Record<string, number> = {};
@@ -98,8 +126,8 @@ export function PieDonut({
   const RechartsPieAny = Pie as unknown as (props: any) => ReactElement;
 
   return (
-    <div className="border border-red-500 grid grid-cols-1 grid-rows-1 aspect-square max-h-[250px] mx-auto justify-center items-center">
-      <div className="border border-green-500  col-start-1 row-start-1 flex justify-center items-center">
+    <div className="grid grid-cols-1 grid-rows-1 aspect-square max-h-[250px] mx-auto justify-center items-center">
+      <div className="col-start-1 row-start-1 flex justify-center items-center">
         <ChartContainer
           id={chartId}
           config={chartConfig}
@@ -117,14 +145,28 @@ export function PieDonut({
               innerRadius={innerRadius}
               outerRadius={outerRadius}
               strokeWidth={5}
-              onMouseLeave={() => setHoverKey(undefined)}
+              onMouseLeave={() => {
+                setHoverKey(undefined);
+                setDisplayValue(total);
+              }}
               onMouseEnter={(payload: { name?: string }) => {
                 const name = payload?.name;
-                if (name) setHoverKey(name);
+                if (name) {
+                  setHoverKey(name);
+                  const hovered = data.find((d) => d.name === name);
+                  if (hovered && total > 0) {
+                    setDisplayValue(Math.round((hovered.value / total) * 100));
+                  }
+                }
               }}
               onMouseMove={(_: unknown, index: number) => {
                 const d = data[index];
-                if (d?.name) setHoverKey(d.name);
+                if (d?.name) {
+                  setHoverKey(d.name);
+                  if (d && total > 0) {
+                    setDisplayValue(Math.round((d.value / total) * 100));
+                  }
+                }
               }}
               activeIndex={activeIndex}
               activeShape={({
@@ -142,48 +184,6 @@ export function PieDonut({
                   className="transition"
                 />
               ))}
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    const hovered = data.find((d) => d.name === hoverKey);
-                    const percent =
-                      hovered && total > 0
-                        ? Math.round((hovered.value / total) * 100)
-                        : undefined;
-                    const value =
-                      percent !== undefined
-                        ? `${percent}`
-                        : centerLabel.showTotal
-                          ? total.toLocaleString()
-                          : "";
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy - 20}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy - 20}
-                          className="fill-foreground text-3xl font-bold"
-                        >
-                          {value}
-                        </tspan>
-
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 5}
-                          className="fill-muted-foreground"
-                        >
-                          {centerLabel.suffix ? centerLabel.suffix : "x"}
-                        </tspan>
-                      </text>
-                    );
-                  }
-                  return null;
-                }}
-              />
             </RechartsPieAny>
             {showLegend ? (
               <ChartLegend
@@ -224,8 +224,15 @@ export function PieDonut({
           </PieChart>
         </ChartContainer>
       </div>
-      <div className="border border-green-500  col-start-1 row-start-1 flex justify-center items-center">
-        <NumberFlow format={{ notation: "compact" }} value={1000} />
+      <div className="col-start-1 row-start-1 flex flex-col justify-center items-center text-2xl font-bold pb-3">
+        <NumberFlow
+          format={{ notation: "compact" }}
+          value={displayValue}
+          suffix={displaySuffix}
+        />
+        <div className="text-muted-foreground pb-4.5 font-normal text-xs">
+          {centerLabel.suffix}
+        </div>
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ export function BounceRateChart({
       data={chartData}
       variant="positive-negative"
       className="min-h-[200px] w-full"
+      centerLabel={{ showTotal: true, suffix: "sessions" }}
     />
   );
 }
