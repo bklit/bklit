@@ -243,6 +243,200 @@ export const pageviewRouter = createTRPCRouter({
       };
     }),
 
+  getEntryPoints: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Check project access
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              startedAt: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      // Get sessions with their entry pages
+      const sessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          id: true,
+          entryPage: true,
+          startedAt: true,
+          userAgent: true,
+          country: true,
+          city: true,
+          pageViewEvents: {
+            select: {
+              id: true,
+              url: true,
+              timestamp: true,
+              mobile: true,
+            },
+            orderBy: {
+              timestamp: "asc",
+            },
+          },
+        },
+        orderBy: {
+          startedAt: "desc",
+        },
+      });
+
+      // Group by entry page URL and count sessions
+      const entryPageGroups = sessions.reduce(
+        (acc, session) => {
+          // Normalize the entry page URL to group by pathname only
+          const entryPage = extractPath(session.entryPage);
+          const originalUrl = session.entryPage;
+          if (!acc[entryPage]) {
+            acc[entryPage] = {
+              url: originalUrl, // Store the original URL for display
+              sessions: 0,
+              totalPageviews: 0,
+              uniqueSessions: new Set(),
+              lastVisited: session.startedAt,
+              firstVisited: session.startedAt,
+              countries: new Set(),
+              cities: new Set(),
+              mobileSessions: 0,
+              desktopSessions: 0,
+            };
+          } else {
+            // Update to the most recent original URL for this path
+            if (session.startedAt > acc[entryPage].lastVisited) {
+              acc[entryPage].url = originalUrl;
+            }
+          }
+
+          acc[entryPage].sessions += 1;
+          acc[entryPage].totalPageviews += session.pageViewEvents.length;
+          acc[entryPage].uniqueSessions.add(session.id);
+          acc[entryPage].lastVisited = new Date(
+            Math.max(
+              acc[entryPage].lastVisited.getTime(),
+              session.startedAt.getTime(),
+            ),
+          );
+          acc[entryPage].firstVisited = new Date(
+            Math.min(
+              acc[entryPage].firstVisited.getTime(),
+              session.startedAt.getTime(),
+            ),
+          );
+
+          if (session.country) acc[entryPage].countries.add(session.country);
+          if (session.city) acc[entryPage].cities.add(session.city);
+
+          // Determine if mobile based on userAgent or mobile field from pageViewEvents
+          const isMobile =
+            session.pageViewEvents.some((event) => event.mobile) ||
+            (session.userAgent &&
+              /Mobile|Android|iPhone|iPad/.test(session.userAgent));
+
+          if (isMobile) {
+            acc[entryPage].mobileSessions += 1;
+          } else {
+            acc[entryPage].desktopSessions += 1;
+          }
+
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            url: string;
+            sessions: number;
+            totalPageviews: number;
+            uniqueSessions: Set<string>;
+            lastVisited: Date;
+            firstVisited: Date;
+            countries: Set<string>;
+            cities: Set<string>;
+            mobileSessions: number;
+            desktopSessions: number;
+          }
+        >,
+      );
+
+      // Convert to array and format
+      const entryPages = Object.values(entryPageGroups).map((group) => ({
+        url: group.url,
+        title: extractPageTitle(group.url),
+        path: extractPath(group.url),
+        sessions: group.sessions,
+        totalPageviews: group.totalPageviews,
+        uniqueSessions: group.uniqueSessions.size,
+        lastVisited: group.lastVisited,
+        firstVisited: group.firstVisited,
+        countries: Array.from(group.countries),
+        cities: Array.from(group.cities),
+        mobileSessions: group.mobileSessions,
+        desktopSessions: group.desktopSessions,
+      }));
+
+      // Sort by sessions count
+      const sortedEntryPages = entryPages.sort(
+        (a, b) => b.sessions - a.sessions,
+      );
+
+      // Apply pagination
+      const paginatedPages = sortedEntryPages.slice(
+        (input.page - 1) * input.limit,
+        input.page * input.limit,
+      );
+
+      return {
+        entryPages: paginatedPages,
+        totalCount: sortedEntryPages.length,
+        pagination: {
+          page: input.page,
+          limit: input.limit,
+          totalPages: Math.ceil(sortedEntryPages.length / input.limit),
+          hasNextPage:
+            input.page < Math.ceil(sortedEntryPages.length / input.limit),
+          hasPreviousPage: input.page > 1,
+        },
+      };
+    }),
+
   getTimeSeries: protectedProcedure
     .input(
       z.object({
@@ -307,7 +501,7 @@ export const pageviewRouter = createTRPCRouter({
       const pageGroups = pageviews.reduce(
         (acc, pageview) => {
           const normalizedUrl = extractPath(pageview.url);
-          const dateKey = pageview.timestamp.toISOString().split("T")[0];
+          const dateKey = pageview.timestamp.toISOString().split("T")[0] ?? "";
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {};
@@ -325,9 +519,8 @@ export const pageviewRouter = createTRPCRouter({
       // Get top pages by total views
       const topPages = Object.entries(pageGroups)
         .map(([path, dailyViews]) => {
-          // Create a full URL for title extraction
-          const fullUrl = `http://localhost:3000${path}`;
-          const title = extractPageTitle(fullUrl);
+          // Extract title from path directly
+          const title = extractPageTitle(path);
           return {
             path,
             title,
@@ -355,7 +548,7 @@ export const pageviewRouter = createTRPCRouter({
       const dateRange: string[] = [];
       const currentDate = new Date(startDate);
       while (currentDate <= endDate) {
-        dateRange.push(currentDate.toISOString().split("T")[0]);
+        dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
@@ -388,13 +581,157 @@ export const pageviewRouter = createTRPCRouter({
 
       return result;
     }),
+
+  getEntryPointsTimeSeries: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+        limit: z.number().min(1).max(10).default(5),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              startedAt: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      // Get sessions for time series analysis
+      const sessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          entryPage: true,
+          startedAt: true,
+        },
+        orderBy: {
+          startedAt: "asc",
+        },
+      });
+
+      // Group by entry page and count sessions per day
+      const entryPageGroups = sessions.reduce(
+        (acc, session) => {
+          const normalizedUrl = extractPath(session.entryPage);
+          const dateKey = session.startedAt.toISOString().split("T")[0] ?? "";
+
+          if (!acc[normalizedUrl]) {
+            acc[normalizedUrl] = {};
+          }
+          if (!acc[normalizedUrl][dateKey]) {
+            acc[normalizedUrl][dateKey] = 0;
+          }
+          acc[normalizedUrl][dateKey] += 1;
+
+          return acc;
+        },
+        {} as Record<string, Record<string, number>>,
+      );
+
+      // Get top entry points by total sessions
+      const topEntryPoints = Object.entries(entryPageGroups)
+        .map(([path, dailySessions]) => {
+          const title = extractPageTitle(path);
+          return {
+            path,
+            title,
+            totalSessions: Object.values(dailySessions).reduce(
+              (sum, count) => sum + count,
+              0,
+            ),
+            dailySessions,
+          };
+        })
+        .sort((a, b) => b.totalSessions - a.totalSessions)
+        .slice(0, input.limit);
+
+      // Generate date range for the last 30 days if no dates provided
+      const endDate = input.endDate || new Date();
+      const startDate =
+        input.startDate ||
+        (() => {
+          const date = new Date(endDate);
+          date.setDate(date.getDate() - 30);
+          return date;
+        })();
+
+      // Generate all dates in range
+      const dateRange: string[] = [];
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Create time series data
+      const timeSeriesData = dateRange.map((date) => {
+        const dataPoint: Record<string, string | number> = { date };
+
+        // Add total sessions for this date
+        dataPoint.total = topEntryPoints.reduce((sum, entryPoint) => {
+          return sum + (entryPoint.dailySessions[date] || 0);
+        }, 0);
+
+        // Add individual entry point data
+        topEntryPoints.forEach((entryPoint, index) => {
+          dataPoint[`entryPoint${index}`] = entryPoint.dailySessions[date] || 0;
+        });
+
+        return dataPoint;
+      });
+
+      const result = {
+        timeSeriesData,
+        topEntryPoints: topEntryPoints.map((entryPoint, index) => ({
+          path: entryPoint.path,
+          title: entryPoint.title,
+          totalSessions: entryPoint.totalSessions,
+          dataKey: `entryPoint${index}`,
+        })),
+      };
+
+      return result;
+    }),
 });
 
 // Helper functions
 function extractPageTitle(url: string): string {
   try {
-    const urlObj = new URL(url);
-    const pathname = urlObj.pathname;
+    // Handle both full URLs and paths
+    const pathname = url.startsWith("http") ? new URL(url).pathname : url;
 
     // Extract title from pathname
     if (pathname === "/" || pathname === "") {
@@ -410,17 +747,17 @@ function extractPageTitle(url: string): string {
     const lastSegment = segments[segments.length - 1];
 
     // Handle numeric segments (like product IDs)
-    if (/^\d+$/.test(lastSegment)) {
+    if (lastSegment && /^\d+$/.test(lastSegment)) {
       // If it's a number, use the parent segment or a generic name
       if (segments.length > 1) {
         const parentSegment = segments[segments.length - 2];
-        return `${formatSegment(parentSegment)} #${lastSegment}`;
+        return `${formatSegment(parentSegment ?? "")} #${lastSegment}`;
       }
       return `Page #${lastSegment}`;
     }
 
     // Handle query parameters or fragments
-    const cleanSegment = lastSegment.split("?")[0].split("#")[0];
+    const cleanSegment = lastSegment?.split("?")[0]?.split("#")[0] ?? "";
 
     // Convert to title case
     return formatSegment(cleanSegment);

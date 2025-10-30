@@ -32,11 +32,13 @@ import { useTRPC } from "@/trpc/react";
 interface PageviewsTableProps {
   organizationId: string;
   projectId: string;
+  viewMode: "all" | "entry-points";
 }
 
 export function PageviewsTable({
   organizationId,
   projectId,
+  viewMode,
 }: PageviewsTableProps) {
   const trpc = useTRPC();
 
@@ -60,8 +62,9 @@ export function PageviewsTable({
 
   const endDate = queryParams.endDate ?? undefined;
 
-  const { data: pageviewsData, isLoading } = useQuery(
-    trpc.pageview.getPageviews.queryOptions({
+  // Get pageviews data for "all" mode
+  const { data: pageviewsData, isLoading: pageviewsLoading } = useQuery({
+    ...trpc.pageview.getPageviews.queryOptions({
       projectId,
       organizationId,
       page: queryParams.page,
@@ -69,23 +72,48 @@ export function PageviewsTable({
       startDate,
       endDate,
     }),
-  );
+    enabled: viewMode === "all",
+  });
+
+  // Get entry points data for "entry-points" mode
+  const { data: entryPointsData, isLoading: entryPointsLoading } = useQuery({
+    ...trpc.pageview.getEntryPoints.queryOptions({
+      projectId,
+      organizationId,
+      page: queryParams.page,
+      limit: queryParams.limit,
+      startDate,
+      endDate,
+    }),
+    enabled: viewMode === "entry-points",
+  });
+
+  const isLoading = pageviewsLoading || entryPointsLoading;
+  const data = viewMode === "all" ? pageviewsData : entryPointsData;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pageviews</CardTitle>
+        <CardTitle>
+          {viewMode === "entry-points" ? "Entry Points" : "Pageviews"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading || !pageviewsData ? (
+        {isLoading || !data ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }, () => (
               <Skeleton key={crypto.randomUUID()} className="h-12 w-full" />
             ))}
           </div>
-        ) : pageviewsData.pages.length === 0 ? (
+        ) : (
+            viewMode === "all"
+              ? (data as any).pages?.length === 0
+              : (data as any).entryPages?.length === 0
+          ) ? (
           <div className="text-center py-8 text-muted-foreground">
-            No pageviews found
+            {viewMode === "entry-points"
+              ? "No entry points found"
+              : "No pageviews found"}
           </div>
         ) : (
           <Table>
@@ -93,51 +121,101 @@ export function PageviewsTable({
               <TableRow>
                 <TableHead>Page Title</TableHead>
                 <TableHead>Path</TableHead>
-                <TableHead>Views</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead>Avg/User</TableHead>
+                {viewMode === "entry-points" ? (
+                  <>
+                    <TableHead>Sessions</TableHead>
+                    <TableHead>Total Views</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    <TableHead>Desktop</TableHead>
+                  </>
+                ) : (
+                  <>
+                    <TableHead>Views</TableHead>
+                    <TableHead>Users</TableHead>
+                    <TableHead>Avg/User</TableHead>
+                  </>
+                )}
                 <TableHead>Last Viewed</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pageviewsData.pages.map((page) => (
-                <TableRow key={page.url}>
-                  <TableCell className="font-medium">{page.title}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground font-mono">
-                    <code className="py-1 px-2 bg-background border border-border/10 rounded-md">
-                      {page.path}
-                    </code>
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {page.viewCount}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {page.uniqueUserCount}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {page.avgViewsPerUser}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    <div className="space-y-1">
-                      <div>
-                        {formatDistanceToNow(new Date(page.lastViewed), {
-                          addSuffix: true,
-                        })}
-                      </div>
-                      <div className="text-xs">
-                        {format(new Date(page.lastViewed), "MMM d, HH:mm")}
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {viewMode === "all"
+                ? (data as any).pages?.map((page: any) => (
+                    <TableRow key={page.url}>
+                      <TableCell className="font-medium">
+                        {page.title}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground font-mono">
+                        <code className="py-1 px-2 bg-background border border-border/10 rounded-md">
+                          {page.path}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {page.viewCount}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {page.uniqueUserCount}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {page.avgViewsPerUser}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        <div className="space-y-1">
+                          <div>
+                            {formatDistanceToNow(new Date(page.lastViewed), {
+                              addSuffix: true,
+                            })}
+                          </div>
+                          <div className="text-xs">
+                            {format(new Date(page.lastViewed), "MMM d, HH:mm")}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : (data as any).entryPages?.map((page: any) => (
+                    <TableRow key={page.url}>
+                      <TableCell className="font-medium">
+                        {page.title}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground font-mono">
+                        <code className="py-1 px-2 bg-background border border-border/10 rounded-md">
+                          {page.path}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {page.sessions}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {page.totalPageviews}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {page.mobileSessions}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {page.desktopSessions}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        <div className="space-y-1">
+                          <div>
+                            {formatDistanceToNow(new Date(page.lastVisited), {
+                              addSuffix: true,
+                            })}
+                          </div>
+                          <div className="text-xs">
+                            {format(new Date(page.lastVisited), "MMM d, HH:mm")}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         )}
       </CardContent>
 
       {/* Pagination Controls */}
-      {pageviewsData && pageviewsData.pagination.totalPages > 1 && (
+      {data && data.pagination.totalPages > 1 && (
         <div className="mt-4">
           <Pagination>
             <PaginationContent>
@@ -146,14 +224,14 @@ export function PageviewsTable({
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (pageviewsData.pagination.hasPreviousPage) {
+                    if (data.pagination.hasPreviousPage) {
                       setQueryParams({
-                        page: pageviewsData.pagination.page - 1,
+                        page: data.pagination.page - 1,
                       });
                     }
                   }}
                   className={
-                    !pageviewsData.pagination.hasPreviousPage
+                    !data.pagination.hasPreviousPage
                       ? "pointer-events-none opacity-50"
                       : ""
                   }
@@ -161,12 +239,12 @@ export function PageviewsTable({
               </PaginationItem>
 
               {Array.from(
-                { length: pageviewsData.pagination.totalPages },
+                { length: data.pagination.totalPages },
                 (_, i) => i + 1,
               )
                 .filter((page) => {
-                  const current = pageviewsData.pagination.page;
-                  const total = pageviewsData.pagination.totalPages;
+                  const current = data.pagination.page;
+                  const total = data.pagination.totalPages;
                   return (
                     page === 1 ||
                     page === total ||
@@ -191,7 +269,7 @@ export function PageviewsTable({
                             e.preventDefault();
                             setQueryParams({ page });
                           }}
-                          isActive={page === pageviewsData.pagination.page}
+                          isActive={page === data.pagination.page}
                         >
                           {page}
                         </PaginationLink>
@@ -205,14 +283,14 @@ export function PageviewsTable({
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (pageviewsData.pagination.hasNextPage) {
+                    if (data.pagination.hasNextPage) {
                       setQueryParams({
-                        page: pageviewsData.pagination.page + 1,
+                        page: data.pagination.page + 1,
                       });
                     }
                   }}
                   className={
-                    !pageviewsData.pagination.hasNextPage
+                    !data.pagination.hasNextPage
                       ? "pointer-events-none opacity-50"
                       : ""
                   }
