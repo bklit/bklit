@@ -45,6 +45,8 @@
 
   --region: var(--bklit-500);
   --region-hover: var(--bklit-600);
+
+  --chart-negative: oklch(0.577 0.245 27.325);
 }
 
 .dark {

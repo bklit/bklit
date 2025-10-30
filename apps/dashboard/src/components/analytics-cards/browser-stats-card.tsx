@@ -7,16 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@bklit/ui/components/chart";
+import { PieDonut } from "@bklit/ui/components/charts/pie-donut";
+
 import { Compass } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Cell, Pie, PieChart } from "recharts";
 import { getBrowserStats } from "@/actions/analytics-actions";
 import { NoDataCard } from "./no-data-card";
 
@@ -30,7 +24,7 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
     { browser: string; count: number }[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [hoverName, setHoverName] = useState<string | undefined>(undefined);
+  // no local hover needed when using PieDonut
 
   useEffect(() => {
     const fetchBrowserStats = async () => {
@@ -79,17 +73,6 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
   }
 
   // Create chart config for browsers
-  const chartConfig: ChartConfig = browserStats.reduce(
-    (config, stat, index) => {
-      const colorVar = `--color-chart-${(index % 5) + 1}`;
-      config[stat.browser.toLowerCase().replace(/\s+/g, "_")] = {
-        label: stat.browser,
-        color: `var(${colorVar})`,
-      };
-      return config;
-    },
-    {} as ChartConfig,
-  );
 
   // Prepare chart data
   const chartData = browserStats.map((stat) => ({
@@ -106,66 +89,11 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-          <PieChart accessibilityLayer data={chartData}>
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              fill="var(--color-chart-1)"
-            >
-              {chartData.map((entry) => (
-                <Cell
-                  key={`cell-${entry.name}`}
-                  fill={`var(--color-${entry.name})`}
-                  fillOpacity={
-                    hoverName ? (entry.name === hoverName ? 1 : 0.4) : 1
-                  }
-                  className="transition"
-                />
-              ))}
-            </Pie>
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend
-              content={(legendProps) => {
-                // biome-ignore lint/suspicious/noExplicitAny: Legend payload typing from recharts
-                const payload = (legendProps as any)?.payload as
-                  | ReadonlyArray<{
-                      value?: string;
-                      dataKey?: string;
-                      color?: string;
-                    }>
-                  | undefined;
-                return (
-                  <div className="flex items-center justify-center gap-4 pt-3">
-                    {payload?.map((item) => (
-                      <button
-                        key={item.dataKey || item.value}
-                        type="button"
-                        className="flex items-center gap-1.5"
-                        onMouseEnter={() =>
-                          setHoverName(
-                            (item.dataKey || item.value) ?? undefined,
-                          )
-                        }
-                        onMouseLeave={() => setHoverName(undefined)}
-                      >
-                        <div
-                          className="h-2 w-2 shrink-0 rounded-[2px]"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="capitalize">{item.value}</span>
-                      </button>
-                    ))}
-                  </div>
-                );
-              }}
-            />
-          </PieChart>
-        </ChartContainer>
+        <PieDonut
+          data={chartData}
+          centerLabel={{ showTotal: true, suffix: "hello" }}
+          className="min-h-[200px] w-full"
+        />
       </CardContent>
     </Card>
   );
