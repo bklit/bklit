@@ -223,15 +223,12 @@ export function EventDetail({
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">
-                    Manual (JavaScript):
-                  </p>
+                  <p className="text-sm font-medium mb-2">Programmatic (JS):</p>
                   <CopyInput
                     value={`window.trackEvent("${trackingId}", "custom_event");`}
                   />
                   <p className="text-xs text-muted-foreground mt-2">
-                    Manual events don't count toward conversion rates since they
-                    may not be user-perceived.
+                    Programmatic events are triggered via code (e.g. SDK calls).
                   </p>
                 </div>
               </div>

@@ -332,8 +332,27 @@ export const eventRouter = {
         // Get the trigger method from the first event
         const firstEventMetadata = group.firstEvent.metadata as {
           triggerMethod?: string;
+          selectorType?: string;
+          source?: string;
         } | null;
-        const triggerMethod = firstEventMetadata?.triggerMethod || "automatic";
+        let triggerType: "data-attr" | "id" | "programmatic" = "programmatic";
+        if (
+          firstEventMetadata?.selectorType === "data-attr" ||
+          firstEventMetadata?.selectorType === "dataAttr"
+        ) {
+          triggerType = "data-attr";
+        } else if (firstEventMetadata?.selectorType === "id") {
+          triggerType = "id";
+        } else if (
+          firstEventMetadata?.triggerMethod === "manual" ||
+          firstEventMetadata?.source === "sdk"
+        ) {
+          triggerType = "programmatic";
+        } else if (firstEventMetadata?.triggerMethod === "automatic") {
+          triggerType = "data-attr";
+        } else {
+          triggerType = "programmatic";
+        }
 
         return {
           sessionId: group.sessionId,
@@ -343,7 +362,7 @@ export const eventRouter = {
           hasClick,
           hasView,
           hasHover,
-          triggerMethod,
+          triggerType,
           totalInteractions: group.events.length,
           events: group.events,
         };
@@ -586,18 +605,19 @@ export const eventRouter = {
       const eventTypeCounts: Record<string, number> = {};
       const timeSeriesData: Record<string, { views: number; clicks: number }> =
         {};
+      const typeSeries: Record<
+        string,
+        { dataAttr: number; id: number; programmatic: number }
+      > = {};
 
-      // Separate automatic (DOM-triggered) vs manual events
-      // Note: Events without triggerMethod are treated as automatic for backward compatibility
-      const automaticEvents = trackedEvents.filter((e) => {
-        const metadata = e.metadata as { triggerMethod?: string } | null;
-        return metadata?.triggerMethod !== "manual"; // Include automatic and legacy events (undefined/null)
-      });
+      // Build time series and type series (data-attr, id, programmatic)
 
       for (const trackedEvent of trackedEvents) {
         const metadata = trackedEvent.metadata as {
           eventType?: string;
           triggerMethod?: string;
+          selectorType?: string;
+          source?: string;
         } | null;
         const eventType = metadata?.eventType || "unknown";
         eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
@@ -613,6 +633,30 @@ export const eventRouter = {
           } else if (eventType === "click") {
             timeSeriesData[dateKey].clicks += 1;
           }
+
+          // classify trigger type
+          let triggerType: "dataAttr" | "id" | "programmatic" = "programmatic";
+          if (
+            metadata?.selectorType === "data-attr" ||
+            metadata?.selectorType === "dataAttr"
+          ) {
+            triggerType = "dataAttr";
+          } else if (metadata?.selectorType === "id") {
+            triggerType = "id";
+          } else if (
+            metadata?.triggerMethod === "manual" ||
+            metadata?.source === "sdk"
+          ) {
+            triggerType = "programmatic";
+          } else if (metadata?.triggerMethod === "automatic") {
+            // Default automatic to data-attr when selectorType is not provided
+            triggerType = "dataAttr";
+          }
+
+          if (!typeSeries[dateKey]) {
+            typeSeries[dateKey] = { dataAttr: 0, id: 0, programmatic: 0 };
+          }
+          typeSeries[dateKey][triggerType] += 1;
         }
       }
 
@@ -656,6 +700,9 @@ export const eventRouter = {
           date,
           views: data.views,
           clicks: data.clicks,
+          dataAttr: typeSeries[date]?.dataAttr || 0,
+          id: typeSeries[date]?.id || 0,
+          programmatic: typeSeries[date]?.programmatic || 0,
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -793,22 +840,18 @@ export const eventRouter = {
         (acc, event) => {
           const dateKey = event.timestamp.toISOString().split("T")[0] ?? "";
           if (!acc[dateKey]) {
-            acc[dateKey] = { total: 0, automatic: 0, manual: 0 };
+            acc[dateKey] = { total: 0, views: 0, clicks: 0 };
           }
           acc[dateKey].total += 1;
 
-          const metadata = event.metadata as { triggerMethod?: string } | null;
-          if (metadata?.triggerMethod === "manual") {
-            acc[dateKey].manual += 1;
-          } else {
-            acc[dateKey].automatic += 1;
-          }
+          const metadata = event.metadata as { eventType?: string } | null;
+          const type = metadata?.eventType || "unknown";
+          if (type === "view") acc[dateKey].views += 1;
+          if (type === "click") acc[dateKey].clicks += 1;
+
           return acc;
         },
-        {} as Record<
-          string,
-          { total: number; automatic: number; manual: number }
-        >,
+        {} as Record<string, { total: number; views: number; clicks: number }>,
       );
 
       const endDate = input.endDate || new Date();
@@ -830,8 +873,8 @@ export const eventRouter = {
       const timeSeriesData = dateRange.map((date) => ({
         date,
         total: eventCountsByDay[date]?.total || 0,
-        automatic: eventCountsByDay[date]?.automatic || 0,
-        manual: eventCountsByDay[date]?.manual || 0,
+        views: eventCountsByDay[date]?.views || 0,
+        clicks: eventCountsByDay[date]?.clicks || 0,
       }));
 
       return { timeSeriesData };

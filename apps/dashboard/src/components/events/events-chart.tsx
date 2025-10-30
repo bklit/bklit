@@ -74,13 +74,13 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
         label: "Total Events",
         color: "var(--bklit-500)",
       },
-      automatic: {
-        label: "Automatic",
+      views: {
+        label: "Views",
         color: "var(--chart-1)",
       },
-      manual: {
-        label: "Manual",
-        color: "var(--bklit-300)",
+      clicks: {
+        label: "Clicks",
+        color: "var(--chart-2)",
       },
     } satisfies ChartConfig;
   }, []);
@@ -158,33 +158,27 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
                       stopOpacity={0.1}
                     />
                   </linearGradient>
-                  <linearGradient
-                    id="fillAutomatic"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
+                  <linearGradient id="fillViews" x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="5%"
-                      stopColor="var(--color-automatic)"
+                      stopColor="var(--color-views)"
                       stopOpacity={0.8}
                     />
                     <stop
                       offset="95%"
-                      stopColor="var(--color-automatic)"
+                      stopColor="var(--color-views)"
                       stopOpacity={0.1}
                     />
                   </linearGradient>
-                  <linearGradient id="fillManual" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillClicks" x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="5%"
-                      stopColor="var(--color-manual)"
+                      stopColor="var(--color-clicks)"
                       stopOpacity={0.8}
                     />
                     <stop
                       offset="95%"
-                      stopColor="var(--color-manual)"
+                      stopColor="var(--color-clicks)"
                       stopOpacity={0.1}
                     />
                   </linearGradient>
@@ -229,21 +223,20 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
                   fillOpacity={0.3}
                 />
 
-                {/* Automatic events area */}
+                {/* Views area */}
                 <Area
-                  dataKey="automatic"
+                  dataKey="views"
                   type="linear"
-                  fill="url(#fillAutomatic)"
-                  stroke="var(--color-automatic)"
+                  fill="url(#fillViews)"
+                  stroke="var(--color-views)"
                   fillOpacity={0.6}
                 />
-
-                {/* Manual events area */}
+                {/* Clicks area */}
                 <Area
-                  dataKey="manual"
+                  dataKey="clicks"
                   type="linear"
-                  fill="url(#fillManual)"
-                  stroke="var(--color-manual)"
+                  fill="url(#fillClicks)"
+                  stroke="var(--color-clicks)"
                   fillOpacity={0.6}
                 />
 
