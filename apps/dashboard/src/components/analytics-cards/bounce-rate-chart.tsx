@@ -4,12 +4,11 @@ import {
   type ChartConfig,
   ChartContainer,
   ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@bklit/ui/components/chart";
+import { useState } from "react";
 import { Cell, Pie, PieChart } from "recharts";
-import type { PieChartData } from "@/types/analytics-cards";
 
 const chartConfig = {
   bounced: {
@@ -31,9 +30,10 @@ export function BounceRateChart({
   bouncedSessions,
   totalSessions,
 }: BounceRateChartProps) {
+  const [hoverName, setHoverName] = useState<string | undefined>(undefined);
   const nonBouncedSessions = totalSessions - bouncedSessions;
 
-  const chartData: PieChartData[] = [
+  const chartData = [
     { name: "bounced", value: bouncedSessions },
     { name: "engaged", value: nonBouncedSessions },
   ];
@@ -54,12 +54,44 @@ export function BounceRateChart({
             <Cell
               key={`cell-${entry.name}`}
               fill={`var(--color-${entry.name})`}
+              fillOpacity={hoverName ? (entry.name === hoverName ? 1 : 0.4) : 1}
+              className="transition"
             />
           ))}
         </Pie>
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend
-          content={<ChartLegendContent verticalAlign="horizontal" />}
+          content={(legendProps) => {
+            // biome-ignore lint/suspicious/noExplicitAny: Legend payload typing from recharts
+            const payload = (legendProps as any)?.payload as
+              | ReadonlyArray<{
+                  value?: string;
+                  dataKey?: string;
+                  color?: string;
+                }>
+              | undefined;
+            return (
+              <div className="flex items-center justify-center gap-4 pt-3">
+                {payload?.map((item) => (
+                  <button
+                    key={item.dataKey || item.value}
+                    type="button"
+                    className="flex items-center gap-1.5"
+                    onMouseEnter={() =>
+                      setHoverName((item.dataKey || item.value) ?? undefined)
+                    }
+                    onMouseLeave={() => setHoverName(undefined)}
+                  >
+                    <div
+                      className="h-2 w-2 shrink-0 rounded-[2px]"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="capitalize">{item.value}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          }}
         />
       </PieChart>
     </ChartContainer>
