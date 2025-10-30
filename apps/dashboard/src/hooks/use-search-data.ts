@@ -31,17 +31,17 @@ export function useSearchData() {
             heading: activeOrganization.name,
             items: [
               {
-                value: `overview`,
+                value: `${activeOrganization.id}-overview`,
                 label: "Overview",
                 href: `/${activeOrganization.id}`,
               },
               {
-                value: `settings`,
+                value: `${activeOrganization.id}-settings`,
                 label: "Settings",
                 href: `/${activeOrganization.id}/settings`,
               },
               {
-                value: `billing`,
+                value: `${activeOrganization.id}-billing`,
                 label: "Billing",
                 href: `/${activeOrganization.id}/settings/billing`,
               },
@@ -50,7 +50,7 @@ export function useSearchData() {
           {
             heading: `${activeOrganization.name} projects`,
             items: activeOrganization.projects.map((project) => ({
-              value: project.name,
+              value: `${activeOrganization.id}-${project.name}`,
               label: project.name,
               href: `/${activeOrganization.id}/${project.id}`,
             })),
@@ -64,7 +64,7 @@ export function useSearchData() {
         items: organizations
           .filter((org) => org.id !== activeOrganization?.id)
           .map((org) => ({
-            value: `org`,
+            value: `org-${org.name}`,
             label: org.name,
             href: `/${org.id}`,
           })),

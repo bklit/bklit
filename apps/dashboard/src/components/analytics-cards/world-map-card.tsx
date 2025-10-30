@@ -31,7 +31,7 @@ export function WorldMapCard() {
   }
 
   return (
-    <Card className="p-0 relative">
+    <Card className="p-0 relative flex-1">
       <CardHeader className="absolute top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl overflow-clip">
         <CardTitle>World Map</CardTitle>
         <CardDescription>

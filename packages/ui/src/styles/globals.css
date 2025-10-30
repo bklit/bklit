@@ -171,3 +171,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Code block line numbers using CSS counters */
+  [data-line-numbers="true"] {
+    counter-reset: line;
+  }
+
+  [data-line-numbers="true"] .line {
+    counter-increment: line;
+    position: relative;
+    padding-left: 3.5rem;
+  }
+
+  [data-line-numbers="true"] .line::before {
+    content: counter(line);
+    position: absolute;
+    left: 0;
+    width: 2.5rem;
+    padding-right: 1rem;
+    text-align: right;
+    color: var(--muted-foreground);
+    user-select: none;
+    pointer-events: none;
+  }
+}

@@ -65,6 +65,10 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
     }
   };
 
+  const width = 960;
+  const height = 500;
+  const translate = [width / 2.2, height / 1.3] as [number, number];
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -84,8 +88,6 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
     if (!svgRef.current || !isMounted) return;
 
     const svg = d3.select(svgRef.current);
-    const width = 960;
-    const height = 500;
 
     // Clear previous content
     svg.selectAll("*").remove();
@@ -94,10 +96,7 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
     const g = svg.append("g");
 
     // Set up projection
-    const projection = d3
-      .geoNaturalEarth1()
-      .scale(350)
-      .translate([width / 2, height / 1.1]);
+    const projection = d3.geoNaturalEarth1().scale(250).translate(translate);
 
     const path = d3.geoPath().projection(projection);
 
@@ -156,8 +155,8 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
           .attr("class", "country")
           .attr("d", (d) => path(d as d3.GeoPermissibleObjects) || "")
           .attr("fill", "var(--color-region)")
-          .attr("stroke", "var(--color-region)")
-          .attr("stroke-width", 0)
+          .attr("stroke", "var(--color-background)")
+          .attr("stroke-width", 1.33)
           // .attr("opacity", 0.33)
           .on("mouseover", function () {
             d3.select(this).attr("fill", "var(--color-region-hover)");
@@ -196,10 +195,7 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
       });
 
       // Get projection from the existing map (must match the main map projection)
-      const projection = d3
-        .geoNaturalEarth1()
-        .scale(350)
-        .translate([480, 454.5]); // width/2, height/1.1
+      const projection = d3.geoNaturalEarth1().scale(250).translate(translate);
 
       const markers = g
         .selectAll(".marker")
@@ -229,12 +225,16 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
       // Add tooltip interactions
       markers
         .on("mouseover", function (event, d) {
-          // Highlight marker
+          // Highlight marker - account for current zoom scale
           const totalVisits = Number(d.totalVisits) || 0;
+          const currentTransform = svgRef.current
+            ? d3.zoomTransform(svgRef.current)
+            : d3.zoomIdentity;
+          const baseRadius = Math.sqrt(totalVisits / 10) + 8;
           d3.select(this)
             .transition()
             .duration(200)
-            .attr("r", Math.sqrt(totalVisits / 10) + 8)
+            .attr("r", baseRadius / currentTransform.k)
             .attr("opacity", 1);
 
           // Show tooltip
@@ -253,12 +253,16 @@ export function WorldMap({ projectId, userId }: WorldMapProps) {
           setTooltipPosition({ x: relativeX, y: relativeY });
         })
         .on("mouseout", function (d) {
-          // Reset marker
+          // Reset marker - account for current zoom scale
           const totalVisits = Number(d.totalVisits) || 0;
+          const currentTransform = svgRef.current
+            ? d3.zoomTransform(svgRef.current)
+            : d3.zoomIdentity;
+          const baseRadius = Math.sqrt(totalVisits / 10) + 6;
           d3.select(this)
             .transition()
             .duration(200)
-            .attr("r", Math.sqrt(totalVisits / 10) + 6);
+            .attr("r", baseRadius / currentTransform.k);
 
           // Restore all countries to normal opacity and color
           g.selectAll(".country")

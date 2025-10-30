@@ -1,3 +1,4 @@
+import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
@@ -5,13 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@bklit/ui/components/item";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { getRecentSessions } from "@/actions/session-actions";
@@ -26,28 +20,11 @@ import {
 import type { SessionAnalyticsCardProps } from "@/types/analytics-cards";
 import { NoDataCard } from "./no-data-card";
 
-function formatDuration(seconds: number | null): string {
-  if (!seconds) return "0s";
-
-  if (seconds < 60) {
-    return `${seconds}s`;
-  }
-
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-
-  if (remainingSeconds === 0) {
-    return `${minutes}m`;
-  }
-
-  return `${minutes}m ${remainingSeconds}s`;
-}
-
 export async function SessionAnalyticsCard({
   projectId,
   organizationId,
 }: SessionAnalyticsCardProps) {
-  const sessions = await getRecentSessions(projectId, 5);
+  const sessions = await getRecentSessions(projectId, 10);
 
   // If no data return empty card
   if (sessions.length === 0) {
@@ -70,7 +47,7 @@ export async function SessionAnalyticsCard({
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="flex flex-col">
           {sessions.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No sessions found
@@ -81,31 +58,28 @@ export async function SessionAnalyticsCard({
               const browser = getBrowserFromUserAgent(session.userAgent);
               const deviceType = getDeviceTypeFromUserAgent(session.userAgent);
               return (
-                <Item asChild variant="outline" key={session.id}>
-                  <Link
-                    href={`/${organizationId || ""}/${projectId}/session/${session.id}`}
-                    className="block"
-                  >
-                    <ItemContent>
-                      <ItemTitle>
-                        {formatDistanceToNow(new Date(session.startedAt), {
-                          addSuffix: true,
-                        })}
-                      </ItemTitle>
-                      <ItemDescription className="flex items-center gap-2">
-                        <span>{session.pageViewEvents.length} pages</span>&bull;
-                        <span>{formatDuration(session.duration)}</span>&bull;
-                        <span>{getBrowserIcon(browser)}</span>&bull;
-                        <span>{getDeviceIcon(deviceType)}</span>
-                      </ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                      <Button size="sm" variant="outline">
-                        View
-                      </Button>
-                    </ItemActions>
-                  </Link>
-                </Item>
+                <Link
+                  key={session.id}
+                  href={`/${organizationId || ""}/${projectId}/session/${session.id}`}
+                  className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-3">
+                      <span>{getBrowserIcon(browser)}</span>
+                      <span className="text-muted-foreground">
+                        {getDeviceIcon(deviceType)}
+                      </span>
+                      <span>{session.pageViewEvents.length} pages</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {formatDistanceToNow(new Date(session.startedAt), {
+                        addSuffix: true,
+                      })}
+                    </Badge>
+                  </div>
+                </Link>
               );
             })
           )}

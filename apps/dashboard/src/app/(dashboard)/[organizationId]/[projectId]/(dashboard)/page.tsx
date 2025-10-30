@@ -53,7 +53,19 @@ export default async function AnalyticsPage({
         </Suspense>
       </div>
 
-      <WorldMapCard />
+      <div className="grid gap-4 md:grid-cols-4">
+        <div className="col-span-2">
+          <WorldMapCard />
+        </div>
+        <div className="col-span-2">
+          <Suspense fallback={<AnalyticsCardSkeleton />}>
+            <SessionAnalyticsCard
+              projectId={projectId}
+              organizationId={organizationId}
+            />
+          </Suspense>
+        </div>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Suspense fallback={<AnalyticsCardSkeleton />}>
@@ -67,14 +79,7 @@ export default async function AnalyticsPage({
         </Suspense>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <SessionAnalyticsCard
-            projectId={projectId}
-            organizationId={organizationId}
-          />
-        </Suspense>
-      </div>
+      <div className="grid gap-4 md:grid-cols-2"></div>
     </div>
   );
 }

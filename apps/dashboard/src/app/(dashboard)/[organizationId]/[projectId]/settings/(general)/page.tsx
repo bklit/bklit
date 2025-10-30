@@ -2,13 +2,16 @@ import { prisma } from "@bklit/db/client";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { CodeBlock } from "@bklit/ui/components/code-block";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CopyInput } from "@/components/copy-input";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
 import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
@@ -93,6 +96,46 @@ export default async function ProjectDashboardPage({
           <ProjectSettingsNavigation params={params} />
         </div>
         <div className="w-5/6 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Project ID</CardTitle>
+              <CardDescription>
+                The project ID is used to identify your project in the Bklit
+                API.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CopyInput value={site.id} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>SDK integration</CardTitle>
+              <CardDescription>
+                Integrate the SDK into your website to start tracking your
+                users.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <CodeBlock language="bash">{`npm install @bklit/sdk
+# or
+pnpm add @bklit/sdk`}</CodeBlock>
+              </div>
+              <div className="space-y-2">
+                <CodeBlock
+                  language="typescript"
+                  lineNumbers={true}
+                >{`import { initBklit } from "@bklit/sdk";
+
+initBklit({
+  projectId: "${site.id}",
+  apiHost: "https://your-api-host.com",
+  debug: true,
+});`}</CodeBlock>
+              </div>
+            </CardContent>
+          </Card>
           <Card variant="destructive">
             <CardHeader>
               <CardTitle>Delete {site.name}</CardTitle>
