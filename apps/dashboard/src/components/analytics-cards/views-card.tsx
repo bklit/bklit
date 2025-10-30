@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
 import type {
   getAnalyticsStats,
@@ -86,7 +87,7 @@ export function ViewsCard({
           <div className="flex justify-between items-center">
             <div>
               <div className="text-2xl font-bold">
-                {sessionStats.totalSessions.toLocaleString()}
+                <NumberFlow value={sessionStats.totalSessions} />
               </div>
               <div className="text-sm text-muted-foreground">
                 Total Sessions
@@ -94,7 +95,10 @@ export function ViewsCard({
             </div>
             <div>
               <div className="text-2xl font-bold">
-                {Math.round(sessionStats.bounceRate)}%
+                <NumberFlow
+                  value={Math.round(sessionStats.bounceRate)}
+                  suffix="%"
+                />
               </div>
               <div className="text-sm text-muted-foreground">Bounce Rate</div>
             </div>
@@ -102,7 +106,7 @@ export function ViewsCard({
           <div className="flex justify-between items-center pt-2 border-t">
             <div>
               <div className="text-2xl font-bold">
-                {initialStats.uniqueVisits.toLocaleString()}
+                <NumberFlow value={initialStats.uniqueVisits} />
               </div>
               <div className="text-sm text-muted-foreground">
                 Unique Visitors
@@ -110,7 +114,7 @@ export function ViewsCard({
             </div>
             <div>
               <div className="text-2xl font-bold">
-                {isLoading ? "..." : (liveUsers ?? initialLiveUsers)}
+                <NumberFlow value={liveUsers ?? initialLiveUsers} />
               </div>
               <div className="text-sm text-muted-foreground">Live Users</div>
             </div>

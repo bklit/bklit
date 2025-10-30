@@ -10,12 +10,14 @@ import {
 } from "@bklit/ui/components/tooltip";
 import { Copy } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface CopyInputProps {
   value: string;
+  className?: string;
 }
 
-export function CopyInput({ value }: CopyInputProps) {
+export function CopyInput({ value, className }: CopyInputProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -28,7 +30,7 @@ export function CopyInput({ value }: CopyInputProps) {
   };
 
   return (
-    <ButtonGroup className="w-full">
+    <ButtonGroup className={cn("w-full", className)}>
       <Input value={value} readOnly disabled className="font-mono" />
       <Tooltip>
         <TooltipTrigger asChild>

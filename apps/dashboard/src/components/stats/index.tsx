@@ -1,10 +1,12 @@
 import { Card, CardContent } from "@bklit/ui/components/card";
+import NumberFlow from "@number-flow/react";
 import type { LucideIcon } from "lucide-react";
 
 interface StatItem {
   icon: LucideIcon;
   name: string;
   stat: string | number;
+  suffix?: string;
 }
 
 interface StatsProps {
@@ -37,7 +39,12 @@ export const Stats = ({ items }: StatsProps) => {
                 <Icon className="size-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">{item.name}</p>
-                  <p className="text-2xl font-bold">{item.stat}</p>
+                  <div className="text-2xl font-bold">
+                    <NumberFlow
+                      value={Number(item.stat)}
+                      suffix={item.suffix || ""}
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>

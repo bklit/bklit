@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { ProgressRow } from "@bklit/ui/components/progress-row";
 import { getTopPages } from "@/actions/analytics-actions";
 import type { AnalyticsCardProps } from "@/types/analytics-cards";
 import { NoDataCard } from "./no-data-card";
@@ -31,6 +32,8 @@ export async function RecentPageViewsCard({
     );
   }
 
+  const totalViews = topPages.reduce((sum, page) => sum + page.count, 0);
+
   return (
     <Card>
       <CardHeader>
@@ -40,17 +43,13 @@ export async function RecentPageViewsCard({
       <CardContent>
         <div className="flex flex-col">
           {topPages.map((page) => (
-            <div
+            <ProgressRow
               key={page.path}
-              className="border-b border-border text-sm flex gap-2 h-8 items-center justify-between last-of-type:border-none "
-            >
-              <div className="text-muted-foreground text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis">
-                {page.path}
-              </div>
-              <Badge variant="secondary">
-                {page.count} view{page.count !== 1 ? "s" : ""}
-              </Badge>
-            </div>
+              variant="secondary"
+              label={page.path}
+              value={page.count}
+              percentage={(page.count / totalViews) * 100}
+            />
           ))}
         </div>
       </CardContent>

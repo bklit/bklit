@@ -16,6 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@bklit/ui/components/chart";
+import { PieDonut } from "@bklit/ui/components/charts/pie-donut";
 import {
   Empty,
   EmptyContent,
@@ -42,16 +43,7 @@ import {
 import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Pie,
-  PieChart,
-  Sector,
-  XAxis,
-} from "recharts";
-import type { PieSectorDataItem } from "recharts/types/polar/Pie";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { CopyInput } from "@/components/copy-input";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
@@ -114,28 +106,17 @@ export function EventDetail({
     },
   } satisfies ChartConfig;
 
-  const conversionChartConfig = {
-    converted: {
-      label: "Converted",
-      color: "var(--chart-1)",
-    },
-    notConverted: {
-      label: "Not Converted",
-      color: "var(--bklit-600)",
-    },
-  } satisfies ChartConfig;
-
   const conversionData = event
     ? [
         {
-          status: "converted",
+          name: "converted",
           value: event.sessionsWithEvent,
-          fill: "var(--color-converted)",
+          label: "Converted",
         },
         {
-          status: "notConverted",
+          name: "notConverted",
           value: event.totalSessions - event.sessionsWithEvent,
-          fill: "var(--color-notConverted)",
+          label: "Not Converted",
         },
       ]
     : [];
@@ -369,33 +350,14 @@ export function EventDetail({
                   </p>
                 </div>
               )}
-              <ChartContainer
-                config={conversionChartConfig}
-                className="h-[250px] w-full"
-              >
-                <PieChart>
-                  <ChartTooltip
-                    content={<ChartTooltipContent hideLabel nameKey="status" />}
-                  />
-                  <Pie
-                    data={conversionData}
-                    dataKey="value"
-                    nameKey="status"
-                    innerRadius={46}
-                    strokeWidth={10}
-                    activeShape={({
-                      outerRadius = 0,
-                      ...props
-                    }: PieSectorDataItem) => (
-                      <Sector {...props} outerRadius={outerRadius + 10} />
-                    )}
-                  />
-                  <ChartLegend
-                    content={<ChartLegendContent nameKey="status" />}
-                    verticalAlign="bottom"
-                  />
-                </PieChart>
-              </ChartContainer>
+              <PieDonut
+                data={conversionData}
+                variant="positive-negative"
+                centerLabel={{ showTotal: true, suffix: "sessions" }}
+                innerRadius={46}
+                outerRadius={80}
+                className="min-h-[250px] w-full"
+              />
             </CardContent>
           </Card>
         </div>

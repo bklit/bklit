@@ -30,13 +30,6 @@ export default async function AnalyticsPage({
       getLiveUsers({ projectId, userId: session.user.id }),
     ]);
 
-  console.log("📊 DASHBOARD: Initial data fetched", {
-    totalViews: initialStats.totalViews,
-    uniqueVisits: initialStats.uniqueVisits,
-    totalSessions: initialSessionData.totalSessions,
-    liveUsers: initialLiveUsers,
-  });
-
   return (
     <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
       <div
@@ -59,10 +52,25 @@ export default async function AnalyticsPage({
           <RecentPageViewsCard projectId={projectId} userId={session.user.id} />
         </Suspense>
       </div>
-      {/* <Suspense fallback={<WorldMapCardSkeleton />}> */}
-      <WorldMapCard />
-      {/* </Suspense> */}
-      <div className="grid gap-4 md:grid-cols-2">
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <div className="col-span-2">
+          <WorldMapCard />
+        </div>
+        <div className="col-span-2">
+          <Suspense fallback={<AnalyticsCardSkeleton />}>
+            <SessionAnalyticsCard
+              projectId={projectId}
+              organizationId={organizationId}
+            />
+          </Suspense>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Suspense fallback={<AnalyticsCardSkeleton />}>
+          <BrowserStatsCard projectId={projectId} userId={session.user.id} />
+        </Suspense>
         <Suspense fallback={<AnalyticsCardSkeleton />}>
           <MobileDesktopCard projectId={projectId} userId={session.user.id} />
         </Suspense>
@@ -71,17 +79,7 @@ export default async function AnalyticsPage({
         </Suspense>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <BrowserStatsCard projectId={projectId} userId={session.user.id} />
-        </Suspense>
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <SessionAnalyticsCard
-            projectId={projectId}
-            organizationId={organizationId}
-          />
-        </Suspense>
-      </div>
+      <div className="grid gap-4 md:grid-cols-2"></div>
     </div>
   );
 }
