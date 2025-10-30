@@ -12,7 +12,13 @@ import {
 } from "@bklit/ui/components/alert-dialog";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@bklit/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@bklit/ui/components/card";
 import {
   Empty,
   EmptyContent,
@@ -39,15 +45,20 @@ import {
   TableHeader,
   TableRow,
 } from "@bklit/ui/components/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@bklit/ui/components/tooltip";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   AlertCircle,
   CalendarIcon,
   Clock,
+  Info,
   Monitor,
   User,
-  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
@@ -59,11 +70,6 @@ import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
 import { EventsChart } from "./events-chart";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@bklit/ui/components/tooltip";
 
 interface EventListItem {
   id: string;
@@ -608,90 +614,98 @@ export function Events({ organizationId, projectId }: EventsProps) {
                             <Info className="size-4 text-muted-foreground" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            Number of unique sessions that triggered this specific event.<br />
-                            Multiple triggers within the same session count as one.
+                            Number of unique sessions that triggered this
+                            specific event.
+                            <br />
+                            Multiple triggers within the same session count as
+                            one.
                           </TooltipContent>
                         </Tooltip>
                       </div>
                     </TableHead>
-                <TableHead>
-                  <div className="flex items-center gap-2">
-                    Conversion Rate
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="size-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Conversion rate = sessions with event / total sessions in range.<br />
-                        One conversion per session maximum.
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-2">
+                        Conversion Rate
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="size-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Conversion rate = sessions with event / total
+                            sessions in range.
+                            <br />
+                            One conversion per session maximum.
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableHead>
                     <TableHead className="text-right">
                       <span className="sr-only">Actions</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-              {events.map((event) => {
-                const uniqueSessionsCount = event.uniqueSessionsCount ?? 0;
-                // One conversion per session
-                const conversions = uniqueSessionsCount;
-                // Conversion rate: sessions with event / total sessions in range
-                // This shows what percentage of all sessions triggered this event
-                const totalSessionsInRange = sessionsStats?.totalSessions ?? 0;
-                const conversionRate =
-                  totalSessionsInRange > 0
-                    ? (uniqueSessionsCount / totalSessionsInRange) * 100
-                    : 0;
-                return (
-                  <TableRow key={event.id}>
-                    <TableCell className="font-medium">{event.name}</TableCell>
-                    <TableCell>
-                      <code className="text-sm bg-muted px-2 py-1 rounded">
-                        {event.trackingId}
-                      </code>
-                    </TableCell>
-                    <TableCell>{totalSessionsInRange}</TableCell>
-                    <TableCell>{uniqueSessionsCount}</TableCell>
-                    <TableCell className="font-mono">
-                      <Badge
-                        variant={
-                          conversionRate > 75
-                            ? "success"
-                            : conversionRate > 35
-                              ? "secondary"
-                              : "destructive"
-                        }
-                        size="lg"
-                      >
-                        {conversionRate.toFixed(0)}%
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Link
-                          href={`/${organizationId}/${projectId}/events/${event.trackingId}`}
-                        >
-                          <Button variant="secondary" size="lg">
-                            View
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => openEditSheet(event)}
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                  {events.map((event) => {
+                    const uniqueSessionsCount = event.uniqueSessionsCount ?? 0;
+                    // One conversion per session
+                    const conversions = uniqueSessionsCount;
+                    // Conversion rate: sessions with event / total sessions in range
+                    // This shows what percentage of all sessions triggered this event
+                    const totalSessionsInRange =
+                      sessionsStats?.totalSessions ?? 0;
+                    const conversionRate =
+                      totalSessionsInRange > 0
+                        ? (uniqueSessionsCount / totalSessionsInRange) * 100
+                        : 0;
+                    return (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">
+                          {event.name}
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-sm bg-muted px-2 py-1 rounded">
+                            {event.trackingId}
+                          </code>
+                        </TableCell>
+                        <TableCell>{totalSessionsInRange}</TableCell>
+                        <TableCell>{uniqueSessionsCount}</TableCell>
+                        <TableCell className="font-mono">
+                          <Badge
+                            variant={
+                              conversionRate > 75
+                                ? "success"
+                                : conversionRate > 35
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                            size="lg"
+                          >
+                            {conversionRate.toFixed(0)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Link
+                              href={`/${organizationId}/${projectId}/events/${event.trackingId}`}
+                            >
+                              <Button variant="secondary" size="lg">
+                                View
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              onClick={() => openEditSheet(event)}
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         )}
