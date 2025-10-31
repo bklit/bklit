@@ -1,7 +1,8 @@
 "use server";
 
-// import { z } from 'zod'; // Unused, schema is imported directly
 import { prisma } from "@bklit/db/client";
+import { sendEmail } from "@bklit/email/client";
+import { BklitNewProjectEmail } from "@bklit/email/emails/new-project";
 import { revalidatePath } from "next/cache";
 import { authenticated } from "@/lib/auth";
 
@@ -38,14 +39,35 @@ export async function createProjectAction(
     const newSite = await prisma.project.create({
       data: {
         name: validatedFields.data.name,
-        domain: validatedFields.data.domain || null,
+        domain: validatedFields.data.domain,
         organizationId: validatedFields.data.organizationId,
-        // userId: session.user.id,
       },
     });
 
-    revalidatePath("/"); // Revalidates all pages, good for dynamic content
-    // Consider more specific revalidation if needed, e.g., revalidatePath(`/${newSite.id}`)
+    // Send email notification
+    const userEmail = session.user.email;
+    const userName =
+      session.user.name || session.user.email?.split("@")[0] || "there";
+
+    if (userEmail) {
+      try {
+        await sendEmail({
+          to: userEmail,
+          from: "noreply@bklit.com",
+          subject: `❖ Bklit - Your project "${newSite.name}" is ready to use`,
+          react: BklitNewProjectEmail({
+            username: userName,
+            projectName: newSite.name,
+            projectId: newSite.id,
+          }),
+        });
+      } catch (emailError) {
+        // Don't fail project creation if email fails
+        console.error("Failed to send project creation email:", emailError);
+      }
+    }
+
+    revalidatePath("/");
     return {
       success: true,
       message: "Project created successfully!",
@@ -112,14 +134,11 @@ export async function deleteProjectAction(
       },
     });
 
-    revalidatePath("/"); // Revalidate paths after deletion
-    // Consider revalidating specific paths if more targeted revalidation is beneficial
-    // e.g., revalidatePath('/dashboard') or a user-specific projects list page.
+    revalidatePath("/");
 
     return {
       success: true,
       message: `Project "${project.name}" deleted successfully.`,
-      // newprojectId is not relevant here, but FormState includes it as optional
     };
   } catch (error) {
     console.error("Error deleting project:", error);

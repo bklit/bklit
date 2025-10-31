@@ -37,7 +37,7 @@ export const BklitNewProjectEmail = ({
           : "Your new project has been created"}
       </Preview>
       <Container style={container}>
-        <Img src={`${baseUrl}/bklit-logo.png`} alt="Bklit" />
+        <Img width="184" src={`${baseUrl}/bklit-logo.png`} alt="Bklit" />
 
         <Text style={title}>
           <strong>{username}</strong>, a new project was created on your
