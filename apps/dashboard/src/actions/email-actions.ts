@@ -18,7 +18,11 @@ export async function testSendEmail(
       to: "mattsince87@gmail.com",
       from: "noreply@bklit.com",
       subject: "Bklit - New Project Created",
-      react: BklitNewProjectEmail({ username: "Matt" }),
+      react: BklitNewProjectEmail({
+        username: "Matt",
+        projectName: "Test Project",
+        projectId: "cmh1rrwf7000122floz152tfo",
+      }),
     });
 
     return {

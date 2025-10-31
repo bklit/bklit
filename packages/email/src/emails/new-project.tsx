@@ -1,7 +1,9 @@
 import {
   Body,
   Button,
+  CodeBlock,
   Container,
+  Font,
   Head,
   Html,
   Img,
@@ -13,47 +15,85 @@ import {
 
 interface BklitNewProjectEmailProps {
   username?: string;
+  projectName?: string;
+  projectId?: string;
 }
 
 const baseUrl = process.env.BKLIT_WEBSITE_URL
-  ? `https://${process.env.BKLIT_WEBSITE_URL}`
-  : "";
+  ? process.env.BKLIT_WEBSITE_URL
+  : "https://bklit.com";
 
 export const BklitNewProjectEmail = ({
   username,
+  projectName,
+  projectId,
 }: BklitNewProjectEmailProps) => (
   <Html>
     <Head />
     <Body style={main}>
       <Preview>
-        A fine-grained personal access token has been added to your account
+        {projectName
+          ? `Your new project "${projectName}" has been created`
+          : "Your new project has been created"}
       </Preview>
       <Container style={container}>
-        <Img src={`${baseUrl}/logo.svg`} alt="Bklit" />
+        <Img src={`${baseUrl}/bklit-logo.png`} alt="Bklit" />
 
         <Text style={title}>
-          <strong>@{username}</strong>, a personal access was created on your
-          account.
+          <strong>{username}</strong>, a new project was created on your
+          account: <strong>{projectName}</strong>.
         </Text>
 
         <Section style={section}>
           <Text style={text}>
             Hey <strong>{username}</strong>!
           </Text>
-          <Text style={text}>
-            A fine-grained personal access token (<Link>resend</Link>) was
-            recently added to your account.
-          </Text>
+          <Font
+            fallbackFontFamily="monospace"
+            fontFamily="CommitMono"
+            fontStyle="normal"
+            fontWeight={400}
+            webFont={{
+              url: "https://react.email/fonts/commit-mono/commit-mono-regular.ttf",
+              format: "truetype",
+            }}
+          />
+          <CodeBlock
+            code={`npm install @bklit/sdk
+# or
+pnpm add @bklit/sdk`}
+            fontFamily="'CommitMono', monospace"
+            language="bash"
+            theme={{}}
+          />
+          <CodeBlock
+            code={`import { initBklit } from "@bklit/sdk";
 
-          <Button style={button}>View your token</Button>
+initBklit({
+  projectId: "${projectId}",
+  apiHost: "https://your-api-host.com",
+  debug: true,
+});`}
+            fontFamily="'CommitMono', monospace"
+            language="javascript"
+            theme={{}}
+          />
+
+          <Button style={button} href={`${baseUrl}`}>
+            View your project
+          </Button>
         </Section>
-        <Text style={links}>
-          <Link style={link}>Your security audit log</Link> ・{" "}
-          <Link style={link}>Contact support</Link>
-        </Text>
 
         <Text style={footer}>
-          GitHub, Inc. ・88 Colin P Kelly Jr Street ・San Francisco, CA 94107
+          <Link style={link} href={baseUrl}>
+            Bklit.com
+          </Link>
+          <Link style={link} href="https://github.com/bklit/bklit">
+            GitHub
+          </Link>
+          <Link style={link} href="https://x.com/bklitai">
+            X.com
+          </Link>
         </Text>
       </Container>
     </Body>
@@ -88,7 +128,7 @@ const section = {
   padding: "24px",
   border: "solid 1px #dedede",
   borderRadius: "5px",
-  textAlign: "center" as const,
+  textAlign: "left" as const,
 };
 
 const text = {

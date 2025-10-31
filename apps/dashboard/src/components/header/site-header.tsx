@@ -15,7 +15,7 @@ export function SiteHeader() {
     <header className="flex flex-col w-full bg-bklit-900 border-b">
       <div className="flex w-full items-center justify-between px-4 lg:px-6 py-4">
         <div className="flex items-center gap-4">
-          <BklitLogo size={32} />
+          <BklitLogo size={32} className="text-white" />
           <Separator
             orientation="vertical"
             className="mx-2 data-[orientation=vertical]:h-4"
