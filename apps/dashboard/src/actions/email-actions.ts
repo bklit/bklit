@@ -17,10 +17,10 @@ export async function testSendEmail(
     const result = await sendEmail({
       to: "mattsince87@gmail.com",
       from: "noreply@bklit.com",
-      subject: "Bklit - New Project Created",
+      subject: "❖ Bklit - Your project is ready to use",
       react: BklitNewProjectEmail({
         username: "Matt",
-        projectName: "Test Project",
+        projectName: "Bklit Playground",
         projectId: "cmh1rrwf7000122floz152tfo",
       }),
     });
