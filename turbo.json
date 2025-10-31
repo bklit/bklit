@@ -8,6 +8,7 @@
     },
     "build": {
       "env": [
+        "BKLIT_WEBSITE_URL",
         "DATABASE_URL",
         "AUTH_SECRET",
         "AUTH_GITHUB_ID",
@@ -16,6 +17,7 @@
         "POLAR_ACCESS_TOKEN",
         "POLAR_WEBHOOK_SECRET",
         "POLAR_ORGANIZATION_ID",
+        "RESEND_API_KEY",
         "VITE_NGROK_URL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
