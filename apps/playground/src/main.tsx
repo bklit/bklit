@@ -13,6 +13,10 @@ const API_HOST = NGROK_URL
   ? `${NGROK_URL}/api/track`
   : "http://localhost:3000/api/track";
 
+// Get the API key from environment variable
+const API_KEY =
+  import.meta.env.VITE_BKLIT_API_KEY || import.meta.env.BKLIT_API_KEY;
+
 // Debug: Check if SDK is imported correctly
 console.log("🔍 Playground: SDK import test", {
   initBklit: typeof initBklit,
@@ -24,6 +28,7 @@ console.log("🌐 Playground: API Configuration", {
   ngrokUrl: NGROK_URL || "Not configured",
   apiHost: API_HOST,
   usingNgrok: !!NGROK_URL,
+  hasApiKey: !!API_KEY,
 });
 
 // Initialize Bklit SDK
@@ -37,6 +42,7 @@ if (YOUR_PROJECT_ID) {
     initBklit({
       projectId: YOUR_PROJECT_ID,
       apiHost: API_HOST,
+      apiKey: API_KEY,
       debug: true, // Enable debug mode to see event tracking logs
     });
     console.log("✅ Playground: Bklit SDK initialized successfully");

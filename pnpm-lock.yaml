@@ -347,6 +347,9 @@ importers:
       '@bklit/email':
         specifier: workspace:*
         version: link:../email
+      '@bklit/utils':
+        specifier: workspace:*
+        version: link:../utils
       '@bklit/validators':
         specifier: workspace:*
         version: link:../validators

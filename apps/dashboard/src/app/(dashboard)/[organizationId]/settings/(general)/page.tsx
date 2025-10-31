@@ -19,6 +19,10 @@ export async function WorkspaceSettingsNavigation({
       </Button>
 
       <Button variant="ghost" asChild className="justify-start">
+        <Link href={`/${organizationId}/settings/api-tokens`}>API Tokens</Link>
+      </Button>
+
+      <Button variant="ghost" asChild className="justify-start">
         <Link href={`/${organizationId}/settings/billing`}>Billing</Link>
       </Button>
     </nav>

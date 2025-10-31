@@ -1,6 +1,7 @@
 import { prisma } from "@bklit/db/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { createOrUpdateSession } from "@/actions/session-actions";
+import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
 import { isMobileDevice } from "@/lib/user-agent";
 import type { GeoLocation } from "@/types/geo";
@@ -27,7 +28,10 @@ function createCorsResponse(
   const response = NextResponse.json(body, { status });
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization",
+  );
   return response;
 }
 
@@ -49,6 +53,25 @@ export async function POST(request: NextRequest) {
 
     if (!payload.projectId) {
       return createCorsResponse({ message: "projectId is required" }, 400);
+    }
+
+    // Validate API token
+    const authHeader = request.headers.get("authorization");
+    const token = extractTokenFromHeader(authHeader);
+
+    if (!token) {
+      return createCorsResponse(
+        { message: "Authorization token is required" },
+        401,
+      );
+    }
+
+    const tokenValidation = await validateApiToken(token, payload.projectId);
+    if (!tokenValidation.valid) {
+      return createCorsResponse(
+        { message: tokenValidation.error || "Invalid token" },
+        401,
+      );
     }
 
     // Extract client IP and get location data
