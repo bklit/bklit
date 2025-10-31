@@ -1,6 +1,7 @@
 "use server";
 
-import { api } from "@/trpc/server";
+import { sendEmail } from "@bklit/email/client";
+import { BklitNewProjectEmail } from "@bklit/email/emails/new-project";
 
 interface EmailFormState {
   success: boolean;
@@ -13,11 +14,11 @@ export async function testSendEmail(
   _formData: FormData,
 ): Promise<EmailFormState> {
   try {
-    const result = await api.email.send({
+    const result = await sendEmail({
       to: "mattsince87@gmail.com",
-      subject: "Bklit - Resend Test Email",
-      html: "<p>This is a test email</p>",
-      text: "This is a test email",
+      from: "noreply@bklit.com",
+      subject: "Bklit - New Project Created",
+      react: BklitNewProjectEmail({ username: "Matt" }),
     });
 
     return {

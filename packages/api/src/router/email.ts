@@ -11,6 +11,7 @@ export const emailRouter = createTRPCRouter({
         html: z.string().optional(),
         text: z.string().optional(),
         from: z.string().email().optional(),
+        react: z.any().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -20,6 +21,7 @@ export const emailRouter = createTRPCRouter({
         html: input.html,
         text: input.text,
         from: input.from,
+        react: input.react,
       });
 
       console.log("Email sent", { to: input.to, subject: input.subject });

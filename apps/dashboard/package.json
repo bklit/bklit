@@ -14,6 +14,7 @@
     "@bklit/api": "workspace:*",
     "@bklit/auth": "workspace:*",
     "@bklit/db": "workspace:*",
+    "@bklit/email": "workspace:*",
     "@bklit/ui": "workspace:*",
     "@bklit/utils": "workspace:*",
     "@bklit/validators": "workspace:*",

@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Resend } from "resend";
 import { emailEnv } from "../env";
 
@@ -11,6 +12,7 @@ export interface SendEmailParams {
   html?: string;
   text?: string;
   from?: string;
+  react?: ReactElement;
 }
 
 export async function sendEmail(params: SendEmailParams) {
@@ -21,11 +23,19 @@ export async function sendEmail(params: SendEmailParams) {
       subject: params.subject,
       html: params.html,
       text: params.text,
+      react: params.react,
     });
+
+    if (result.error) {
+      throw new Error(
+        result.error.message ||
+          "Failed to send email. Please check your domain verification in Resend.",
+      );
+    }
 
     return {
       success: true,
-      id: result.id,
+      id: result.data?.id,
       message: "Email sent successfully",
     };
   } catch (error) {

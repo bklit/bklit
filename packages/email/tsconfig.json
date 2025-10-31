@@ -1,5 +1,9 @@
 {
   "extends": "@bklit/tsconfig/internal-package.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["ES2022", "dom", "dom.iterable"]
+  },
   "include": ["src"],
   "exclude": ["node_modules"]
 }

@@ -5,11 +5,15 @@
   "module": true,
   "exports": {
     "./env": "./env.ts",
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./emails/*": "./src/emails/*.tsx"
   },
   "scripts": {},
   "dependencies": {
+    "@react-email/components": "^0.5.7",
+    "@react-email/render": "^1.4.0",
     "@t3-oss/env-nextjs": "catalog:",
+    "react": "catalog:react19",
     "resend": "catalog:",
     "zod": "catalog:"
   },
