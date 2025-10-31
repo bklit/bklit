@@ -1,0 +1,37 @@
+import { Resend } from "resend";
+import { emailEnv } from "../env";
+
+const env = emailEnv();
+
+export const resend = new Resend(env.RESEND_API_KEY);
+
+export interface SendEmailParams {
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+  from?: string;
+}
+
+export async function sendEmail(params: SendEmailParams) {
+  try {
+    const result = await resend.emails.send({
+      from: params.from || "onboarding@resend.dev",
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+      text: params.text,
+    });
+
+    return {
+      success: true,
+      id: result.id,
+      message: "Email sent successfully",
+    };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to send email",
+    );
+  }
+}

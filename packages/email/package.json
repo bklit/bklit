@@ -1,0 +1,19 @@
+{
+  "name": "@bklit/email",
+  "version": "0.1.0",
+  "private": true,
+  "module": true,
+  "exports": {
+    "./env": "./env.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {},
+  "dependencies": {
+    "@t3-oss/env-nextjs": "catalog:",
+    "resend": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@bklit/tsconfig": "workspace:*"
+  }
+}
