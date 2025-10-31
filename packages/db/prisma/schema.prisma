@@ -81,6 +81,7 @@ model Organization {
   projects    Project[]
   invitations Invitation[]
   members     Member[]
+  apiTokens   ApiToken[]
 
   @@index([plan])
   @@map("organization")
@@ -124,6 +125,7 @@ model Project {
   organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   trackedEvents    TrackedEvent[]
   trackedSessions  TrackedSession[]
+  apiTokenProjects ApiTokenProject[]
 
   @@index([organizationId])
 }
@@ -235,4 +237,35 @@ model NotificationPreference {
   @@index([userId])
   @@index([projectId])
   @@map("notification_preference")
+}
+
+model ApiToken {
+  id             String            @id @default(cuid())
+  name           String
+  description    String?
+  tokenHash      String            @unique
+  tokenPrefix    String
+  organizationId String
+  createdAt      DateTime          @default(now())
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects       ApiTokenProject[]
+
+  @@index([tokenHash])
+  @@index([organizationId])
+  @@map("api_token")
+}
+
+model ApiTokenProject {
+  id        String   @id @default(cuid())
+  tokenId   String
+  projectId String
+  token     ApiToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([tokenId, projectId])
+  @@index([tokenId])
+  @@index([projectId])
+  @@map("api_token_project")
 }

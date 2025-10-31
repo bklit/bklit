@@ -16,6 +16,7 @@
     "@bklit/auth": "workspace:*",
     "@bklit/db": "workspace:*",
     "@bklit/email": "workspace:*",
+    "@bklit/utils": "workspace:*",
     "@bklit/validators": "workspace:*",
     "@trpc/server": "catalog:",
     "superjson": "2.2.2",

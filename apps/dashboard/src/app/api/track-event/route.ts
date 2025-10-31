@@ -1,5 +1,6 @@
 import { prisma } from "@bklit/db/client";
 import { type NextRequest, NextResponse } from "next/server";
+import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 
 interface EventTrackingPayload {
   trackingId: string;
@@ -17,7 +18,10 @@ function createCorsResponse(
   const response = NextResponse.json(body, { status });
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization",
+  );
   return response;
 }
 
@@ -40,6 +44,25 @@ export async function POST(request: NextRequest) {
       return createCorsResponse(
         { message: "projectId, trackingId, and eventType are required" },
         400,
+      );
+    }
+
+    // Validate API token
+    const authHeader = request.headers.get("authorization");
+    const token = extractTokenFromHeader(authHeader);
+
+    if (!token) {
+      return createCorsResponse(
+        { message: "Authorization token is required" },
+        401,
+      );
+    }
+
+    const tokenValidation = await validateApiToken(token, payload.projectId);
+    if (!tokenValidation.valid) {
+      return createCorsResponse(
+        { message: tokenValidation.error || "Invalid token" },
+        401,
       );
     }
 

@@ -7,6 +7,7 @@ interface BklitOptions {
   apiHost?: string;
   environment?: "development" | "production";
   debug?: boolean;
+  apiKey?: string;
 }
 
 let currentSessionId: string | null = null; // Keep track of current session
@@ -21,7 +22,7 @@ export function initBklit(options: BklitOptions): void {
     return;
   }
 
-  const { projectId, apiHost, environment, debug } = options;
+  const { projectId, apiHost, environment, debug, apiKey } = options;
 
   // Get default configuration and merge with options
   const defaultConfig = getDefaultConfig(environment);
@@ -45,6 +46,7 @@ export function initBklit(options: BklitOptions): void {
       apiHost: finalConfig.apiHost,
       environment: finalConfig.environment,
       debug: finalConfig.debug,
+      hasApiKey: !!apiKey,
       userAgent: `${navigator.userAgent.substring(0, 50)}...`,
     });
   }
@@ -54,6 +56,7 @@ export function initBklit(options: BklitOptions): void {
   window.bklitApiHost = finalConfig.apiHost;
   window.bklitEnvironment = finalConfig.environment;
   window.bklitDebug = finalConfig.debug;
+  window.bklitApiKey = apiKey;
 
   // Generate or get existing session ID
   if (!currentSessionId) {
@@ -139,9 +142,7 @@ export function initBklit(options: BklitOptions): void {
 
       const response = await fetch(finalConfig.apiHost, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: buildHeaders(apiKey),
         body: JSON.stringify(data),
         keepalive: true,
       });
@@ -191,9 +192,7 @@ export function initBklit(options: BklitOptions): void {
         const endSessionUrl = `${finalConfig.apiHost}/session-end`;
         const response = await fetch(endSessionUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: buildHeaders(apiKey),
           body: JSON.stringify({
             sessionId: currentSessionId,
             projectId: projectId,
@@ -369,12 +368,11 @@ export function trackPageView() {
 
   const apiHost =
     window.bklitApiHost || getDefaultConfig(window.bklitEnvironment).apiHost;
+  const apiKey = window.bklitApiKey;
 
   fetch(apiHost, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(apiKey),
     body: JSON.stringify(data),
     keepalive: true,
   })
@@ -452,11 +450,11 @@ export function trackEvent(
         "/api/track-event",
       );
 
+  const apiKey = window.bklitApiKey;
+
   fetch(eventApiHost, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(apiKey),
     body: JSON.stringify(data),
     keepalive: true,
   })
@@ -635,6 +633,19 @@ export function clearBklitSession(): void {
   }
 }
 
+// Helper function to build headers with optional Authorization
+function buildHeaders(apiKey?: string): HeadersInit {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (apiKey) {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+  }
+
+  return headers;
+}
+
 // Store configuration globally for manual tracking
 declare global {
   interface Window {
@@ -650,6 +661,7 @@ declare global {
     bklitApiHost?: string;
     bklitEnvironment?: "development" | "production";
     bklitDebug?: boolean;
+    bklitApiKey?: string;
   }
 }
 

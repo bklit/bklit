@@ -1,4 +1,5 @@
 import { acquisitionRouter } from "./router/acquisition";
+import { apiTokenRouter } from "./router/api-token";
 import { authRouter } from "./router/auth";
 import { emailRouter } from "./router/email";
 import { eventRouter } from "./router/event";
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   acquisition: acquisitionRouter,
   notification: notificationRouter,
   email: emailRouter,
+  apiToken: apiTokenRouter,
 }) as const;
 
 // export type definition of API
