@@ -10,7 +10,7 @@ export const PageHeader = ({
   children,
 }: PageHeaderProps) => {
   return (
-    <div className="w-full dark:bg-black">
+    <div className="w-full bg-background">
       <div className="flex justify-between items-center w-full container mx-auto py-8 px-4 ">
         <div>
           <h1 className="text-3xl font-bold">{title}</h1>
