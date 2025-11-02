@@ -1,11 +1,13 @@
 "use server";
 
+import { sendEmail } from "@bklit/email/client";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/auth/server";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
+import { BklitNewWorkspaceEmail } from "../../../../packages/email/src/emails/new-workspace";
 
 const createOrganizationSchema = z.object({
   name: z
@@ -88,6 +90,28 @@ export async function createOrganizationAction(
       },
       headers: await headers(),
     });
+
+    // Send email notification
+    const userEmail = session.user.email;
+    const userName =
+      session.user.name || session.user.email?.split("@")[0] || "there";
+
+    if (userEmail && organization?.id) {
+      try {
+        await sendEmail({
+          to: userEmail,
+          from: "noreply@bklit.com",
+          subject: `❖ Bklit - Your workspace "${validatedFields.data.name}" is ready to use`,
+          react: BklitNewWorkspaceEmail({
+            username: userName,
+            workspaceName: validatedFields.data.name,
+          }),
+        });
+      } catch (emailError) {
+        // Don't fail organization creation if email fails
+        console.error("Failed to send workspace creation email:", emailError);
+      }
+    }
 
     revalidatePath("/");
     return {
