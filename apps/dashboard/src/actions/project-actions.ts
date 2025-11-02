@@ -2,12 +2,11 @@
 
 import { prisma } from "@bklit/db/client";
 import { sendEmail } from "@bklit/email/client";
-import { BklitNewProjectEmail } from "@bklit/email/emails/new-project";
 import { revalidatePath } from "next/cache";
 import { authenticated } from "@/lib/auth";
-
 import { addProjectSchema } from "@/lib/schemas/project-schema";
 import type { ProjectFormState } from "@/types/user";
+import { BklitNewProjectEmail } from "../../../../packages/email/src/emails/new-project";
 
 export type FormState = ProjectFormState;
 

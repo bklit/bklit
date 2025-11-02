@@ -13,78 +13,48 @@ import {
   Text,
 } from "@react-email/components";
 
-interface BklitNewProjectEmailProps {
+interface BklitNewWorkspaceEmailProps {
   username?: string;
-  projectName?: string;
-  projectId?: string;
+  workspaceName?: string;
+  workspaceId?: string;
 }
 
 const baseUrl = process.env.BKLIT_WEBSITE_URL
   ? process.env.BKLIT_WEBSITE_URL
   : "https://bklit.com";
 
-export const BklitNewProjectEmail = ({
+export const BklitNewWorkspaceEmail = ({
   username,
-  projectName,
-  projectId,
-}: BklitNewProjectEmailProps) => (
+  workspaceName,
+  workspaceId,
+}: BklitNewWorkspaceEmailProps) => (
   <Html>
     <Head />
     <Body style={main}>
       <Preview>
-        {projectName
-          ? `Your new project "${projectName}" has been created`
-          : "Your new project has been created"}
+        {workspaceName
+          ? `Your new workspace "${workspaceName}" has been created`
+          : "Your new workspace has been created"}
       </Preview>
       <Container style={container}>
         <Img width="184" src={`${baseUrl}/bklit-logo.png`} alt="Bklit" />
 
         <Text style={title}>
-          <strong>{username}</strong>, a new project was created on your
-          account: <strong>{projectName}</strong>.
+          <strong>{username}</strong>, a new workspace was created on your
+          account: <strong>{workspaceName}</strong>.
         </Text>
 
         <Section style={section}>
           <Text style={text}>
             Hey <strong>{username}</strong>!
           </Text>
-          <Text style={text}>To get started, install the SDK...</Text>
-          <Font
-            fallbackFontFamily="monospace"
-            fontFamily="CommitMono"
-            fontStyle="normal"
-            fontWeight={400}
-            webFont={{
-              url: "https://react.email/fonts/commit-mono/commit-mono-regular.ttf",
-              format: "truetype",
-            }}
-          />
-          <CodeBlock
-            code={`npm install @bklit/sdk
-# or
-pnpm add @bklit/sdk`}
-            fontFamily="'CommitMono', monospace"
-            language="bash"
-            theme={{}}
-            style={codeblock}
-          />
-          <Text style={text}>Initialize the SDK in your website:</Text>
-          <CodeBlock
-            code={`import { initBklit } from "@bklit/sdk";
-
-initBklit({
-  projectId: "${projectId}",
-  apiHost: "https://your-api-host.com",
-  debug: true,
-});`}
-            fontFamily="'CommitMono', monospace"
-            language="javascript"
-            theme={{}}
-            style={codeblock}
-          />
+          <Text style={text}>
+            You've successfully created a new workspace. Go to your workspace to
+            add projects and users.
+          </Text>
 
           <Button style={button} href={`${baseUrl}`}>
-            View your project
+            View your workspace
           </Button>
         </Section>
 
@@ -104,13 +74,13 @@ initBklit({
   </Html>
 );
 
-BklitNewProjectEmail.PreviewProps = {
+BklitNewWorkspaceEmail.PreviewProps = {
   username: "alanturing",
-  projectName: "My Project",
-  projectId: "1234567890",
-} as BklitNewProjectEmailProps;
+  workspaceName: "My Workspace",
+  workspaceId: "1234567890",
+} as BklitNewWorkspaceEmailProps;
 
-export default BklitNewProjectEmail;
+export default BklitNewWorkspaceEmail;
 
 const main = {
   backgroundColor: "#ffffff",
