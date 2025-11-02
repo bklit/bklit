@@ -1,9 +1,7 @@
 import {
   Body,
   Button,
-  CodeBlock,
   Container,
-  Font,
   Head,
   Html,
   Img,
@@ -16,7 +14,6 @@ import {
 interface BklitNewWorkspaceEmailProps {
   username?: string;
   workspaceName?: string;
-  workspaceId?: string;
 }
 
 const baseUrl = process.env.BKLIT_WEBSITE_URL
@@ -26,7 +23,6 @@ const baseUrl = process.env.BKLIT_WEBSITE_URL
 export const BklitNewWorkspaceEmail = ({
   username,
   workspaceName,
-  workspaceId,
 }: BklitNewWorkspaceEmailProps) => (
   <Html>
     <Head />
@@ -77,7 +73,6 @@ export const BklitNewWorkspaceEmail = ({
 BklitNewWorkspaceEmail.PreviewProps = {
   username: "alanturing",
   workspaceName: "My Workspace",
-  workspaceId: "1234567890",
 } as BklitNewWorkspaceEmailProps;
 
 export default BklitNewWorkspaceEmail;
@@ -136,17 +131,4 @@ const footer = {
   gap: "16px",
   justifyContent: "center",
   alignItems: "center",
-};
-
-const codeblock = {
-  backgroundColor: "#000000",
-  color: "#888",
-  padding: "12px 24px",
-  borderRadius: "0.5em",
-  margin: "0 0 10px 0",
-  boxSizing: "border-box" as const,
-  width: "100%",
-  fontSize: "12px",
-  lineHeight: "1.5",
-  textAlign: "left" as const,
 };
