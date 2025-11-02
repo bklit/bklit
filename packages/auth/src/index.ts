@@ -55,6 +55,8 @@ export function initAuth(options: {
 
   githubClientId: string;
   githubClientSecret: string;
+  googleClientId: string;
+  googleClientSecret: string;
 }) {
   const config = {
     database: prismaAdapter(prisma, {
@@ -64,9 +66,16 @@ export function initAuth(options: {
     secret: options.secret,
     hooks: {
       after: createAuthMiddleware(async (ctx) => {
-        if (ctx.path.startsWith("/sign-up")) {
-          const newSession = ctx.context.newSession;
-          if (newSession?.user.email) {
+        const newSession = ctx.context.newSession;
+
+        // Check if this is a new user signup (social or email)
+        if (newSession?.user.email) {
+          // Check if this is the user's first session (new account)
+          const existingSessions = await prisma.session.count({
+            where: { userId: newSession.user.id },
+          });
+
+          if (existingSessions === 1) {
             try {
               await sendEmail({
                 to: newSession.user.email,
@@ -155,6 +164,15 @@ export function initAuth(options: {
         clientSecret: options.githubClientSecret,
         redirectURI: `${options.baseUrl}/api/auth/callback/github`,
       },
+      ...(options.googleClientId && options.googleClientSecret
+        ? {
+            google: {
+              clientId: options.googleClientId,
+              clientSecret: options.googleClientSecret,
+              redirectURI: `${options.baseUrl}/api/auth/callback/google`,
+            },
+          }
+        : {}),
     },
     trustedOrigins: ["expo://"],
   } satisfies BetterAuthOptions;

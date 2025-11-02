@@ -11,6 +11,8 @@ import {
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { authClient } from "@/auth/client";
+import { GitHubIcon } from "@/components/icons/github";
+import { GoogleIcon } from "@/components/icons/google";
 
 function LoginPage() {
   const searchParams = useSearchParams();
@@ -27,7 +29,7 @@ function LoginPage() {
             Access your Bklit Analytics dashboard.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-3">
           <Button
             onClick={() =>
               authClient.signIn.social({
@@ -36,8 +38,24 @@ function LoginPage() {
               })
             }
             size="lg"
+            className="w-full gap-2"
           >
+            <GitHubIcon className="size-5" />
             Sign in with GitHub
+          </Button>
+          <Button
+            onClick={() =>
+              authClient.signIn.social({
+                provider: "google",
+                callbackURL: callbackUrl,
+              })
+            }
+            variant="outline"
+            size="lg"
+            className="w-full gap-2"
+          >
+            <GoogleIcon className="size-5" />
+            Sign in with Google
           </Button>
         </CardContent>
       </Card>

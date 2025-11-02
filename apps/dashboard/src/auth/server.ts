@@ -10,6 +10,8 @@ export const auth = initAuth({
   secret: env.AUTH_SECRET,
   githubClientId: env.AUTH_GITHUB_ID,
   githubClientSecret: env.AUTH_GITHUB_SECRET,
+  googleClientId: env.AUTH_GOOGLE_ID || "",
+  googleClientSecret: env.AUTH_GOOGLE_SECRET || "",
 });
 
 export const getSession = cache(async () =>
