@@ -77,7 +77,7 @@ export function NavUser({
           <DropdownMenuItem asChild>
             <Link href={dashboardHref}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
-              Dashboard
+              Overview
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

@@ -1,46 +1,23 @@
-import { prisma } from "@bklit/db/client";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { Plus, Users } from "lucide-react";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "@bklit/ui/components/item";
+import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
-
-async function getUserOrganizations(userId: string) {
-  return await prisma.organizationMember.findMany({
-    where: { userId },
-    include: {
-      organization: {
-        include: {
-          projects: true,
-          members: {
-            include: {
-              user: {
-                select: { name: true, email: true, image: true },
-              },
-            },
-          },
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-async function getUserDirectSites(organizationId: string) {
-  return await prisma.project.findMany({
-    where: { organizationId: organizationId },
-    orderBy: { createdAt: "desc" },
-  });
-}
+import { api } from "@/trpc/server";
 
 export default async function UserPage({
   params,
@@ -55,33 +32,34 @@ export default async function UserPage({
     redirect("/");
   }
 
-  const [organizationMemberships] = await Promise.all([
-    getUserOrganizations(userId),
-    getUserDirectSites(userId),
-  ]);
+  const organizations = await api.organization.list();
+
+  const organizationMemberships = organizations.map((org) => {
+    const userMembership = org.members.find(
+      (member) => member.userId === session.user.id,
+    );
+    return {
+      organization: org,
+      role: userMembership?.role || "member",
+      createdAt: userMembership?.createdAt,
+    };
+  });
 
   return (
-    <div className="space-y-6 prose dark:prose-invert max-w-none">
+    <>
       <PageHeader
         title="My Workspaces"
         description="Manage your organizations and projects."
-      />
+      >
+        <Button asChild>
+          <Link href="/organizations/create">
+            <Plus className="mr-2 size-4" />
+            Create Organization
+          </Link>
+        </Button>
+      </PageHeader>
 
-      {/* Organizations Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="size-6" />
-            Organizations
-          </h2>
-          <Button asChild>
-            <Link href="/organizations/create">
-              <Plus className="mr-2 size-4" />
-              Create Organization
-            </Link>
-          </Button>
-        </div>
-
+      <div className="container mx-auto py-6 px-4 flex gap-4">
         {organizationMemberships.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
@@ -91,7 +69,7 @@ export default async function UserPage({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid w-full gap-4 md:grid-cols-2 lg:grid-cols-3">
             {organizationMemberships.map((membership) => (
               <Card
                 key={membership.organization.id}
@@ -99,8 +77,11 @@ export default async function UserPage({
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">
+                    <CardTitle className="text-lg flex items-center gap-2">
                       {membership.organization.name}
+                      <Badge variant="secondary">
+                        {membership.organization.projects.length} projects
+                      </Badge>
                     </CardTitle>
                     <Badge
                       variant={
@@ -110,34 +91,45 @@ export default async function UserPage({
                       {membership.role}
                     </Badge>
                   </div>
-                  <CardDescription>
-                    {membership.organization.description || "No description"}
-                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Projects: {membership.organization.projects.length}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Members: {membership.organization.members.length}
-                    </p>
+                  <div className="flex gap-2 justify-end">
+                    <Button asChild variant="outline">
+                      <Link href={`/${membership.organization.id}`}>
+                        View Organization
+                      </Link>
+                    </Button>
+                    {membership.role === "owner" && (
+                      <Button asChild variant="secondary">
+                        <Link href={`/${membership.organization.id}/settings`}>
+                          Settings
+                        </Link>
+                      </Button>
+                    )}
                   </div>
-
                   {membership.organization.projects.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Recent Projects:</p>
-                      <div className="space-y-1">
-                        {membership.organization.sites
+                      <div className="flex flex-col gap-2">
+                        {membership.organization.projects
                           .slice(0, 3)
-                          .map((site) => (
-                            <Link
-                              key={site.id}
-                              href={`/${membership.organization.id}/${site.id}`}
-                              className="block text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          .map((project) => (
+                            <Item
+                              key={project.id}
+                              size="sm"
+                              variant="outline"
+                              asChild
                             >
-                              {site.name}
-                            </Link>
+                              <Link
+                                href={`/${membership.organization.id}/${project.id}`}
+                              >
+                                <ItemContent>
+                                  <ItemTitle>{project.name}</ItemTitle>
+                                </ItemContent>
+                                <ItemActions>
+                                  <ChevronRight size={16} />
+                                </ItemActions>
+                              </Link>
+                            </Item>
                           ))}
                         {membership.organization.projects.length > 3 && (
                           <p className="text-xs text-muted-foreground">
@@ -147,27 +139,12 @@ export default async function UserPage({
                       </div>
                     </div>
                   )}
-
-                  <div className="flex gap-2">
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/${membership.organization.id}`}>
-                        View Organization
-                      </Link>
-                    </Button>
-                    {membership.role === "owner" && (
-                      <Button asChild size="sm">
-                        <Link href={`/${membership.organization.id}/settings`}>
-                          Settings
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

@@ -58,7 +58,15 @@ export const organizationRouter = {
       },
       include: {
         projects: true,
+        members: {
+          include: {
+            user: {
+              select: { name: true, email: true, image: true },
+            },
+          },
+        },
       },
+      orderBy: { createdAt: "desc" },
     });
   }),
 
