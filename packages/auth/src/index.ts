@@ -1,5 +1,7 @@
 import { expo } from "@better-auth/expo";
 import { prisma } from "@bklit/db/client";
+import { sendEmail } from "@bklit/email/client";
+import { BklitWelcomeEmail } from "@bklit/email/emails/welcome";
 import {
   checkout,
   polar,
@@ -11,6 +13,7 @@ import { Polar } from "@polar-sh/sdk";
 import type { BetterAuthOptions } from "better-auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { createAuthMiddleware } from "better-auth/api";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { authEnv } from "../env";
 import plansTemplate from "./pricing-plans.json";
@@ -52,6 +55,8 @@ export function initAuth(options: {
 
   githubClientId: string;
   githubClientSecret: string;
+  googleClientId: string;
+  googleClientSecret: string;
 }) {
   const config = {
     database: prismaAdapter(prisma, {
@@ -59,6 +64,37 @@ export function initAuth(options: {
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        const newSession = ctx.context.newSession;
+
+        // Check if this is a new user signup (social or email)
+        if (newSession?.user.email) {
+          // Check if this is the user's first session (new account)
+          const existingSessions = await prisma.session.count({
+            where: { userId: newSession.user.id },
+          });
+
+          if (existingSessions === 1) {
+            try {
+              await sendEmail({
+                to: newSession.user.email,
+                from: "noreply@bklit.com",
+                subject: "Welcome to ❖ Bklit! 🎉",
+                react: BklitWelcomeEmail({
+                  username:
+                    newSession.user.name ||
+                    newSession.user.email.split("@")[0] ||
+                    "there",
+                }),
+              });
+            } catch (emailError) {
+              console.error("Failed to send welcome email:", emailError);
+            }
+          }
+        }
+      }),
+    },
     plugins: [
       oAuthProxy({
         /**
@@ -128,6 +164,15 @@ export function initAuth(options: {
         clientSecret: options.githubClientSecret,
         redirectURI: `${options.baseUrl}/api/auth/callback/github`,
       },
+      ...(options.googleClientId && options.googleClientSecret
+        ? {
+            google: {
+              clientId: options.googleClientId,
+              clientSecret: options.googleClientSecret,
+              redirectURI: `${options.baseUrl}/api/auth/callback/google`,
+            },
+          }
+        : {}),
     },
     trustedOrigins: ["expo://"],
   } satisfies BetterAuthOptions;

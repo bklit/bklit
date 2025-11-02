@@ -52,11 +52,17 @@ You'll need to obtain the following credentials:
 
 - `DATABASE_URL` - Your PostgreSQL database connection string
 
-**GitHub OAuth** (for authentication)
+**GitHub OAuth** (authentication)
 
 - `AUTH_GITHUB_ID` - Your GitHub OAuth App Client ID
 - `AUTH_GITHUB_SECRET` - Your GitHub OAuth App Client Secret
 - Create a GitHub OAuth App: [GitHub OAuth Documentation](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
+
+**Google OAuth** (authentication)
+
+- `AUTH_GOOGLE_ID` - Your Goolge OAuth Client ID
+- `AUTH_GOOGLE_SECRET` - Your Google OAuth Client Secret
+- Create Google Credentials in the [Google Cloud Console](https://console.cloud.google.com/apis/dashboard). Refer to the [Better-Auth guide](https://www.better-auth.com/docs/authentication/google) for more help.
 
 **Better Auth**
 

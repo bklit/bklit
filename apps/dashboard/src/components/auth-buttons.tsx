@@ -2,10 +2,15 @@
 
 import { Button } from "@bklit/ui/components/button";
 import { authClient } from "@/auth/client";
+import { GitHubIcon } from "./icons/github";
 
 export function SignInButton() {
   return (
-    <Button onClick={() => authClient.signIn.social({ provider: "github" })}>
+    <Button
+      onClick={() => authClient.signIn.social({ provider: "github" })}
+      className="gap-2"
+    >
+      <GitHubIcon className="size-5" />
       Sign in with GitHub
     </Button>
   );

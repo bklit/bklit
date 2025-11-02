@@ -378,6 +378,9 @@ importers:
       '@bklit/db':
         specifier: workspace:*
         version: link:../db
+      '@bklit/email':
+        specifier: workspace:*
+        version: link:../email
       '@bklit/utils':
         specifier: workspace:*
         version: link:../utils
