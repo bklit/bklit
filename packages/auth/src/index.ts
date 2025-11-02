@@ -1,5 +1,7 @@
 import { expo } from "@better-auth/expo";
 import { prisma } from "@bklit/db/client";
+import { sendEmail } from "@bklit/email/client";
+import { BklitWelcomeEmail } from "@bklit/email/emails/welcome";
 import {
   checkout,
   polar,
@@ -11,6 +13,7 @@ import { Polar } from "@polar-sh/sdk";
 import type { BetterAuthOptions } from "better-auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { createAuthMiddleware } from "better-auth/api";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { authEnv } from "../env";
 import plansTemplate from "./pricing-plans.json";
@@ -59,6 +62,30 @@ export function initAuth(options: {
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        if (ctx.path.startsWith("/sign-up")) {
+          const newSession = ctx.context.newSession;
+          if (newSession?.user.email) {
+            try {
+              await sendEmail({
+                to: newSession.user.email,
+                from: "noreply@bklit.com",
+                subject: "Welcome to ❖ Bklit! 🎉",
+                react: BklitWelcomeEmail({
+                  username:
+                    newSession.user.name ||
+                    newSession.user.email.split("@")[0] ||
+                    "there",
+                }),
+              });
+            } catch (emailError) {
+              console.error("Failed to send welcome email:", emailError);
+            }
+          }
+        }
+      }),
+    },
     plugins: [
       oAuthProxy({
         /**

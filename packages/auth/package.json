@@ -19,6 +19,7 @@
   "dependencies": {
     "@better-auth/expo": "1.2.12",
     "@bklit/db": "workspace:*",
+    "@bklit/email": "workspace:*",
     "@bklit/utils": "workspace:*",
     "@polar-sh/better-auth": "^1.2.1",
     "@polar-sh/sdk": "^0.34.17",

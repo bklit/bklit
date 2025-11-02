@@ -1,13 +1,13 @@
 "use server";
 
 import { sendEmail } from "@bklit/email/client";
+import { BklitNewWorkspaceEmail } from "@bklit/email/emails/new-workspace";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/auth/server";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
-import { BklitNewWorkspaceEmail } from "../../../../packages/email/src/emails/new-workspace";
 
 const createOrganizationSchema = z.object({
   name: z

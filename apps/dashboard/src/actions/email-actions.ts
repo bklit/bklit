@@ -1,7 +1,7 @@
 "use server";
 
 import { sendEmail } from "@bklit/email/client";
-import { BklitNewProjectEmail } from "../../../../packages/email/src/emails/new-project";
+import { BklitNewProjectEmail } from "@bklit/email/emails/new-project";
 
 interface EmailFormState {
   success: boolean;
