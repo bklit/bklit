@@ -3,7 +3,7 @@ import { Badge } from "./badge";
 
 interface ProgressRowProps {
   label: string;
-  value: number;
+  value?: number;
   percentage?: number;
   icon?: React.ReactNode;
   className?: string;
@@ -42,14 +42,14 @@ export const ProgressRow = ({
             {label}
           </span>
         </div>
-        <Badge variant="secondary">{value}</Badge>
+        {value && <Badge variant="secondary">{value}</Badge>}
       </div>
       {percentage && (
         <div className="flex h-0.5 bg-muted">
           <div
             className="flex h-full bg-primary rounded-full"
             style={{ width: `${percentage}%` }}
-          ></div>
+          />
         </div>
       )}
     </div>
