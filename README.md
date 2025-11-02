@@ -112,13 +112,13 @@ The dashboard will be available at `http://localhost:3000`
 
 The playground is a demo application that shows how to integrate the Bklit SDK.
 
-1. **Create an organization and project**
+1. **Create an organization and project in your dashboard**
    - Navigate to `http://localhost:3000`
    - Sign in with GitHub
    - Create a new organization
    - Create a new project within that organization
 
-2. **Generate an API key**
+2. **Generate an API key in your dashboard**
    - Go to your organization settings
    - Navigate to "API Tokens"
    - Create a new API token
