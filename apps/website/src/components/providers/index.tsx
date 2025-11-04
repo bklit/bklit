@@ -1,6 +1,8 @@
 "use client";
 
+import { TooltipProvider } from "@bklit/ui/components/tooltip";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { GithubStatsProvider } from "./github-stats-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +12,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      {children}
+      <TooltipProvider>
+        <GithubStatsProvider>{children}</GithubStatsProvider>
+      </TooltipProvider>
     </NextThemesProvider>
   );
 }

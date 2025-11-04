@@ -1,40 +1,79 @@
 import { Button } from "@bklit/ui/components/button";
-import { Github } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { ButtonGroup } from "@bklit/ui/components/button-group";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@bklit/ui/components/card";
+import { BklitLogo } from "@bklit/ui/icons/bklit";
+import {
+  Activity,
+  Blend,
+  Clapperboard,
+  Cone,
+  FlagTriangleRight,
+  Github,
+  MousePointer2,
+} from "lucide-react";
+import { CardDecorator } from "@/components/card-decorator";
+import { GithubStarCount } from "@/components/github-star-count";
 import { PageHeader } from "@/components/page-header";
+import { PolarPricingTable } from "@/components/polar-pricing-table";
 
 export default function MarketingHomePage() {
   return (
-    <main className="w-full min-h-screen bklit-hero flex flex-col">
+    <main className="w-full min-h-screen bklit-hero flex flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto flex flex-col mt-8 px-4">
-        <div className="flex items-center justify-start w-full h-[600px]">
-          <div className="py-10 space-y-3">
-            <h1 className="text-2xl font-normal font-mono">
-              Analytics for Developers
+      <div className="container mx-auto max-w-6xl flex flex-col px-4">
+        <div className="flex items-center justify-start w-full min-h-[600px]">
+          <div className="py-10 space-y-6 max-w-2xl">
+            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+              Understand your{" "}
+              <span className="font-serif font-normal italic">application</span>
             </h1>
-            <p className="text-muted-foreground font-mono text-md">
-              Real-time analytics, funnel analysis, custom event triggers, and
-              more.
+            <p className="font-mono text-lg">
+              Real-time analytics, funnel analysis, custom event triggers,
+              sessions, acquisitions and much more.
             </p>
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="lg" asChild>
-                <a
-                  href="https://github.com/bklit/bklit"
-                  target="_blank"
-                  title="Bklit on Github"
-                  rel="noopener noreferrer"
+              <ButtonGroup>
+                <Button variant="mono" size="lg" asChild>
+                  <a
+                    href="https://app.bklit.com/signin"
+                    target="_blank"
+                    title="Bklit Demo Dashboard"
+                    rel="noopener noreferrer"
+                  >
+                    Demo
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  asChild
+                  className="group flex items-center gap-3"
                 >
-                  <Github size={16} /> OpenSource
-                </a>
-              </Button>
+                  <a
+                    href="https://github.com/bklit/bklit"
+                    target="_blank"
+                    title="Bklit on Github"
+                    rel="noopener noreferrer"
+                  >
+                    <Github size={16} /> OpenSource
+                    <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
+                      <GithubStarCount />
+                    </span>
+                  </a>
+                </Button>
+              </ButtonGroup>
             </div>
           </div>
         </div>
       </div>
       <div className="w-full border-t border-b border-bklit-600">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-6 gap-px bg-bklit-600 px-px">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-bklit-600 px-px">
             <div className="col-span-1 bg-background flex items-center justify-center p-8">
               <img src="/nextjs.svg" alt="Next.js" />
             </div>
@@ -51,122 +90,113 @@ export default function MarketingHomePage() {
               <img src="/prisma.svg" alt="Next.js" />
             </div>
             <div className="col-span-1 bg-background flex items-center justify-center p-8">
-              <Logo height={30} />
+              <div className="flex items-center gap-3 cursor-pointer">
+                <BklitLogo size={38} className="dark:text-white text-black" />
+                <span className="text-2xl font-bold">Bklit</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="w-full border-b border-bklit-600">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 gap-px bg-bklit-600 px-px">
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h5 className="text-lg text-left font-bold font-mono">
-                Real-time analytics
-              </h5>
-              <p className="text-muted-foreground font-mono text-sm">
-                Instantly see where you're users are coming from in real-time,
-                with live session data.
-              </p>
-            </div>
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h5 className="text-lg text-left font-semibold font-mono">
-                Session analytics
-              </h5>
-              <p className="text-muted-foreground font-mono text-base">
-                Track your users' sessions and see how they interact with your
-                website and view their flow.
-              </p>
-            </div>
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h5 className="text-lg text-left font-semibold font-mono">
-                Custom event triggers
-              </h5>
-              <p className="text-muted-foreground font-mono text-base">
-                Trigger custom events when your users perform certain actions,
-                such as clicking a button or submitting a form or simply by
-                viewing a page.
-              </p>
-            </div>
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h5 className="text-lg text-left font-semibold font-mono">
-                User location tracking
-              </h5>
-              <p className="text-muted-foreground font-mono text-base">
-                See where your users are coming from, with city and country and
-                locale.
-              </p>
-            </div>
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h5 className="text-lg text-left font-semibold font-mono">
-                Fully open-source
-              </h5>
-              <p className="text-muted-foreground font-mono text-base">
-                All of our code is open-source and available on GitHub.
-              </p>
-            </div>
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h5 className="text-lg text-left font-semibold font-mono">
-                Polar Subscription
-              </h5>
-              <p className="text-muted-foreground font-mono text-base">
-                Workspace and project limits with Polar.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="w-full border-b border-bklit-600">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 gap-px bg-bklit-600 px-px">
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h3 className="text-xl text-left font-semibold font-mono">
-                Simple SDK
-              </h3>
-              <p className="text-muted-foreground font-mono text-sm">
-                Simple SDK to integrate with your website and start tracking
-                your users.
-              </p>
-            </div>
-            <div className="col-span-1 bg-bklit-900 flex flex-col items-start justify-start p-8 space-y-4">
-              <pre className="font-mono text-sm overflow-x-auto">
-                <code className="text-bklit-100">
-                  {`import { initBklit } from "@bklit/sdk";
+      <div className="w-full">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="col-span-1">
+              <CardDecorator className="px-6 text-emerald-100">
+                <Activity size={64} strokeWidth={1.5} />
+              </CardDecorator>
+              <CardHeader>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+                  Real-time analytics
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  Real-time analytics let you know what's happening in
+                  real-time.
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-initBklit({
-  projectId: "your-project-id",
-  apiHost: "https://your-api-host.com",
-  environment: "development",
-  debug: true,
-});`}
-                </code>
-              </pre>
-            </div>
-            <div className="col-span-1 bg-bklit-900 flex flex-col items-start justify-start p-8 space-y-4">
-              <pre className="font-mono text-sm overflow-x-auto">
-                <code className="text-bklit-100">
-                  {`<a href="/" data-bklit-event="checkout">
-  Home
-</a>
+            <Card className="col-span-1">
+              <CardDecorator className="px-6 text-emerald-100">
+                <Cone size={64} strokeWidth={1.5} />
+              </CardDecorator>
+              <CardHeader>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+                  Funnel analysis
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  Funnels help you understand the path users take through your
+                  app.
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-window.trackEvent("checkout", "custom_event");
-`}
-                </code>
-              </pre>
-            </div>
-            <div className="col-span-1 bg-background flex flex-col items-start justify-start p-8 space-y-4">
-              <h3 className="text-xl text-left font-semibold font-mono">
-                Custom events
-              </h3>
-              <p className="text-muted-foreground font-mono text-sm">
-                Easy-to-use API to track custom events, use data attributes, id
-                attributes or manual tracking.
-              </p>
-            </div>
+            <Card className="col-span-1">
+              <CardDecorator className="px-6 text-emerald-100">
+                <MousePointer2 size={64} strokeWidth={1.5} />
+              </CardDecorator>
+              <CardHeader>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+                  Event triggers
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  Measure specific events in your app and trigger actions based
+                  on them.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="col-span-1">
+              <CardDecorator className="px-6 text-emerald-100">
+                <Clapperboard size={64} strokeWidth={1.5} />
+              </CardDecorator>
+              <CardHeader>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+                  Sessions
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  Get a detailed view of each session and how they interact with
+                  your app.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="col-span-1">
+              <CardDecorator className="px-6 text-emerald-100">
+                <Blend size={64} strokeWidth={1.5} />
+              </CardDecorator>
+              <CardHeader>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+                  Acquisitions
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  Track where your users come from and how they find your app.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="col-span-1">
+              <CardDecorator className="px-6 text-emerald-100">
+                <FlagTriangleRight size={64} strokeWidth={1.5} />
+              </CardDecorator>
+              <CardHeader>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+                  Campaigns
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  Measure the effectiveness of your campaigns and track your
+                  ROI.
+                </CardDescription>
+              </CardHeader>
+            </Card>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 mb-12 mt-24">
+      <div className="w-full">
+        <div className="container mx-auto max-w-6xl px-4"></div>
+      </div>
+      <div className="container mx-auto max-w-6xl px-4 mb-12 mt-24">
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground font-mono text-sm">
             &copy; {new Date().getFullYear()} Bklit. All rights reserved.
