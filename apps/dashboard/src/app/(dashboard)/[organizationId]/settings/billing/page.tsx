@@ -2,8 +2,9 @@ import { unstable_noStore } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
-import { SettingsLayout } from "@/components/settings/settings-layout";
+import { PageHeader } from "@/components/header/page-header";
 import { PricingTable } from "@/components/plans/pricing-table";
+import { SettingsLayout } from "@/components/settings/settings-layout";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
