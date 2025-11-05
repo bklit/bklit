@@ -8,11 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { GitHubIcon } from "@bklit/ui/icons/github";
+import { GoogleIcon } from "@bklit/ui/icons/google";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { authClient } from "@/auth/client";
-import { GitHubIcon } from "@/components/icons/github";
-import { GoogleIcon } from "@/components/icons/google";
 
 function LoginPage() {
   const searchParams = useSearchParams();
