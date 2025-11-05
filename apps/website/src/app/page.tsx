@@ -78,16 +78,16 @@ export default function MarketingHomePage() {
               <img src="/nextjs.svg" alt="Next.js" />
             </div>
             <div className="col-span-1 bg-background flex items-center justify-center p-8">
-              <img src="/supabase.svg" alt="Next.js" />
+              <img src="/resend.svg" alt="Resend" />
             </div>
             <div className="col-span-1 bg-background flex items-center justify-center p-8">
-              <img src="/turborepo.svg" alt="Next.js" />
+              <img src="/turborepo.svg" alt="Turborepo" />
             </div>
             <div className="col-span-1 bg-background flex items-center justify-center p-8">
-              <img src="/polar.svg" alt="Next.js" />
+              <img src="/polar.svg" alt="Polar.sh" />
             </div>
             <div className="col-span-1 bg-background flex items-center justify-center p-8">
-              <img src="/prisma.svg" alt="Next.js" />
+              <img src="/prisma.svg" alt="Prisma" />
             </div>
             <div className="col-span-1 bg-background flex items-center justify-center p-8">
               <div className="flex items-center gap-3 cursor-pointer">
