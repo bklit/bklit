@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/header/page-header";
-import { SettingsNavigation } from "@/components/nav/settings-navigation";
 import { HydrateClient } from "@/trpc/server";
+import { SettingsNavigation } from "./settings-navigation";
 
 interface SettingsLayoutProps {
   title: string;
@@ -39,4 +39,3 @@ export function SettingsLayout({
     </HydrateClient>
   );
 }
-
