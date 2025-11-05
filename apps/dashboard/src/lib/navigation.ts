@@ -91,7 +91,7 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
 
   // User level: /user/[userId]
   if (segments[0] === "user" && segments.length >= 2) {
-    return navigationConfig.user;
+    return navigationConfig.user ?? [];
   }
 
   // Project level: /[organizationId]/[projectId]/... (but not billing, settings)
@@ -100,12 +100,12 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
     segments[1] !== "billing" &&
     segments[1] !== "settings"
   ) {
-    return navigationConfig.project;
+    return navigationConfig.project ?? [];
   }
 
   // Organization level: /[organizationId], /[organizationId]/billing, or /[organizationId]/settings
   if (segments.length >= 1 && segments[0] !== "user") {
-    return navigationConfig.organization;
+    return navigationConfig.organization ?? [];
   }
 
   return [];
