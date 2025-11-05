@@ -246,6 +246,12 @@ importers:
       '@bklit/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
+      '@bklit/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@tailwindcss/vite':
+        specifier: ^4.1.16
+        version: 4.1.16(vite@6.4.1(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1))
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -255,6 +261,9 @@ importers:
       react-router-dom:
         specifier: ^7.9.5
         version: 7.9.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      tailwindcss:
+        specifier: ^4.1.16
+        version: 4.1.16
     devDependencies:
       '@eslint/js':
         specifier: ^9.38.0
@@ -2801,6 +2810,11 @@ packages:
 
   '@tailwindcss/postcss@4.1.16':
     resolution: {integrity: sha512-Qn3SFGPXYQMKR/UtqS+dqvPrzEeBZHrFA92maT4zijCVggdsXnDBMsPFJo1eArX3J+O+Gi+8pV4PkqjLCNBk3A==}
+
+  '@tailwindcss/vite@4.1.16':
+    resolution: {integrity: sha512-bbguNBcDxsRmi9nnlWJxhfDWamY3lmcyACHcdO1crxfzuLpOhHLLtEIN/nCbbAtj5rchUgQD17QVAKi1f7IsKg==}
+    peerDependencies:
+      vite: ^5.2.0 || ^6 || ^7
 
   '@tanstack/devtools-event-client@0.3.4':
     resolution: {integrity: sha512-eq+PpuutUyubXu+ycC1GIiVwBs86NF/8yYJJAKSpPcJLWl6R/761F1H4F/9ziX6zKezltFUH1ah3Cz8Ah+KJrw==}
@@ -9106,6 +9120,13 @@ snapshots:
       '@tailwindcss/oxide': 4.1.16
       postcss: 8.5.6
       tailwindcss: 4.1.16
+
+  '@tailwindcss/vite@4.1.16(vite@6.4.1(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1))':
+    dependencies:
+      '@tailwindcss/node': 4.1.16
+      '@tailwindcss/oxide': 4.1.16
+      tailwindcss: 4.1.16
+      vite: 6.4.1(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
 
   '@tanstack/devtools-event-client@0.3.4': {}
 
