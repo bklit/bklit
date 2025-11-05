@@ -1,9 +1,8 @@
 import { ApiTokens } from "@/components/api-tokens/api-tokens";
 import { CreateTokenButton } from "@/components/api-tokens/create-token-button";
-import { PageHeader } from "@/components/header/page-header";
+import { SettingsLayout } from "@/components/settings/settings-layout";
 import { authenticated } from "@/lib/auth";
-import { api, HydrateClient } from "@/trpc/server";
-import { WorkspaceSettingsNavigation } from "../(general)/page";
+import { api } from "@/trpc/server";
 
 export default async function ApiTokensSettingsPage({
   params,
@@ -19,25 +18,18 @@ export default async function ApiTokensSettingsPage({
   ]);
 
   return (
-    <HydrateClient>
-      <PageHeader
-        title="API Tokens"
-        description="Manage API tokens for authenticating your tracking requests."
-      >
-        <CreateTokenButton organizationId={organizationId} />
-      </PageHeader>
-      <div className="container mx-auto py-6 px-4 flex gap-4">
-        <div className="w-1/6">
-          <WorkspaceSettingsNavigation params={params} />
-        </div>
-        <div className="w-5/6">
-          <ApiTokens
-            organizationId={organizationId}
-            organizationName={organization.name}
-            tokens={tokens}
-          />
-        </div>
-      </div>
-    </HydrateClient>
+    <SettingsLayout
+      title="API Tokens"
+      description="Manage API tokens for authenticating your tracking requests."
+      headerActions={<CreateTokenButton organizationId={organizationId} />}
+      navigationType="organizationSettings"
+      organizationId={organizationId}
+    >
+      <ApiTokens
+        organizationId={organizationId}
+        organizationName={organization.name}
+        tokens={tokens}
+      />
+    </SettingsLayout>
   );
 }

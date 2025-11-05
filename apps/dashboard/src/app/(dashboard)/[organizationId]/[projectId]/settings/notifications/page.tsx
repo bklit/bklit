@@ -1,6 +1,5 @@
-import { PageHeader } from "@/components/header/page-header";
+import { SettingsLayout } from "@/components/settings/settings-layout";
 import { ProjectNotifications } from "../../../_components/project-notifications";
-import { ProjectSettingsNavigation } from "../(general)/page";
 
 interface NotificationSettingsPageProps {
   params: Promise<{ organizationId: string; projectId: string }>;
@@ -12,24 +11,17 @@ export default async function NotificationSettingsPage({
   const { organizationId, projectId } = await params;
 
   return (
-    <>
-      <PageHeader
-        title="Notifications"
-        description="Manage your notification preferences for this project."
+    <SettingsLayout
+      title="Notifications"
+      description="Manage your notification preferences for this project."
+      navigationType="projectSettings"
+      organizationId={organizationId}
+      projectId={projectId}
+    >
+      <ProjectNotifications
+        projectId={projectId}
+        organizationId={organizationId}
       />
-
-      <div className="container mx-auto py-6 px-4 flex gap-4">
-        <div className="w-1/6">
-          <ProjectSettingsNavigation params={params} />
-        </div>
-
-        <div className="w-5/6">
-          <ProjectNotifications
-            projectId={projectId}
-            organizationId={organizationId}
-          />
-        </div>
-      </div>
-    </>
+    </SettingsLayout>
   );
 }
