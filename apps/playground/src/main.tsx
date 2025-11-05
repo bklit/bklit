@@ -1,9 +1,11 @@
+import "@bklit/ui/globals.css";
 import { initBklit } from "@bklit/sdk";
+import { Toaster } from "@bklit/ui/components/sonner";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ThemeProvider } from "../components/theme-provider";
 import routes from "./routes";
-import "./index.css";
 
 const YOUR_PROJECT_ID = "cmh1rrwf7000122floz152tfo";
 
@@ -62,6 +64,9 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <RouterProvider router={router} />
+      <Toaster />
+    </ThemeProvider>
   </React.StrictMode>,
 );
