@@ -9,9 +9,9 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { CodeBlock } from "@bklit/ui/components/code-block";
+import { CopyInput } from "@bklit/ui/components/input-copy";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CopyInput } from "@/components/copy-input";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
 import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";

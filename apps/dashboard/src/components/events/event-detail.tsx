@@ -25,6 +25,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@bklit/ui/components/empty";
+import { CopyInput } from "@bklit/ui/components/input-copy";
 import {
   Popover,
   PopoverContent,
@@ -44,7 +45,6 @@ import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import { CopyInput } from "@/components/copy-input";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
