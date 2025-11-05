@@ -21,9 +21,7 @@ export function authEnv() {
       POLAR_FREE_PRODUCT_ID: z.string().optional(), // Optional - Free plan may not exist in Polar
       POLAR_PRO_PRODUCT_ID: z.string().min(1),
 
-      NODE_ENV: z
-        .enum(["development", "production", "test", "localdev"])
-        .optional(),
+      NODE_ENV: z.enum(["development", "production", "test"]).optional(),
     },
     experimental__runtimeEnv: {},
     skipValidation:

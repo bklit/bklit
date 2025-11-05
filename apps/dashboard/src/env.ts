@@ -7,7 +7,7 @@ export const env = createEnv({
   extends: [dbEnv(), vercel()],
   shared: {
     NODE_ENV: z
-      .enum(["development", "production", "test", "localdev"])
+      .enum(["development", "production", "test"])
       .default("development"),
   },
   /**
