@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import type { inferRouterOutputs } from "@trpc/server";
-import { DeleteOrganizationForm } from "@/components/forms/delete-team-form";
+import { DeleteOrganizationForm } from "@/components/forms/delete-organization-form";
 import { UpdateOrganizationNameForm } from "@/components/forms/update-organization-name-form";
 import { UpdateOrganizationThemeForm } from "@/components/forms/update-organization-theme-form";
 import { getThemeGradient } from "@/lib/utils/get-organization-theme";
