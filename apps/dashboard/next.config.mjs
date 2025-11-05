@@ -11,7 +11,6 @@ const config = {
   transpilePackages: ["@bklit/auth", "@bklit/db", "@bklit/ui", "@bklit/utils"],
 
   /** We already do linting and typechecking as separate tasks in CI */
-  eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 };
 
