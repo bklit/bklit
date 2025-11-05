@@ -27,6 +27,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@bklit/ui/components/empty";
+import { CopyInput } from "@bklit/ui/components/input-copy";
 import {
   Sheet,
   SheetContent,
@@ -64,7 +65,6 @@ import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import { createEvent, deleteEvent, updateEvent } from "@/actions/event-actions";
-import { CopyInput } from "@/components/copy-input";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";

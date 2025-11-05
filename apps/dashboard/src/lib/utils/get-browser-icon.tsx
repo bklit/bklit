@@ -1,8 +1,8 @@
-import { BrowserIcon } from "@/components/icons/browser";
-import { ChromeIcon } from "@/components/icons/chrome";
-import { EdgeIcon } from "@/components/icons/edge";
-import { FirefoxIcon } from "@/components/icons/firefox";
-import { SafariIcon } from "@/components/icons/safari";
+import { BrowserIcon } from "@bklit/ui/icons/browser";
+import { ChromeIcon } from "@bklit/ui/icons/chrome";
+import { EdgeIcon } from "@bklit/ui/icons/edge";
+import { FirefoxIcon } from "@bklit/ui/icons/firefox";
+import { SafariIcon } from "@bklit/ui/icons/safari";
 
 interface BrowserConfig {
   name: string;

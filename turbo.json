@@ -13,6 +13,8 @@
         "AUTH_SECRET",
         "AUTH_GITHUB_ID",
         "AUTH_GITHUB_SECRET",
+        "AUTH_GOOGLE_ID",
+        "AUTH_GOOGLE_SECRET",
         "POLAR_SERVER_MODE",
         "POLAR_ACCESS_TOKEN",
         "POLAR_WEBHOOK_SECRET",

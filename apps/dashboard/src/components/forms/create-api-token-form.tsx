@@ -17,13 +17,13 @@ import {
   FieldLabel,
 } from "@bklit/ui/components/field";
 import { Input } from "@bklit/ui/components/input";
+import { CopyInput } from "@bklit/ui/components/input-copy";
 import { Textarea } from "@bklit/ui/components/textarea";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { CopyInput } from "@/components/copy-input";
 import { useTRPC } from "@/trpc/react";
 
 const formSchema = z.object({

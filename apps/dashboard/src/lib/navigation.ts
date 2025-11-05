@@ -9,43 +9,43 @@ interface NavigationConfig {
 }
 
 export const navigationConfig: NavigationConfig = {
-  // Team level navigation (when at /[teamId])
-  team: [
+  // Organization level navigation (when at /[organizationId])
+  organization: [
     {
       title: "Overview",
-      href: "/[teamId]",
+      href: "/[organizationId]",
     },
     {
       title: "Settings",
-      href: "/[teamId]/settings",
+      href: "/[organizationId]/settings",
     },
   ],
 
-  // Site level navigation (when at /[teamId]/[projectId])
-  site: [
+  // Project level navigation (when at /[organizationId]/[projectId])
+  project: [
     {
       title: "Overview",
-      href: "/[teamId]/[projectId]",
+      href: "/[organizationId]/[projectId]",
     },
     {
       title: "Sessions",
-      href: "/[teamId]/[projectId]/sessions",
+      href: "/[organizationId]/[projectId]/sessions",
     },
     {
       title: "Events",
-      href: "/[teamId]/[projectId]/events",
+      href: "/[organizationId]/[projectId]/events",
     },
     {
       title: "Pageviews",
-      href: "/[teamId]/[projectId]/pageviews",
+      href: "/[organizationId]/[projectId]/pageviews",
     },
     {
       title: "Acquisitions",
-      href: "/[teamId]/[projectId]/acquisitions",
+      href: "/[organizationId]/[projectId]/acquisitions",
     },
     {
       title: "Settings",
-      href: "/[teamId]/[projectId]/settings",
+      href: "/[organizationId]/[projectId]/settings",
     },
   ],
 
@@ -56,6 +56,34 @@ export const navigationConfig: NavigationConfig = {
       href: "/user/[userId]",
     },
   ],
+
+  // Organization settings navigation
+  organizationSettings: [
+    {
+      title: "General",
+      href: "/[organizationId]/settings",
+    },
+    {
+      title: "API Tokens",
+      href: "/[organizationId]/settings/api-tokens",
+    },
+    {
+      title: "Billing",
+      href: "/[organizationId]/settings/billing",
+    },
+  ],
+
+  // Project settings navigation
+  projectSettings: [
+    {
+      title: "General",
+      href: "/[organizationId]/[projectId]/settings",
+    },
+    {
+      title: "Notifications",
+      href: "/[organizationId]/[projectId]/settings/notifications",
+    },
+  ],
 };
 
 export function getNavigationItems(pathname: string): NavigationItem[] {
@@ -63,21 +91,21 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
 
   // User level: /user/[userId]
   if (segments[0] === "user" && segments.length >= 2) {
-    return navigationConfig.user;
+    return navigationConfig.user ?? [];
   }
 
-  // Site level: /[teamId]/[projectId]/... (but not billing, settings)
+  // Project level: /[organizationId]/[projectId]/... (but not billing, settings)
   if (
     segments.length >= 2 &&
     segments[1] !== "billing" &&
     segments[1] !== "settings"
   ) {
-    return navigationConfig.site;
+    return navigationConfig.project ?? [];
   }
 
-  // Team level: /[teamId], /[teamId]/billing, or /[teamId]/settings
+  // Organization level: /[organizationId], /[organizationId]/billing, or /[organizationId]/settings
   if (segments.length >= 1 && segments[0] !== "user") {
-    return navigationConfig.team;
+    return navigationConfig.organization ?? [];
   }
 
   return [];
@@ -85,14 +113,14 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
 
 export function replaceDynamicParams(
   items: NavigationItem[],
-  teamId?: string,
+  organizationId?: string,
   projectId?: string,
   userId?: string,
 ): NavigationItem[] {
   return items.map((item) => ({
     ...item,
     href: item.href
-      .replace("[teamId]", teamId || "")
+      .replace("[organizationId]", organizationId || "")
       .replace("[projectId]", projectId || "")
       .replace("[userId]", userId || ""),
   }));

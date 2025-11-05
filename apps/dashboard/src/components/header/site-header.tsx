@@ -1,8 +1,8 @@
 "use client";
 
 import { Separator } from "@bklit/ui/components/separator";
+import { BklitLogo } from "@bklit/ui/icons/bklit";
 import { authClient } from "@/auth/client";
-import { BklitLogo } from "@/components/icons/bklit";
 import { DashboardNavigation } from "@/components/nav/dashboard-navigation";
 import { NavUser } from "@/components/nav/nav-user";
 import { NavWorkspace } from "@/components/nav/nav-workspace";
