@@ -31,9 +31,7 @@ export const BklitInvitationEmail = ({
   <Html>
     <Head />
     <Body style={main}>
-      <Preview>
-        You've been invited to join {organizationName} on Bklit
-      </Preview>
+      <Preview>You've been invited to join {organizationName} on Bklit</Preview>
       <Container style={container}>
         <Img width="184" src={`${baseUrl}/bklit-logo.png`} alt="Bklit" />
 
@@ -148,4 +146,3 @@ const footer = {
   justifyContent: "center",
   alignItems: "center",
 };
-

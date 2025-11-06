@@ -1,7 +1,7 @@
 import { sendEmail } from "@bklit/email/client";
 import { BklitInvitationEmail } from "@bklit/email/emails/invitation";
-import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { render } from "@react-email/render";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
@@ -97,7 +97,8 @@ export const invitationRouter = {
 
       // Send invitation email
       const inviterName = organization.members[0]?.user.name || "Someone";
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
       const inviteLink = `${baseUrl}/invite/${invitation.id}`;
 
       const emailHtml = await render(
@@ -295,4 +296,3 @@ export const invitationRouter = {
       };
     }),
 } satisfies TRPCRouterRecord;
-

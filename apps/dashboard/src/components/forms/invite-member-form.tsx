@@ -125,9 +125,7 @@ export function InviteMemberForm({
                   We'll send an invitation email to this address.
                 </FieldDescription>
                 {field.state.meta.errors.length > 0 && (
-                  <FieldError>
-                    {field.state.meta.errors.join(", ")}
-                  </FieldError>
+                  <FieldError>{field.state.meta.errors.join(", ")}</FieldError>
                 )}
               </FieldGroup>
             )}
@@ -165,9 +163,7 @@ export function InviteMemberForm({
                   Choose the permission level for this member.
                 </FieldDescription>
                 {field.state.meta.errors.length > 0 && (
-                  <FieldError>
-                    {field.state.meta.errors.join(", ")}
-                  </FieldError>
+                  <FieldError>{field.state.meta.errors.join(", ")}</FieldError>
                 )}
               </FieldGroup>
             )}
@@ -191,4 +187,3 @@ export function InviteMemberForm({
     </Dialog>
   );
 }
-

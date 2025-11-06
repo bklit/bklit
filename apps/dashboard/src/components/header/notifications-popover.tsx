@@ -122,9 +122,7 @@ export function NotificationsPopover() {
                         invitationId: invitation.id,
                       })
                     }
-                    disabled={
-                      declineInvite.isPending || acceptInvite.isPending
-                    }
+                    disabled={declineInvite.isPending || acceptInvite.isPending}
                   >
                     Decline
                   </Button>
@@ -135,9 +133,7 @@ export function NotificationsPopover() {
                         invitationId: invitation.id,
                       })
                     }
-                    disabled={
-                      acceptInvite.isPending || declineInvite.isPending
-                    }
+                    disabled={acceptInvite.isPending || declineInvite.isPending}
                   >
                     Accept
                   </Button>
@@ -150,4 +146,3 @@ export function NotificationsPopover() {
     </Popover>
   );
 }
-

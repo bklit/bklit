@@ -44,4 +44,3 @@ export function getUserRole<T extends { userId: string; role: string }>(
   }
   return members.find((member) => member.userId === userId)?.role;
 }
-
