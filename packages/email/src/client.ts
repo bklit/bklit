@@ -12,6 +12,8 @@ export interface SendEmailParams {
   html?: string;
   text?: string;
   from?: string;
+  cc?: string | string[];
+  bcc?: string | string[];
   react?: ReactElement;
 }
 
@@ -23,6 +25,8 @@ export async function sendEmail(params: SendEmailParams) {
       subject: params.subject,
       html: params.html,
       text: params.text,
+      cc: params.cc,
+      bcc: params.bcc,
       react: params.react,
     });
 

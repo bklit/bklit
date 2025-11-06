@@ -9,8 +9,10 @@ import {
 } from "@bklit/ui/components/card";
 import { CodeBlock } from "@bklit/ui/components/code-block";
 import { CopyInput } from "@bklit/ui/components/input-copy";
+import { MemberRole } from "@bklit/utils/roles";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
+import { FormPermissions } from "@/components/permissions/form-permissions";
 import { SettingsLayout } from "@/components/settings/settings-layout";
 import { authenticated } from "@/lib/auth";
 
@@ -60,7 +62,7 @@ export default async function ProjectDashboardPage({
     redirect("/");
   }
 
-  const { site, userMembership } = siteData;
+  const { site } = siteData;
   return (
     <SettingsLayout
       title="Project settings"
@@ -108,19 +110,20 @@ initBklit({
             </div>
           </CardContent>
         </Card>
-        <Card variant="destructive">
-          <CardHeader>
-            <CardTitle>Delete {site.name}</CardTitle>
-            <CardDescription>
-              Danger zone: Delete this project and all associated data.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="space-y-6">
-            {userMembership?.role === "owner" && (
+
+        <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
+          <Card variant="destructive">
+            <CardHeader>
+              <CardTitle>Delete {site.name}</CardTitle>
+              <CardDescription>
+                Danger zone: Delete this project and all associated data.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="space-y-6">
               <DeleteProjectForm projectId={site.id} projectName={site.name} />
-            )}
-          </CardFooter>
-        </Card>
+            </CardFooter>
+          </Card>
+        </FormPermissions>
       </div>
     </SettingsLayout>
   );

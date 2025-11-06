@@ -11,10 +11,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { MemberRole } from "@bklit/utils/roles";
 import type { inferRouterOutputs } from "@trpc/server";
 import { DeleteOrganizationForm } from "@/components/forms/delete-organization-form";
 import { UpdateOrganizationNameForm } from "@/components/forms/update-organization-name-form";
 import { UpdateOrganizationThemeForm } from "@/components/forms/update-organization-theme-form";
+import { FormPermissions } from "@/components/permissions/form-permissions";
 import { getThemeGradient } from "@/lib/utils/get-organization-theme";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -74,23 +76,24 @@ export const OrganizationSettings = ({
           }
         />
       )}
-
-      <Card variant="destructive">
-        <CardHeader>
-          <CardTitle>Delete organization</CardTitle>
-          <CardDescription>
-            Delete this organization and all associated data.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {organization.userMembership.role === "owner" && (
-            <DeleteOrganizationForm
-              organizationId={organization.id}
-              organizationName={organization.name}
-            />
-          )}
-        </CardContent>
-      </Card>
+      <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
+        <Card variant="destructive">
+          <CardHeader>
+            <CardTitle>Delete organization</CardTitle>
+            <CardDescription>
+              Delete this organization and all associated data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {organization.userMembership.role === "owner" && (
+              <DeleteOrganizationForm
+                organizationId={organization.id}
+                organizationName={organization.name}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </FormPermissions>
     </div>
   );
 };

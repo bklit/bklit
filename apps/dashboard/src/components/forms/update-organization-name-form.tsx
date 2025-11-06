@@ -17,10 +17,12 @@ import {
   FieldLabel,
 } from "@bklit/ui/components/field";
 import { Input } from "@bklit/ui/components/input";
+import { MemberRole } from "@bklit/utils/roles";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateOrganizationNameAction } from "@/actions/organization-actions";
+import { FormPermissions } from "@/components/permissions/form-permissions";
 
 const formSchema = z.object({
   name: z
@@ -61,62 +63,64 @@ export function UpdateOrganizationNameForm({
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Team name</CardTitle>
-        <CardDescription>
-          This is the name of your team, it will be displayed in the dashboard
-          and other places and is used to identify your team.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          id="update-organization-name-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-        >
-          <FieldGroup>
-            <form.Field name="name">
-              {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name}>
-                      Organization name
-                    </FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      placeholder="Enter organization name"
-                      autoComplete="off"
-                    />
-                    <FieldDescription>
-                      Choose a name that represents your team or organization.
-                    </FieldDescription>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            </form.Field>
-          </FieldGroup>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Field orientation="horizontal" className="justify-between">
-          <Button type="submit" form="update-organization-name-form">
-            Update name
-          </Button>
-        </Field>
-      </CardFooter>
-    </Card>
+    <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
+      <Card>
+        <CardHeader>
+          <CardTitle>Team name</CardTitle>
+          <CardDescription>
+            This is the name of your team, it will be displayed in the dashboard
+            and other places and is used to identify your team.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            id="update-organization-name-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit();
+            }}
+          >
+            <FieldGroup>
+              <form.Field name="name">
+                {(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>
+                        Organization name
+                      </FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={isInvalid}
+                        placeholder="Enter organization name"
+                        autoComplete="off"
+                      />
+                      <FieldDescription>
+                        Choose a name that represents your team or organization.
+                      </FieldDescription>
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  );
+                }}
+              </form.Field>
+            </FieldGroup>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Field orientation="horizontal" className="justify-between">
+            <Button type="submit" form="update-organization-name-form">
+              Update name
+            </Button>
+          </Field>
+        </CardFooter>
+      </Card>
+    </FormPermissions>
   );
 }

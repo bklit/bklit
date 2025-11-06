@@ -77,13 +77,16 @@ export const apiTokenRouter = {
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // Verify user is member of organization
+      // Verify user is admin or owner of organization
       const organization = await ctx.prisma.organization.findFirst({
         where: {
           id: input.organizationId,
           members: {
             some: {
               userId: ctx.session.user.id,
+              role: {
+                in: ["admin", "owner"],
+              },
             },
           },
         },
@@ -94,8 +97,9 @@ export const apiTokenRouter = {
 
       if (!organization) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Organization not found or user is not a member",
+          code: "FORBIDDEN",
+          message:
+            "Organization not found or you don't have permission to create tokens",
         });
       }
 
@@ -169,13 +173,16 @@ export const apiTokenRouter = {
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // Verify user is member of organization
+      // Verify user is admin or owner of organization
       const organization = await ctx.prisma.organization.findFirst({
         where: {
           id: input.organizationId,
           members: {
             some: {
               userId: ctx.session.user.id,
+              role: {
+                in: ["admin", "owner"],
+              },
             },
           },
         },
@@ -186,8 +193,9 @@ export const apiTokenRouter = {
 
       if (!organization) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Organization not found or user is not a member",
+          code: "FORBIDDEN",
+          message:
+            "Organization not found or you don't have permission to update tokens",
         });
       }
 
@@ -320,13 +328,16 @@ export const apiTokenRouter = {
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // Verify user is member of organization
+      // Verify user is admin or owner of organization
       const organization = await ctx.prisma.organization.findFirst({
         where: {
           id: input.organizationId,
           members: {
             some: {
               userId: ctx.session.user.id,
+              role: {
+                in: ["admin", "owner"],
+              },
             },
           },
         },
@@ -334,8 +345,9 @@ export const apiTokenRouter = {
 
       if (!organization) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Organization not found or user is not a member",
+          code: "FORBIDDEN",
+          message:
+            "Organization not found or you don't have permission to delete tokens",
         });
       }
 

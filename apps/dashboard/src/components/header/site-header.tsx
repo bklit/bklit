@@ -6,6 +6,7 @@ import { authClient } from "@/auth/client";
 import { DashboardNavigation } from "@/components/nav/dashboard-navigation";
 import { NavUser } from "@/components/nav/nav-user";
 import { NavWorkspace } from "@/components/nav/nav-workspace";
+import { NotificationsPopover } from "./notifications-popover";
 import { SiteSearch } from "./site-search";
 
 export function SiteHeader() {
@@ -30,14 +31,17 @@ export function SiteHeader() {
           </div>
           <div className="flex items-center gap-1 lg:gap-2">
             {clientSession?.user && (
-              <NavUser
-                user={{
-                  name: clientSession.user.name || "",
-                  email: clientSession.user.email || "",
-                  avatar: clientSession.user.image || "",
-                  id: clientSession.user.id,
-                }}
-              />
+              <>
+                <NotificationsPopover />
+                <NavUser
+                  user={{
+                    name: clientSession.user.name || "",
+                    email: clientSession.user.email || "",
+                    avatar: clientSession.user.image || "",
+                    id: clientSession.user.id,
+                  }}
+                />
+              </>
             )}
           </div>
         </div>
