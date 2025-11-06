@@ -79,19 +79,27 @@ export const organizationRouter = {
       }),
     )
     .mutation(async ({ input, ctx }) => {
+      // Verify user is admin or owner of organization
       const organization = await ctx.prisma.organization.findFirst({
         where: {
           id: input.id,
           members: {
             some: {
               userId: ctx.session.user.id,
+              role: {
+                in: ["admin", "owner"],
+              },
             },
           },
         },
       });
 
       if (!organization) {
-        throw new TRPCError({ code: "NOT_FOUND" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Organization not found or you don't have permission to update it",
+        });
       }
 
       return ctx.prisma.organization.update({

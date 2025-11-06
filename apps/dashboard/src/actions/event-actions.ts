@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@bklit/db/client";
+import { hasPermission, MemberRole } from "@bklit/utils/roles";
 import { authenticated } from "@/lib/auth";
 
 export async function createEvent(data: {
@@ -35,6 +36,18 @@ export async function createEvent(data: {
       project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
+    }
+
+    // Check if user is admin or owner
+    const userMembership = project.organization.members[0];
+    if (
+      !userMembership ||
+      !hasPermission(userMembership.role, MemberRole.ADMIN)
+    ) {
+      return {
+        success: false,
+        error: "Only administrators can create events",
+      };
     }
 
     const existingEventByTrackingId = await prisma.eventDefinition.findUnique({
@@ -120,6 +133,18 @@ export async function updateEvent(data: {
       return { success: false, error: "Forbidden" };
     }
 
+    // Check if user is admin or owner
+    const userMembership = event.project.organization.members[0];
+    if (
+      !userMembership ||
+      !hasPermission(userMembership.role, MemberRole.ADMIN)
+    ) {
+      return {
+        success: false,
+        error: "Only administrators can update events",
+      };
+    }
+
     if (data.trackingId && data.trackingId !== event.trackingId) {
       const existingEvent = await prisma.eventDefinition.findUnique({
         where: {
@@ -203,6 +228,18 @@ export async function deleteEvent(data: {
       event.project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
+    }
+
+    // Check if user is admin or owner
+    const userMembership = event.project.organization.members[0];
+    if (
+      !userMembership ||
+      !hasPermission(userMembership.role, MemberRole.ADMIN)
+    ) {
+      return {
+        success: false,
+        error: "Only administrators can delete events",
+      };
     }
 
     await prisma.eventDefinition.delete({

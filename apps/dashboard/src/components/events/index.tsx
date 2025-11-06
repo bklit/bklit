@@ -1,15 +1,6 @@
 "use client";
 
 import type { Prisma } from "@bklit/db/client";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@bklit/ui/components/alert-dialog";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -19,6 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@bklit/ui/components/dialog";
 import {
   Empty,
   EmptyContent,
@@ -51,6 +51,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@bklit/ui/components/tooltip";
+import { MemberRole } from "@bklit/utils/roles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
@@ -67,6 +68,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createEvent, deleteEvent, updateEvent } from "@/actions/event-actions";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
+import { FormPermissions } from "@/components/permissions/form-permissions";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
 import { EventsChart } from "./events-chart";
@@ -437,7 +439,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
 
             {validationError && (
               <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
-                <AlertCircle className="size-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="size-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
                 <p className="text-sm text-red-600 dark:text-red-400">
                   {validationError}
                 </p>
@@ -711,58 +713,57 @@ export function Events({ organizationId, projectId }: EventsProps) {
         )}
       </div>
 
-      <AlertDialog
-        open={openDeleteDialog}
-        onOpenChange={handleDeleteDialogChange}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Event</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              event <strong>"{editingEvent?.name}"</strong> and all associated
-              tracked event data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4">
-            <label
-              htmlFor="delete-confirmation"
-              className="text-sm font-medium"
-            >
-              Type{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-sm">
-                {editingEvent?.trackingId}
-              </code>{" "}
-              to confirm:
-            </label>
-            <input
-              id="delete-confirmation"
-              type="text"
-              value={deleteConfirmation}
-              onChange={(e) => setDeleteConfirmation(e.target.value)}
-              placeholder="Enter tracking ID"
-              className="w-full border p-2 rounded mt-2"
-              autoComplete="off"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                confirmDelete();
-              }}
-              disabled={
-                deleteConfirmation !== editingEvent?.trackingId ||
-                deleteMutation.isPending
-              }
-              variant="destructive"
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete Event"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={openDeleteDialog} onOpenChange={handleDeleteDialogChange}>
+        <DialogContent>
+          <FormPermissions requiredRole={MemberRole.ADMIN} inModal asChild>
+            <DialogHeader>
+              <DialogTitle>Delete Event</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete the
+                event <strong>"{editingEvent?.name}"</strong> and all associated
+                tracked event data.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <label
+                htmlFor="delete-confirmation"
+                className="text-sm font-medium"
+              >
+                Type{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-sm">
+                  {editingEvent?.trackingId}
+                </code>{" "}
+                to confirm:
+              </label>
+              <input
+                id="delete-confirmation"
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Enter tracking ID"
+                className="w-full border p-2 rounded mt-2"
+                autoComplete="off"
+              />
+            </div>
+            <DialogFooter>
+              <DialogClose>Cancel</DialogClose>
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmDelete();
+                }}
+                disabled={
+                  deleteConfirmation !== editingEvent?.trackingId ||
+                  deleteMutation.isPending
+                }
+                variant="destructive"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete Event"}
+              </Button>
+            </DialogFooter>
+          </FormPermissions>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

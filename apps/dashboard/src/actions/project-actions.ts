@@ -35,6 +35,25 @@ export async function createProjectAction(
   }
 
   try {
+    // Verify user is admin or owner of the organization
+    const membership = await prisma.member.findFirst({
+      where: {
+        organizationId: validatedFields.data.organizationId,
+        userId: session.user.id,
+        role: {
+          in: ["admin", "owner"],
+        },
+      },
+    });
+
+    if (!membership) {
+      return {
+        success: false,
+        message:
+          "You don't have permission to create projects in this organization.",
+      };
+    }
+
     const newSite = await prisma.project.create({
       data: {
         name: validatedFields.data.name,
@@ -106,20 +125,50 @@ export async function deleteProjectAction(
   }
 
   try {
+    // Fetch project with organization and user membership
     const project = await prisma.project.findUnique({
       where: {
         id: projectId,
+      },
+      include: {
+        organization: {
+          include: {
+            members: {
+              where: {
+                userId: session.user.id,
+              },
+            },
+          },
+        },
       },
     });
 
     if (!project) {
       return {
         success: false,
-        message:
-          "Project not found or you do not have permission to delete it.",
+        message: "Project not found.",
       };
     }
 
+    // Check if user is a member of the organization
+    const userMembership = project.organization?.members[0];
+
+    if (!userMembership) {
+      return {
+        success: false,
+        message: "You don't have permission to delete this project.",
+      };
+    }
+
+    // Only owners can delete projects
+    if (userMembership.role !== "owner") {
+      return {
+        success: false,
+        message: "Only organization owners can delete projects.",
+      };
+    }
+
+    // Verify project name matches
     if (project.name !== confirmedProjectName) {
       return {
         success: false,
