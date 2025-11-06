@@ -113,9 +113,6 @@ importers:
       '@bklit/validators':
         specifier: workspace:*
         version: link:../../packages/validators
-      '@hookform/resolvers':
-        specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.65.0(react@19.1.0))
       '@polar-sh/nextjs':
         specifier: ^0.4.11
         version: 0.4.11(next@16.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
@@ -179,9 +176,6 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.1.0(react@19.1.0)
-      react-hook-form:
-        specifier: ^7.65.0
-        version: 7.65.0(react@19.1.0)
       reactflow:
         specifier: ^11.11.4
         version: 11.11.4(@types/react@19.2.2)(immer@10.2.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1322,11 +1316,6 @@ packages:
 
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
-
-  '@hookform/resolvers@5.2.2':
-    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
-    peerDependencies:
-      react-hook-form: ^7.55.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -7200,11 +7189,6 @@ snapshots:
   '@floating-ui/utils@0.2.10': {}
 
   '@hexagon/base64@1.1.28': {}
-
-  '@hookform/resolvers@5.2.2(react-hook-form@7.65.0(react@19.1.0))':
-    dependencies:
-      '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.65.0(react@19.1.0)
 
   '@humanfs/core@0.19.1': {}
 
