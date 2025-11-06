@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@bklit/ui/components/avatar";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -75,9 +80,6 @@ export const OrganizationDashboard = ({
             </div>
 
             <Card>
-              <CardHeader>
-                <CardDescription>Manage your team members....</CardDescription>
-              </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {organization.members.map((member) => (
@@ -89,13 +91,12 @@ export const OrganizationDashboard = ({
                       {member.user.email}*/}
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                              <span className="text-sm font-medium">
-                                {member.user.name?.[0]?.toUpperCase() || "?"}
-                              </span>
-                            </div>
-                          </div>
+                          <Avatar>
+                            <AvatarImage src={member.user.image || ""} />
+                            <AvatarFallback>
+                              {member.user.name?.[0]?.toUpperCase() || "?"}
+                            </AvatarFallback>
+                          </Avatar>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>{member.user.name}</p>
