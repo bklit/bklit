@@ -9,14 +9,20 @@ interface FormPermissionsProps {
   children: React.ReactNode;
   requiredRole: MemberRole;
   asChild?: boolean;
-  fallback?: React.ReactNode;
+  overlayMessage?: string;
 }
+
+const roleLabels: Record<string, string> = {
+  owner: "organization owners",
+  admin: "administrators",
+  member: "members",
+};
 
 export function FormPermissions({
   children,
   requiredRole,
   asChild = false,
-  fallback = null,
+  overlayMessage,
 }: FormPermissionsProps) {
   const workspace = useWorkspace();
   const userRole = workspace.activeOrganization?.members.find(
@@ -25,10 +31,17 @@ export function FormPermissions({
 
   const hasAccess = hasPermission(userRole, requiredRole);
 
+  const defaultMessage =
+    overlayMessage ||
+    `This feature is only available to ${roleLabels[requiredRole] || requiredRole}`;
+
   return (
-    <Permissions hasAccess={hasAccess} asChild={asChild} fallback={fallback}>
+    <Permissions
+      hasAccess={hasAccess}
+      asChild={asChild}
+      overlayMessage={defaultMessage}
+    >
       {children}
     </Permissions>
   );
 }
-
