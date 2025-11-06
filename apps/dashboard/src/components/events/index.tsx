@@ -65,6 +65,7 @@ import {
 import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { createEvent, deleteEvent, updateEvent } from "@/actions/event-actions";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
@@ -218,6 +219,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
       return result.data;
     },
     onSuccess: () => {
+      toast.success("Event created successfully!");
       setName("");
       setDescription("");
       setTrackingId("");
@@ -227,7 +229,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
       });
     },
     onError: (error: Error) => {
-      alert(`Error creating event: ${error.message}`);
+      toast.error(error.message);
     },
   });
 
@@ -246,6 +248,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
       return result.data;
     },
     onSuccess: () => {
+      toast.success("Event updated successfully!");
       setEditingEvent(null);
       setOpenEventsSheet(false);
       setName("");
@@ -256,7 +259,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
       });
     },
     onError: (error: Error) => {
-      alert(`Error updating event: ${error.message}`);
+      toast.error(error.message);
     },
   });
 
@@ -269,6 +272,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
       return result;
     },
     onSuccess: () => {
+      toast.success("Event deleted successfully!");
       setOpenDeleteDialog(false);
       setOpenEventsSheet(false);
       setDeleteConfirmation("");
@@ -278,7 +282,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
       });
     },
     onError: (error: Error) => {
-      alert(`Error deleting event: ${error.message}`);
+      toast.error(error.message);
     },
   });
 
@@ -649,8 +653,6 @@ export function Events({ organizationId, projectId }: EventsProps) {
                 <TableBody>
                   {events.map((event) => {
                     const uniqueSessionsCount = event.uniqueSessionsCount ?? 0;
-                    // One conversion per session
-                    const conversions = uniqueSessionsCount;
                     // Conversion rate: sessions with event / total sessions in range
                     // This shows what percentage of all sessions triggered this event
                     const totalSessionsInRange =

@@ -29,7 +29,7 @@ import { useTRPC } from "@/trpc/react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  description: z.string().max(500).optional().nullable(),
+  description: z.string().max(500).nullable(),
   projectIds: z
     .array(z.string())
     .min(1, "At least one project must be selected"),
@@ -66,6 +66,7 @@ export function UpdateApiTokenForm({
   const updateToken = useMutation(
     trpc.apiToken.update.mutationOptions({
       onSuccess: () => {
+        toast.success("API token updated successfully!");
         queryClient.invalidateQueries({
           queryKey: ["apiToken", "list", { organizationId }],
         });
@@ -80,7 +81,7 @@ export function UpdateApiTokenForm({
   const form = useForm({
     defaultValues: {
       name: "",
-      description: "",
+      description: "" as string | null,
       projectIds: [] as string[],
     },
     validators: {
@@ -180,9 +181,7 @@ export function UpdateApiTokenForm({
                         name={field.name}
                         value={field.state.value || ""}
                         onBlur={field.handleBlur}
-                        onChange={(e) =>
-                          field.handleChange(e.target.value || null)
-                        }
+                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="Token for production environment"
                         rows={3}
                       />

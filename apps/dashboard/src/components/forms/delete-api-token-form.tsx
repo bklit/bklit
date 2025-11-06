@@ -43,6 +43,7 @@ export function DeleteApiTokenForm({
   const deleteToken = useMutation(
     trpc.apiToken.delete.mutationOptions({
       onSuccess: () => {
+        toast.success("API token deleted successfully!");
         queryClient.invalidateQueries({
           queryKey: ["apiToken", "list", { organizationId }],
         });
