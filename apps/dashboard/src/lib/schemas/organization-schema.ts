@@ -15,4 +15,3 @@ export const createOrganizationSchema = z.object({
 export type CreateOrganizationFormValues = z.infer<
   typeof createOrganizationSchema
 >;
-
