@@ -12,9 +12,11 @@ import {
 } from "@bklit/ui/components/dialog";
 import { Input } from "@bklit/ui/components/input";
 import { Label } from "@bklit/ui/components/label";
+import { MemberRole } from "@bklit/utils/roles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { FormPermissions } from "@/components/permissions/form-permissions";
 import { useTRPC } from "@/trpc/react";
 
 interface DeleteApiTokenFormProps {
@@ -68,44 +70,48 @@ export function DeleteApiTokenForm({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Delete API Token: {tokenName}</DialogTitle>
-          <DialogDescription>
-            To permanently delete this API token, please enter &quot;
-            <span className="font-semibold">{tokenName}</span>&quot; below.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label
-              htmlFor="token-name-confirmation"
-              className="text-right sr-only"
-            >
-              Token Name
-            </Label>
-            <Input
-              id="token-name-confirmation"
-              value={confirmationInput}
-              onChange={(e) => setConfirmationInput(e.target.value)}
-              placeholder={tokenName}
-              className="col-span-4"
-            />
+        <FormPermissions requiredRole={MemberRole.ADMIN} inModal>
+          <DialogHeader>
+            <DialogTitle>Delete API Token: {tokenName}</DialogTitle>
+            <DialogDescription>
+              To permanently delete this API token, please enter &quot;
+              <span className="font-semibold">{tokenName}</span>&quot; below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label
+                htmlFor="token-name-confirmation"
+                className="text-right sr-only"
+              >
+                Token Name
+              </Label>
+              <Input
+                id="token-name-confirmation"
+                value={confirmationInput}
+                onChange={(e) => setConfirmationInput(e.target.value)}
+                placeholder={tokenName}
+                className="col-span-4"
+              />
+            </div>
           </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" disabled={deleteToken.isPending}>
-              Cancel
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" disabled={deleteToken.isPending}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={
+                deleteToken.isPending || confirmationInput !== tokenName
+              }
+            >
+              {deleteToken.isPending ? "Deleting..." : "Delete Token"}
             </Button>
-          </DialogClose>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={deleteToken.isPending || confirmationInput !== tokenName}
-          >
-            {deleteToken.isPending ? "Deleting..." : "Delete Token"}
-          </Button>
-        </DialogFooter>
+          </DialogFooter>
+        </FormPermissions>
       </DialogContent>
     </Dialog>
   );

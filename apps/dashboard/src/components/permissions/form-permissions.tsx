@@ -10,6 +10,7 @@ interface FormPermissionsProps {
   requiredRole: MemberRole;
   asChild?: boolean;
   overlayMessage?: string;
+  inModal?: boolean;
 }
 
 const roleLabels: Record<string, string> = {
@@ -23,6 +24,7 @@ export function FormPermissions({
   requiredRole,
   asChild = false,
   overlayMessage,
+  inModal = false,
 }: FormPermissionsProps) {
   const workspace = useWorkspace();
   const userRole = workspace.activeOrganization?.members.find(
@@ -40,6 +42,7 @@ export function FormPermissions({
       hasAccess={hasAccess}
       asChild={asChild}
       overlayMessage={defaultMessage}
+      inModal={inModal}
     >
       {children}
     </Permissions>
