@@ -25,6 +25,8 @@ import {
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layers2, Plus, Settings } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { InviteMemberForm } from "@/components/forms/invite-member-form";
 import { PageHeader } from "@/components/header/page-header";
 import { useTRPC } from "@/trpc/react";
 
@@ -34,6 +36,7 @@ export const OrganizationDashboard = ({
   organizationId: string;
 }) => {
   const trpc = useTRPC();
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const { data: organization } = useSuspenseQuery(
     trpc.organization.fetch.queryOptions({
       id: organizationId,
@@ -56,10 +59,12 @@ export const OrganizationDashboard = ({
               {organization.userMembership.role === "owner" && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button asChild size="icon" variant="ghost">
-                      <Link href={`/${organizationId}/members/invite`}>
-                        <Plus size={16} />
-                      </Link>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setInviteDialogOpen(true)}
+                    >
+                      <Plus size={16} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -189,6 +194,12 @@ export const OrganizationDashboard = ({
           </div>
         </div>
       </div>
+
+      <InviteMemberForm
+        organizationId={organizationId}
+        isOpen={inviteDialogOpen}
+        onOpenChange={setInviteDialogOpen}
+      />
     </>
   );
 };
