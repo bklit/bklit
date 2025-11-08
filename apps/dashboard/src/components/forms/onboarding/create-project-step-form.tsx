@@ -71,9 +71,9 @@ export function CreateProjectStepForm({
       const projectId = state.newprojectId;
       const projectName = form.state.values.name;
       const projectDomain = form.state.values.domain;
-      form.reset();
       if (projectId) {
         onSuccess(projectId, projectName, projectDomain);
+        form.reset();
       }
     } else if (state.message && !state.success) {
       if (state.errors) {
