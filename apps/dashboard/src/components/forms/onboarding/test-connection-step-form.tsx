@@ -31,10 +31,15 @@ export function TestConnectionStepForm({
 
   // Get pageview stats to check for connection
   const { refetch: refetchStats } = useQuery(
-    trpc.pageview.getStats.queryOptions({
-      projectId,
-      organizationId,
-    }),
+    trpc.pageview.getStats.queryOptions(
+      {
+        projectId,
+        organizationId,
+      },
+      {
+        enabled: false,
+      },
+    ),
   );
 
   // Poll for connection every 3 seconds
