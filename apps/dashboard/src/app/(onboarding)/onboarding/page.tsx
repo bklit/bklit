@@ -3,7 +3,7 @@
 import { Button } from "@bklit/ui/components/button";
 import NumberFlow from "@number-flow/react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { CreateProjectStepForm } from "@/components/forms/onboarding/create-project-step-form";
 import { CreateWorkspaceStepForm } from "@/components/forms/onboarding/create-workspace-step-form";
 import { SDKConnectionStepForm } from "@/components/forms/onboarding/sdk-connection-step-form";
@@ -147,7 +147,7 @@ function TestConnectionStep({
   );
 }
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   // Use nuqs for URL-based state (for testing/debugging)
   const [stepParam, setStepParam] = useQueryState(
     "step",
@@ -292,5 +292,19 @@ export default function OnboardingPage() {
         </Stepper.Item>
       </Stepper>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center p-8 text-muted-foreground">
+          Loading...
+        </div>
+      }
+    >
+      <OnboardingPageContent />
+    </Suspense>
   );
 }
