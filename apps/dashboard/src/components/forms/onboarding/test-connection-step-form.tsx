@@ -69,10 +69,6 @@ export function TestConnectionStepForm({
 
     return () => {
       clearInterval(checkConnection);
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current);
-        redirectTimeoutRef.current = null;
-      }
     };
   }, [
     isConnected,
@@ -82,6 +78,16 @@ export function TestConnectionStepForm({
     projectId,
     setStepperConnected,
   ]);
+
+  // Cleanup redirect timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Countdown timer when redirecting
   useEffect(() => {
