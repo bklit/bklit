@@ -59,7 +59,7 @@ export function SDKConnectionStepForm({
         projectIds: [projectId],
       });
     }
-  }, [organizationId, projectName, projectId, createdToken, createToken]);
+  }, [organizationId, projectName, projectId, createdToken]);
 
   if (createToken.isPending || !createdToken) {
     return (

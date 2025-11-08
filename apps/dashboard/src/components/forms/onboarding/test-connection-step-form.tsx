@@ -5,7 +5,7 @@ import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useStepper } from "@/app/(onboarding)/components/stepper";
 import { useTRPC } from "@/trpc/react";
@@ -27,6 +27,7 @@ export function TestConnectionStepForm({
   const [isConnected, setIsConnected] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get pageview stats to check for connection
   const { refetch: refetchStats } = useQuery(
@@ -52,13 +53,22 @@ export function TestConnectionStepForm({
 
         // Wait 5 seconds then redirect
         setIsRedirecting(true);
-        setTimeout(() => {
+        if (redirectTimeoutRef.current) {
+          clearTimeout(redirectTimeoutRef.current);
+        }
+        redirectTimeoutRef.current = setTimeout(() => {
           router.push(`/${organizationId}/${projectId}`);
         }, 5000);
       }
     }, 3000);
 
-    return () => clearInterval(checkConnection);
+    return () => {
+      clearInterval(checkConnection);
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    };
   }, [
     isConnected,
     refetchStats,
