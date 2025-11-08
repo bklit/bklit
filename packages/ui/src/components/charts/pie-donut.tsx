@@ -2,7 +2,7 @@
 
 import { cn } from "@bklit/ui/lib/utils";
 import NumberFlow from "@number-flow/react";
-import { type ReactElement, useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Cell, Pie, PieChart, Sector } from "recharts";
 import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import { type ChartConfig, ChartContainer, ChartLegend } from "../chart";

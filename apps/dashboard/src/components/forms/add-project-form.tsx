@@ -135,7 +135,7 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
                   autoComplete="url"
                 />
                 <FieldDescription>
-                  The primary domain where your project is hosted.
+                  <code>localhost</code> is automatically detected.
                 </FieldDescription>
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>

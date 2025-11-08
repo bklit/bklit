@@ -7,7 +7,9 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "../components/theme-provider";
 import routes from "./routes";
 
-const YOUR_PROJECT_ID = "cmh1rrwf7000122floz152tfo";
+// Use .env project id, fallback to bklit playground
+const YOUR_PROJECT_ID = import.meta.env.VITE_BKLIT_PROJECT_ID;
+const PROJECT_ID = YOUR_PROJECT_ID || "cmh1rrwf7000122floz152tfo";
 
 // Get the ngrok URL from environment variable
 const NGROK_URL = import.meta.env.VITE_NGROK_URL;
@@ -34,15 +36,15 @@ console.log("🌐 Playground: API Configuration", {
 });
 
 // Initialize Bklit SDK
-if (YOUR_PROJECT_ID) {
+if (PROJECT_ID) {
   console.log("🎯 Playground: Initializing Bklit SDK...", {
-    projectId: YOUR_PROJECT_ID,
+    projectId: PROJECT_ID,
     apiHost: API_HOST,
   });
 
   try {
     initBklit({
-      projectId: YOUR_PROJECT_ID,
+      projectId: PROJECT_ID,
       apiHost: API_HOST,
       apiKey: API_KEY,
       debug: true, // Enable debug mode to see event tracking logs

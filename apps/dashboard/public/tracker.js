@@ -3,6 +3,24 @@
   let inactivityTimer = null;
   let sessionEnded = false;
 
+  // Get config from script tag
+  const currentScript =
+    document.currentScript || document.querySelector("script[data-project-id]");
+  const projectId = currentScript?.getAttribute("data-project-id");
+  const apiToken = currentScript?.getAttribute("data-token");
+  const apiUrl =
+    currentScript?.getAttribute("data-api-url") || "http://localhost:3000";
+
+  if (!projectId) {
+    console.error("[Bklit] Error: data-project-id attribute is required");
+    return;
+  }
+
+  if (!apiToken) {
+    console.error("[Bklit] Error: data-token attribute is required");
+    return;
+  }
+
   // Utility: Get or generate a sessionId
   function getSessionId() {
     let sessionId = localStorage.getItem("bklit_session_id");
@@ -19,10 +37,13 @@
     sessionEnded = true;
     const sessionId = getSessionId();
     try {
-      await fetch("http://localhost:3000/api/track/session-end", {
+      await fetch(`${apiUrl}/api/track/session-end`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiToken}`,
+        },
+        body: JSON.stringify({ sessionId, projectId }),
         keepalive: true, // for beforeunload
       });
       // Optionally clear sessionId if you want new session next visit
@@ -45,16 +66,34 @@
       const data = {
         url: window.location.href,
         timestamp: new Date().toISOString(),
-        siteId: "YOUR_SITE_ID_HERE",
+        projectId: projectId,
         sessionId: getSessionId(),
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || undefined,
       };
-      await fetch("http://localhost:3000/api/track", {
+
+      // Extract UTM parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("utm_source"))
+        data.utmSource = urlParams.get("utm_source");
+      if (urlParams.get("utm_medium"))
+        data.utmMedium = urlParams.get("utm_medium");
+      if (urlParams.get("utm_campaign"))
+        data.utmCampaign = urlParams.get("utm_campaign");
+      if (urlParams.get("utm_term")) data.utmTerm = urlParams.get("utm_term");
+      if (urlParams.get("utm_content"))
+        data.utmContent = urlParams.get("utm_content");
+
+      await fetch(`${apiUrl}/api/track`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiToken}`,
+        },
         body: JSON.stringify(data),
       });
-    } catch {
-      // Silent fail
+    } catch (err) {
+      console.error("[Bklit] Tracking error:", err);
     }
   }
   window.trackPageView = trackPageView;

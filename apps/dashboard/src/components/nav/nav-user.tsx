@@ -16,6 +16,7 @@ import {
 } from "@bklit/ui/components/dropdown-menu";
 import { CreditCard, LayoutDashboard, LogOut, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/auth/client";
 import { useWorkspace } from "@/contexts/workspace-provider";
 import { ThemeToggle } from "../theme-toggle";
@@ -32,11 +33,16 @@ export function NavUser({
   };
 }) {
   const { activeOrganization } = useWorkspace();
-
+  const router = useRouter();
   const billingHref = `/${activeOrganization?.id}/billing`;
   const dashboardHref = activeOrganization?.id
     ? `/${activeOrganization?.id}`
     : "/";
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    router.push("/signin");
+  };
 
   return (
     <DropdownMenu>
@@ -94,7 +100,7 @@ export function NavUser({
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => authClient.signOut()}>
+        <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           Log out
         </DropdownMenuItem>

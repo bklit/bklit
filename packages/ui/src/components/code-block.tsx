@@ -16,7 +16,7 @@ export async function CodeBlock(props: Props) {
 
   const out = await codeToHast(props.children, {
     lang: props.language,
-    theme: "vesper",
+    theme: "nord",
   });
 
   return toJsxRuntime(out, {
