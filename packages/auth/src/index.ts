@@ -3,7 +3,6 @@ import { prisma } from "@bklit/db/client";
 import { sendEmail } from "@bklit/email/client";
 import { BklitInvitationEmail } from "@bklit/email/emails/invitation";
 import { BklitWelcomeEmail } from "@bklit/email/emails/welcome";
-import { render } from "@react-email/render";
 import {
   checkout,
   polar,
@@ -12,6 +11,7 @@ import {
   webhooks,
 } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
+import { render } from "@react-email/render";
 import type { BetterAuthOptions } from "better-auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -83,11 +83,14 @@ export function initAuth(options: {
           console.log("[AUTH HOOK] User found:", !!user);
           console.log("[AUTH HOOK] User created at:", user?.createdAt);
           console.log("[AUTH HOOK] Current time:", new Date());
-          
+
           if (user) {
             const isNewUser = Date.now() - user.createdAt.getTime() < 10000;
             console.log("[AUTH HOOK] Is new user (< 10s):", isNewUser);
-            console.log("[AUTH HOOK] Time since creation (ms):", Date.now() - user.createdAt.getTime());
+            console.log(
+              "[AUTH HOOK] Time since creation (ms):",
+              Date.now() - user.createdAt.getTime(),
+            );
 
             if (isNewUser) {
               console.log("[AUTH HOOK] ✅ Processing new user signup...");
@@ -112,14 +115,14 @@ export function initAuth(options: {
               // Auto-invite to default project's organization if configured
               const defaultProject = env.BKLIT_DEFAULT_PROJECT;
               console.log("[AUTO-INVITE] Default project ID:", defaultProject);
-              
+
               if (defaultProject) {
                 try {
                   console.log(
                     "[AUTO-INVITE] Looking up project:",
                     defaultProject,
                   );
-                  
+
                   // Find the project and its organization
                   const project = await prisma.project.findUnique({
                     where: { id: defaultProject },
@@ -235,12 +238,12 @@ export function initAuth(options: {
                   );
                 }
               } else {
-                console.log(
-                  "[AUTO-INVITE] ⏭️  No default project configured",
-                );
+                console.log("[AUTO-INVITE] ⏭️  No default project configured");
               }
             } else {
-              console.log("[AUTH HOOK] ⏭️ Skipping - not a new user (account created >10s ago)");
+              console.log(
+                "[AUTH HOOK] ⏭️ Skipping - not a new user (account created >10s ago)",
+              );
             }
           } else {
             console.log("[AUTH HOOK] ❌ User not found in database");
