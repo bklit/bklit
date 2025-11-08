@@ -72,13 +72,18 @@ export function initAuth(options: {
 
         // Check if this is a new user signup (social or email)
         if (newSession?.user.email) {
-          // Check if this is a newly created user (within last 10 seconds)
+          // Check if this is a newly created user by comparing session and user creation times
           const user = await prisma.user.findUnique({
             where: { id: newSession.user.id },
           });
 
-          if (user) {
-            const isNewUser = Date.now() - user.createdAt.getTime() < 10000;
+          if (user && newSession.session?.createdAt) {
+            // If session was created within 5 seconds of user creation, treat as new signup
+            const timeDiff = Math.abs(
+              new Date(newSession.session.createdAt).getTime() -
+                user.createdAt.getTime(),
+            );
+            const isNewUser = timeDiff < 5000;
 
             if (isNewUser) {
               // Send welcome email
