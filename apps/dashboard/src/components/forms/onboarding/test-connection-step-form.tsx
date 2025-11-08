@@ -96,7 +96,7 @@ export function TestConnectionStepForm({
   }, [isRedirecting]);
 
   const handleOpenWebsite = () => {
-    window.open(projectDomain, "_blank");
+    window.open(projectDomain, "_blank", "noopener,noreferrer");
   };
 
   if (isRedirecting) {
