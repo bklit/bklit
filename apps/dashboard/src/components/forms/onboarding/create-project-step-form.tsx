@@ -96,77 +96,72 @@ export function CreateProjectStepForm({
   }, [state, form, onSuccess]);
 
   return (
-    <>
-      <form
-        id="create-project-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-        className="space-y-6"
-      >
-        <FieldGroup>
-          <form.Field name="name">
-            {(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    aria-invalid={isInvalid}
-                    placeholder="My Awesome Project"
-                    autoComplete="off"
-                  />
-                  <FieldDescription>
-                    A descriptive name for your website or application.
-                  </FieldDescription>
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                </Field>
-              );
-            }}
-          </form.Field>
-          <form.Field name="domain">
-            {(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>Domain</FieldLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    aria-invalid={isInvalid}
-                    placeholder="https://foo.com"
-                    type="url"
-                    autoComplete="url"
-                  />
-                  <FieldDescription>
-                    Your primary domain, <code>localhost</code> is automatically
-                    detected.
-                  </FieldDescription>
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                </Field>
-              );
-            }}
-          </form.Field>
-        </FieldGroup>
-        {state.message && !state.success && !state.errors && (
-          <p className="text-sm font-medium text-destructive">
-            {state.message}
-          </p>
-        )}
-      </form>
-      <input type="hidden" form="create-project-form" />
-    </>
+    <form
+      id="create-project-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+      className="space-y-6"
+    >
+      <FieldGroup>
+        <form.Field name="name">
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  aria-invalid={isInvalid}
+                  placeholder="My Awesome Project"
+                  autoComplete="off"
+                />
+                <FieldDescription>
+                  A descriptive name for your website or application.
+                </FieldDescription>
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
+        </form.Field>
+        <form.Field name="domain">
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor={field.name}>Domain</FieldLabel>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  aria-invalid={isInvalid}
+                  placeholder="https://foo.com"
+                  type="url"
+                  autoComplete="url"
+                />
+                <FieldDescription>
+                  Your primary domain, <code>localhost</code> is automatically
+                  detected.
+                </FieldDescription>
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
+        </form.Field>
+      </FieldGroup>
+      {state.message && !state.success && !state.errors && (
+        <p className="text-sm font-medium text-destructive">{state.message}</p>
+      )}
+    </form>
   );
 }
 
