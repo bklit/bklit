@@ -15,7 +15,7 @@ export default async function RootPage() {
   const organizations = await api.organization.list();
 
   if (organizations.length === 0) {
-    return redirect("/organizations/create");
+    return redirect("/onboarding");
   }
 
   return redirect(`/${organizations[0]?.id}`);

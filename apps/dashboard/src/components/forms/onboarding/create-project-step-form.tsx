@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@bklit/ui/components/button";
 import {
   Field,
   FieldDescription,
@@ -13,12 +12,7 @@ import { useForm } from "@tanstack/react-form";
 import { useActionState, useEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { createProjectAction, type FormState } from "@/actions/project-actions";
-import { authClient } from "@/auth/client";
 import { addProjectSchema } from "@/lib/schemas/project-schema";
-
-interface AddProjectFormProps {
-  onSuccess?: (newprojectId?: string) => void;
-}
 
 const initialState: FormState = {
   success: false,
@@ -26,8 +20,21 @@ const initialState: FormState = {
   newprojectId: undefined,
 };
 
-export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
-  const { data: activeOrganization } = authClient.useActiveOrganization();
+interface CreateProjectStepFormProps {
+  organizationId: string;
+  onSuccess: (
+    projectId: string,
+    projectName: string,
+    projectDomain: string,
+  ) => void;
+  onLoadingChange?: (isLoading: boolean) => void;
+}
+
+export function CreateProjectStepForm({
+  organizationId,
+  onSuccess,
+  onLoadingChange,
+}: CreateProjectStepFormProps) {
   const [state, formAction] = useActionState(createProjectAction, initialState);
   const [isPending, startTransition] = useTransition();
 
@@ -35,7 +42,7 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
     defaultValues: {
       name: "",
       domain: "",
-      organizationId: activeOrganization?.id || "",
+      organizationId: organizationId,
     },
     validators: {
       onSubmit: addProjectSchema,
@@ -55,11 +62,18 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
   });
 
   useEffect(() => {
+    onLoadingChange?.(isPending);
+  }, [isPending, onLoadingChange]);
+
+  useEffect(() => {
     if (state.success) {
-      toast.success(state.message);
-      form.reset();
-      if (onSuccess) {
-        onSuccess(state.newprojectId);
+      toast.success(state.message || "Project created successfully! 🚀");
+      const projectId = state.newprojectId;
+      const projectName = form.state.values.name;
+      const projectDomain = form.state.values.domain;
+      if (projectId) {
+        onSuccess(projectId, projectName, projectDomain);
+        form.reset();
       }
     } else if (state.message && !state.success) {
       if (state.errors) {
@@ -83,7 +97,7 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
 
   return (
     <form
-      id="add-project-form"
+      id="create-project-form"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
@@ -130,12 +144,13 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   aria-invalid={isInvalid}
-                  placeholder="https://example.com"
+                  placeholder="https://foo.com"
                   type="url"
                   autoComplete="url"
                 />
                 <FieldDescription>
-                  <code>localhost</code> is automatically detected.
+                  Your primary domain, <code>localhost</code> is automatically
+                  detected.
                 </FieldDescription>
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
@@ -143,17 +158,11 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
           }}
         </form.Field>
       </FieldGroup>
-      <Button
-        type="submit"
-        form="add-project-form"
-        disabled={isPending}
-        className="w-full sm:w-auto"
-      >
-        {isPending ? "Creating Project..." : "Create Project"}
-      </Button>
       {state.message && !state.success && !state.errors && (
         <p className="text-sm font-medium text-destructive">{state.message}</p>
       )}
     </form>
   );
 }
+
+export type { CreateProjectStepFormProps };
