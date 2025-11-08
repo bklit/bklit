@@ -40,7 +40,11 @@ export function NavUser({
     : "/";
 
   const handleSignOut = async () => {
-    await authClient.signOut();
+    const result = await authClient.signOut();
+    if (result.error) {
+      console.error("Sign out failed:", result.error);
+      return;
+    }
     router.push("/signin");
   };
 
