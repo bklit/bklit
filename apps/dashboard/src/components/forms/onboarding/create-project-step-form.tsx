@@ -93,7 +93,7 @@ export function CreateProjectStepForm({
         toast.error(state.message);
       }
     }
-  }, [state, form, onSuccess, onLoadingChange]);
+  }, [state, form, onSuccess]);
 
   return (
     <>
