@@ -70,9 +70,6 @@ export function initAuth(options: {
       after: createAuthMiddleware(async (ctx) => {
         const newSession = ctx.context.newSession;
 
-        console.log("[AUTH HOOK] New session created:", !!newSession);
-        console.log("[AUTH HOOK] User email:", newSession?.user?.email);
-
         // Check if this is a new user signup (social or email)
         if (newSession?.user.email) {
           // Check if this is a newly created user (within last 10 seconds)
@@ -80,21 +77,10 @@ export function initAuth(options: {
             where: { id: newSession.user.id },
           });
 
-          console.log("[AUTH HOOK] User found:", !!user);
-          console.log("[AUTH HOOK] User created at:", user?.createdAt);
-          console.log("[AUTH HOOK] Current time:", new Date());
-
           if (user) {
             const isNewUser = Date.now() - user.createdAt.getTime() < 10000;
-            console.log("[AUTH HOOK] Is new user (< 10s):", isNewUser);
-            console.log(
-              "[AUTH HOOK] Time since creation (ms):",
-              Date.now() - user.createdAt.getTime(),
-            );
 
             if (isNewUser) {
-              console.log("[AUTH HOOK] ✅ Processing new user signup...");
-
               // Send welcome email
               try {
                 await sendEmail({
@@ -114,29 +100,14 @@ export function initAuth(options: {
 
               // Auto-invite to default project's organization if configured
               const defaultProject = env.BKLIT_DEFAULT_PROJECT;
-              console.log("[AUTO-INVITE] Default project ID:", defaultProject);
 
               if (defaultProject) {
                 try {
-                  console.log(
-                    "[AUTO-INVITE] Looking up project:",
-                    defaultProject,
-                  );
-
                   // Find the project and its organization
                   const project = await prisma.project.findUnique({
                     where: { id: defaultProject },
                     include: { organization: true },
                   });
-
-                  console.log(
-                    "[AUTO-INVITE] Project found:",
-                    project ? "Yes" : "No",
-                  );
-                  console.log(
-                    "[AUTO-INVITE] Organization:",
-                    project?.organization?.name,
-                  );
 
                   if (project?.organization) {
                     const organizationId = project.organization.id;
@@ -158,15 +129,6 @@ export function initAuth(options: {
                         },
                       });
 
-                    console.log(
-                      "[AUTO-INVITE] Existing member:",
-                      existingMember ? "Yes" : "No",
-                    );
-                    console.log(
-                      "[AUTO-INVITE] Existing invitation:",
-                      existingInvitation ? "Yes" : "No",
-                    );
-
                     if (!existingMember && !existingInvitation) {
                       // Create invitation
                       const invitation = await prisma.invitation.create({
@@ -182,10 +144,6 @@ export function initAuth(options: {
                           inviterId: user.id, // Self-invitation from system
                         },
                       });
-                      console.log(
-                        "[AUTO-INVITE] ✅ Invitation created:",
-                        invitation.id,
-                      );
 
                       // Send invitation email
                       try {
@@ -209,47 +167,21 @@ export function initAuth(options: {
                           subject: `You've been invited to join ${project.organization.name} on Bklit`,
                           html: emailHtml,
                         });
-
-                        console.log(
-                          "[AUTO-INVITE] ✅ Invitation email sent to:",
-                          user.email,
-                        );
                       } catch (emailError) {
                         console.error(
-                          "[AUTO-INVITE] ❌ Failed to send invitation email:",
+                          "Failed to send auto-invite email:",
                           emailError,
                         );
                         // Don't fail the whole process if email fails
                       }
-                    } else {
-                      console.log(
-                        "[AUTO-INVITE] ⏭️  Skipped - user already has access",
-                      );
                     }
-                  } else {
-                    console.log(
-                      "[AUTO-INVITE] ❌ Project not found or has no organization",
-                    );
                   }
                 } catch (inviteError) {
-                  console.error(
-                    "[AUTO-INVITE] ❌ Failed to auto-invite to default project:",
-                    inviteError,
-                  );
+                  console.error("Failed to auto-invite:", inviteError);
                 }
-              } else {
-                console.log("[AUTO-INVITE] ⏭️  No default project configured");
               }
-            } else {
-              console.log(
-                "[AUTH HOOK] ⏭️ Skipping - not a new user (account created >10s ago)",
-              );
             }
-          } else {
-            console.log("[AUTH HOOK] ❌ User not found in database");
           }
-        } else {
-          console.log("[AUTH HOOK] ⏭️ No email in session");
         }
       }),
     },
