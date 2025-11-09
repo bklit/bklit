@@ -5,9 +5,9 @@ A lightweight analytics SDK for tracking page views, sessions, and user behavior
 ## Installation
 
 ```bash
-npm install bklit
+npm install @bklit/sdk
 # or
-pnpm add bklit
+pnpm add @bklit/sdk
 ```
 
 ## Quick Start
@@ -17,150 +17,133 @@ import { initBklit } from "@bklit/sdk";
 
 // Initialize the SDK
 initBklit({
-  siteId: "your-site-id-here",
-  apiHost: "https://your-analytics-api.com/api/track", // optional
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  debug: true, // Optional - enables console logging
 });
 ```
 
-## Environment Configuration
+Get your `projectId` and `apiKey` from your [Bklit Dashboard](https://app.bklit.com).
 
-The SDK supports multiple environments and can be configured using environment variables or runtime options.
+## Configuration Options
 
-### Environment Variables
+### `initBklit(options)`
 
-You can set these environment variables during build time:
+**Required Parameters:**
 
-```bash
-# API endpoint (overrides default for the environment)
-BKLIT_API_HOST=https://your-custom-api.com/api/track
+- `projectId` (string) - Your unique project identifier from the Bklit dashboard
+- `apiKey` (string) - Your API authentication token from the Bklit dashboard
 
-# Environment (development, staging, production)
-BKLIT_ENVIRONMENT=production
+**Optional Parameters:**
 
-# Enable debug logging
-BKLIT_DEBUG=true
-```
+- `apiHost` (string) - API endpoint URL. Defaults to `https://app.bklit.com/api/track`
+- `environment` (string) - Set to `"development"` for local testing. Defaults to `"production"`
+- `debug` (boolean) - Enable detailed console logging. Defaults to `false`
 
-### Runtime Configuration
+### Example with All Options
 
 ```javascript
-import { initBklit } from "@bklit/sdk";
-
-// Development environment
 initBklit({
-  siteId: "your-site-id",
-  environment: "development", // Enables debug logging automatically
-});
-
-// Staging environment
-initBklit({
-  siteId: "your-site-id",
-  environment: "staging",
-  apiHost: "https://staging-api.yourdomain.com/api/track",
-});
-
-// Production environment
-initBklit({
-  siteId: "your-site-id",
-  environment: "production", // Default
-  debug: false, // Disable debug logging
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  apiHost: "https://app.bklit.com/api/track", // Optional
+  environment: "production", // Optional
+  debug: false, // Optional
 });
 ```
-
-### Default API Hosts
-
-The SDK uses these default API hosts based on environment:
-
-- **Development**: `http://localhost:3000/api/track`
-- **Staging**: `https://staging-api.yourdomain.com/api/track`
-- **Production**: `https://api.yourdomain.com/api/track`
 
 ## Console Logging
 
-The SDK provides comprehensive console logging to help you debug and monitor tracking events. Open your browser's developer console to see detailed logs.
+When `debug: true` is enabled, the SDK provides detailed console logs to help you monitor tracking events.
 
-### Log Types
+**Note:** Error messages (using `console.error` and `console.warn`) will always appear regardless of the debug setting.
 
-- 🎯 **Initialization**: SDK setup and configuration
-- 🆔 **Session Management**: Session creation and updates
-- 🚀 **Page Views**: Page view tracking events
-- 🔄 **Route Changes**: SPA navigation detection
-- ✅ **Success**: Successful API calls and operations
-- ❌ **Errors**: Failed requests and error messages
-
-### Example Console Output
+### Example Debug Output
 
 ```
 🎯 Bklit SDK: Initializing with configuration {
-  siteId: "your-site-id",
-  apiHost: "https://your-api.com/api/track",
-  environment: "development",
-  debug: true,
-  userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)..."
+  projectId: "your-project-id",
+  apiHost: "https://app.bklit.com/api/track",
+  environment: "production",
+  debug: true
 }
 
 🆔 Bklit SDK: New session created {
   sessionId: "1703123456789-abc123def456"
 }
 
-🎯 Bklit SDK: Initializing page view tracking...
-
 🚀 Bklit SDK: Tracking page view... {
   url: "https://yoursite.com/page",
   sessionId: "1703123456789-abc123def456",
-  siteId: "your-site-id",
-  environment: "development"
+  projectId: "your-project-id"
 }
 
-✅ Bklit SDK: Page view tracked successfully! {
-  url: "https://yoursite.com/page",
-  sessionId: "1703123456789-abc123def456",
-  status: 200
-}
-
-🔄 Bklit SDK: Route change detected {
-  from: "https://yoursite.com/page1",
-  to: "https://yoursite.com/page2",
-  sessionId: "1703123456789-abc123def456"
-}
-
-🔄 Bklit SDK: Ending session on page unload... {
-  sessionId: "1703123456789-abc123def456",
-  siteId: "your-site-id"
-}
-
-✅ Bklit SDK: Session ended successfully! {
-  sessionId: "1703123456789-abc123def456",
-  status: 200
-}
+✅ Bklit SDK: Page view tracked successfully!
 ```
-
-## Manual Tracking
-
-You can manually trigger page view tracking using the global function:
-
-```javascript
-// Manual page view tracking
-window.trackPageView();
-```
-
-This is useful for:
-
-- Custom events
-- Single-page applications with custom routing
-- Testing and debugging
 
 ## Features
 
-- ✅ **Automatic Page View Tracking**: Tracks page views automatically
-- ✅ **Session Management**: Creates and manages user sessions
-- ✅ **SPA Support**: Detects route changes in single-page applications
-- ✅ **Session Ending**: Automatically ends sessions when users leave
-- ✅ **Comprehensive Logging**: Detailed console logs for debugging
-- ✅ **Manual Tracking**: Global function for custom tracking
-- ✅ **Error Handling**: Graceful error handling with detailed logs
-- ✅ **Environment Configuration**: Support for multiple environments
-- ✅ **Environment Variables**: Build-time configuration support
+### Automatic Tracking
+
+- **Page View Tracking** - Automatically tracks when pages load
+- **Session Management** - Creates and manages user sessions across page visits
+- **SPA Support** - Detects route changes in single-page applications
+- **Session Ending** - Automatically ends sessions when users close the tab
+
+### Event Tracking
+
+Track user interactions automatically with data attributes or IDs:
+
+```html
+<!-- Using data attribute -->
+<button data-bklit-event="cta-signup">Sign Up</button>
+
+<!-- Using ID -->
+<button id="bklit-event-cta-login">Login</button>
+```
+
+The SDK automatically tracks:
+
+- **Click events** - When users click the element
+- **View events** - When the element becomes visible (50% threshold)
+- **Hover events** - When users hover for 500ms
+
+### Manual Tracking
+
+#### Track Page Views
+
+```javascript
+window.trackPageView();
+```
+
+Useful for custom routing or manual page tracking.
+
+#### Track Custom Events
+
+```javascript
+window.trackEvent(
+  "purchase-button", // trackingId
+  "click", // eventType: "click", "view", "hover", or custom
+  {
+    // metadata (optional)
+    product: "Pro Plan",
+    price: 29.99,
+  },
+  "manual", // triggerMethod: "automatic" or "manual"
+);
+```
+
+### UTM Parameter Tracking
+
+The SDK automatically captures UTM parameters from the URL:
+
+- `utm_source`
+- `utm_medium`
+- `utm_campaign`
+- `utm_term`
+- `utm_content`
+
+These are included with every page view event.
 
 ## API Reference
 
@@ -170,10 +153,11 @@ Initialize the Bklit SDK.
 
 **Parameters:**
 
-- `options.siteId` (string, required): Your unique site identifier
-- `options.apiHost` (string, optional): API endpoint URL (overrides environment default)
-- `options.environment` (string, optional): Environment ('development', 'staging', 'production')
-- `options.debug` (boolean, optional): Enable/disable debug logging
+- `options.projectId` (string, **required**) - Your unique project identifier
+- `options.apiKey` (string, **required**) - Your API authentication token
+- `options.apiHost` (string, optional) - API endpoint URL. Defaults to `https://app.bklit.com/api/track`
+- `options.environment` (string, optional) - Environment mode: `"development"` or `"production"`. Defaults to `"production"`
+- `options.debug` (boolean, optional) - Enable debug logging. Defaults to `false`
 
 ### `window.trackPageView()`
 
@@ -181,49 +165,30 @@ Manually trigger a page view tracking event.
 
 **Returns:** void
 
-## Deployment
+### `window.trackEvent(trackingId, eventType, metadata?, triggerMethod?)`
 
-### NPM Package
+Manually trigger a custom event.
 
-The recommended way to distribute your SDK is through npm:
+**Parameters:**
 
-```bash
-# Build the SDK
-pnpm build
+- `trackingId` (string, required) - Unique identifier for the event
+- `eventType` (string, required) - Type of event: `"click"`, `"view"`, `"hover"`, or custom
+- `metadata` (object, optional) - Additional data to attach to the event
+- `triggerMethod` (string, optional) - `"automatic"` or `"manual"`. Defaults to `"manual"`
 
-# Publish to npm
-npm publish
-```
+**Returns:** void
 
-### Environment-Specific Builds
+### `window.clearBklitSession()`
 
-You can create environment-specific builds by setting environment variables:
+Clear the current session (useful for testing).
 
-```bash
-# Development build
-BKLIT_ENVIRONMENT=development BKLIT_DEBUG=true pnpm build
+**Returns:** void
 
-# Production build
-BKLIT_ENVIRONMENT=production pnpm build
-```
+## Support
 
-### CDN Distribution
-
-For direct browser usage, build and upload to a CDN:
-
-```bash
-# Build for CDN
-pnpm build
-
-# Upload dist/ folder to your CDN
-```
-
-## Browser Support
-
-- Chrome 60+
-- Firefox 55+
-- Safari 12+
-- Edge 79+
+- **Documentation:** [https://bklit.com](https://bklit.com)
+- **Issues:** [https://github.com/bklit/bklit/issues](https://github.com/bklit/bklit/issues)
+- **Discord:** [https://discord.gg/GFfD67gZGf](https://discord.gg/GFfD67gZGf)
 
 ## License
 
