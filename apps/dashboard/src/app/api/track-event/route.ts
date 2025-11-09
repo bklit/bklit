@@ -1,6 +1,7 @@
 import { prisma } from "@bklit/db/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
+import { checkEventLimit } from "@/lib/usage-limits";
 
 interface EventTrackingPayload {
   trackingId: string;
@@ -64,6 +65,25 @@ export async function POST(request: NextRequest) {
         { message: tokenValidation.error || "Invalid token" },
         401,
       );
+    }
+
+    // Check usage limits
+    if (tokenValidation.organizationId) {
+      const usageCheck = await checkEventLimit(
+        tokenValidation.organizationId,
+        payload.projectId,
+      );
+
+      if (!usageCheck.allowed) {
+        return createCorsResponse(
+          {
+            message: usageCheck.message || "Usage limit exceeded",
+            currentUsage: usageCheck.currentUsage,
+            limit: usageCheck.limit,
+          },
+          429,
+        );
+      }
     }
 
     const eventDefinition = await prisma.eventDefinition.findUnique({

@@ -5,6 +5,7 @@ interface TokenValidationResult {
   valid: boolean;
   error?: string;
   tokenId?: string;
+  organizationId?: string;
 }
 
 /**
@@ -91,6 +92,7 @@ export async function validateApiToken(
     return {
       valid: true,
       tokenId: matchedToken.id,
+      organizationId: matchedToken.organizationId,
     };
   } catch (error) {
     console.error("Error validating API token:", error);

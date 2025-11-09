@@ -16,6 +16,7 @@ export enum PlanType {
 export interface PlanLimits {
   projectLimit: number;
   teamMemberLimit: number;
+  eventLimit: number;
 }
 
 /**
@@ -26,10 +27,12 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   [PlanType.FREE]: {
     projectLimit: 1,
     teamMemberLimit: 1,
+    eventLimit: 10000,
   },
   [PlanType.PRO]: {
     projectLimit: 5,
     teamMemberLimit: 5,
+    eventLimit: 10000,
   },
 };
 
