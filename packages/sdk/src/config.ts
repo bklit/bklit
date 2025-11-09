@@ -9,8 +9,13 @@ export interface BklitConfig {
 // Get dashboard URL from environment and construct API endpoint
 const getDefaultApiHost = (env: "development" | "production"): string => {
   // Get dashboard URL from NEXT_PUBLIC_APP_URL
+  // Explicitly check for undefined and empty string
   const dashboardUrl =
-    typeof process !== "undefined" && process.env?.NEXT_PUBLIC_APP_URL;
+    typeof process !== "undefined" &&
+    process.env?.NEXT_PUBLIC_APP_URL !== undefined &&
+    process.env.NEXT_PUBLIC_APP_URL !== ""
+      ? process.env.NEXT_PUBLIC_APP_URL
+      : undefined;
 
   if (dashboardUrl) {
     // Remove trailing slash and append /api/track
