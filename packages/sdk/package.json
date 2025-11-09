@@ -2,6 +2,25 @@
   "name": "@bklit/sdk",
   "version": "0.1.0",
   "private": false,
+  "author": "Matt Litherland",
+  "license": "MIT",
+  "homepage": "https://bklit.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bklit/bklit.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/bklit/bklit/issues"
+  },
+  "keywords": [
+    "analytics",
+    "tracking",
+    "page-views",
+    "sessions",
+    "web-analytics",
+    "bklit"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -9,7 +28,8 @@
   "scripts": {
     "build": "BKLIT_ENVIRONMENT=production tsup src/index.ts --format esm,cjs --dts --clean",
     "dev": "BKLIT_ENVIRONMENT=development BKLIT_DEBUG=true tsup src/index.ts --format esm,cjs --dts --watch",
-    "clean": "git clean -xdf .cache .turbo dist node_modules"
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "prepublishOnly": "pnpm build"
   },
   "exports": {
     ".": {
@@ -19,7 +39,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "devDependencies": {
     "tsup": "^8.5.0",
