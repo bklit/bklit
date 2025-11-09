@@ -4,6 +4,7 @@ import { Button } from "@bklit/ui/components/button";
 import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -124,9 +125,14 @@ export function TestConnectionStepForm({
 
   return (
     <div className="space-y-6">
-      <Button onClick={handleOpenWebsite} variant="secondary" size="lg">
-        <ExternalLink size={16} /> Open your website
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button onClick={handleOpenWebsite} variant="secondary" size="lg">
+          <ExternalLink size={16} /> Open your website
+        </Button>
+        <Button variant="ghost" size="lg" asChild>
+          <Link href="/">Skip</Link>
+        </Button>
+      </div>
 
       <div className="flex items-center gap-2 p-4 border rounded-md bg-muted/50">
         {isConnected ? (
