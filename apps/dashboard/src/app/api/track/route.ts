@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createOrUpdateSession } from "@/actions/session-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
+import { checkEventLimit } from "@/lib/usage-limits";
 import { isMobileDevice } from "@/lib/user-agent";
 import type { GeoLocation } from "@/types/geo";
 
@@ -72,6 +73,25 @@ export async function POST(request: NextRequest) {
         { message: tokenValidation.error || "Invalid token" },
         401,
       );
+    }
+
+    // Check usage limits
+    if (tokenValidation.organizationId) {
+      const usageCheck = await checkEventLimit(
+        tokenValidation.organizationId,
+        payload.projectId,
+      );
+
+      if (!usageCheck.allowed) {
+        return createCorsResponse(
+          {
+            message: usageCheck.message || "Usage limit exceeded",
+            currentUsage: usageCheck.currentUsage,
+            limit: usageCheck.limit,
+          },
+          429,
+        );
+      }
     }
 
     // Extract client IP and get location data
