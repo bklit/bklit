@@ -57,6 +57,25 @@ export async function createOrganizationAction(
   }
 
   try {
+    // Check if user already owns an organization
+    const existingOrganizations = await api.organization.list();
+    const ownedOrganizations = existingOrganizations.filter((org) =>
+      org.members.some(
+        (member) =>
+          member.userId === session.user.id && member.role === "owner",
+      ),
+    );
+
+    if (ownedOrganizations.length >= 1) {
+      return {
+        success: false,
+        message:
+          "You can only create one organization. Delete your existing organization to create a new one.",
+        newOrganizationId: undefined,
+        errors: {},
+      };
+    }
+
     // Generate a URL-friendly slug from the organization name
     const slug = validatedFields.data.name
       .toLowerCase()
@@ -75,6 +94,25 @@ export async function createOrganizationAction(
         success: false,
         message:
           "An organization with this name already exists. Please choose a different name.",
+        newOrganizationId: undefined,
+        errors: {},
+      };
+    }
+
+    // Double-check at database level (race condition protection)
+    const doubleCheck = await api.organization.list();
+    const doubleCheckOwned = doubleCheck.filter((org) =>
+      org.members.some(
+        (member) =>
+          member.userId === session.user.id && member.role === "owner",
+      ),
+    );
+
+    if (doubleCheckOwned.length >= 1) {
+      return {
+        success: false,
+        message:
+          "You can only create one organization. Delete your existing organization to create a new one.",
         newOrganizationId: undefined,
         errors: {},
       };
