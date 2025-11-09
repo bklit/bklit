@@ -22,17 +22,24 @@ const getDefaultApiHost = (env: "development" | "production"): string => {
     return `${dashboardUrl.replace(/\/$/, "")}/api/track`;
   }
 
-  // No dashboard URL configured
+  // Production: Use published production URL as fallback
   if (env === "production") {
-    throw new Error(
-      "NEXT_PUBLIC_APP_URL environment variable is required for production builds.",
-    );
+    if (typeof window !== "undefined") {
+      console.warn(
+        "⚠️ Bklit SDK: No apiHost provided and NEXT_PUBLIC_APP_URL not set. " +
+          "Using default production API: https://app.bklit.com/api/track. " +
+          "For better control, pass apiHost to initBklit().",
+      );
+    }
+    return "https://app.bklit.com/api/track";
   }
 
   // Development fallback
-  console.warn(
-    "NEXT_PUBLIC_APP_URL not set, using default: http://localhost:3000/api/track",
-  );
+  if (typeof window !== "undefined") {
+    console.warn(
+      "NEXT_PUBLIC_APP_URL not set, using default: http://localhost:3000/api/track",
+    );
+  }
   return "http://localhost:3000/api/track";
 };
 

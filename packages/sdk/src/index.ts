@@ -24,12 +24,18 @@ export function initBklit(options: BklitOptions): void {
 
   const { projectId, apiHost, environment, debug, apiKey } = options;
 
-  // Get default configuration and merge with options
-  const defaultConfig = getDefaultConfig(environment);
+  // Determine values: use provided options, fall back to defaults only if needed
+  const finalEnvironment = environment || "production";
+  const finalDebug =
+    debug !== undefined ? debug : finalEnvironment === "development";
+
+  // Only get default apiHost if not provided
+  const finalApiHost = apiHost || getDefaultConfig(finalEnvironment).apiHost;
+
   const finalConfig: BklitConfig = {
-    apiHost: apiHost || defaultConfig.apiHost,
-    environment: environment || defaultConfig.environment,
-    debug: debug !== undefined ? debug : defaultConfig.debug,
+    apiHost: finalApiHost,
+    environment: finalEnvironment,
+    debug: finalDebug,
   };
 
   // Validate configuration
