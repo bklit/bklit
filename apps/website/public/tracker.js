@@ -3,6 +3,13 @@
   let inactivityTimer = null;
   let sessionEnded = false;
 
+  // Auto-detect API URL based on hostname
+  const hostname = window.location.hostname;
+  const apiUrl =
+    hostname === "localhost" || hostname === "127.0.0.1"
+      ? "http://localhost:3000"
+      : "https://app.bklit.com";
+
   // Utility: Get or generate a sessionId
   function getSessionId() {
     let sessionId = localStorage.getItem("bklit_session_id");
@@ -19,7 +26,7 @@
     sessionEnded = true;
     const sessionId = getSessionId();
     try {
-      await fetch("http://localhost:3000/api/track/session-end", {
+      await fetch(`${apiUrl}/api/track/session-end`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId }),
@@ -48,7 +55,7 @@
         siteId: "YOUR_SITE_ID_HERE",
         sessionId: getSessionId(),
       };
-      await fetch("http://localhost:3000/api/track", {
+      await fetch(`${apiUrl}/api/track`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

@@ -15,8 +15,8 @@ const ENV_VARS = {
 
 // Default API hosts for different environments
 const DEFAULT_API_HOSTS = {
-  development: "http://192.168.1.94:3000/api/track",
-  production: "https://bklit.com/api/track",
+  development: "http://localhost:3000/api/track",
+  production: "https://app.bklit.com/api/track",
 } as const;
 
 /**

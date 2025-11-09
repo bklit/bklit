@@ -8,8 +8,18 @@
     document.currentScript || document.querySelector("script[data-project-id]");
   const projectId = currentScript?.getAttribute("data-project-id");
   const apiToken = currentScript?.getAttribute("data-token");
-  const apiUrl =
-    currentScript?.getAttribute("data-api-url") || "http://localhost:3000";
+  
+  // Smart API URL detection: use data-api-url attribute, or detect from hostname
+  let apiUrl = currentScript?.getAttribute("data-api-url");
+  if (!apiUrl) {
+    // Auto-detect based on current hostname
+    const hostname = window.location.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      apiUrl = "http://localhost:3000";
+    } else {
+      apiUrl = "https://app.bklit.com";
+    }
+  }
 
   if (!projectId) {
     console.error("[Bklit] Error: data-project-id attribute is required");
