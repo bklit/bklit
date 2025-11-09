@@ -83,8 +83,8 @@ You'll need to obtain the following credentials:
 - `POLAR_SERVER_MODE` - Either `sandbox` or `production`
 - `POLAR_WEBHOOK_SECRET` - Your Polar webhook secret
 - `POLAR_ORGANIZATION_ID` - Your Polar organization ID
-- `POLAR_PRO_PRODUCT_ID` - Your Polar Pro product ID (**Required**)
-- `POLAR_FREE_PRODUCT_ID` - (Optional) Your Polar Free product ID
+- `POLAR_PRO_PRODUCT_ID` - Your Polar Pro product ID (**Required** - server-side)
+- `NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID` - Your Polar Pro product ID (client-side)
 - Set up Polar: [Polar Documentation](https://docs.polar.sh/)
 
 **Resend** (for email)
@@ -92,33 +92,11 @@ You'll need to obtain the following credentials:
 - `RESEND_API_KEY` - Your Resend API key
 - Get your API key: [Resend Documentation](https://resend.com/docs/introduction)
 
-**Example `.env` file:**
+**Optional**
 
-```bash
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/bklit"
-
-# Application URLs
-AUTH_URL="http://localhost:3000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# Auth
-AUTH_SECRET="your-secret-key-here"
-AUTH_GITHUB_ID="your-github-oauth-id"
-AUTH_GITHUB_SECRET="your-github-oauth-secret"
-AUTH_GOOGLE_ID="your-google-oauth-id"  # Optional
-AUTH_GOOGLE_SECRET="your-google-oauth-secret"  # Optional
-
-# Polar (Billing)
-POLAR_ACCESS_TOKEN="your-polar-access-token"
-POLAR_SERVER_MODE="sandbox"
-POLAR_WEBHOOK_SECRET="your-polar-webhook-secret"
-POLAR_ORGANIZATION_ID="your-polar-org-id"
-POLAR_PRO_PRODUCT_ID="your-polar-pro-product-id"
-
-# Email
-RESEND_API_KEY="your-resend-api-key"
-```
+- `BKLIT_WEBSITE_URL` - Your marketing website URL (used for email template images)
+- `BKLIT_DEFAULT_PROJECT` - Auto-invite new users to this project's organization
+- `NODE_ENV` - Node environment (`development`, `production`, `test`)
 
 3. **Set up the database**
 
@@ -240,6 +218,7 @@ NEXT_PUBLIC_APP_URL="https://app.bklit.com"
 # Polar - Switch to production mode
 POLAR_SERVER_MODE="production"
 POLAR_PRO_PRODUCT_ID="your-production-product-id"
+NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID="your-production-product-id"
 
 # Database - Production database connection
 DATABASE_URL="your-production-database-url"
