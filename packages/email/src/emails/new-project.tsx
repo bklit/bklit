@@ -74,8 +74,8 @@ pnpm add @bklit/sdk`}
 
 initBklit({
   projectId: "${projectId}",
-  apiHost: "https://your-api-host.com",
-  debug: true,
+  apiKey: "your-api-key",
+  debug: true, // Optional - enables console logging
 });`}
             fontFamily="'CommitMono', monospace"
             language="javascript"

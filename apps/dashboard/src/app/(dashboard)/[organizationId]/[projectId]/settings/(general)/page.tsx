@@ -104,8 +104,8 @@ pnpm add @bklit/sdk`}</CodeBlock>
 
 initBklit({
   projectId: "${site.id}",
-  apiHost: "https://your-api-host.com",
-  debug: true,
+  apiKey: "your-api-key",
+  debug: true, // Optional - enables console logging
 });`}</CodeBlock>
             </div>
           </CardContent>

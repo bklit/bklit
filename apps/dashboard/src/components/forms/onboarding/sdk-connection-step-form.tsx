@@ -128,12 +128,9 @@ export function SDKConnectionStepForm({
 
       <div>
         <h3 className="text-sm font-medium mb-2">Install the SDK</h3>
-        <CodeBlockClient
-          language="bash"
-          footer={
-            <>We haven't published the SDK yet, run playground locally.</>
-          }
-        >{`pnpm add @bklit/sdk`}</CodeBlockClient>
+        <CodeBlockClient language="bash">{`npm install @bklit/sdk
+# or
+pnpm add @bklit/sdk`}</CodeBlockClient>
       </div>
 
       <div>
