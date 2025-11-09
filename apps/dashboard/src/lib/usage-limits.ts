@@ -10,7 +10,6 @@ interface UsageCheckResult {
 
 export async function checkEventLimit(
   organizationId: string,
-  projectId: string,
 ): Promise<UsageCheckResult> {
   if (process.env.NODE_ENV === "development") {
     return { allowed: true, currentUsage: 0, limit: Infinity };

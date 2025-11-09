@@ -79,7 +79,6 @@ export async function POST(request: NextRequest) {
     if (tokenValidation.organizationId) {
       const usageCheck = await checkEventLimit(
         tokenValidation.organizationId,
-        payload.projectId,
       );
 
       if (!usageCheck.allowed) {
