@@ -30,7 +30,7 @@ export function SDKConnectionStepForm({
 }: SDKConnectionStepFormProps) {
   const trpc = useTRPC();
   const [createdToken, setCreatedToken] = useState<string | null>(null);
-  
+
   // Determine API host based on environment
   const apiHost =
     typeof window !== "undefined" &&

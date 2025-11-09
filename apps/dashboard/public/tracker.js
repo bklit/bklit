@@ -8,7 +8,7 @@
     document.currentScript || document.querySelector("script[data-project-id]");
   const projectId = currentScript?.getAttribute("data-project-id");
   const apiToken = currentScript?.getAttribute("data-token");
-  
+
   // Smart API URL detection: use data-api-url attribute, or detect from hostname
   let apiUrl = currentScript?.getAttribute("data-api-url");
   if (!apiUrl) {
