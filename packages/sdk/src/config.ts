@@ -6,52 +6,47 @@ export interface BklitConfig {
   debug: boolean;
 }
 
-// Environment variable names
-const ENV_VARS = {
-  BKLIT_API_HOST: "BKLIT_API_HOST",
-  BKLIT_ENVIRONMENT: "BKLIT_ENVIRONMENT",
-  BKLIT_DEBUG: "BKLIT_DEBUG",
-} as const;
+// Get dashboard URL from environment and construct API endpoint
+const getDefaultApiHost = (env: "development" | "production"): string => {
+  // Get dashboard URL from NEXT_PUBLIC_APP_URL
+  // Explicitly check for undefined and empty string
+  const dashboardUrl =
+    typeof process !== "undefined" &&
+    process.env?.NEXT_PUBLIC_APP_URL !== undefined &&
+    process.env.NEXT_PUBLIC_APP_URL !== ""
+      ? process.env.NEXT_PUBLIC_APP_URL
+      : undefined;
 
-// Default API hosts for different environments
-const DEFAULT_API_HOSTS = {
-  development: "http://192.168.1.94:3000/api/track",
-  production: "https://bklit.com/api/track",
-} as const;
-
-/**
- * Get environment variable value - Vite and Node.js compatible
- */
-function getEnvVar(key: string): string | undefined {
-  // For browser environments, we'll rely on the options passed to initBklit
-  // rather than trying to access environment variables directly
-  if (typeof window !== "undefined") {
-    return undefined;
+  if (dashboardUrl) {
+    // Remove trailing slash and append /api/track
+    return `${dashboardUrl.replace(/\/$/, "")}/api/track`;
   }
 
-  // Only try process.env in Node.js environments
-  if (typeof process !== "undefined" && process.env) {
-    return process.env[key];
+  // No dashboard URL configured
+  if (env === "production") {
+    throw new Error(
+      "NEXT_PUBLIC_APP_URL environment variable is required for production builds.",
+    );
   }
 
-  return undefined;
-}
+  // Development fallback
+  console.warn(
+    "NEXT_PUBLIC_APP_URL not set, using default: http://localhost:3000/api/track",
+  );
+  return "http://localhost:3000/api/track";
+};
 
 /**
  * Get default configuration based on environment
  */
 export function getDefaultConfig(environment?: string): BklitConfig {
-  const env =
-    environment || getEnvVar(ENV_VARS.BKLIT_ENVIRONMENT) || "production";
+  const env = environment || "production";
 
-  // Get API host from environment variable or use default
-  const apiHost =
-    getEnvVar(ENV_VARS.BKLIT_API_HOST) ||
-    DEFAULT_API_HOSTS[env as keyof typeof DEFAULT_API_HOSTS];
+  // Get API host from dashboard URL
+  const apiHost = getDefaultApiHost(env as "development" | "production");
 
-  // Determine debug mode
-  const debugEnv = getEnvVar(ENV_VARS.BKLIT_DEBUG);
-  const debug = debugEnv ? debugEnv === "true" : env === "development";
+  // Debug mode enabled in development
+  const debug = env === "development";
 
   return {
     apiHost,

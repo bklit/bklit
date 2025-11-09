@@ -31,6 +31,14 @@ export function SDKConnectionStepForm({
   const trpc = useTRPC();
   const [createdToken, setCreatedToken] = useState<string | null>(null);
 
+  // Determine API host based on environment
+  const apiHost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
+      ? "http://localhost:3000/api/track"
+      : "https://app.bklit.com/api/track";
+
   // Auto-create API token on mount
   const createToken = useMutation(
     trpc.apiToken.create.mutationOptions({
@@ -130,11 +138,8 @@ pnpm add @bklit/sdk`}</CodeBlockClient>
           lineNumbers={false}
           footer={
             <>
-              For local development, use{" "}
-              <code className="bg-muted px-1 py-0.5 rounded">
-                http://localhost:3000
-              </code>{" "}
-              as the apiHost.
+              The SDK will automatically use the correct API endpoint based on
+              your environment.
             </>
           }
         >{`import { initBklit } from "@bklit/sdk";
@@ -142,7 +147,7 @@ pnpm add @bklit/sdk`}</CodeBlockClient>
 initBklit({
   projectId: "${projectId}",
   apiKey: "${createdToken}",
-  apiHost: "${projectDomain}",
+  apiHost: "${apiHost}",
 });`}</CodeBlockClient>
       </div>
     </div>
