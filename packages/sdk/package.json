@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "build": "BKLIT_ENVIRONMENT=production tsup src/index.ts --format esm,cjs --dts --clean",
     "dev": "BKLIT_ENVIRONMENT=development BKLIT_DEBUG=true tsup src/index.ts --format esm,cjs --dts --watch",
     "clean": "git clean -xdf .cache .turbo dist node_modules"
   },
