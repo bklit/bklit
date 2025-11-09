@@ -1,5 +1,5 @@
 import { prisma } from "@bklit/db/client";
-import { getPlanLimits, type PlanType } from "./plans";
+import { getPlanLimits, PlanType } from "./plans";
 
 interface UsageCheckResult {
   allowed: boolean;
@@ -30,23 +30,42 @@ export async function checkEventLimit(
     };
   }
 
-  const planLimits = getPlanLimits(organization.plan as PlanType);
+  // Validate plan type and default to FREE if invalid
+  const planValue = organization.plan;
+  let validPlan: PlanType;
+
+  if (Object.values(PlanType).includes(planValue as PlanType)) {
+    validPlan = planValue as PlanType;
+  } else {
+    console.error(`Invalid plan type: ${planValue}, defaulting to FREE plan`);
+    validPlan = PlanType.FREE;
+  }
+
+  const planLimits = getPlanLimits(validPlan);
   const eventLimit = planLimits.eventLimit;
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
+  // Get all projects for this organization
+  const projects = await prisma.project.findMany({
+    where: { organizationId },
+    select: { id: true },
+  });
+  const projectIds = projects.map((p) => p.id);
+
+  // Count events across ALL projects in the organization
   const [pageViewCount, trackedEventCount] = await Promise.all([
     prisma.pageViewEvent.count({
       where: {
-        projectId,
+        projectId: { in: projectIds },
         createdAt: { gte: startOfMonth },
       },
     }),
     prisma.trackedEvent.count({
       where: {
-        projectId,
+        projectId: { in: projectIds },
         createdAt: { gte: startOfMonth },
       },
     }),

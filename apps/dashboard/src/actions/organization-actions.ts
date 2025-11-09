@@ -57,6 +57,22 @@ export async function createOrganizationAction(
   }
 
   try {
+    // Check if user already owns an organization
+    const existingOwnerships = await api.organization.list();
+    const ownedOrganizations = existingOwnerships.filter(
+      (org) => org.role === "owner",
+    );
+
+    if (ownedOrganizations.length >= 1) {
+      return {
+        success: false,
+        message:
+          "You can only create one organization. Delete your existing organization to create a new one.",
+        newOrganizationId: undefined,
+        errors: {},
+      };
+    }
+
     // Generate a URL-friendly slug from the organization name
     const slug = validatedFields.data.name
       .toLowerCase()
