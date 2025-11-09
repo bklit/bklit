@@ -31,13 +31,27 @@ export function SDKConnectionStepForm({
   const trpc = useTRPC();
   const [createdToken, setCreatedToken] = useState<string | null>(null);
 
-  // Determine API host based on environment
-  const apiHost =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1")
-      ? "http://localhost:3000/api/track"
-      : "https://app.bklit.com/api/track";
+  // Determine API host based on current dashboard location
+  const getApiHost = () => {
+    if (typeof window === "undefined") {
+      return "http://localhost:3000/api/track";
+    }
+
+    const { hostname, protocol, port } = window.location;
+
+    // If on localhost, use localhost
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      const portSuffix =
+        port && port !== "80" && port !== "443" ? `:${port}` : "";
+      return `${protocol}//${hostname}${portSuffix}/api/track`;
+    }
+
+    // Otherwise, use current dashboard URL
+    const baseUrl = `${protocol}//${hostname}`;
+    return `${baseUrl}/api/track`;
+  };
+
+  const apiHost = getApiHost();
 
   // Auto-create API token on mount
   const createToken = useMutation(

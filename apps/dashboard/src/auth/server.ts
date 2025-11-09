@@ -5,8 +5,8 @@ import { cache } from "react";
 import { env } from "../env";
 
 export const auth = initAuth({
-  baseUrl: dashboardUrl(),
-  productionUrl: dashboardUrl(),
+  baseUrl: dashboardUrl(), // Current environment URL
+  productionUrl: process.env.AUTH_URL || "https://app.bklit.com", // Always production
   secret: env.AUTH_SECRET,
   githubClientId: env.AUTH_GITHUB_ID,
   githubClientSecret: env.AUTH_GITHUB_SECRET,
