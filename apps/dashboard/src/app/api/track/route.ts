@@ -77,9 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Check usage limits
     if (tokenValidation.organizationId) {
-      const usageCheck = await checkEventLimit(
-        tokenValidation.organizationId,
-      );
+      const usageCheck = await checkEventLimit(tokenValidation.organizationId);
 
       if (!usageCheck.allowed) {
         return createCorsResponse(
