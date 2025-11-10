@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   title: "Create project",
 };
 
-export default function CreateProjectModal() {
-  return <Modal />;
+interface CreateProjectModalProps {
+  params: Promise<{ organizationId: string }>;
+}
+
+export default async function CreateProjectModal({
+  params,
+}: CreateProjectModalProps) {
+  const { organizationId } = await params;
+  return <Modal organizationId={organizationId} />;
 }

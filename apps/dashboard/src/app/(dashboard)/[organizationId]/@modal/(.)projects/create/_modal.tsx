@@ -7,24 +7,45 @@ import {
   DialogTitle,
 } from "@bklit/ui/components/dialog";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { AddProjectForm } from "@/components/forms/add-project-form";
 
-export default function Modal() {
-  const router = useRouter();
+interface ModalProps {
+  organizationId: string;
+}
 
-  const handleSuccess = () => {
-    setTimeout(() => {
-      router.back();
-    }, 150);
+export default function Modal({ organizationId }: ModalProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(true);
+
+  const handleSuccess = (newProjectId?: string) => {
+    if (newProjectId) {
+      setOpen(false);
+      setTimeout(() => {
+        router.push(`/${organizationId}/${newProjectId}`);
+      }, 150);
+    }
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setOpen(false);
+      setTimeout(() => {
+        router.back();
+      }, 150);
+    }
   };
 
   return (
-    <Dialog open={true} onOpenChange={() => router.back()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add project</DialogTitle>
         </DialogHeader>
-        <AddProjectForm onSuccess={handleSuccess} />
+        <AddProjectForm
+          organizationId={organizationId}
+          onSuccess={handleSuccess}
+        />
       </DialogContent>
     </Dialog>
   );
