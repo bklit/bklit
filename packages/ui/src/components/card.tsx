@@ -3,12 +3,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
 const cardVariants = cva(
-  "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+  "bg-card backdrop-blur-sm text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm",
   {
     variants: {
       variant: {
-        default: "",
-        destructive: "border-destructive/50 dark:border-destructive",
+        default:
+          "border-t border-bklit-600 bg-[radial-gradient(var(--bklit-600)_1px,transparent_1px)] bg-size-[16px_16px] before:content-[''] before:absolute before:inset-0 before:bg-linear-to-b before:from-transparent before:to-bklit-900 before:rounded-xl before:z-[-1]",
+        destructive:
+          "border-destructive/10 dark:border-destructive/20 border-t bg-[radial-gradient(var(--bklit-700)_1px,transparent_1px)] bg-size-[16px_16px] before:content-[''] before:absolute before:inset-0 before:bg-linear-to-b before:from-red-900/10 before:to-bklit-900 before:rounded-xl before:z-[-1]",
       },
     },
     defaultVariants: {
@@ -48,7 +50,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn("leading-none font-medium text-lg", className)}
       {...props}
     />
   );

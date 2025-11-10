@@ -51,7 +51,7 @@ export function NavUser({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <Avatar className="h-8 w-8 rounded-lg">
+        <Avatar className="size-9 border border-input">
           <AvatarImage src={user.avatar} alt={user.name} />
           <AvatarFallback className="rounded-lg">
             {user.name?.[0]?.toUpperCase()}
@@ -65,14 +65,18 @@ export function NavUser({
         sideOffset={4}
       >
         <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <Avatar className="h-8 w-8 rounded-lg">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm ">
+            <Avatar className="size-9 border border-input">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+              <AvatarFallback className="rounded-lg">
+                {user.name?.[0]?.toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs">{user.email}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {user.email}
+              </span>
             </div>
           </div>
         </DropdownMenuLabel>
@@ -86,26 +90,26 @@ export function NavUser({
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
             <Link href={dashboardHref}>
-              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <LayoutDashboard className="mr-2 size-3" />
               Overview
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={`/user/${user.id || "profile"}`}>
-              <User className="mr-2 h-4 w-4" />
+              <User className="mr-2 size-3" />
               My Workspaces
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={billingHref}>
-              <CreditCard className="mr-2 h-4 w-4" />
+              <CreditCard className="mr-2 size-3" />
               Billing for {activeOrganization?.name}
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 size-3" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

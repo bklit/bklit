@@ -13,12 +13,19 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@bklit/ui/components/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@bklit/ui/components/empty";
 import {
   Item,
   ItemActions,
@@ -29,7 +36,13 @@ import {
   ItemTitle,
 } from "@bklit/ui/components/item";
 import { format } from "date-fns";
-import { Layers2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  Layers2,
+  MoreHorizontal,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -68,13 +81,17 @@ export function ApiTokens({
   return (
     <>
       {tokens.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              No API tokens yet. Create your first token to get started.
-            </p>
-          </CardContent>
-        </Card>
+        <Empty className="border border-bklit-500 bg-bklit-800/50 aspect-3/1">
+          <EmptyHeader>
+            <EmptyMedia>
+              <ShieldCheck size={24} className="text-bklit-300" />
+            </EmptyMedia>
+            <EmptyTitle className="text-base">No API tokens yet</EmptyTitle>
+            <EmptyDescription className="text-sm">
+              Create your first token to get started.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <Card>
           <CardHeader>

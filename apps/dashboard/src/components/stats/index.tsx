@@ -1,4 +1,9 @@
-import { Card, CardContent } from "@bklit/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@bklit/ui/components/card";
 import NumberFlow from "@number-flow/react";
 import type { LucideIcon } from "lucide-react";
 
@@ -33,18 +38,20 @@ export const Stats = ({ items }: StatsProps) => {
       {items.map((item) => {
         const Icon = item.icon;
         return (
-          <Card key={item.name}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
+          <Card key={item.name} className="gap-0">
+            <CardHeader className="pt-1">
+              <div className="flex items-center gap-2">
                 <Icon className="size-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">{item.name}</p>
-                  <div className="text-2xl font-bold">
-                    <NumberFlow
-                      value={Number(item.stat)}
-                      suffix={item.suffix || ""}
-                    />
-                  </div>
+                <CardTitle> {item.name}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <div className="text-4xl font-semibold">
+                  <NumberFlow
+                    value={Number(item.stat)}
+                    suffix={item.suffix || ""}
+                  />
                 </div>
               </div>
             </CardContent>

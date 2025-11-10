@@ -1,7 +1,13 @@
 "use client";
 
-import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@bklit/ui/components/empty";
 import {
   Item,
   ItemActions,
@@ -70,36 +76,42 @@ export function NotificationsPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="icon" variant="ghost" className="relative">
-          <Bell className="size-5" />
+        <Button
+          size="icon"
+          variant="outline"
+          className="relative cursor-pointer"
+        >
+          <Bell size={14} />
           {hasNotifications && (
-            <Badge
-              className="absolute -top-1 -right-1 size-5 flex items-center justify-center p-0 text-xs"
-              variant="destructive"
-            >
-              {invitations.length}
-            </Badge>
+            <span
+              data-count={invitations.length}
+              className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-brand-500 text-white rounded-full "
+            />
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-96 p-0">
-        <div className="border-b px-4 py-3">
-          <h3 className="font-semibold text-sm">Notifications</h3>
-          {hasNotifications && (
+        {hasNotifications && (
+          <div className="border-b px-4 py-3">
+            <h3 className="font-semibold text-sm">Notifications</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               You have {invitations.length} pending invitation
               {invitations.length > 1 ? "s" : ""}
             </p>
-          )}
-        </div>
+          </div>
+        )}
 
         {invitations.length === 0 ? (
-          <div className="p-8 text-center">
-            <Bell className="size-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-            <p className="text-sm text-muted-foreground">
-              No new notifications
-            </p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia>
+                <Bell size={16} />
+              </EmptyMedia>
+              <EmptyTitle className="text-sm text-muted-foreground">
+                No new notifications
+              </EmptyTitle>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <ItemGroup className="max-h-[400px] overflow-y-auto">
             {invitations.map((invitation) => (
@@ -109,8 +121,7 @@ export function NotificationsPopover() {
                     Invitation to {invitation.organization.name}
                   </ItemTitle>
                   <ItemDescription>
-                    {invitation.user.name} invited you to join as{" "}
-                    {invitation.role || "member"}
+                    You were invited to join as {invitation.role || "member"}
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
