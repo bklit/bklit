@@ -13,10 +13,10 @@ import { useForm } from "@tanstack/react-form";
 import { useActionState, useEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { createProjectAction, type FormState } from "@/actions/project-actions";
-import { authClient } from "@/auth/client";
 import { addProjectSchema } from "@/lib/schemas/project-schema";
 
 interface AddProjectFormProps {
+  organizationId?: string;
   onSuccess?: (newprojectId?: string) => void;
 }
 
@@ -26,8 +26,15 @@ const initialState: FormState = {
   newprojectId: undefined,
 };
 
-export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
-  const { data: activeOrganization } = authClient.useActiveOrganization();
+export function AddProjectForm({
+  organizationId,
+  onSuccess,
+}: AddProjectFormProps) {
+  console.log(
+    "🔍 AddProjectForm - received organizationId prop:",
+    organizationId,
+  );
+
   const [state, formAction] = useActionState(createProjectAction, initialState);
   const [isPending, startTransition] = useTransition();
 
@@ -35,12 +42,31 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
     defaultValues: {
       name: "",
       domain: "",
-      organizationId: activeOrganization?.id || "",
+      organizationId: organizationId || "",
     },
     validators: {
-      onSubmit: addProjectSchema,
+      onSubmit: ({ value }) => {
+        console.log("📝 Validating form:", value);
+        const result = addProjectSchema.safeParse(value);
+        if (!result.success) {
+          console.error("📝 Validation failed:", result.error);
+          return result.error.format();
+        }
+        console.log("📝 Validation passed!");
+        return undefined;
+      },
     },
     onSubmit: async ({ value }) => {
+      console.log("📝 Add Project Form: Submitting with values:", value);
+
+      // Validation: organizationId is required
+      if (!value.organizationId) {
+        toast.error(
+          "No active organization found. Please select an organization.",
+        );
+        return;
+      }
+
       const formData = new FormData();
       Object.entries(value).forEach(([key, val]) => {
         if (val !== undefined && val !== null) {
@@ -48,6 +74,7 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
         }
       });
 
+      console.log("📝 Add Project Form: Starting transition...");
       startTransition(() => {
         formAction(formData);
       });
@@ -86,6 +113,11 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
       id="add-project-form"
       onSubmit={(e) => {
         e.preventDefault();
+        console.log(
+          "📝 Form submit triggered, current values:",
+          form.state.values,
+        );
+        console.log("📝 Form validation errors:", form.state.errors);
         form.handleSubmit();
       }}
       className="space-y-6"
@@ -146,10 +178,12 @@ export function AddProjectForm({ onSuccess }: AddProjectFormProps) {
       <Button
         type="submit"
         form="add-project-form"
-        disabled={isPending}
+        disabled={isPending || form.state.isSubmitting}
         className="w-full sm:w-auto"
       >
-        {isPending ? "Creating Project..." : "Create Project"}
+        {isPending || form.state.isSubmitting
+          ? "Creating Project..."
+          : "Create Project"}
       </Button>
       {state.message && !state.success && !state.errors && (
         <p className="text-sm font-medium text-destructive">{state.message}</p>

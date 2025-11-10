@@ -1,13 +1,30 @@
+"use client";
+
 import { Card, CardContent } from "@bklit/ui/components/card";
-import type { Metadata } from "next";
+import { useRouter } from "next/navigation";
+import { use } from "react";
 import { AddProjectForm } from "@/components/forms/add-project-form";
 import { PageHeader } from "@/components/header/page-header";
 
-export const metadata: Metadata = {
-  title: "Create Project | Bklit",
-};
+interface CreateProjectPageProps {
+  params: Promise<{ organizationId: string }>;
+}
 
-export default function CreateProjectPage() {
+export default function CreateProjectPage({ params }: CreateProjectPageProps) {
+  const { organizationId } = use(params);
+  const router = useRouter();
+
+  console.log(
+    "🔍 Create Project Page - organizationId from params:",
+    organizationId,
+  );
+
+  const handleSuccess = (newProjectId?: string) => {
+    if (newProjectId) {
+      router.push(`/${organizationId}/${newProjectId}`);
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -17,7 +34,10 @@ export default function CreateProjectPage() {
       <div className="container mx-auto py-6 px-4 flex gap-4">
         <Card className="w-full max-w-2xl">
           <CardContent>
-            <AddProjectForm />
+            <AddProjectForm
+              organizationId={organizationId}
+              onSuccess={handleSuccess}
+            />
           </CardContent>
         </Card>
       </div>
