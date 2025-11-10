@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { CodeBlock } from "@bklit/ui/components/code-block";
+import { CodeBlockClient } from "@bklit/ui/components/code-block-client";
 import { CopyInput } from "@bklit/ui/components/input-copy";
 import { MemberRole } from "@bklit/utils/roles";
 import { redirect } from "next/navigation";
@@ -92,12 +93,12 @@ export default async function ProjectDashboardPage({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <CodeBlock language="bash">{`npm install @bklit/sdk
+              <CodeBlockClient language="bash">{`npm install @bklit/sdk
 # or
-pnpm add @bklit/sdk`}</CodeBlock>
+pnpm add @bklit/sdk`}</CodeBlockClient>
             </div>
             <div className="space-y-2">
-              <CodeBlock
+              <CodeBlockClient
                 language="typescript"
                 lineNumbers={true}
               >{`import { initBklit } from "@bklit/sdk";
@@ -106,7 +107,7 @@ initBklit({
   projectId: "${site.id}",
   apiKey: "your-api-key",
   debug: true, // Optional - enables console logging
-});`}</CodeBlock>
+});`}</CodeBlockClient>
             </div>
           </CardContent>
         </Card>

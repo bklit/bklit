@@ -13,8 +13,8 @@ export function SiteHeader() {
   const { data: clientSession } = authClient.useSession();
 
   return (
-    <header className="flex flex-col w-full bg-bklit-900 border-b">
-      <div className="flex w-full items-center justify-between px-4 lg:px-6 py-4">
+    <header className="flex relative flex-col w-full bg-[radial-gradient(var(--bklit-700)_1px,transparent_1px)] bg-size-[16px_16px] before:content-[''] before:absolute before:inset-0 before:bg-linear-to-b before:from-transparent before:to-background before:z-0">
+      <div className="flex relative w-full items-center justify-between px-4 lg:px-6 py-4">
         <div className="flex items-center gap-4">
           <BklitLogo size={32} className="dark:text-white text-black" />
           <Separator
@@ -25,28 +25,24 @@ export function SiteHeader() {
             <NavWorkspace />
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center justify-between">
-            <SiteSearch />
-          </div>
-          <div className="flex items-center gap-1 lg:gap-2">
-            {clientSession?.user && (
-              <>
-                <NotificationsPopover />
-                <NavUser
-                  user={{
-                    name: clientSession.user.name || "",
-                    email: clientSession.user.email || "",
-                    avatar: clientSession.user.image || "",
-                    id: clientSession.user.id,
-                  }}
-                />
-              </>
-            )}
-          </div>
+        <div className="flex items-center gap-3">
+          <SiteSearch />
+          {clientSession?.user && (
+            <>
+              <NotificationsPopover />
+              <NavUser
+                user={{
+                  name: clientSession.user.name || "",
+                  email: clientSession.user.email || "",
+                  avatar: clientSession.user.image || "",
+                  id: clientSession.user.id,
+                }}
+              />
+            </>
+          )}
         </div>
       </div>
-      <div className="flex w-full items-center justify-between px-4 lg:px-6 py-4">
+      <div className="relative flex w-full items-center justify-between px-4 lg:px-6 py-4">
         <DashboardNavigation />
       </div>
     </header>
