@@ -49,3 +49,11 @@ export interface ProjectFormState {
   errors?: Record<string, string[] | undefined>;
   newprojectId?: string;
 }
+
+// User data for display
+export interface User {
+  name: string;
+  email: string;
+  avatar: string;
+  id?: string;
+}

@@ -52,7 +52,7 @@ export const navigationConfig: NavigationConfig = {
   // User level navigation (when at /user/[userId])
   user: [
     {
-      title: "Profile",
+      title: "Workspaces",
       href: "/user/[userId]",
     },
   ],
