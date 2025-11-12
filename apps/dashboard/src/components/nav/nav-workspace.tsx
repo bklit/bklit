@@ -33,8 +33,6 @@ export function NavWorkspace({ user }: { user: User }) {
   const isPro = activeOrganization?.plan === "pro";
   const planName = isPro ? "Pro" : "Free";
 
-  console.log("→", activeOrganization);
-
   return (
     <Breadcrumb>
       <BreadcrumbList>
