@@ -12,6 +12,13 @@ import { SiteSearch } from "./site-search";
 export function SiteHeader() {
   const { data: clientSession } = authClient.useSession();
 
+  const user = clientSession?.user && {
+    name: clientSession.user.name || "",
+    email: clientSession.user.email || "",
+    avatar: clientSession.user.image || "",
+    id: clientSession.user.id,
+  };
+
   return (
     <header className="flex relative flex-col w-full bg-[radial-gradient(var(--bklit-700)_1px,transparent_1px)] bg-size-[16px_16px] before:content-[''] before:absolute before:inset-0 before:bg-linear-to-b before:from-transparent before:to-background before:z-0">
       <div className="flex relative w-full items-center justify-between px-4 lg:px-6 py-4">
@@ -22,22 +29,15 @@ export function SiteHeader() {
             className="mx-2 data-[orientation=vertical]:h-4"
           />
           <div className="flex items-center gap-2">
-            <NavWorkspace />
+            {user && <NavWorkspace user={user} />}
           </div>
         </div>
         <div className="flex items-center gap-3">
           <SiteSearch />
-          {clientSession?.user && (
+          {user && (
             <>
               <NotificationsPopover />
-              <NavUser
-                user={{
-                  name: clientSession.user.name || "",
-                  email: clientSession.user.email || "",
-                  avatar: clientSession.user.image || "",
-                  id: clientSession.user.id,
-                }}
-              />
+              <NavUser user={user} />
             </>
           )}
         </div>

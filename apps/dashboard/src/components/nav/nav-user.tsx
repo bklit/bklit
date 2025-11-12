@@ -51,7 +51,7 @@ export function NavUser({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <Avatar className="size-9 border border-input">
+        <Avatar className="size-9">
           <AvatarImage src={user.avatar} alt={user.name} />
           <AvatarFallback className="rounded-lg">
             {user.name?.[0]?.toUpperCase()}
