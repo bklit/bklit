@@ -30,12 +30,6 @@ export async function GET() {
           unhealthyChecks: number;
           avgResponseTime: number;
           statusCodes: Record<number, number>;
-          incidents: Array<{
-            startTime: string;
-            endTime: string;
-            duration: number;
-            errorMessage?: string;
-          }>;
         }
       >
     > = {};
@@ -54,7 +48,6 @@ export async function GET() {
           unhealthyChecks: 0,
           avgResponseTime: 0,
           statusCodes: {},
-          incidents: [],
         };
       }
     }
