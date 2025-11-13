@@ -11,12 +11,14 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@bklit/db": "workspace:*",
     "@bklit/ui": "workspace:*",
     "@bklit/utils": "workspace:*",
     "next": "catalog:",
     "next-themes": "^0.4.4",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "recharts": "^3.3.0"
   },
   "devDependencies": {
     "@bklit/tsconfig": "workspace:*",

@@ -269,3 +269,20 @@ model ApiTokenProject {
   @@index([projectId])
   @@map("api_token_project")
 }
+
+model ApiHealthCheck {
+  id            String   @id @default(cuid())
+  endpoint      String
+  statusCode    Int
+  responseTimeMs Int
+  isHealthy     Boolean
+  errorMessage  String?
+  timestamp     DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([endpoint])
+  @@index([timestamp])
+  @@index([isHealthy])
+  @@index([endpoint, timestamp])
+  @@map("api_health_check")
+}

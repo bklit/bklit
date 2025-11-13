@@ -2,9 +2,21 @@ import type { ReactElement } from "react";
 import { Resend } from "resend";
 import { emailEnv } from "../env";
 
-const env = emailEnv();
+let resendInstance: Resend | null = null;
 
-export const resend = new Resend(env.RESEND_API_KEY);
+function getResend(): Resend {
+  if (!resendInstance) {
+    const env = emailEnv();
+    resendInstance = new Resend(env.RESEND_API_KEY);
+  }
+  return resendInstance;
+}
+
+export const resend = new Proxy({} as Resend, {
+  get(_target, prop) {
+    return getResend()[prop as keyof Resend];
+  },
+});
 
 export interface SendEmailParams {
   to: string | string[];
@@ -18,8 +30,13 @@ export interface SendEmailParams {
 }
 
 export async function sendEmail(params: SendEmailParams) {
+  const apiKey = emailEnv().RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not configured. Cannot send email.");
+  }
+  
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: params.from || "onboarding@resend.dev",
       to: params.to,
       subject: params.subject,
