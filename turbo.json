@@ -27,7 +27,8 @@
         "TRIGGER_SECRET_KEY",
         "TRIGGER_API_KEY",
         "TRIGGER_API_URL",
-        "ALERT_EMAIL"
+        "ALERT_EMAIL",
+        "HEALTH_CHECK_SECRET"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "dependsOn": ["^build", "^db:generate"],

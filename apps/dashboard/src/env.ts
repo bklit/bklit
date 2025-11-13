@@ -42,6 +42,7 @@ export const env = createEnv({
      * API Health Monitoring
      */
     ALERT_EMAIL: z.string().email().min(1),
+    HEALTH_CHECK_SECRET: z.string().min(1),
   },
 
   /**
