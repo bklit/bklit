@@ -7,7 +7,19 @@ let resendInstance: Resend | null = null;
 function getResend(): Resend {
   if (!resendInstance) {
     const env = emailEnv();
-    resendInstance = new Resend(env.RESEND_API_KEY);
+    const apiKey = env.RESEND_API_KEY;
+    
+    if (!apiKey || apiKey.trim() === "") {
+      const error = new Error(
+        "RESEND_API_KEY is not configured. Cannot create Resend client. Please set RESEND_API_KEY environment variable.",
+      );
+      console.error(error.message);
+      // In production, throw error; in development, you might want to allow it
+      // but we'll throw to prevent creating invalid client
+      throw error;
+    }
+    
+    resendInstance = new Resend(apiKey);
   }
   return resendInstance;
 }
@@ -34,7 +46,7 @@ export async function sendEmail(params: SendEmailParams) {
   if (!apiKey) {
     throw new Error("RESEND_API_KEY is not configured. Cannot send email.");
   }
-  
+
   try {
     const result = await getResend().emails.send({
       from: params.from || "onboarding@resend.dev",

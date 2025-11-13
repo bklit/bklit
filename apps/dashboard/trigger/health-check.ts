@@ -9,18 +9,9 @@ interface HealthCheckResult {
   errorMessage?: string;
 }
 
-interface EndpointAlertState {
-  consecutiveFailures: number;
-  lastAlertSentAt?: Date;
-  isInAlertState: boolean;
-}
-
 const ALERT_THRESHOLD = 60; // 60 checks = 5 minutes at 5-second intervals
 const TIMEOUT_MS = 10000; // 10 seconds
 const SLOW_RESPONSE_MS = 5000; // 5 seconds
-
-// In-memory state to track consecutive failures per endpoint
-const alertState = new Map<string, EndpointAlertState>();
 
 function getBaseUrl(): string {
   // Use NEXT_PUBLIC_APP_URL if set (works for both dev and prod)
@@ -117,59 +108,91 @@ async function handleAlerting(
   endpoint: string,
   isHealthy: boolean,
 ): Promise<void> {
-  const state = alertState.get(endpoint) || {
-    consecutiveFailures: 0,
-    isInAlertState: false,
-  };
+  // Use a transaction to atomically read and update the alert state
+  await prisma.$transaction(async (tx) => {
+    // Get or create the alert state for this endpoint
+    let state = await tx.apiHealthAlertState.findUnique({
+      where: { endpoint },
+    });
 
-  if (!isHealthy) {
-    state.consecutiveFailures++;
-    state.isInAlertState = true;
+    if (!state) {
+      // Create initial state if it doesn't exist
+      state = await tx.apiHealthAlertState.create({
+        data: {
+          endpoint,
+          consecutiveFailures: 0,
+          isInAlertState: false,
+        },
+      });
+    }
 
-    // Check if we should send an alert
-    if (
-      state.consecutiveFailures >= ALERT_THRESHOLD &&
-      !state.lastAlertSentAt
-    ) {
-      // Send email alert (lazy import to avoid env validation errors)
-      try {
-        const { sendEmail } = await import("@bklit/email/client");
-        const { ApiHealthAlertEmail } = await import(
-          "@bklit/email/emails/api-health-alert"
-        );
+    if (!isHealthy) {
+      // Increment consecutive failures and mark as in alert state
+      const updatedState = await tx.apiHealthAlertState.update({
+        where: { endpoint },
+        data: {
+          consecutiveFailures: { increment: 1 },
+          isInAlertState: true,
+        },
+      });
 
-        await sendEmail({
-          to: "matt@bklit.com",
-          subject: `API Health Alert: ${endpoint} is down`,
-          react: ApiHealthAlertEmail({
-            endpoint,
-            consecutiveFailures: state.consecutiveFailures,
-            durationMinutes: (state.consecutiveFailures * 5) / 60,
-          }),
-        });
+      // Check if we should send an alert
+      if (
+        updatedState.consecutiveFailures >= ALERT_THRESHOLD &&
+        !updatedState.lastAlertSentAt
+      ) {
+        // Send email alert (lazy import to avoid env validation errors)
+        try {
+          const { sendEmail } = await import("@bklit/email/client");
+          const { ApiHealthAlertEmail } = await import(
+            "@bklit/email/emails/api-health-alert"
+          );
 
-        state.lastAlertSentAt = new Date();
-        console.log(
-          `Alert sent for ${endpoint} after ${state.consecutiveFailures} failures`,
-        );
-      } catch (error) {
-        console.error(`Failed to send alert for ${endpoint}:`, error);
-        // Continue even if email fails
+          await sendEmail({
+            to: "matt@bklit.com",
+            subject: `API Health Alert: ${endpoint} is down`,
+            react: ApiHealthAlertEmail({
+              endpoint,
+              consecutiveFailures: updatedState.consecutiveFailures,
+              durationMinutes: (updatedState.consecutiveFailures * 5) / 60,
+            }),
+          });
+
+          // Update lastAlertSentAt after successful email send
+          await tx.apiHealthAlertState.update({
+            where: { endpoint },
+            data: {
+              lastAlertSentAt: new Date(),
+            },
+          });
+
+          console.log(
+            `Alert sent for ${endpoint} after ${updatedState.consecutiveFailures} failures`,
+          );
+        } catch (error) {
+          console.error(`Failed to send alert for ${endpoint}:`, error);
+          // Continue even if email fails - don't update lastAlertSentAt
+        }
       }
-    }
-  } else {
-    // Health recovered - reset state
-    if (state.isInAlertState) {
-      console.log(
-        `Health recovered for ${endpoint} after ${state.consecutiveFailures} failures`,
-      );
-    }
-    state.consecutiveFailures = 0;
-    state.isInAlertState = false;
-    state.lastAlertSentAt = undefined;
-  }
+    } else {
+      // Health recovered - reset state
+      if (state.isInAlertState) {
+        console.log(
+          `Health recovered for ${endpoint} after ${state.consecutiveFailures} failures`,
+        );
+      }
 
-  alertState.set(endpoint, state);
+      // Reset all alert state fields atomically
+      await tx.apiHealthAlertState.update({
+        where: { endpoint },
+        data: {
+          consecutiveFailures: 0,
+          isInAlertState: false,
+          lastAlertSentAt: null, // Clear the last alert timestamp on recovery
+        },
+      });
+    }
+  });
 }
 
 export const healthCheckTask = task({
@@ -203,10 +226,22 @@ export const healthCheckTask = task({
 
     const results = [trackResult, trackEventResult];
 
-    // Store results in database
+    // Store results in database (use upsert to handle unique constraint)
     for (const result of results) {
-      await prisma.apiHealthCheck.create({
-        data: {
+      await prisma.apiHealthCheck.upsert({
+        where: {
+          endpoint_timestamp: {
+            endpoint: result.endpoint,
+            timestamp,
+          },
+        },
+        update: {
+          statusCode: result.statusCode,
+          responseTimeMs: result.responseTimeMs,
+          isHealthy: result.isHealthy,
+          errorMessage: result.errorMessage,
+        },
+        create: {
           endpoint: result.endpoint,
           statusCode: result.statusCode,
           responseTimeMs: result.responseTimeMs,

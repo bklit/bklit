@@ -4,8 +4,11 @@ import type { healthCheckTask } from "../../../../trigger/health-check";
 export async function POST() {
   try {
     // Manually trigger the health check task
-    const handle = await tasks.trigger<typeof healthCheckTask>("health-check", {});
-    
+    const handle = await tasks.trigger<typeof healthCheckTask>(
+      "health-check",
+      {},
+    );
+
     return Response.json({
       success: true,
       runId: handle.id,
@@ -22,4 +25,3 @@ export async function POST() {
     );
   }
 }
-

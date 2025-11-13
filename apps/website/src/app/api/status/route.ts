@@ -110,15 +110,25 @@ export async function GET() {
     > = {};
 
     // Detect incidents (consecutive unhealthy checks)
-    const incidents: Record<string, Array<{ start: Date; end?: Date; error?: string }>> = {};
+    const incidents: Record<
+      string,
+      Array<{ start: Date; end?: Date; error?: string }>
+    > = {};
     
+    // Track last timestamp per endpoint for closing open incidents
+    const lastTimestampByEndpoint: Record<string, Date> = {};
+
     for (const check of healthChecks) {
       if (!incidents[check.endpoint]) {
         incidents[check.endpoint] = [];
       }
-      
+
+      // Track the last timestamp for each endpoint
+      lastTimestampByEndpoint[check.endpoint] = check.timestamp;
+
       if (!check.isHealthy) {
-        const lastIncident = incidents[check.endpoint][incidents[check.endpoint].length - 1];
+        const lastIncident =
+          incidents[check.endpoint][incidents[check.endpoint].length - 1];
         if (!lastIncident || lastIncident.end) {
           // Start new incident
           incidents[check.endpoint].push({
@@ -126,17 +136,28 @@ export async function GET() {
             error: check.errorMessage || undefined,
           });
         } else {
-          // Continue existing incident
-          lastIncident.end = check.timestamp;
+          // Continue existing incident - don't set end, just update error if needed
           if (check.errorMessage && !lastIncident.error) {
             lastIncident.error = check.errorMessage;
           }
         }
       } else {
         // Health recovered - close any open incident
-        const lastIncident = incidents[check.endpoint][incidents[check.endpoint].length - 1];
+        const lastIncident =
+          incidents[check.endpoint][incidents[check.endpoint].length - 1];
         if (lastIncident && !lastIncident.end) {
           lastIncident.end = check.timestamp;
+        }
+      }
+    }
+
+    // Close any open incidents with the last known timestamp for that endpoint
+    for (const [endpoint, endpointIncidents] of Object.entries(incidents)) {
+      const lastIncident = endpointIncidents[endpointIncidents.length - 1];
+      if (lastIncident && !lastIncident.end) {
+        const lastTimestamp = lastTimestampByEndpoint[endpoint];
+        if (lastTimestamp) {
+          lastIncident.end = lastTimestamp;
         }
       }
     }
@@ -144,9 +165,18 @@ export async function GET() {
     // Build final result
     for (const [endpoint, dailyData] of Object.entries(groupedData)) {
       const allDays = Object.values(dailyData);
-      const totalChecks = allDays.reduce((sum, day) => sum + day.totalChecks, 0);
-      const healthyChecks = allDays.reduce((sum, day) => sum + day.healthyChecks, 0);
-      const unhealthyChecks = allDays.reduce((sum, day) => sum + day.unhealthyChecks, 0);
+      const totalChecks = allDays.reduce(
+        (sum, day) => sum + day.totalChecks,
+        0,
+      );
+      const healthyChecks = allDays.reduce(
+        (sum, day) => sum + day.healthyChecks,
+        0,
+      );
+      const unhealthyChecks = allDays.reduce(
+        (sum, day) => sum + day.unhealthyChecks,
+        0,
+      );
       const uptimePercentage =
         totalChecks > 0 ? (healthyChecks / totalChecks) * 100 : 100;
 
@@ -174,7 +204,8 @@ export async function GET() {
           unhealthyChecks: day.unhealthyChecks,
           uptimePercentage:
             day.totalChecks > 0
-              ? Math.round((day.healthyChecks / day.totalChecks) * 100 * 100) / 100
+              ? Math.round((day.healthyChecks / day.totalChecks) * 100 * 100) /
+                100
               : 100,
           avgResponseTime: Math.round(day.avgResponseTime),
           statusCodes: day.statusCodes,
@@ -199,4 +230,3 @@ export async function GET() {
     );
   }
 }
-

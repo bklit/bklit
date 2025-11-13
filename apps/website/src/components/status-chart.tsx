@@ -11,7 +11,7 @@ import { Bar, BarChart, XAxis } from "recharts";
 interface StatusChartProps {
   data: Array<{
     date: string;
-    isHealthy: boolean;
+    isHealthy: boolean | null; // null means no data
   }>;
 }
 
@@ -24,17 +24,25 @@ const chartConfig = {
     label: "Unhealthy",
     color: "var(--color-destructive)",
   },
+  unknown: {
+    label: "No data",
+    color: "var(--color-muted)",
+  },
 } satisfies ChartConfig;
 
 export function StatusChart({ data }: StatusChartProps) {
-  const chartData = data.map((day) => ({
-    date: new Date(day.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-    healthy: day.isHealthy ? 1 : 0,
-    unhealthy: day.isHealthy ? 0 : 1,
-  }));
+  const chartData = data.map((day) => {
+    const hasData = day.isHealthy !== null;
+    return {
+      date: new Date(day.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      healthy: day.isHealthy === true ? 1 : 0,
+      unhealthy: day.isHealthy === false ? 1 : 0,
+      unknown: !hasData ? 1 : 0,
+    };
+  });
 
   return (
     <ChartContainer config={chartConfig} className="h-[120px] w-full">
@@ -56,6 +64,12 @@ export function StatusChart({ data }: StatusChartProps) {
           dataKey="unhealthy"
           stackId="a"
           fill="var(--color-destructive)"
+          radius={[5, 5, 5, 5]}
+        />
+        <Bar
+          dataKey="unknown"
+          stackId="a"
+          fill="var(--color-muted)"
           radius={[5, 5, 5, 5]}
         />
       </BarChart>

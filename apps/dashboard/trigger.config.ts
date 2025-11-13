@@ -14,4 +14,3 @@ export const config: TriggerConfig = {
   // Environment detection - will use "development" or "production" based on NODE_ENV
   // In production deployments, Trigger.dev will automatically use the production environment
 };
-

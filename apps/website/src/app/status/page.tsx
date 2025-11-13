@@ -75,7 +75,7 @@ export default async function StatusPage() {
         isCurrentlyHealthy: boolean;
         dailyData: Array<{
           date: string;
-          isHealthy: boolean;
+          isHealthy: boolean | null; // null means no data
         }>;
       }
     > = {};
@@ -86,13 +86,19 @@ export default async function StatusPage() {
         const lastCheck = dayData[date];
         return {
           date,
-          isHealthy: lastCheck ? lastCheck.isHealthy : false, // Default to unhealthy if no data
+          isHealthy: lastCheck ? lastCheck.isHealthy : null, // null means no data
         };
       });
 
-      const healthyDays = dailyData.filter((day) => day.isHealthy).length;
-      const totalDays = dailyData.length;
-      const uptimePercentage = (healthyDays / totalDays) * 100;
+      // Only count days with actual data for uptime calculation
+      const daysWithData = dailyData.filter((day) => day.isHealthy !== null);
+      const healthyDays = dailyData.filter(
+        (day) => day.isHealthy === true,
+      ).length;
+      const uptimePercentage =
+        daysWithData.length > 0
+          ? (healthyDays / daysWithData.length) * 100
+          : 100;
 
       // Count total checks for stats
       const totalChecks = healthChecks.filter(
