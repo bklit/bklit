@@ -92,6 +92,12 @@ You'll need to obtain the following credentials:
 - `RESEND_API_KEY` - Your Resend API key
 - Get your API key: [Resend Documentation](https://resend.com/docs/introduction)
 
+**API Health Monitoring**
+
+- `ALERT_EMAIL` - Email address to receive API health alerts when endpoints are down
+- Required for the health check monitoring system to send email notifications
+- **Note:** For Trigger.dev cloud execution, also set this in your Trigger.dev dashboard environment variables
+
 **Optional**
 
 - `BKLIT_WEBSITE_URL` - Your marketing website URL (used for email template images)
@@ -233,6 +239,7 @@ DATABASE_URL="your-production-database-url"
 - `POLAR_WEBHOOK_SECRET`
 - `POLAR_ORGANIZATION_ID`
 - `RESEND_API_KEY`
+- `ALERT_EMAIL`
 
 ### Vercel Deployment
 

@@ -37,6 +37,11 @@ export const env = createEnv({
     TRIGGER_SECRET_KEY: z.string().optional(),
     TRIGGER_API_KEY: z.string().optional(),
     TRIGGER_API_URL: z.string().url().optional(),
+
+    /**
+     * API Health Monitoring
+     */
+    ALERT_EMAIL: z.string().email().min(1),
   },
 
   /**

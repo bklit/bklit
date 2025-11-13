@@ -26,7 +26,8 @@
         "NGROK_URL",
         "TRIGGER_SECRET_KEY",
         "TRIGGER_API_KEY",
-        "TRIGGER_API_URL"
+        "TRIGGER_API_URL",
+        "ALERT_EMAIL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "dependsOn": ["^build", "^db:generate"],

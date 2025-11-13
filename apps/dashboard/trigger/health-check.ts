@@ -1,5 +1,6 @@
 import { prisma } from "@bklit/db/client";
 import { task } from "@trigger.dev/sdk/v3";
+import { env } from "../src/env";
 
 interface HealthCheckResult {
   endpoint: string;
@@ -141,6 +142,16 @@ async function handleAlerting(
         updatedState.consecutiveFailures >= ALERT_THRESHOLD &&
         !updatedState.lastAlertSentAt
       ) {
+        // Validate alert email is configured
+        const alertEmail = env.ALERT_EMAIL;
+        if (!alertEmail || alertEmail.trim() === "") {
+          const error = new Error(
+            "ALERT_EMAIL environment variable is not configured. Cannot send API health alerts. Please set ALERT_EMAIL in your environment variables.",
+          );
+          console.error(error.message);
+          throw error;
+        }
+
         // Send email alert (lazy import to avoid env validation errors)
         try {
           const { sendEmail } = await import("@bklit/email/client");
@@ -149,7 +160,7 @@ async function handleAlerting(
           );
 
           await sendEmail({
-            to: "matt@bklit.com",
+            to: alertEmail,
             subject: `API Health Alert: ${endpoint} is down`,
             react: ApiHealthAlertEmail({
               endpoint,
