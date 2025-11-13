@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 export function emailEnv() {
   return createEnv({
     server: {
-      RESEND_API_KEY: z.string().min(1),
+      RESEND_API_KEY: z.string().min(1).optional(),
     },
     experimental__runtimeEnv: {},
     skipValidation:

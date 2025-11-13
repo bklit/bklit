@@ -6,17 +6,19 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo .next dist node_modules",
     "dev": "pnpm with-env next dev --port 3001 --turbopack",
-    "build": "pnpm with-env next build",
+    "build": "pnpm run -F @bklit/db generate && pnpm with-env next build",
     "start": "pnpm with-env next start",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@bklit/db": "workspace:*",
     "@bklit/ui": "workspace:*",
     "@bklit/utils": "workspace:*",
     "next": "catalog:",
     "next-themes": "^0.4.4",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "recharts": "^3.3.0"
   },
   "devDependencies": {
     "@bklit/tsconfig": "workspace:*",

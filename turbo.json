@@ -22,7 +22,13 @@
         "POLAR_WEBHOOK_SECRET",
         "POLAR_ORGANIZATION_ID",
         "RESEND_API_KEY",
-        "VITE_NGROK_URL"
+        "VITE_NGROK_URL",
+        "NGROK_URL",
+        "TRIGGER_SECRET_KEY",
+        "TRIGGER_API_KEY",
+        "TRIGGER_API_URL",
+        "ALERT_EMAIL",
+        "HEALTH_CHECK_SECRET"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "dependsOn": ["^build", "^db:generate"],
@@ -50,6 +56,11 @@
       "cache": false
     },
     "dev": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "persistent": true,
+      "cache": false
+    },
+    "dev:trigger": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "persistent": true,
       "cache": false

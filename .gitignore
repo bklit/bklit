@@ -52,3 +52,6 @@ dist/
 # turbo
 .turbo/
 .turbo.ngrok.pid
+
+# trigger.dev
+.trigger/

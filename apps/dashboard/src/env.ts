@@ -30,6 +30,19 @@ export const env = createEnv({
     POLAR_SERVER_MODE: z.string().min(1),
     POLAR_ACCESS_TOKEN: z.string().min(1),
     POLAR_WEBHOOK_SECRET: z.string().min(1),
+
+    /**
+     * Trigger.dev
+     */
+    TRIGGER_SECRET_KEY: z.string().optional(),
+    TRIGGER_API_KEY: z.string().optional(),
+    TRIGGER_API_URL: z.string().url().optional(),
+
+    /**
+     * API Health Monitoring
+     */
+    ALERT_EMAIL: z.string().email().min(1),
+    HEALTH_CHECK_SECRET: z.string().min(1),
   },
 
   /**
