@@ -322,6 +322,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.1.0(react@19.1.0)
+      recharts:
+        specifier: ^3.3.0
+        version: 3.3.0(@types/react@19.2.2)(react-dom@19.1.0(react@19.1.0))(react-is@19.2.0)(react@19.1.0)(redux@5.0.1)
     devDependencies:
       '@bklit/tsconfig':
         specifier: workspace:*
