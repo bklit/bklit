@@ -73,7 +73,7 @@
   --muted-foreground: var(--bklit-200);
   --accent: var(--bklit-600);
   --accent-foreground: var(--color-white);
-  --destructive: oklch(0.5396 0.1988 11.12);
+  --destructive: oklch(45.9% 0.187 3.815);
   --destructive-foreground: oklch(0.9082 0.048775 8.6356);
   --border: var(--bklit-700);
   --input: var(--bklit-600);

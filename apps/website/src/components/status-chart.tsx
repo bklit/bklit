@@ -18,11 +18,11 @@ interface StatusChartProps {
 const chartConfig = {
   healthy: {
     label: "Healthy",
-    color: "#10b981", // emerald-500
+    color: "var(--color-teal-700)",
   },
   unhealthy: {
     label: "Unhealthy",
-    color: "#ef4444", // red-500
+    color: "var(--color-destructive)",
   },
 } satisfies ChartConfig;
 
@@ -49,14 +49,14 @@ export function StatusChart({ data }: StatusChartProps) {
         <Bar
           dataKey="healthy"
           stackId="a"
-          fill="#10b981"
-          radius={[0, 0, 0, 0]}
+          fill="var(--color-teal-700)"
+          radius={[5, 5, 5, 5]}
         />
         <Bar
           dataKey="unhealthy"
           stackId="a"
-          fill="#ef4444"
-          radius={[0, 0, 0, 0]}
+          fill="var(--color-destructive)"
+          radius={[5, 5, 5, 5]}
         />
       </BarChart>
     </ChartContainer>

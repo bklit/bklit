@@ -1,4 +1,5 @@
 import { prisma } from "@bklit/db/client";
+import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
@@ -6,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { cn } from "@bklit/ui/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { StatusChart } from "@/components/status-chart";
 
@@ -70,6 +72,7 @@ export default async function StatusPage() {
         totalChecks: number;
         healthyChecks: number;
         unhealthyChecks: number;
+        isCurrentlyHealthy: boolean;
         dailyData: Array<{
           date: string;
           isHealthy: boolean;
@@ -100,12 +103,22 @@ export default async function StatusPage() {
       ).length;
       const unhealthyChecks = totalChecks - healthyChecks;
 
+      // Get the most recent check to determine current status
+      const endpointChecks = healthChecks
+        .filter((c) => c.endpoint === endpoint)
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      const mostRecentCheck = endpointChecks[0];
+      const isCurrentlyHealthy = mostRecentCheck
+        ? mostRecentCheck.isHealthy
+        : false;
+
       result[endpoint] = {
         endpoint,
         uptimePercentage: Math.round(uptimePercentage * 100) / 100,
         totalChecks,
         healthyChecks,
         unhealthyChecks,
+        isCurrentlyHealthy,
         dailyData,
       };
     }
@@ -121,9 +134,37 @@ export default async function StatusPage() {
   return (
     <main className="w-full min-h-screen bklit-hero flex flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-6xl flex flex-col px-4 py-12 space-y-12">
+      <div className="container mx-auto max-w-3xl flex flex-col px-4 py-4 md:py-8 lg:py-12 space-y-12">
         <div>
-          <h1 className="text-4xl font-bold mb-2">API Status</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-4xl font-bold mb-2">API Status</h1>
+            {statusData &&
+            typeof statusData === "object" &&
+            !("error" in statusData) ? (
+              (() => {
+                const allHealthy = Object.values(statusData).every(
+                  (data) => data.isCurrentlyHealthy,
+                );
+                return (
+                  <Badge variant="outline" size="lg" className="gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex size-2 rounded-full",
+                        allHealthy ? "bg-teal-700" : "bg-destructive",
+                      )}
+                    />
+                    {allHealthy
+                      ? "All systems operational"
+                      : "Some systems experiencing issues"}
+                  </Badge>
+                );
+              })()
+            ) : (
+              <Badge variant="secondary" size="lg">
+                Status unknown
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Real-time health monitoring for our tracking APIs
           </p>
@@ -135,13 +176,48 @@ export default async function StatusPage() {
           Object.entries(statusData).map(([endpoint, data]) => (
             <Card key={endpoint} className="space-y-4">
               <CardHeader>
-                <CardTitle>{endpoint}</CardTitle>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle>
+                    <code>{endpoint}</code>
+                  </CardTitle>
+                  <Badge variant="outline" size="lg" className="gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex size-2 rounded-full",
+                        data.isCurrentlyHealthy
+                          ? "bg-teal-700"
+                          : "bg-destructive",
+                      )}
+                    />
+                    <span className="text-sm">
+                      {data.isCurrentlyHealthy ? "Operational" : "Degraded"}
+                    </span>
+                  </Badge>
+                </div>
                 <CardDescription>
                   <div className="flex gap-4 text-sm text-muted-foreground">
-                    <span>Uptime: {data.uptimePercentage}%</span>
-                    <span>Total Checks: {data.totalChecks}</span>
-                    <span>Healthy: {data.healthyChecks}</span>
-                    <span>Unhealthy: {data.unhealthyChecks}</span>
+                    <Badge
+                      variant={
+                        data.uptimePercentage >= 90 ? "success" : "destructive"
+                      }
+                    >
+                      Uptime {data.uptimePercentage}%
+                    </Badge>
+                    <Badge variant="secondary">
+                      Total Checks {data.totalChecks}
+                    </Badge>
+                    <Badge
+                      variant={data.healthyChecks > 0 ? "success" : "secondary"}
+                    >
+                      Healthy {data.healthyChecks}
+                    </Badge>
+                    <Badge
+                      variant={
+                        data.unhealthyChecks > 0 ? "destructive" : "success"
+                      }
+                    >
+                      Unhealthy {data.unhealthyChecks}
+                    </Badge>
                   </div>
                 </CardDescription>
               </CardHeader>
