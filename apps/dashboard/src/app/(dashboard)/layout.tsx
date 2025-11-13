@@ -1,3 +1,4 @@
+import { Footer } from "@/components/footer";
 import { SiteHeader } from "@/components/header/site-header";
 import { WorkspaceProvider } from "@/contexts/workspace-provider";
 import { authenticated } from "@/lib/auth";
@@ -18,6 +19,7 @@ export default async function DashboardLayout({
       <div className="flex flex-col min-h-screen ">
         <SiteHeader />
         <main className="flex-1 flex flex-col bg-background">{children}</main>
+        <Footer />
         {modal}
       </div>
     </WorkspaceProvider>
