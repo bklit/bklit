@@ -1,5 +1,5 @@
-import { NextRequest } from "next/server";
 import { tasks } from "@trigger.dev/sdk/v3";
+import type { NextRequest } from "next/server";
 import { env } from "@/env";
 import type { healthCheckTask } from "../../../../trigger/health-check";
 
@@ -38,7 +38,8 @@ function validateHealthCheckSecret(request: NextRequest): boolean {
 export async function POST(request: NextRequest) {
   // Validate authentication
   if (!validateHealthCheckSecret(request)) {
-    const clientIP = request.headers.get("x-forwarded-for") ||
+    const clientIP =
+      request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
       "unknown";
     const userAgent = request.headers.get("user-agent") || "unknown";

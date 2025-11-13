@@ -8,7 +8,7 @@ function getResend(): Resend {
   if (!resendInstance) {
     const env = emailEnv();
     const apiKey = env.RESEND_API_KEY;
-    
+
     if (!apiKey || apiKey.trim() === "") {
       const error = new Error(
         "RESEND_API_KEY is not configured. Cannot create Resend client. Please set RESEND_API_KEY environment variable.",
@@ -18,7 +18,7 @@ function getResend(): Resend {
       // but we'll throw to prevent creating invalid client
       throw error;
     }
-    
+
     resendInstance = new Resend(apiKey);
   }
   return resendInstance;

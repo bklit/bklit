@@ -114,7 +114,7 @@ export async function GET() {
       string,
       Array<{ start: Date; end?: Date; error?: string }>
     > = {};
-    
+
     // Track last timestamp per endpoint for closing open incidents
     const lastTimestampByEndpoint: Record<string, Date> = {};
 
