@@ -105,71 +105,60 @@ async function checkEndpoint(
   }
 }
 
+interface EmailPayload {
+  endpoint: string;
+  consecutiveFailures: number;
+  durationMinutes: number;
+}
+
 async function handleAlerting(
   endpoint: string,
   isHealthy: boolean,
 ): Promise<void> {
   // Use a transaction to atomically read and update the alert state
-  await prisma.$transaction(async (tx) => {
-    // Get or create the alert state for this endpoint
-    let state = await tx.apiHealthAlertState.findUnique({
-      where: { endpoint },
-    });
-
-    if (!state) {
-      // Create initial state if it doesn't exist
-      state = await tx.apiHealthAlertState.create({
-        data: {
-          endpoint,
-          consecutiveFailures: 0,
-          isInAlertState: false,
-        },
-      });
-    }
-
-    if (!isHealthy) {
-      // Increment consecutive failures and mark as in alert state
-      const updatedState = await tx.apiHealthAlertState.update({
+  // Collect email payload inside transaction, but send email after transaction completes
+  const emailPayload: EmailPayload | null = await prisma.$transaction(
+    async (tx) => {
+      // Get or create the alert state for this endpoint
+      let state = await tx.apiHealthAlertState.findUnique({
         where: { endpoint },
-        data: {
-          consecutiveFailures: { increment: 1 },
-          isInAlertState: true,
-        },
       });
 
-      // Check if we should send an alert
-      if (
-        updatedState.consecutiveFailures >= ALERT_THRESHOLD &&
-        !updatedState.lastAlertSentAt
-      ) {
-        // Validate alert email is configured
-        const alertEmail = env.ALERT_EMAIL;
-        if (!alertEmail || alertEmail.trim() === "") {
-          const error = new Error(
-            "ALERT_EMAIL environment variable is not configured. Cannot send API health alerts. Please set ALERT_EMAIL in your environment variables.",
-          );
-          console.error(error.message);
-          throw error;
-        }
+      if (!state) {
+        // Create initial state if it doesn't exist
+        state = await tx.apiHealthAlertState.create({
+          data: {
+            endpoint,
+            consecutiveFailures: 0,
+            isInAlertState: false,
+          },
+        });
+      }
 
-        // Send email alert (lazy import to avoid env validation errors)
-        try {
-          const { sendEmail } = await import("@bklit/email/client");
-          const { ApiHealthAlertEmail } = await import(
-            "@bklit/email/emails/api-health-alert"
-          );
+      if (!isHealthy) {
+        // Increment consecutive failures and mark as in alert state
+        const updatedState = await tx.apiHealthAlertState.update({
+          where: { endpoint },
+          data: {
+            consecutiveFailures: { increment: 1 },
+            isInAlertState: true,
+          },
+        });
 
-          await sendEmail({
-            to: alertEmail,
-            subject: `API Health Alert: ${endpoint} is down`,
-            react: ApiHealthAlertEmail({
-              endpoint,
-              consecutiveFailures: updatedState.consecutiveFailures,
-              durationMinutes: (updatedState.consecutiveFailures * 5) / 60,
-            }),
-          });
+        // Check if we should send an alert
+        if (
+          updatedState.consecutiveFailures >= ALERT_THRESHOLD &&
+          !updatedState.lastAlertSentAt
+        ) {
+          // Prepare email payload
+          const payload: EmailPayload = {
+            endpoint,
+            consecutiveFailures: updatedState.consecutiveFailures,
+            durationMinutes: (updatedState.consecutiveFailures * 5) / 60,
+          };
 
-          // Update lastAlertSentAt after successful email send
+          // Update lastAlertSentAt inside transaction (DB commit happens first)
+          // This marks the alert as sent even if email fails later
           await tx.apiHealthAlertState.update({
             where: { endpoint },
             data: {
@@ -177,33 +166,73 @@ async function handleAlerting(
             },
           });
 
-          console.log(
-            `Alert sent for ${endpoint} after ${updatedState.consecutiveFailures} failures`,
-          );
-        } catch (error) {
-          console.error(`Failed to send alert for ${endpoint}:`, error);
-          // Continue even if email fails - don't update lastAlertSentAt
+          // Return email payload to send after transaction completes
+          return payload;
         }
-      }
-    } else {
-      // Health recovered - reset state
-      if (state.isInAlertState) {
-        console.log(
-          `Health recovered for ${endpoint} after ${state.consecutiveFailures} failures`,
-        );
+      } else {
+        // Health recovered - reset state
+        if (state.isInAlertState) {
+          console.log(
+            `Health recovered for ${endpoint} after ${state.consecutiveFailures} failures`,
+          );
+        }
+
+        // Reset all alert state fields atomically
+        await tx.apiHealthAlertState.update({
+          where: { endpoint },
+          data: {
+            consecutiveFailures: 0,
+            isInAlertState: false,
+            lastAlertSentAt: null, // Clear the last alert timestamp on recovery
+          },
+        });
       }
 
-      // Reset all alert state fields atomically
-      await tx.apiHealthAlertState.update({
-        where: { endpoint },
-        data: {
-          consecutiveFailures: 0,
-          isInAlertState: false,
-          lastAlertSentAt: null, // Clear the last alert timestamp on recovery
-        },
-      });
+      return null; // No email to send
+    },
+  );
+
+  // Send email after transaction completes (outside of transaction)
+  if (emailPayload) {
+    // Validate alert email is configured
+    const alertEmail = env.ALERT_EMAIL;
+    if (!alertEmail || alertEmail.trim() === "") {
+      console.error(
+        "ALERT_EMAIL environment variable is not configured. Cannot send API health alerts. Please set ALERT_EMAIL in your environment variables.",
+      );
+      return;
     }
-  });
+
+    // Send email alert (lazy import to avoid env validation errors)
+    // Wrap in try/catch to log failures without affecting DB state
+    try {
+      const { sendEmail } = await import("@bklit/email/client");
+      const { ApiHealthAlertEmail } = await import(
+        "@bklit/email/emails/api-health-alert"
+      );
+
+      await sendEmail({
+        to: alertEmail,
+        subject: `API Health Alert: ${emailPayload.endpoint} is down`,
+        react: ApiHealthAlertEmail({
+          endpoint: emailPayload.endpoint,
+          consecutiveFailures: emailPayload.consecutiveFailures,
+          durationMinutes: emailPayload.durationMinutes,
+        }),
+      });
+
+      console.log(
+        `Alert sent for ${emailPayload.endpoint} after ${emailPayload.consecutiveFailures} failures`,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to send alert for ${emailPayload.endpoint}:`,
+        error,
+      );
+      // Note: DB state is already updated (lastAlertSentAt is set)
+      // We don't rollback the DB update even if email fails
+    }
+  }
 }
 
 export const healthCheckTask = task({
