@@ -1,6 +1,5 @@
 import { prisma } from "@bklit/db/client";
 import { schedules } from "@trigger.dev/sdk/v3";
-import { env } from "../src/env";
 
 interface HealthCheckResult {
   endpoint: string;
@@ -194,6 +193,9 @@ async function handleAlerting(
 
   // Send email after transaction completes (outside of transaction)
   if (emailPayload) {
+    // Lazy import env to avoid validation errors during task indexing
+    const { env } = await import("../src/env");
+
     // Validate alert email is configured
     const alertEmail = env.ALERT_EMAIL;
     if (!alertEmail || alertEmail.trim() === "") {
