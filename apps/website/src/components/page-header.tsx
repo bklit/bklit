@@ -14,15 +14,11 @@ import {
   TooltipTrigger,
 } from "@bklit/ui/components/tooltip";
 import { BklitLogo } from "@bklit/ui/icons/bklit";
-import { Github } from "lucide-react";
 import Link from "next/link";
-import { useGithubStats } from "./providers/github-stats-provider";
 
 export const PageHeader = () => {
-  const { data, isLoading } = useGithubStats();
-
   return (
-    <header className="w-full flex p-3 py-5 md:py-3">
+    <header className="fixed z-50 w-full flex p-3 py-5 md:py-3 bg-linear-to-b from-background to-transparent">
       <div className="container max-w-6xl mx-auto px-4">
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-start gap-3">
@@ -89,23 +85,12 @@ export const PageHeader = () => {
             </ul>
           </nav>
 
-          <nav>
-            <ul className="flex items-center gap-2">
-              <li>
-                <Button size="lg" variant="ghost" asChild>
-                  <a
-                    href={data?.html_url}
-                    target="_blank"
-                    className="flex items-center gap-2"
-                  >
-                    <Github size={16} />
-                    <span className="font-bold">
-                      {isLoading ? "..." : data?.stargazers_count}
-                    </span>
-                  </a>
-                </Button>
-              </li>
-            </ul>
+          <nav className="flex items-center gap-2">
+            <Button size="lg" variant="mono" asChild>
+              <a href="https://app.bklit.com/signin" title="Sign in">
+                Sign in
+              </a>
+            </Button>
           </nav>
         </div>
       </div>
