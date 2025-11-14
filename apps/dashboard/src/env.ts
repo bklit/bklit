@@ -64,6 +64,8 @@ export const env = createEnv({
     !!process.env.TRIGGER_BUILD ||
     process.env.NODE_ENV === "test" ||
     // Skip validation during Trigger.dev task indexing/build phase
-    // (when env vars aren't loaded yet, but module is being evaluated)
-    (process.env.NODE_ENV !== "production" && !process.env.DATABASE_URL),
+    // Check if required env vars are missing (they won't be available during indexing)
+    !process.env.AUTH_GITHUB_ID ||
+    !process.env.AUTH_SECRET ||
+    !process.env.POLAR_SERVER_MODE,
 });
