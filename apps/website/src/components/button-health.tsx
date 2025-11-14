@@ -1,6 +1,7 @@
 import { prisma } from "@bklit/db/client";
-import { Badge } from "@bklit/ui/components/badge";
+import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
+import Link from "next/link";
 
 export const ButtonHealth = async () => {
   let isHealthy = false;
@@ -21,18 +22,25 @@ export const ButtonHealth = async () => {
   }
 
   return (
-    <Badge
+    <Button
       variant="outline"
       className={cn("gap-2 cursor-pointer hover:bg-accent transition-colors")}
       size="lg"
+      asChild
     >
-      <span
-        className={cn(
-          "inline-flex size-2 rounded-full",
-          isHealthy ? "bg-teal-700" : "bg-destructive",
-        )}
-      />
-      {isHealthy ? "Systems normal" : "Issues detected"}
-    </Badge>
+      <Link
+        href="/status"
+        title="View system status"
+        aria-label="View system status"
+      >
+        <span
+          className={cn(
+            "inline-flex size-2 rounded-full",
+            isHealthy ? "bg-teal-700" : "bg-destructive",
+          )}
+        />
+        {isHealthy ? "Systems normal" : "Issues detected"}
+      </Link>
+    </Button>
   );
 };

@@ -22,7 +22,7 @@ export function ThemeSwitcher() {
   return (
     <Toggle
       variant="outline"
-      size="default"
+      size="lg"
       pressed={isDark}
       onPressedChange={(pressed) => setTheme(pressed ? "dark" : "light")}
       aria-label="Toggle theme"
