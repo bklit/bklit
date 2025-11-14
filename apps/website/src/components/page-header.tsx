@@ -2,40 +2,20 @@
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@bklit/ui/components/dropdown-menu";
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@bklit/ui/components/tooltip";
-import { BklitLogo } from "@bklit/ui/icons/bklit";
 import Link from "next/link";
+import { LogoDropdown } from "./logo-dropdown";
 
 export const PageHeader = () => {
   return (
-    <header className="fixed z-50 w-full flex p-3 py-5 md:py-3 bg-linear-to-b from-background to-transparent">
+    <header className="fixed z-50 w-full flex p-3 py-5 md:py-3 bg-linear-to-b from-background to-transparent progressive-blur">
       <div className="container max-w-6xl mx-auto px-4">
         <div className="flex items-center gap-2 justify-between">
           <div className="flex items-start gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-3 cursor-pointer">
-                  <BklitLogo size={38} className="dark:text-white text-black" />
-                  <span className="text-2xl font-bold">Bklit</span>
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Copy SVG</DropdownMenuItem>
-                <DropdownMenuItem>Copy React</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Download Zip</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <LogoDropdown />
             <Badge variant="secondary" className="opacity-70 hover:opacity-100">
               Beta
             </Badge>

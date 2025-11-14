@@ -8,18 +8,18 @@ export const Hero = () => {
     <div className="container mx-auto max-w-6xl flex flex-col px-4">
       <div className="grid grid-cols-1 grid-rows-1">
         <div className="grid grid-cols-1 grid-rows-1 col-span-1 col-start-1 row-start-1">
-          <div className="col-start-1 row-start-1 w-full flex justify-end">
-            <img src="/diamond.svg" alt="Bklit" className="w-4/5" />
+          <div className="col-start-1 row-start-1 w-full flex items-start md:items-center justify-end">
+            <img src="/diamond.svg" alt="Bklit" className="w-3/5 md:w-4/5" />
           </div>
           <div className="col-start-1 row-start-1 bg-linear-to-b from-transparent to-background" />
         </div>
-        <div className="col-span-1 col-start-1 row-start-1 py-26 pt-36">
+        <div className="col-span-1 col-start-1 row-start-1 py py-26 pt-26 md:pt-36">
           <div className="grid grid-cols-2 w-full">
             <div className="py-10 space-y-6 max-w-2xl col-span-2 lg:col-span-1">
-              <h1 className="text-6xl font-bold leading-tight bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+              <h1 className="text-4xl md:text-6xl font-bold leading-tight bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
                 Analytics for developers who build at scale
               </h1>
-              <p className="font-mono text-lg">
+              <p className="font-mono text-base md:text-lg">
                 Join the companies that use our open-source analytics to track
                 what matters, understand customers, experiment faster, and turn
                 data into growth.

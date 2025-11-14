@@ -184,3 +184,7 @@
     @apply bg-muted py-1 px-1.5 text-xs rounded font-mono;
   }
 }
+
+@utility progressive-blur {
+  @apply backdrop-blur-md mask-b-from-65%;
+}

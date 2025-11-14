@@ -8,7 +8,7 @@ import {
 export const FAQ = () => {
   return (
     <div className="container mx-auto max-w-6xl px-4 mt-24">
-      <div className="grid grid-cols-5">
+      <div className="flex flex-col md:grid grid-cols-5">
         <div className="col-span-3 col-start-2 p-px border-t border-b border-dashed border-zinc-800">
           <div className="bg-background">
             <div className="flex flex-col gap-4 p-6">
