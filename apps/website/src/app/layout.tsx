@@ -34,11 +34,11 @@ export default async function RootLayout({
           <div className="col-span-1 col-start-1 row-start-1">
             <div className="container max-w-6xl mx-auto px-4 h-full">
               <div className="grid grid-cols-5 w-full min-h-screen h-full">
-                <div className="col-span-1 border-l border-dashed border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-dashed border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-dashed border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-dashed border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-r border-dashed border-zinc-800 h-full" />
+                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
+                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
+                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
+                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
+                <div className="col-span-1 border-l border-r border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
               </div>
             </div>
           </div>

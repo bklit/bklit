@@ -9,8 +9,8 @@ export const Footer = () => {
       <div className="block bg-linear-to-b from-transparent to-background h-48" />
       <footer className="bg-background mt-auto">
         <div className="container mx-auto max-w-6xl flex flex-col gap-24 px-4">
-          <div className="flex flex-col gap-6 text-center justify-center items-center bg-background bg-[radial-gradient(var(--color-zinc-800)_1px,transparent_1px)] bg-size-[10px_10px] p-8 md:p-32 border border-zinc-800">
-            <h3 className="text-2xl md:text-4xl font-bold bg-clip-text text-transparent bg-linear-to-b from-amber-100 to-emerald-100">
+          <div className="flex flex-col gap-6 text-center justify-center items-center bg-background bg-[radial-gradient(var(--color-zinc-400)_1px,transparent_1px)] dark:bg-[radial-gradient(var(--color-zinc-800)_1px,transparent_1px)] bg-size-[10px_10px] p-8 md:p-32 border border-zinc-200 dark:border-zinc-800">
+            <h3 className="text-2xl md:text-4xl font-bold dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
               Get started today
             </h3>
             <p className="text-sm md:text-md font-mono">
@@ -23,7 +23,7 @@ export const Footer = () => {
               </a>
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-zinc-800 border-dashed pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-zinc-200 dark:border-zinc-800 border-dashed pt-8">
             <div className="col-span-1 space-y-4">
               <h4 className="text-base font-bold">Company</h4>
               <ul className="flex flex-col gap-2 text-sm">
