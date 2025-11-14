@@ -59,7 +59,8 @@ export const ApiHealthAlertEmail = ({
 
           <Text style={text}>
             This alert was triggered after {consecutiveFailures} consecutive
-            failed health check{consecutiveFailures > 1 ? "s" : ""} (hourly checks).
+            failed health check{consecutiveFailures > 1 ? "s" : ""} (hourly
+            checks).
           </Text>
         </Section>
 
