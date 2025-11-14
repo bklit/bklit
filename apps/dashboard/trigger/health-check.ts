@@ -1,5 +1,5 @@
 import { prisma } from "@bklit/db/client";
-import { task } from "@trigger.dev/sdk/v3";
+import { schedules } from "@trigger.dev/sdk/v3";
 import { env } from "../src/env";
 
 interface HealthCheckResult {
@@ -10,7 +10,7 @@ interface HealthCheckResult {
   errorMessage?: string;
 }
 
-const ALERT_THRESHOLD = 60; // 60 checks = 5 minutes at 5-second intervals
+const ALERT_THRESHOLD = 1; // Alert after 1 consecutive failure (1 hour of downtime)
 const TIMEOUT_MS = 10000; // 10 seconds
 const SLOW_RESPONSE_MS = 5000; // 5 seconds
 
@@ -154,7 +154,7 @@ async function handleAlerting(
           const payload: EmailPayload = {
             endpoint,
             consecutiveFailures: updatedState.consecutiveFailures,
-            durationMinutes: (updatedState.consecutiveFailures * 5) / 60,
+            durationMinutes: updatedState.consecutiveFailures * 60, // Each check is 1 hour apart
           };
 
           // Update lastAlertSentAt inside transaction (DB commit happens first)
@@ -235,17 +235,13 @@ async function handleAlerting(
   }
 }
 
-export const healthCheckTask = task({
+export const healthCheckTask = schedules.task({
   id: "health-check",
-  trigger: {
-    type: "scheduled",
-    cron: "*/5 * * * * *", // Every 5 seconds
-  },
+  cron: "0 * * * *", // Every hour at minute 0
   retry: {
     maxAttempts: 3,
   },
-  run: async (payload, { ctx }) => {
-    const baseUrl = getBaseUrl();
+  run: async (_payload) => {
     const timestamp = new Date();
 
     // Check /api/track endpoint

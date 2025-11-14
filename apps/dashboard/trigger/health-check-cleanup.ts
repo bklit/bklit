@@ -1,19 +1,16 @@
 import { prisma } from "@bklit/db/client";
-import { task } from "@trigger.dev/sdk/v3";
+import { schedules } from "@trigger.dev/sdk/v3";
 
 // Data retention: Keep health check data for 90 days
 const RETENTION_DAYS = 90;
 
-export const healthCheckCleanupTask = task({
+export const healthCheckCleanupTask = schedules.task({
   id: "health-check-cleanup",
-  trigger: {
-    type: "scheduled",
-    cron: "0 2 * * *", // Daily at 2:00 AM UTC
-  },
+  cron: "0 2 * * *", // Daily at 2:00 AM UTC
   retry: {
     maxAttempts: 3,
   },
-  run: async (payload, { ctx }) => {
+  run: async (_payload) => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
 
