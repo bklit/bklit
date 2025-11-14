@@ -1,0 +1,38 @@
+name: Deploy Trigger.dev
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/dashboard/trigger/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.1
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: 🚀 Deploy Trigger.dev
+        working-directory: apps/dashboard
+        env:
+          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+        run: |
+          pnpm run deploy:trigger
