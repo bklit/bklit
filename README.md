@@ -1,7 +1,7 @@
 ![hero](https://repository-images.githubusercontent.com/985341745/de876cb4-a2d4-449f-9e71-38d9910e626e)
 
 <p align="center">
-	<h1 align="center"><b>Bklit</b></h1>
+	<h1 align="center"><b>Bklit Inc</b></h1>
 <p align="center">
     Run your business smarter
     <br />
