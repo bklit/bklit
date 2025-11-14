@@ -308,6 +308,7 @@ bklit/
 - **UI:** shadcn/ui with Tailwind CSS v4
 - **API:** tRPC for type-safe APIs
 - **Monorepo:** Turborepo + pnpm workspaces
+- **Status Page:** Trigger.dev
 
 ## License
 
