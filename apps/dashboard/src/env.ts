@@ -59,5 +59,11 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
   },
   skipValidation:
-    !!process.env.CI || process.env.npm_lifecycle_event === "lint",
+    !!process.env.CI ||
+    process.env.npm_lifecycle_event === "lint" ||
+    !!process.env.TRIGGER_BUILD ||
+    process.env.NODE_ENV === "test" ||
+    // Skip validation during Trigger.dev task indexing/build phase
+    // (when env vars aren't loaded yet, but module is being evaluated)
+    (process.env.NODE_ENV !== "production" && !process.env.DATABASE_URL),
 });
