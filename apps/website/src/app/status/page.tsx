@@ -11,6 +11,9 @@ import { cn } from "@bklit/ui/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { StatusChart } from "@/components/status-chart";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function StatusPage() {
   let statusData = null;
 
