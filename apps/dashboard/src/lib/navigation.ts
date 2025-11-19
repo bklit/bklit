@@ -1,5 +1,6 @@
 import {
   Eye,
+  Layers2,
   MousePointerClick,
   PanelsTopLeft,
   SendHorizontal,
@@ -22,12 +23,28 @@ export const navigationConfig: NavigationConfig = {
   // Organization level navigation (when at /[organizationId])
   organization: [
     {
-      title: "Overview",
+      title: "Projects",
+      icon: Layers2,
       href: "/[organizationId]",
     },
     {
       title: "Settings",
+      icon: Settings,
       href: "/[organizationId]/settings",
+      items: [
+        {
+          title: "General",
+          href: "/[organizationId]/settings",
+        },
+        {
+          title: "API Tokens",
+          href: "/[organizationId]/settings/api-tokens",
+        },
+        {
+          title: "Billing",
+          href: "/[organizationId]/settings/billing",
+        },
+      ],
     },
   ],
 

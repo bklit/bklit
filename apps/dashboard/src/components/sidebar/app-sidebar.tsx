@@ -53,6 +53,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     enabled: isProjectLevel && !!projectId && !!organizationId,
   });
 
+  const { data: organization } = useQuery({
+    ...trpc.organization.fetch.queryOptions({
+      id: organizationId ?? "",
+    }),
+    enabled: !isProjectLevel && !!organizationId,
+  });
+
   return (
     <Sidebar
       collapsible="icon"
@@ -70,7 +77,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {isProjectLevel ? (
           <NavProject projectName={project?.name} items={resolvedItems} />
         ) : (
-          <NavWorkspace items={resolvedItems} />
+          <NavWorkspace
+            workspaceName={organization?.name}
+            items={resolvedItems}
+          />
         )}
       </SidebarContent>
     </Sidebar>
