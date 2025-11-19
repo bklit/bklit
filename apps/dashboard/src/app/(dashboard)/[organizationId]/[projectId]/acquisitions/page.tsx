@@ -1,17 +1,19 @@
 import { Acquisitions } from "@/components/acquisitions";
 
 interface AcquisitionsPageProps {
-  params: {
+  params: Promise<{
     organizationId: string;
     projectId: string;
-  };
+  }>;
 }
 
-export default function AcquisitionsPage({ params }: AcquisitionsPageProps) {
+export default async function AcquisitionsPage({ params }: AcquisitionsPageProps) {
+  const { organizationId, projectId } = await params;
+  
   return (
     <Acquisitions
-      organizationId={params.organizationId}
-      projectId={params.projectId}
+      organizationId={organizationId}
+      projectId={projectId}
     />
   );
 }
