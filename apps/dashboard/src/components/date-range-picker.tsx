@@ -81,7 +81,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
       <Popover open={isOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
             className="justify-start text-left font-normal"
           >

@@ -3,13 +3,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
 const cardVariants = cva(
-  "bg-card backdrop-blur-sm text-card-foreground flex flex-col rounded-xl pb-6 shadow-sm border border-bklit-600",
+  "bg-card backdrop-blur-sm text-card-foreground flex flex-col rounded-xl pb-6 border border-bklit-600",
   {
     variants: {
       variant: {
         default: "bg-card",
-        destructive:
-          "border-destructive/10 dark:border-destructive/20 border-t bg-[radial-gradient(var(--bklit-700)_1px,transparent_1px)] bg-size-[16px_16px] before:content-[''] before:absolute before:inset-0 before:bg-linear-to-b before:from-red-900/10 before:to-bklit-900 before:rounded-xl before:z-[-1]",
+        destructive: "border-destructive/20 dark:border-destructive/50 ",
       },
     },
     defaultVariants: {

@@ -9,6 +9,7 @@ import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -53,87 +54,71 @@ export const OrganizationDashboard = ({
       <PageHeader
         title={organization.name}
         description="Manage your team and projects."
-      />
+      >
+        {organization.userMembership.role === "owner" && (
+          <Button asChild>
+            <Link href={`/${organizationId}/projects/create`}>
+              <Plus size={16} />
+              Create project
+            </Link>
+          </Button>
+        )}
+      </PageHeader>
       <div className="container mx-auto flex gap-4">
         <div className="w-1/5 flex flex-col gap-4">
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-normal flex items-center gap-2">
-                Your team
-              </h4>
-              {organization.userMembership.role === "owner" && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setInviteDialogOpen(true)}
-                    >
-                      <Plus size={16} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Invite member</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-
-            <Card>
-              <CardContent>
-                <div className="space-y-3">
-                  {organization.members.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between"
-                    >
-                      {/* {member.user.name}
+          <Card>
+            <CardHeader>
+              <CardTitle>Team</CardTitle>
+              <CardDescription>Manage your team.</CardDescription>
+              <CardAction>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setInviteDialogOpen(true)}
+                >
+                  <Plus size={16} />
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {organization.members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between"
+                  >
+                    {/* {member.user.name}
                       {member.user.email}*/}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Avatar>
-                            <AvatarImage src={member.user.image || ""} />
-                            <AvatarFallback>
-                              {member.user.name?.[0]?.toUpperCase() || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{member.user.name}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Badge
-                        variant={
-                          member.role === "owner" ? "secondary" : "outline"
-                        }
-                      >
-                        {member.role}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Avatar>
+                          <AvatarImage src={member.user.image || ""} />
+                          <AvatarFallback>
+                            {member.user.name?.[0]?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{member.user.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Badge
+                      variant={
+                        member.role === "owner" ? "secondary" : "outline"
+                      }
+                    >
+                      {member.role}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="w-4/5">
           {/* Projects Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-normal flex items-center gap-2">
-                Projects
-              </h4>
-              {organization.userMembership.role === "owner" && (
-                <Button asChild>
-                  <Link href={`/${organizationId}/projects/create`}>
-                    <Plus size={16} />
-                    Create project
-                  </Link>
-                </Button>
-              )}
-            </div>
-
             {organization.projects.length === 0 ? (
               <Card>
                 <Empty>
