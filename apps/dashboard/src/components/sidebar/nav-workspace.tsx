@@ -76,4 +76,3 @@ export function NavWorkspace({ workspaceName, items }: NavWorkspaceProps) {
     </SidebarGroup>
   );
 }
-

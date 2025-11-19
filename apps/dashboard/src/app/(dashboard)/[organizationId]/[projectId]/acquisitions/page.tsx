@@ -7,13 +7,10 @@ interface AcquisitionsPageProps {
   }>;
 }
 
-export default async function AcquisitionsPage({ params }: AcquisitionsPageProps) {
+export default async function AcquisitionsPage({
+  params,
+}: AcquisitionsPageProps) {
   const { organizationId, projectId } = await params;
-  
-  return (
-    <Acquisitions
-      organizationId={organizationId}
-      projectId={projectId}
-    />
-  );
+
+  return <Acquisitions organizationId={organizationId} projectId={projectId} />;
 }
