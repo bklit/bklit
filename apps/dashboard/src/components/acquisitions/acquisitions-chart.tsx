@@ -147,7 +147,7 @@ export function AcquisitionsChart({
 
   return (
     <Card className="pt-0">
-      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+      <CardHeader>
         <div className="grid flex-1 gap-1">
           <CardTitle>Acquisitions Over Time</CardTitle>
           <CardDescription>
@@ -205,7 +205,10 @@ export function AcquisitionsChart({
                     </linearGradient>
                   ))}
                 </defs>
-                <CartesianGrid vertical={false} />
+                <CartesianGrid
+                  stroke="var(--bklit-500)"
+                  strokeDasharray="3 3"
+                />
                 <XAxis
                   dataKey="date"
                   tickLine={false}

@@ -17,18 +17,18 @@ export default async function DashboardLayout({
 
   return (
     <WorkspaceProvider session={session} organizations={organizations}>
-      <SidebarProvider>
-        <AppSidebar />
+      <SidebarProvider className="flex flex-col">
+        <SiteHeader />
+        <div className="flex flex-1 pt-(--header-height)">
+          <AppSidebar />
 
-        <SidebarInset>
-          <div className="flex flex-col min-h-screen ">
-            <SiteHeader />
-            <main className="flex-1 flex flex-col bg-background">
+          <SidebarInset>
+            <main className="flex flex-col bg-bklit-800 border border-border rounded-xl overflow-auto h-0 min-h-full p-8">
               {children}
             </main>
             {modal}
-          </div>
-        </SidebarInset>
+          </SidebarInset>
+        </div>
       </SidebarProvider>
     </WorkspaceProvider>
   );

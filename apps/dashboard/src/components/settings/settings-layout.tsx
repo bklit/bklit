@@ -26,7 +26,7 @@ export function SettingsLayout({
       <PageHeader title={title} description={description}>
         {headerActions}
       </PageHeader>
-      <div className="container mx-auto py-6 px-4 flex gap-4">
+      <div className="container mx-auto flex gap-4">
         <div className="w-1/6">
           <SettingsNavigation
             type={navigationType}

@@ -29,7 +29,7 @@ export default async function BillingPage({
 
     if (!organization) {
       return (
-        <div className="container mx-auto py-6 px-4">
+        <div className="container mx-auto">
           <PageHeader
             title="Billing"
             description="No organization found. Please create an organization first."

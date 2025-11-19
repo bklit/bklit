@@ -39,20 +39,18 @@ export const Stats = ({ items }: StatsProps) => {
         const Icon = item.icon;
         return (
           <Card key={item.name} className="gap-0">
-            <CardHeader className="pt-1">
+            <CardHeader className="pb-1">
               <div className="flex items-center gap-2">
                 <Icon className="size-4 text-muted-foreground" />
                 <CardTitle> {item.name}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2">
-                <div className="text-4xl font-semibold">
-                  <NumberFlow
-                    value={Number(item.stat)}
-                    suffix={item.suffix || ""}
-                  />
-                </div>
+              <div className="text-4xl font-semibold">
+                <NumberFlow
+                  value={Number(item.stat)}
+                  suffix={item.suffix || ""}
+                />
               </div>
             </CardContent>
           </Card>

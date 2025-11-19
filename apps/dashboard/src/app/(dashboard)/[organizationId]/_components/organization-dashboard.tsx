@@ -54,7 +54,7 @@ export const OrganizationDashboard = ({
         title={organization.name}
         description="Manage your team and projects."
       />
-      <div className="container mx-auto py-6 px-4 flex gap-4">
+      <div className="container mx-auto flex gap-4">
         <div className="w-1/5 flex flex-col gap-4">
           <section className="space-y-4">
             <div className="flex items-center justify-between">

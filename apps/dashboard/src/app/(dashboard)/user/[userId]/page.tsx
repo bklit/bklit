@@ -59,7 +59,7 @@ export default async function UserPage({
         </Button>
       </PageHeader>
 
-      <div className="container mx-auto py-6 px-4 flex gap-4">
+      <div className="container mx-auto flex gap-4">
         {organizationMemberships.length === 0 ? (
           <Card>
             <CardContent className="pt-6">

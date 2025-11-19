@@ -3,12 +3,11 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
 const cardVariants = cva(
-  "bg-card backdrop-blur-sm text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm",
+  "bg-card backdrop-blur-sm text-card-foreground flex flex-col rounded-xl pb-6 shadow-sm border border-bklit-600",
   {
     variants: {
       variant: {
-        default:
-          "border-t border-bklit-600 bg-[radial-gradient(var(--bklit-600)_1px,transparent_1px)] bg-size-[16px_16px] before:content-[''] before:absolute before:inset-0 before:bg-linear-to-b before:from-transparent before:to-bklit-900 before:rounded-xl before:z-[-1]",
+        default: "bg-card",
         destructive:
           "border-destructive/10 dark:border-destructive/20 border-t bg-[radial-gradient(var(--bklit-700)_1px,transparent_1px)] bg-size-[16px_16px] before:content-[''] before:absolute before:inset-0 before:bg-linear-to-b before:from-red-900/10 before:to-bklit-900 before:rounded-xl before:z-[-1]",
       },
@@ -38,7 +37,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 py-6 has-data-[slot=card-action]:grid-cols-[1fr_auto]",
         className,
       )}
       {...props}
