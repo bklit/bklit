@@ -4,7 +4,7 @@ import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/header/page-header";
 import { PricingTable } from "@/components/plans/pricing-table";
-import { SettingsLayout } from "@/components/settings/settings-layout";
+import { SettingsNavigation } from "@/components/settings/settings-navigation";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
@@ -57,18 +57,22 @@ export default async function BillingPage({
     });
 
     return (
-      <SettingsLayout
-        title="Billing"
-        description={`Manage subscription and billing information for ${organization.name}.`}
-        navigationType="organizationSettings"
-        organizationId={organization.id}
-      >
+      <>
+        <PageHeader
+          title="Billing"
+          description={`Manage subscription and billing information for ${organization.name}.`}
+        >
+          <SettingsNavigation
+            type="organizationSettings"
+            organizationId={organizationId}
+          />
+        </PageHeader>
         <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
         <PricingTable
           organization={organization}
           subscriptions={subscriptions.result.items}
         />
-      </SettingsLayout>
+      </>
     );
   }
 
@@ -91,17 +95,21 @@ export default async function BillingPage({
   });
 
   return (
-    <SettingsLayout
-      title="Billing"
-      description={`Manage subscription and billing information for ${organization.name}.`}
-      navigationType="organizationSettings"
-      organizationId={organizationId}
-    >
+    <>
+      <PageHeader
+        title="Billing"
+        description={`Manage subscription and billing information for ${organization.name}.`}
+      >
+        <SettingsNavigation
+          type="organizationSettings"
+          organizationId={organizationId}
+        />
+      </PageHeader>
       <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
       <PricingTable
         organization={organization}
         subscriptions={subscriptions.result.items}
       />
-    </SettingsLayout>
+    </>
   );
 }

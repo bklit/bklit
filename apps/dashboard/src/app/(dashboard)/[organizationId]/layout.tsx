@@ -6,9 +6,9 @@ export default async function Layout({
   modal: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="container mx-auto">
       {children}
       {modal}
-    </>
+    </div>
   );
 }

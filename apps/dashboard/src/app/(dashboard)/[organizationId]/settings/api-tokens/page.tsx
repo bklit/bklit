@@ -1,6 +1,7 @@
 import { ApiTokens } from "@/components/api-tokens/api-tokens";
-import { CreateTokenButton } from "@/components/api-tokens/create-token-button";
-import { SettingsLayout } from "@/components/settings/settings-layout";
+// import { CreateTokenButton } from "@/components/api-tokens/create-token-button";
+import { PageHeader } from "@/components/header/page-header";
+import { SettingsNavigation } from "@/components/settings/settings-navigation";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
@@ -18,18 +19,21 @@ export default async function ApiTokensSettingsPage({
   ]);
 
   return (
-    <SettingsLayout
-      title="API Tokens"
-      description="Manage API tokens for authenticating your tracking requests."
-      headerActions={<CreateTokenButton organizationId={organizationId} />}
-      navigationType="organizationSettings"
-      organizationId={organizationId}
-    >
+    <>
+      <PageHeader
+        title="API Tokens"
+        description="Manage API tokens for authenticating your tracking requests."
+      >
+        <SettingsNavigation
+          type="organizationSettings"
+          organizationId={organizationId}
+        />
+      </PageHeader>
       <ApiTokens
         organizationId={organizationId}
         organizationName={organization.name}
         tokens={tokens}
       />
-    </SettingsLayout>
+    </>
   );
 }
