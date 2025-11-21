@@ -1,4 +1,5 @@
-import { SettingsLayout } from "@/components/settings/settings-layout";
+import { PageHeader } from "@/components/header/page-header";
+import { SettingsNavigation } from "@/components/settings/settings-navigation";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 import { OrganizationSettings } from "../../_components/organization-settings";
@@ -15,13 +16,17 @@ export default async function OrganizationSettingsPage({
   const organization = await api.organization.fetch({ id: organizationId });
 
   return (
-    <SettingsLayout
-      title="Settings"
-      description="Manage your organization settings."
-      navigationType="organizationSettings"
-      organizationId={organizationId}
-    >
+    <>
+      <PageHeader
+        title="Settings"
+        description="Manage your organization settings."
+      >
+        <SettingsNavigation
+          type="organizationSettings"
+          organizationId={organizationId}
+        />
+      </PageHeader>
       <OrganizationSettings organization={organization} />
-    </SettingsLayout>
+    </>
   );
 }

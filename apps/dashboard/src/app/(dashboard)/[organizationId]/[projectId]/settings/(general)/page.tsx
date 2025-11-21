@@ -7,14 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { CodeBlock } from "@bklit/ui/components/code-block";
 import { CodeBlockClient } from "@bklit/ui/components/code-block-client";
 import { CopyInput } from "@bklit/ui/components/input-copy";
 import { MemberRole } from "@bklit/utils/roles";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
+import { PageHeader } from "@/components/header/page-header";
 import { FormPermissions } from "@/components/permissions/form-permissions";
-import { SettingsLayout } from "@/components/settings/settings-layout";
+import { SettingsNavigation } from "@/components/settings/settings-navigation";
 import { authenticated } from "@/lib/auth";
 
 async function getSiteData(
@@ -65,13 +65,17 @@ export default async function ProjectDashboardPage({
 
   const { site } = siteData;
   return (
-    <SettingsLayout
-      title="Project settings"
-      description="Manage your projects settings."
-      navigationType="projectSettings"
-      organizationId={organizationId}
-      projectId={projectId}
-    >
+    <>
+      <PageHeader
+        title="Project settings"
+        description="Manage your projects settings."
+      >
+        <SettingsNavigation
+          type="projectSettings"
+          organizationId={organizationId}
+          projectId={projectId}
+        />
+      </PageHeader>
       <div className="space-y-4">
         <Card>
           <CardHeader>
@@ -126,6 +130,6 @@ initBklit({
           </Card>
         </FormPermissions>
       </div>
-    </SettingsLayout>
+    </>
   );
 }

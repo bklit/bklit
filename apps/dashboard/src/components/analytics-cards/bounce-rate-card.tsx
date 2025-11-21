@@ -39,12 +39,10 @@ export async function BounceRateCard({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mt-4 h-[200px]">
-          <BounceRateChart
-            bouncedSessions={data.bouncedSessions}
-            totalSessions={data.totalSessions}
-          />
-        </div>
+        <BounceRateChart
+          bouncedSessions={data.bouncedSessions}
+          totalSessions={data.totalSessions}
+        />
       </CardContent>
     </Card>
   );

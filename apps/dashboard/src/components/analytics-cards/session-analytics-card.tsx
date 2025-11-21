@@ -38,7 +38,7 @@ export async function SessionAnalyticsCard({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader>
         <CardTitle>Recent Sessions</CardTitle>
         <Button asChild size="sm" variant="ghost">
           <Link href={`/${organizationId || ""}/${projectId}/sessions`}>

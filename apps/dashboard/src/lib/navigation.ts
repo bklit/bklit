@@ -1,7 +1,18 @@
+import {
+  Eye,
+  Layers2,
+  MousePointerClick,
+  PanelsTopLeft,
+  SendHorizontal,
+  Settings,
+  Split,
+} from "lucide-react";
+
 interface NavigationItem {
   title: string;
   href: string;
   icon?: React.ComponentType<{ className?: string }>;
+  items?: NavigationItem[];
 }
 
 interface NavigationConfig {
@@ -12,12 +23,28 @@ export const navigationConfig: NavigationConfig = {
   // Organization level navigation (when at /[organizationId])
   organization: [
     {
-      title: "Overview",
+      title: "Projects",
+      icon: Layers2,
       href: "/[organizationId]",
     },
     {
       title: "Settings",
+      icon: Settings,
       href: "/[organizationId]/settings",
+      items: [
+        {
+          title: "General",
+          href: "/[organizationId]/settings",
+        },
+        {
+          title: "API Tokens",
+          href: "/[organizationId]/settings/api-tokens",
+        },
+        {
+          title: "Billing",
+          href: "/[organizationId]/settings/billing",
+        },
+      ],
     },
   ],
 
@@ -25,27 +52,43 @@ export const navigationConfig: NavigationConfig = {
   project: [
     {
       title: "Overview",
+      icon: PanelsTopLeft,
       href: "/[organizationId]/[projectId]",
     },
     {
       title: "Sessions",
+      icon: Split,
       href: "/[organizationId]/[projectId]/sessions",
     },
     {
       title: "Events",
+      icon: MousePointerClick,
       href: "/[organizationId]/[projectId]/events",
     },
     {
       title: "Pageviews",
+      icon: Eye,
       href: "/[organizationId]/[projectId]/pageviews",
     },
     {
       title: "Acquisitions",
+      icon: SendHorizontal,
       href: "/[organizationId]/[projectId]/acquisitions",
     },
     {
       title: "Settings",
+      icon: Settings,
       href: "/[organizationId]/[projectId]/settings",
+      items: [
+        {
+          title: "General",
+          href: "/[organizationId]/[projectId]/settings",
+        },
+        {
+          title: "Notifications",
+          href: "/[organizationId]/[projectId]/settings/notifications",
+        },
+      ],
     },
   ],
 
@@ -125,5 +168,8 @@ export function replaceDynamicParams(
       .replace("[organizationId]", organizationId || "")
       .replace("[projectId]", projectId || "")
       .replace("[userId]", userId || ""),
+    items: item.items
+      ? replaceDynamicParams(item.items, organizationId, projectId, userId)
+      : undefined,
   }));
 }

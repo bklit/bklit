@@ -62,7 +62,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
           <DateRangePicker />
         </div>
       </PageHeader>
-      <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
+      <div className="container mx-auto flex flex-col gap-4">
         <Stats
           items={[
             {

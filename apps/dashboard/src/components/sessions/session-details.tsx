@@ -126,7 +126,7 @@ export function SessionDetails({
     return (
       <>
         <PageHeader title="Session Details" description="Session not found" />
-        <div className="container mx-auto py-6 px-4">
+        <div className="container mx-auto">
           <Card>
             <CardContent className="text-center py-8">
               <p className="text-muted-foreground">Session not found</p>
@@ -156,7 +156,7 @@ export function SessionDetails({
           </Link>
         </div>
       </PageHeader>
-      <div className="container mx-auto py-6 px-4 flex gap-4">
+      <div className="container mx-auto flex gap-4">
         <div className="w-3/12 flex flex-col gap-4">
           {/* Session Overview */}
           <Card>

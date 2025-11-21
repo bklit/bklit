@@ -14,7 +14,7 @@ export default function CreateOrganizationPage() {
         title="Create Workspace"
         description="Create your new workspace"
       />
-      <div className="container mx-auto py-6 px-4 flex gap-4">
+      <div className="container mx-auto flex gap-4">
         <Card className="w-full max-w-2xl">
           <CardContent>
             <AddOrganizationForm />

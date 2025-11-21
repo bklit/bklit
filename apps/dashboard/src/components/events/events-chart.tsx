@@ -72,7 +72,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
     return {
       total: {
         label: "Total Events",
-        color: "var(--bklit-500)",
+        color: "var(--bklit-400)",
       },
       views: {
         label: "Views",
@@ -123,7 +123,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
 
   return (
     <Card className="pt-0">
-      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+      <CardHeader>
         <div className="grid flex-1 gap-1">
           <CardTitle>Events Over Time</CardTitle>
           <CardDescription>
@@ -139,7 +139,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
               desktop={statsData?.desktopEvents || 0}
             />
           </div>
-          <div className="col-span-3">
+          <div className="col-span-3 ">
             <ChartContainer
               config={chartConfig}
               className="aspect-auto h-[250px] w-full"
@@ -183,7 +183,10 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
                     />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} />
+                <CartesianGrid
+                  stroke="var(--bklit-500)"
+                  strokeDasharray="3 3"
+                />
                 <XAxis
                   dataKey="date"
                   tickLine={false}

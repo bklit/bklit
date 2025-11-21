@@ -3,5 +3,5 @@ export default function SettingsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="w-full flex-1">{children}</div>;
+  return <div className="container mx-auto">{children}</div>;
 }

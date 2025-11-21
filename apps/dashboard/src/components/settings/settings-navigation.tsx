@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@bklit/ui/components/button";
+import { useSidebar } from "@bklit/ui/components/sidebar";
 import { cn } from "@bklit/ui/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,29 +18,34 @@ export function SettingsNavigation({
   organizationId,
   projectId,
 }: SettingsNavigationProps) {
+  const { open } = useSidebar();
   const pathname = usePathname();
   const items = navigationConfig[type] ?? [];
   const resolvedItems = replaceDynamicParams(items, organizationId, projectId);
 
-  return (
-    <nav className="flex flex-col gap-px">
-      {resolvedItems.map((item) => {
-        const isActive = pathname === item.href;
+  if (!open) {
+    return (
+      <nav className="flex flex-row gap-px">
+        {resolvedItems.map((item) => {
+          const isActive = pathname === item.href;
 
-        return (
-          <Button
-            key={item.href}
-            variant="ghost"
-            asChild
-            className={cn(
-              "justify-start",
-              isActive && "bg-accent text-accent-foreground",
-            )}
-          >
-            <Link href={item.href}>{item.title}</Link>
-          </Button>
-        );
-      })}
-    </nav>
-  );
+          return (
+            <Button
+              key={item.href}
+              variant="ghost"
+              asChild
+              className={cn(
+                "justify-start",
+                isActive && "bg-accent text-accent-foreground",
+              )}
+            >
+              <Link href={item.href}>{item.title}</Link>
+            </Button>
+          );
+        })}
+      </nav>
+    );
+  } else {
+    return null;
+  }
 }

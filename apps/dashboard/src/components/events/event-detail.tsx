@@ -140,7 +140,7 @@ export function EventDetail({
             </Link>
           </div>
         </PageHeader>
-        <div className="container mx-auto py-6 px-4">
+        <div className="container mx-auto">
           <Empty className="border border-bklit-600 bg-bklit-900">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -218,7 +218,7 @@ export function EventDetail({
         </div>
       </PageHeader>
 
-      <div className="container mx-auto py-6 px-4 space-y-6">
+      <div className="container mx-auto gap-4">
         {/* Key Metrics */}
         <Stats
           items={[
@@ -293,7 +293,10 @@ export function EventDetail({
                       />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid
+                    stroke="var(--bklit-500)"
+                    strokeDasharray="3 3"
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <XAxis
                     dataKey="date"

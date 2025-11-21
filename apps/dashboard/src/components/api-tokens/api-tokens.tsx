@@ -5,6 +5,7 @@ import { Button } from "@bklit/ui/components/button";
 import { ButtonGroup } from "@bklit/ui/components/button-group";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -20,7 +21,6 @@ import {
 } from "@bklit/ui/components/dropdown-menu";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -48,6 +48,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { DeleteApiTokenForm } from "@/components/forms/delete-api-token-form";
 import { UpdateApiTokenForm } from "@/components/forms/update-api-token-form";
+import { CreateTokenButton } from "./create-token-button";
 
 interface ApiToken {
   id: string;
@@ -97,6 +98,9 @@ export function ApiTokens({
           <CardHeader>
             <CardTitle>{organizationName} API Tokens</CardTitle>
             <CardDescription>Manage your API tokens</CardDescription>
+            <CardAction>
+              <CreateTokenButton organizationId={organizationId} />
+            </CardAction>
           </CardHeader>
           <CardContent>
             <ItemGroup>

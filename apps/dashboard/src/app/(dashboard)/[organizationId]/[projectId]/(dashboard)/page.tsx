@@ -13,6 +13,7 @@ import { SessionAnalyticsCard } from "@/components/analytics-cards/session-analy
 import { TopCountriesCard } from "@/components/analytics-cards/top-countries-card";
 import { ViewsCard } from "@/components/analytics-cards/views-card";
 import { WorldMapCard } from "@/components/analytics-cards/world-map-card";
+import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
 
 export default async function AnalyticsPage({
@@ -31,55 +32,64 @@ export default async function AnalyticsPage({
     ]);
 
   return (
-    <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
-      <div
-        className="grid gap-4 
+    <>
+      <PageHeader
+        title={`Welcome back, ${session.user.name}!`}
+        description="Quick insights..."
+      />
+      <div className="container mx-auto flex flex-col gap-4">
+        <div
+          className="grid gap-4 
       md:grid-cols-2 lg:grid-cols-3"
-      >
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <ViewsCard
-            projectId={projectId}
-            organizationId={organizationId}
-            initialStats={initialStats}
-            initialSessionData={initialSessionData}
-            initialLiveUsers={initialLiveUsers}
-          />
-        </Suspense>
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <TopCountriesCard projectId={projectId} userId={session.user.id} />
-        </Suspense>
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <RecentPageViewsCard projectId={projectId} userId={session.user.id} />
-        </Suspense>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="col-span-2">
-          <WorldMapCard />
-        </div>
-        <div className="col-span-2">
+        >
           <Suspense fallback={<AnalyticsCardSkeleton />}>
-            <SessionAnalyticsCard
+            <ViewsCard
               projectId={projectId}
               organizationId={organizationId}
+              initialStats={initialStats}
+              initialSessionData={initialSessionData}
+              initialLiveUsers={initialLiveUsers}
+            />
+          </Suspense>
+          <Suspense fallback={<AnalyticsCardSkeleton />}>
+            <TopCountriesCard projectId={projectId} userId={session.user.id} />
+          </Suspense>
+          <Suspense fallback={<AnalyticsCardSkeleton />}>
+            <RecentPageViewsCard
+              projectId={projectId}
+              userId={session.user.id}
             />
           </Suspense>
         </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <BrowserStatsCard projectId={projectId} userId={session.user.id} />
-        </Suspense>
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <MobileDesktopCard projectId={projectId} userId={session.user.id} />
-        </Suspense>
-        <Suspense fallback={<AnalyticsCardSkeleton />}>
-          <BounceRateCard projectId={projectId} userId={session.user.id} />
-        </Suspense>
-      </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="col-span-2">
+            <WorldMapCard />
+          </div>
+          <div className="col-span-2">
+            <Suspense fallback={<AnalyticsCardSkeleton />}>
+              <SessionAnalyticsCard
+                projectId={projectId}
+                organizationId={organizationId}
+              />
+            </Suspense>
+          </div>
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-2"></div>
-    </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Suspense fallback={<AnalyticsCardSkeleton />}>
+            <BrowserStatsCard projectId={projectId} userId={session.user.id} />
+          </Suspense>
+          <Suspense fallback={<AnalyticsCardSkeleton />}>
+            <MobileDesktopCard projectId={projectId} userId={session.user.id} />
+          </Suspense>
+          <Suspense fallback={<AnalyticsCardSkeleton />}>
+            <BounceRateCard projectId={projectId} userId={session.user.id} />
+          </Suspense>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2"></div>
+      </div>
+    </>
   );
 }

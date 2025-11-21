@@ -125,8 +125,8 @@ export function SessionsChart({
   }
 
   return (
-    <Card className="pt-0">
-      <CardHeader className="flex items-center gap-2 space-y-0 py-5 sm:flex-row">
+    <Card>
+      <CardHeader>
         <div className="grid flex-1 gap-1">
           <CardTitle>Sessions Over Time</CardTitle>
           <CardDescription>
@@ -134,7 +134,7 @@ export function SessionsChart({
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent>
         <div className="grid grid-cols-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
@@ -186,7 +186,10 @@ export function SessionsChart({
                     />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} />
+                <CartesianGrid
+                  stroke="var(--bklit-500)"
+                  strokeDasharray="3 3"
+                />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
