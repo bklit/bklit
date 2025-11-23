@@ -93,7 +93,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
             value={viewMode}
             onValueChange={(value) => setDateParams({ viewMode: value })}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger size="sm" className="w-[180px]">
               <SelectValue placeholder="Select view mode" />
             </SelectTrigger>
             <SelectContent>
@@ -104,7 +104,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
           <DateRangePicker />
         </div>
       </PageHeader>
-      <div className="container mx-auto py-6 px-4 flex flex-col gap-4">
+      <div className="container mx-auto flex flex-col gap-4">
         {/* Stats Cards */}
         <Stats
           items={[

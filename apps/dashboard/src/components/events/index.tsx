@@ -525,7 +525,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
         </SheetContent>
       </Sheet>
 
-      <div className="container mx-auto py-6 px-4 gap-4 flex flex-col">
+      <div className="container mx-auto flex flex-col gap-4">
         <Stats
           items={[
             {

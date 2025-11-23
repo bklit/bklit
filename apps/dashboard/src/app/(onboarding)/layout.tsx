@@ -1,3 +1,4 @@
+import { Diamonds } from "@bklit/ui/components/diamonds/diamonds";
 import { Toaster } from "@bklit/ui/components/sonner";
 import { BklitLogo } from "@bklit/ui/icons/bklit";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -22,12 +23,24 @@ export default function OnboardingLayout({
           </div>
         </div>
         <div className="bg-background relative hidden lg:grid grid-cols-1 grid-rows-1 h-full overflow-hidden">
-          <div className="col-start-1 row-start-1 w-full h-full isolate ">
-            <div className="absolute inset-0 bg-linear-to-br from-brand-500/20 to-background mix-blend-multiply" />
-            <BklitLogo className="absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 size-dvw mix-blend-multiply text-brand-300/10" />
-            <BklitLogo className="absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 size-dvw mix-blend-color-burn text-fuchsia-300/20" />
-            {/* <BklitLogo className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-96 text-white" /> */}
+          <div className="col-start-1 row-start-1 w-full h-full">
+            <Diamonds
+              vignetteStrength={0.8}
+              grainScale={0.5}
+              tileCount={3}
+              tileMinSize={60}
+              mouseDampening={0.71}
+              mirrorGradient={true}
+              spotlightRadius={1}
+              spotlightSoftness={1}
+              spotlightOpacity={1}
+              distortAmount={10}
+              shineDirection={"left"}
+              mixBlendMode={"normal"}
+              gradientColors={["#000000", "#d2f98b"]}
+            />
           </div>
+          <div className="col-start-1 row-start-1 w-full h-full bg-linear-to-b from-transparent via-background/10 to-background z-10 pointer-events-none" />
         </div>
       </div>
       <Toaster closeButton />

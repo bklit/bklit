@@ -1,4 +1,6 @@
+import { SidebarInset, SidebarProvider } from "@bklit/ui/components/sidebar";
 import { SiteHeader } from "@/components/header/site-header";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { WorkspaceProvider } from "@/contexts/workspace-provider";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
@@ -15,11 +17,19 @@ export default async function DashboardLayout({
 
   return (
     <WorkspaceProvider session={session} organizations={organizations}>
-      <div className="flex flex-col min-h-screen ">
+      <SidebarProvider className="flex flex-col">
         <SiteHeader />
-        <main className="flex-1 flex flex-col bg-background">{children}</main>
-        {modal}
-      </div>
+        <div className="flex flex-1 pt-(--header-height)">
+          <AppSidebar />
+
+          <SidebarInset>
+            <main className="flex flex-col bg-bklit-800 border border-border rounded-xl overflow-auto h-0 min-h-full p-8">
+              {children}
+            </main>
+            {modal}
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     </WorkspaceProvider>
   );
 }

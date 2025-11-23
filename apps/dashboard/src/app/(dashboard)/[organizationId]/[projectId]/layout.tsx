@@ -12,13 +12,13 @@ export default async function Layout({
   const { organizationId, projectId } = await params;
 
   return (
-    <div className="w-full flex-1">
+    <>
       {children}
       {modal}
       <LiveVisitorToasts
         projectId={projectId}
         organizationId={organizationId}
       />
-    </div>
+    </>
   );
 }
