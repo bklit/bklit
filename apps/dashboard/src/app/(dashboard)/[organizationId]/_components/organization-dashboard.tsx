@@ -75,6 +75,7 @@ export const OrganizationDashboard = ({
                   size="icon"
                   variant="ghost"
                   onClick={() => setInviteDialogOpen(true)}
+                  aria-label="Invite member"
                 >
                   <Plus size={16} />
                 </Button>
