@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@bklit/db": "workspace:*",
+    "@bklit/sdk": "workspace:*",
     "@bklit/ui": "workspace:*",
     "@bklit/utils": "workspace:*",
     "next": "catalog:",

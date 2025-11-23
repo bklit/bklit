@@ -14,6 +14,7 @@ model User {
   email         String       @unique
   emailVerified Boolean
   image         String?
+  role          String       @default("user")
   createdAt     DateTime
   updatedAt     DateTime
   accounts      Account[]
@@ -246,6 +247,7 @@ model ApiToken {
   tokenHash      String            @unique
   tokenPrefix    String
   organizationId String
+  allowedDomains String[]          @default([])
   createdAt      DateTime          @default(now())
   lastUsedAt     DateTime?
   expiresAt      DateTime?

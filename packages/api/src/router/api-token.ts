@@ -57,6 +57,7 @@ export const apiTokenRouter = {
         name: token.name,
         description: token.description,
         tokenPrefix: token.tokenPrefix,
+        allowedDomains: token.allowedDomains,
         createdAt: token.createdAt,
         lastUsedAt: token.lastUsedAt,
         expiresAt: token.expiresAt,
@@ -73,6 +74,7 @@ export const apiTokenRouter = {
         organizationId: z.string(),
         name: z.string().min(1).max(100),
         description: z.string().max(500).optional(),
+        allowedDomains: z.array(z.string()).optional(),
         projectIds: z.array(z.string()),
       }),
     )
@@ -127,6 +129,7 @@ export const apiTokenRouter = {
           tokenHash,
           tokenPrefix: prefix,
           organizationId: input.organizationId,
+          allowedDomains: input.allowedDomains || [],
           projects: {
             create: input.projectIds.map((projectId) => ({
               projectId,
@@ -169,6 +172,7 @@ export const apiTokenRouter = {
         organizationId: z.string(),
         name: z.string().min(1).max(100).optional(),
         description: z.string().max(500).optional().nullable(),
+        allowedDomains: z.array(z.string()).optional(),
         projectIds: z.array(z.string()).optional(),
       }),
     )
@@ -235,6 +239,9 @@ export const apiTokenRouter = {
           ...(input.name !== undefined && { name: input.name }),
           ...(input.description !== undefined && {
             description: input.description,
+          }),
+          ...(input.allowedDomains !== undefined && {
+            allowedDomains: input.allowedDomains,
           }),
         },
         include: {

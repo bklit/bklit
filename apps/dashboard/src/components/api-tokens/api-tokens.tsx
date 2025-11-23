@@ -21,6 +21,7 @@ import {
 } from "@bklit/ui/components/dropdown-menu";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -55,6 +56,7 @@ interface ApiToken {
   name: string;
   description: string | null;
   tokenPrefix: string;
+  allowedDomains: string[];
   createdAt: Date;
   lastUsedAt: Date | null;
   expiresAt: Date | null;
@@ -78,7 +80,6 @@ export function ApiTokens({
     id: string;
     name: string;
   } | null>(null);
-
   return (
     <>
       {tokens.length === 0 ? (
@@ -92,6 +93,9 @@ export function ApiTokens({
               Create your first token to get started.
             </EmptyDescription>
           </EmptyHeader>
+          <EmptyContent>
+            <CreateTokenButton organizationId={organizationId} />
+          </EmptyContent>
         </Empty>
       ) : (
         <Card>
@@ -121,9 +125,34 @@ export function ApiTokens({
                         )}
                       </ItemTitle>
                       <ItemDescription>
-                        {token.lastUsedAt
-                          ? `Last used on ${format(new Date(token.lastUsedAt), "PPp")}`
-                          : "Never used"}
+                        <div className="space-y-1">
+                          <div>
+                            {token.lastUsedAt
+                              ? `Last used on ${format(new Date(token.lastUsedAt), "PPp")}`
+                              : "Never used"}
+                          </div>
+                          {token.allowedDomains &&
+                          token.allowedDomains.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              <span className="text-xs text-muted-foreground">
+                                Allowed domains:
+                              </span>
+                              {token.allowedDomains.map((domain) => (
+                                <Badge
+                                  key={domain}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {domain}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              No domain restrictions
+                            </div>
+                          )}
+                        </div>
                       </ItemDescription>
                     </ItemContent>
                     <ItemActions>

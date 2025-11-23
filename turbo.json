@@ -9,6 +9,8 @@
     "build": {
       "env": [
         "BKLIT_WEBSITE_URL",
+        "NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN",
+        "NEXT_PUBLIC_BKLIT_API_HOST",
         "DATABASE_URL",
         "AUTH_SECRET",
         "AUTH_GITHUB_ID",

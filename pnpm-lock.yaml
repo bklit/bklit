@@ -307,6 +307,9 @@ importers:
       '@bklit/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@bklit/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@bklit/ui':
         specifier: workspace:*
         version: link:../../packages/ui

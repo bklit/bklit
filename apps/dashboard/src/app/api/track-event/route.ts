@@ -67,6 +67,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate domain if allowedDomains is specified
+    if (
+      tokenValidation.allowedDomains &&
+      tokenValidation.allowedDomains.length > 0
+    ) {
+      const origin = request.headers.get("origin");
+      const referer = request.headers.get("referer");
+
+      const requestDomain = origin
+        ? new URL(origin).hostname
+        : referer
+          ? new URL(referer).hostname
+          : null;
+
+      if (!requestDomain) {
+        return createCorsResponse(
+          { message: "Origin or Referer header required" },
+          403,
+        );
+      }
+
+      // Allow localhost in development (for local testing)
+      const isLocalhost =
+        requestDomain === "localhost" || requestDomain === "127.0.0.1";
+      if (isLocalhost && process.env.NODE_ENV === "development") {
+        // Skip domain validation for localhost in development
+      } else {
+        // Check if domain matches any allowed domain (exact match or subdomain)
+        const isAllowed = tokenValidation.allowedDomains.some(
+          (allowedDomain) => {
+            // Exact match
+            if (requestDomain === allowedDomain) return true;
+            // Subdomain match (e.g., www.example.com matches example.com)
+            if (requestDomain.endsWith(`.${allowedDomain}`)) return true;
+            return false;
+          },
+        );
+
+        if (!isAllowed) {
+          return createCorsResponse(
+            {
+              message: `Domain ${requestDomain} is not allowed for this token`,
+            },
+            403,
+          );
+        }
+      }
+    }
+
     // Check usage limits
     if (tokenValidation.organizationId) {
       const usageCheck = await checkEventLimit(tokenValidation.organizationId);
