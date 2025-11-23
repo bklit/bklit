@@ -41,7 +41,8 @@ export function NavWorkspace({ workspaceName, items }: NavWorkspaceProps) {
         {items.map((item) => {
           const Icon = item.icon || Building2;
           const isActive = item.items?.length
-            ? pathname.startsWith(item.href)
+            ? pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(`${item.href}/`))
             : pathname === item.href;
 
           return (
@@ -57,7 +58,7 @@ export function NavWorkspace({ workspaceName, items }: NavWorkspaceProps) {
                   {item.items.map((subItem) => {
                     const isSubItemActive = pathname === subItem.href;
                     return (
-                      <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubItem key={subItem.href}>
                         <SidebarMenuSubButton
                           asChild
                           isActive={isSubItemActive}
