@@ -672,6 +672,9 @@ declare global {
 }
 
 // Make functions available globally
-window.trackPageView = trackPageView;
-window.trackEvent = trackEvent;
-window.clearBklitSession = clearBklitSession;
+// Only expose to window in browser environment
+if (typeof window !== "undefined") {
+  window.trackPageView = trackPageView;
+  window.trackEvent = trackEvent;
+  window.clearBklitSession = clearBklitSession;
+}
