@@ -61,11 +61,18 @@ export async function POST(request: NextRequest) {
       const origin = request.headers.get("origin");
       const referer = request.headers.get("referer");
 
-      const requestDomain = origin
-        ? new URL(origin).hostname
-        : referer
-          ? new URL(referer).hostname
-          : null;
+      let requestDomain: string | null = null;
+      try {
+        if (origin) {
+          requestDomain = new URL(origin).hostname;
+        } else if (referer) {
+          requestDomain = new URL(referer).hostname;
+        }
+      } catch (error) {
+        // Malformed header values - treat as absent
+        console.warn("Failed to parse origin/referer header:", error);
+        requestDomain = null;
+      }
 
       if (!requestDomain) {
         return createCorsResponse(
