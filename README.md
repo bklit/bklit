@@ -113,9 +113,9 @@ You'll need to obtain the following credentials:
 **Website App** (for `apps/website`)
 
 - `NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN` - Required API token for website tracking integration
-- `NEXT_PUBLIC_BKLIT_API_HOST` - Optional, override API host URL (useful for development with ngrok or cloudflared tunnel)
+- `NEXT_PUBLIC_BKLIT_API_HOST` - Optional, override API host URL (useful for development with cloudflared tunnel)
   - Leave blank to use default production API host
-  - Example for local testing: `http://localhost:3000` or your tunnel URL
+  - Example for local testing: `http://localhost:3000` or your cloudflared tunnel URL
 
 **Optional**
 
@@ -153,6 +153,27 @@ pnpm dev
 
 The dashboard will be available at `http://localhost:3000`
 
+#### Using Cloudflared for Development Tunnels
+
+For remote testing or sharing your local instance, you can use Cloudflared to create a tunnel:
+
+1. **Start the development server** (in one terminal):
+   ```bash
+   pnpm dev
+   ```
+
+2. **Start Cloudflared tunnel** (in another terminal):
+   ```bash
+   cloudflared tunnel --url http://localhost:3000
+   ```
+
+3. **Update your environment variables** with the tunnel URL:
+   - Copy the `https://` URL that cloudflared provides (e.g., `https://abc123.trycloudflare.com`)
+   - Set `NEXT_PUBLIC_APP_URL` and `AUTH_URL` to this URL in your `.env` file
+   - For the playground, set `VITE_NGROK_URL` to this URL in `apps/playground/.env`
+
+**Note:** For local development between `localhost:5173` (playground) and `localhost:3000` (dashboard), a tunnel is **not required** thanks to CORS configuration.
+
 ### Setting Up the Playground (Demo App)
 
 The playground is a demo application that shows how to integrate the Bklit SDK.
@@ -184,6 +205,7 @@ The playground is a demo application that shows how to integrate the Bklit SDK.
    VITE_BKLIT_PROJECT_ID="your-project-id"  # From dashboard
    VITE_BKLIT_API_KEY="your-api-token"     # From step 2
    # VITE_NGROK_URL is optional - leave blank to use localhost:3000
+   # Set to your cloudflared tunnel URL if using a tunnel (e.g., https://abc123.trycloudflare.com)
    ```
 
 4. **Run the playground**
@@ -200,19 +222,6 @@ The playground is a demo application that shows how to integrate the Bklit SDK.
 
    You should see tracking events in your dashboard's analytics immediately!
 
-#### Optional: Using ngrok for Remote Testing
-
-If you need to test from external devices or share your local instance:
-
-```bash
-# Start ngrok tunnel to your dashboard
-ngrok http 3000
-
-# Update playground .env with the ngrok URL
-VITE_NGROK_URL=https://abc123.ngrok-free.app
-```
-
-**Note:** For local development between `localhost:5173` (playground) and `localhost:3000` (dashboard), ngrok is **not required** thanks to CORS configuration.
 
 ### Additional Scripts
 

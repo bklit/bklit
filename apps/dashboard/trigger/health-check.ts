@@ -15,7 +15,7 @@ const SLOW_RESPONSE_MS = 5000; // 5 seconds
 
 function getBaseUrl(): string {
   // Use NEXT_PUBLIC_APP_URL if set (works for both dev and prod)
-  // In dev mode with ngrok, this should be set to the ngrok URL
+  // In dev mode with cloudflared, this should be set to the cloudflared tunnel URL
   // In production, this should be set to https://app.bklit.com
   const envUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (envUrl) {
@@ -28,10 +28,11 @@ function getBaseUrl(): string {
     process.env.TRIGGER_ENV === "development";
 
   if (isDev) {
-    // Development: check for ngrok URL (only in dev mode)
-    const ngrokUrl = process.env.NGROK_URL || process.env.VITE_NGROK_URL;
-    if (ngrokUrl) {
-      return ngrokUrl;
+    // Development: check for tunnel URL (cloudflared or ngrok - only in dev mode)
+    // Note: VITE_NGROK_URL and NGROK_URL env vars still work for backward compatibility
+    const tunnelUrl = process.env.NGROK_URL || process.env.VITE_NGROK_URL;
+    if (tunnelUrl) {
+      return tunnelUrl;
     }
     // Development fallback: use localhost (won't work from Trigger.dev cloud, but good fallback)
     return "http://localhost:3000";

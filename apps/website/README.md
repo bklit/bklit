@@ -18,23 +18,26 @@
    pnpm prisma:generate:web
    ```
 
-4. **Start ngrok** (in a separate terminal)
-
-   ```bash
-   ngrok http 3000
-   ```
-
-5. **Build the SDK**
+4. **Build the SDK**
 
    ```bash
    pnpm build:sdk
    ```
 
-6. **Start the web app**
+5. **Start the web app**
 
    ```bash
    pnpm dev:web
    ```
+
+6. **Start Cloudflared tunnel** (optional, in a separate terminal for remote testing)
+
+   ```bash
+   cloudflared tunnel --url http://localhost:3000
+   ```
+
+   Copy the tunnel URL and update your `.env` file:
+   - Set `AUTH_URL` and `NEXT_PUBLIC_APP_URL` to the tunnel URL (e.g., `https://abc123.trycloudflare.com`)
 
 7. **Start the playground** (in another terminal)
    ```bash
