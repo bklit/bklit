@@ -30,7 +30,7 @@ export function BklitComponent({
   environment,
   debug,
 }: BklitComponentProps) {
-  if (!apiKey || !projectId) {
+  if (!projectId) {
     return null;
   }
 
