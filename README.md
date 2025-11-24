@@ -102,10 +102,26 @@ You'll need to obtain the following credentials:
   - Generate a secure random string: `openssl rand -base64 32`
   - Send in `Authorization: Bearer <secret>` header or `X-Health-Check-Secret: <secret>` header
 
+**Trigger.dev** (optional, for background jobs and scheduled tasks)
+
+- `TRIGGER_SECRET_KEY` - Optional, for Trigger.dev cloud execution
+- `TRIGGER_API_KEY` - Optional, for Trigger.dev API access
+- `TRIGGER_API_URL` - Optional, for Trigger.dev API endpoint
+- Set up Trigger.dev: [Trigger.dev Documentation](https://trigger.dev/docs)
+- **Note:** These are only required if you're using Trigger.dev cloud execution. For local development, Trigger.dev runs without these credentials.
+
+**Website App** (for `apps/website`)
+
+- `NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN` - Required API token for website tracking integration
+- `NEXT_PUBLIC_BKLIT_API_HOST` - Optional, override API host URL (useful for development with ngrok or cloudflared tunnel)
+  - Leave blank to use default production API host
+  - Example for local testing: `http://localhost:3000` or your tunnel URL
+
 **Optional**
 
 - `BKLIT_WEBSITE_URL` - Your marketing website URL (used for email template images)
 - `BKLIT_DEFAULT_PROJECT` - Auto-invite new users to this project's organization
+- `POLAR_FREE_PRODUCT_ID` - Optional, your Polar Free product ID (if you have a free plan)
 - `NODE_ENV` - Node environment (`development`, `production`, `test`)
 
 3. **Set up the database**
@@ -245,6 +261,8 @@ DATABASE_URL="your-production-database-url"
 - `RESEND_API_KEY`
 - `ALERT_EMAIL`
 - `HEALTH_CHECK_SECRET`
+- `TRIGGER_SECRET_KEY` / `TRIGGER_API_KEY` / `TRIGGER_API_URL` (if using Trigger.dev cloud)
+- `NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN` (for website app)
 
 ### Vercel Deployment
 
@@ -273,6 +291,93 @@ DATABASE_URL="your-production-database-url"
 - **Website:** `bklit.com`
 
 Add these in Vercel Project Settings → Domains
+
+### Cloudflare Setup (Required for Geolocation)
+
+To enable geolocation data collection, you need to set up Cloudflare as a proxy/CDN in front of your Vercel deployment. Cloudflare provides geolocation headers automatically when requests pass through their network.
+
+#### 1. Add Domain to Cloudflare
+
+1. **Sign up/Login to Cloudflare**
+   - Go to [cloudflare.com](https://cloudflare.com) and create an account (free tier works)
+
+2. **Add Your Domain**
+   - In Cloudflare dashboard, click "Add a Site"
+   - Enter your domain (e.g., `app.bklit.com`)
+   - Select the free plan
+
+3. **Update Nameservers**
+   - Cloudflare will provide you with nameservers
+   - Go to your domain registrar and update the nameservers to Cloudflare's
+   - Wait for DNS propagation (can take up to 24 hours, usually much faster)
+
+#### 2. Configure DNS Records
+
+1. **Add DNS Records in Cloudflare**
+   - Go to DNS → Records
+   - Add an A record or CNAME pointing to your Vercel deployment:
+     - **Type:** CNAME (recommended) or A
+     - **Name:** `app` (or `@` for root domain)
+     - **Target:** Your Vercel domain (e.g., `your-app.vercel.app`) or Vercel's IP
+     - **Proxy status:** Proxied (orange cloud icon) - **This is required!**
+
+2. **Ensure Proxy is Enabled**
+   - The orange cloud icon must be ON (proxied)
+   - This routes traffic through Cloudflare's network, enabling geolocation headers
+
+#### 3. Enable IP Geolocation
+
+1. **Navigate to Network Settings**
+   - In Cloudflare dashboard, go to Network tab
+
+2. **Enable IP Geolocation**
+   - Find "IP Geolocation" option
+   - Toggle it to "On"
+   - This enables Cloudflare to add geolocation headers to requests
+
+#### 4. Enable Managed Transforms (Required for Full Geolocation Data)
+
+1. **Navigate to Rules → Transform Rules**
+   - In Cloudflare dashboard, go to Rules → Transform Rules tab
+
+2. **Enable "Add visitor location headers"**
+   - This is a Managed Transform that adds comprehensive geolocation headers
+   - Go to Rules → Transform Rules → Managed Transforms
+   - Enable "Add visitor location headers" transform
+   - This adds headers like `CF-Region`, `CF-City`, `CF-Latitude`, `CF-Longitude`, `CF-TimeZone`, `CF-PostalCode`, etc.
+   - **Note:** Without this step, you'll only get basic headers like `CF-IPCountry`. This step is required for full geolocation data.
+
+#### 5. Configure SSL/TLS
+
+1. **Set SSL/TLS Mode**
+   - Go to SSL/TLS tab in Cloudflare
+   - Set mode to "Full" or "Full (strict)" (recommended)
+   - This ensures secure connection between Cloudflare and Vercel
+
+#### 6. Update Vercel Domain Settings
+
+1. **Add Custom Domain in Vercel**
+   - In Vercel project settings, add your domain
+   - Vercel will automatically configure SSL certificates
+
+2. **Verify Connection**
+   - Once DNS propagates, your domain should work through Cloudflare
+   - Test by visiting your domain - it should load your Vercel app
+
+#### How It Works
+
+Once configured:
+
+- Client requests → Cloudflare (adds geolocation headers) → Vercel → Your app
+- Your app reads geolocation from Cloudflare headers (`CF-IPCountry`, `CF-City`, etc.)
+- No external API calls needed for geolocation in production
+- Local development automatically falls back to ip-api.com when Cloudflare headers aren't present
+
+#### Local Development
+
+- Cloudflare headers won't be present in local development
+- The app automatically falls back to ip-api.com for geolocation
+- No additional configuration needed for local testing
 
 ## Development
 

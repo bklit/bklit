@@ -94,3 +94,29 @@ export function getCountryCodeForFlag(countryName: string): string {
 
   return found?.alpha2Code?.toLowerCase() || "xx";
 }
+
+/**
+ * Get full country name from a 2-letter or 3-letter country code
+ * @param countryCode - ISO 3166-1 alpha-2 (2-letter) or alpha-3 (3-letter) country code
+ * @returns Full country name, or "Unknown" if not found
+ */
+export function getCountryNameFromCode(countryCode: string): string {
+  if (!countryCode) {
+    return "Unknown";
+  }
+
+  const coordinates = getCountryCoordinates();
+  const normalizedCode = countryCode.toUpperCase().trim();
+
+  // First try to find by alpha-2 code (2-letter)
+  let found = coordinates.find(
+    (coord) => coord.alpha2Code === normalizedCode,
+  );
+
+  // If not found, try alpha-3 code (3-letter)
+  if (!found) {
+    found = coordinates.find((coord) => coord.alpha3Code === normalizedCode);
+  }
+
+  return found?.country || "Unknown";
+}

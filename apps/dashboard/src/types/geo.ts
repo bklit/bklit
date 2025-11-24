@@ -2,11 +2,11 @@
 
 // Basic geo location data
 export interface GeoLocation {
-  country: string;
+  country?: string;
   countryCode: string;
   region?: string;
   regionName?: string;
-  city: string;
+  city?: string;
   zip?: string;
   lat: number;
   lon: number;
