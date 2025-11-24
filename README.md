@@ -102,10 +102,26 @@ You'll need to obtain the following credentials:
   - Generate a secure random string: `openssl rand -base64 32`
   - Send in `Authorization: Bearer <secret>` header or `X-Health-Check-Secret: <secret>` header
 
+**Trigger.dev** (optional, for background jobs and scheduled tasks)
+
+- `TRIGGER_SECRET_KEY` - Optional, for Trigger.dev cloud execution
+- `TRIGGER_API_KEY` - Optional, for Trigger.dev API access
+- `TRIGGER_API_URL` - Optional, for Trigger.dev API endpoint
+- Set up Trigger.dev: [Trigger.dev Documentation](https://trigger.dev/docs)
+- **Note:** These are only required if you're using Trigger.dev cloud execution. For local development, Trigger.dev runs without these credentials.
+
+**Website App** (for `apps/website`)
+
+- `NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN` - Required API token for website tracking integration
+- `NEXT_PUBLIC_BKLIT_API_HOST` - Optional, override API host URL (useful for development with ngrok or cloudflared tunnel)
+  - Leave blank to use default production API host
+  - Example for local testing: `http://localhost:3000` or your tunnel URL
+
 **Optional**
 
 - `BKLIT_WEBSITE_URL` - Your marketing website URL (used for email template images)
 - `BKLIT_DEFAULT_PROJECT` - Auto-invite new users to this project's organization
+- `POLAR_FREE_PRODUCT_ID` - Optional, your Polar Free product ID (if you have a free plan)
 - `NODE_ENV` - Node environment (`development`, `production`, `test`)
 
 3. **Set up the database**
@@ -245,6 +261,8 @@ DATABASE_URL="your-production-database-url"
 - `RESEND_API_KEY`
 - `ALERT_EMAIL`
 - `HEALTH_CHECK_SECRET`
+- `TRIGGER_SECRET_KEY` / `TRIGGER_API_KEY` / `TRIGGER_API_URL` (if using Trigger.dev cloud)
+- `NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN` (for website app)
 
 ### Vercel Deployment
 
@@ -317,14 +335,26 @@ To enable geolocation data collection, you need to set up Cloudflare as a proxy/
    - Toggle it to "On"
    - This enables Cloudflare to add geolocation headers to requests
 
-#### 4. Configure SSL/TLS
+#### 4. Enable Managed Transforms (Required for Full Geolocation Data)
+
+1. **Navigate to Rules → Transform Rules**
+   - In Cloudflare dashboard, go to Rules → Transform Rules tab
+
+2. **Enable "Add visitor location headers"**
+   - This is a Managed Transform that adds comprehensive geolocation headers
+   - Go to Rules → Transform Rules → Managed Transforms
+   - Enable "Add visitor location headers" transform
+   - This adds headers like `CF-Region`, `CF-City`, `CF-Latitude`, `CF-Longitude`, `CF-TimeZone`, `CF-PostalCode`, etc.
+   - **Note:** Without this step, you'll only get basic headers like `CF-IPCountry`. This step is required for full geolocation data.
+
+#### 5. Configure SSL/TLS
 
 1. **Set SSL/TLS Mode**
    - Go to SSL/TLS tab in Cloudflare
    - Set mode to "Full" or "Full (strict)" (recommended)
    - This ensures secure connection between Cloudflare and Vercel
 
-#### 5. Update Vercel Domain Settings
+#### 6. Update Vercel Domain Settings
 
 1. **Add Custom Domain in Vercel**
    - In Vercel project settings, add your domain
