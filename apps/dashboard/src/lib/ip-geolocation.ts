@@ -1,4 +1,5 @@
 import type { GeoLocation, IpGeoResponse } from "@/types/geo";
+import { getCountryNameFromCode } from "@/lib/maps/country-coordinates";
 
 interface LocationData extends GeoLocation {
   ip: string;
@@ -33,7 +34,6 @@ function getLocationFromCloudflareHeaders(
 
   // Extract all available Cloudflare geolocation headers
   // Note: Header names are case-insensitive, but Cloudflare typically uses lowercase
-  const country = countryCode || undefined; // Use the already-checked countryCode
   const region = headers.get("cf-region") || undefined;
   const regionCode = headers.get("cf-regioncode") || undefined; // ISO region code
   const city = headers.get("cf-city") || undefined;
@@ -46,10 +46,16 @@ function getLocationFromCloudflareHeaders(
   const lat = latitude ? parseFloat(latitude) : null;
   const lon = longitude ? parseFloat(longitude) : null;
 
+  // Map Cloudflare's 2-letter country code to full country name
+  // Cloudflare provides CF-IPCountry as a 2-letter ISO 3166-1 alpha-2 code
+  // This ensures consistency with ip-api format and downstream consumers
+  const country = getCountryNameFromCode(countryCode);
+
   // Log available headers for debugging (only in development)
   if (process.env.NODE_ENV === "development") {
     console.log("Cloudflare geolocation headers:", {
       country,
+      countryCode,
       region,
       regionCode,
       city,
@@ -61,13 +67,10 @@ function getLocationFromCloudflareHeaders(
     });
   }
 
-  // Cloudflare provides country code but we need to map it to country name
-  // For now, we'll use the country code as both country and countryCode
-  // You may want to add a mapping function if you need full country names
   return {
     ip: ip,
-    country: country, // CF provides country code, not full name
-    countryCode: countryCode, // Use the already-checked countryCode
+    country: country, // Full country name mapped from code
+    countryCode: countryCode, // 2-letter ISO country code from Cloudflare
     region: regionCode || region, // Prefer regionCode if available, fallback to region
     regionName: region, // Full region name
     city: city,
