@@ -1,5 +1,6 @@
 "use server";
 
+import { prisma } from "@bklit/db/client";
 import { sendEmail } from "@bklit/email/client";
 import { BklitNewWorkspaceEmail } from "@bklit/email/emails/new-workspace";
 import { revalidatePath } from "next/cache";
@@ -57,23 +58,32 @@ export async function createOrganizationAction(
   }
 
   try {
-    // Check if user already owns an organization
-    const existingOrganizations = await api.organization.list();
-    const ownedOrganizations = existingOrganizations.filter((org) =>
-      org.members.some(
-        (member) =>
-          member.userId === session.user.id && member.role === "owner",
-      ),
-    );
+    // Check if user is super admin (bypasses limits)
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+    const isSuperAdmin = user?.role === "super_admin";
 
-    if (ownedOrganizations.length >= 1) {
-      return {
-        success: false,
-        message:
-          "You can only create one organization. Delete your existing organization to create a new one.",
-        newOrganizationId: undefined,
-        errors: {},
-      };
+    // Check if user already owns an organization (skip for super admin)
+    if (!isSuperAdmin) {
+      const existingOrganizations = await api.organization.list();
+      const ownedOrganizations = existingOrganizations.filter((org) =>
+        org.members.some(
+          (member) =>
+            member.userId === session.user.id && member.role === "owner",
+        ),
+      );
+
+      if (ownedOrganizations.length >= 1) {
+        return {
+          success: false,
+          message:
+            "You can only create one organization. Delete your existing organization to create a new one.",
+          newOrganizationId: undefined,
+          errors: {},
+        };
+      }
     }
 
     // Generate a URL-friendly slug from the organization name
@@ -99,23 +109,25 @@ export async function createOrganizationAction(
       };
     }
 
-    // Double-check at database level (race condition protection)
-    const doubleCheck = await api.organization.list();
-    const doubleCheckOwned = doubleCheck.filter((org) =>
-      org.members.some(
-        (member) =>
-          member.userId === session.user.id && member.role === "owner",
-      ),
-    );
+    // Double-check at database level (race condition protection) - skip for super admin
+    if (!isSuperAdmin) {
+      const doubleCheck = await api.organization.list();
+      const doubleCheckOwned = doubleCheck.filter((org) =>
+        org.members.some(
+          (member) =>
+            member.userId === session.user.id && member.role === "owner",
+        ),
+      );
 
-    if (doubleCheckOwned.length >= 1) {
-      return {
-        success: false,
-        message:
-          "You can only create one organization. Delete your existing organization to create a new one.",
-        newOrganizationId: undefined,
-        errors: {},
-      };
+      if (doubleCheckOwned.length >= 1) {
+        return {
+          success: false,
+          message:
+            "You can only create one organization. Delete your existing organization to create a new one.",
+          newOrganizationId: undefined,
+          errors: {},
+        };
+      }
     }
 
     const organization = await auth.api.createOrganization({

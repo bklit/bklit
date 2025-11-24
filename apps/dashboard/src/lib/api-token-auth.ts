@@ -6,6 +6,7 @@ interface TokenValidationResult {
   error?: string;
   tokenId?: string;
   organizationId?: string;
+  allowedDomains?: string[];
 }
 
 /**
@@ -30,9 +31,10 @@ export async function validateApiToken(
     // Since we can't query by the plain token, we need to fetch all tokens
     // and verify each one (this is acceptable for now, but could be optimized
     // by storing a prefix lookup or using a different approach)
+    const tokenPrefix = token.substring(0, 8);
     const tokens = await prisma.apiToken.findMany({
       where: {
-        tokenPrefix: token.substring(0, 8), // Use prefix to narrow search
+        tokenPrefix, // Use prefix to narrow search
       },
       include: {
         projects: true,
@@ -42,7 +44,7 @@ export async function validateApiToken(
     if (tokens.length === 0) {
       return {
         valid: false,
-        error: "Invalid token",
+        error: "Invalid token: No token found with this prefix",
       };
     }
 
@@ -59,7 +61,7 @@ export async function validateApiToken(
     if (!matchedToken) {
       return {
         valid: false,
-        error: "Invalid token",
+        error: "Invalid token: Token hash does not match",
       };
     }
 
@@ -79,7 +81,7 @@ export async function validateApiToken(
     if (!isAssignedToProject) {
       return {
         valid: false,
-        error: "Token is not authorized for this project",
+        error: `Token is not authorized for project ${projectId}. Token is assigned to: ${matchedToken.projects.map((p) => p.projectId).join(", ") || "no projects"}`,
       };
     }
 
@@ -93,6 +95,7 @@ export async function validateApiToken(
       valid: true,
       tokenId: matchedToken.id,
       organizationId: matchedToken.organizationId,
+      allowedDomains: matchedToken.allowedDomains,
     };
   } catch (error) {
     console.error("Error validating API token:", error);

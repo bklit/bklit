@@ -30,6 +30,7 @@ import { useTRPC } from "@/trpc/react";
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().max(500).nullable(),
+  allowedDomains: z.string().optional(),
   projectIds: z
     .array(z.string())
     .min(1, "At least one project must be selected"),
@@ -82,17 +83,36 @@ export function UpdateApiTokenForm({
     defaultValues: {
       name: "",
       description: "" as string | null,
+      allowedDomains: "",
       projectIds: [] as string[],
     },
     validators: {
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
+      // Parse domains from comma or newline separated string
+      const domains = value.allowedDomains
+        ? value.allowedDomains
+            .split(/[,\n]/)
+            .map((d) => d.trim())
+            .filter((d) => d.length > 0)
+            .map((d) => {
+              // Remove protocol if present
+              try {
+                const url = new URL(d.startsWith("http") ? d : `https://${d}`);
+                return url.hostname;
+              } catch {
+                return d;
+              }
+            })
+        : [];
+
       await updateToken.mutateAsync({
         id: tokenId,
         organizationId,
         name: value.name,
         description: value.description || null,
+        allowedDomains: domains,
         projectIds: value.projectIds,
       });
     },
@@ -102,6 +122,10 @@ export function UpdateApiTokenForm({
     if (token) {
       form.setFieldValue("name", token.name);
       form.setFieldValue("description", token.description || "");
+      form.setFieldValue(
+        "allowedDomains",
+        token.allowedDomains?.join("\n") || "",
+      );
       form.setFieldValue(
         "projectIds",
         token.projects.map((p) => p.id),
@@ -187,6 +211,32 @@ export function UpdateApiTokenForm({
                       />
                       <FieldDescription>
                         An optional description for this token.
+                      </FieldDescription>
+                    </Field>
+                  );
+                }}
+              </form.Field>
+
+              <form.Field name="allowedDomains">
+                {(field) => {
+                  return (
+                    <Field>
+                      <FieldLabel htmlFor={field.name}>
+                        Allowed Domains (optional)
+                      </FieldLabel>
+                      <Textarea
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value || ""}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="example.com&#10;www.example.com&#10;app.example.com"
+                        rows={3}
+                      />
+                      <FieldDescription>
+                        Restrict this token to specific domains. Enter one
+                        domain per line or comma-separated. Leave empty to allow
+                        all domains. Examples: example.com, www.example.com
                       </FieldDescription>
                     </Field>
                   );
