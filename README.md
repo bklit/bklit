@@ -274,6 +274,81 @@ DATABASE_URL="your-production-database-url"
 
 Add these in Vercel Project Settings → Domains
 
+### Cloudflare Setup (Required for Geolocation)
+
+To enable geolocation data collection, you need to set up Cloudflare as a proxy/CDN in front of your Vercel deployment. Cloudflare provides geolocation headers automatically when requests pass through their network.
+
+#### 1. Add Domain to Cloudflare
+
+1. **Sign up/Login to Cloudflare**
+   - Go to [cloudflare.com](https://cloudflare.com) and create an account (free tier works)
+
+2. **Add Your Domain**
+   - In Cloudflare dashboard, click "Add a Site"
+   - Enter your domain (e.g., `app.bklit.com`)
+   - Select the free plan
+
+3. **Update Nameservers**
+   - Cloudflare will provide you with nameservers
+   - Go to your domain registrar and update the nameservers to Cloudflare's
+   - Wait for DNS propagation (can take up to 24 hours, usually much faster)
+
+#### 2. Configure DNS Records
+
+1. **Add DNS Records in Cloudflare**
+   - Go to DNS → Records
+   - Add an A record or CNAME pointing to your Vercel deployment:
+     - **Type:** CNAME (recommended) or A
+     - **Name:** `app` (or `@` for root domain)
+     - **Target:** Your Vercel domain (e.g., `your-app.vercel.app`) or Vercel's IP
+     - **Proxy status:** Proxied (orange cloud icon) - **This is required!**
+
+2. **Ensure Proxy is Enabled**
+   - The orange cloud icon must be ON (proxied)
+   - This routes traffic through Cloudflare's network, enabling geolocation headers
+
+#### 3. Enable IP Geolocation
+
+1. **Navigate to Network Settings**
+   - In Cloudflare dashboard, go to Network tab
+
+2. **Enable IP Geolocation**
+   - Find "IP Geolocation" option
+   - Toggle it to "On"
+   - This enables Cloudflare to add geolocation headers to requests
+
+#### 4. Configure SSL/TLS
+
+1. **Set SSL/TLS Mode**
+   - Go to SSL/TLS tab in Cloudflare
+   - Set mode to "Full" or "Full (strict)" (recommended)
+   - This ensures secure connection between Cloudflare and Vercel
+
+#### 5. Update Vercel Domain Settings
+
+1. **Add Custom Domain in Vercel**
+   - In Vercel project settings, add your domain
+   - Vercel will automatically configure SSL certificates
+
+2. **Verify Connection**
+   - Once DNS propagates, your domain should work through Cloudflare
+   - Test by visiting your domain - it should load your Vercel app
+
+#### How It Works
+
+Once configured:
+
+- Client requests → Cloudflare (adds geolocation headers) → Vercel → Your app
+- Your app reads geolocation from Cloudflare headers (`CF-IPCountry`, `CF-City`, etc.)
+- No external API calls needed for geolocation in production
+- Local development automatically falls back to ip-api.com when Cloudflare headers aren't present
+
+#### Local Development
+
+- Cloudflare headers won't be present in local development
+- The app automatically falls back to ip-api.com for geolocation
+- No additional configuration needed for local testing
+
 ## Development
 
 This is a monorepo managed with [Turborepo](https://turbo.build/repo) and [pnpm workspaces](https://pnpm.io/workspaces).

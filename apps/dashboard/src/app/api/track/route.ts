@@ -153,7 +153,8 @@ export async function POST(request: NextRequest) {
 
     if (clientIP) {
       try {
-        locationData = await getLocationFromIP(clientIP);
+        // Pass request object to getLocationFromIP so it can read Cloudflare headers
+        locationData = await getLocationFromIP(clientIP, request);
         if (locationData) {
           console.log(
             `Location data retrieved for IP ${clientIP}: ${locationData.city}, ${locationData.country}`,
