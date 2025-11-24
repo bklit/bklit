@@ -33,10 +33,10 @@ function getLocationFromCloudflareHeaders(
 
   // Extract all available Cloudflare geolocation headers
   // Note: Header names are case-insensitive, but Cloudflare typically uses lowercase
-  const country = headers.get("cf-ipcountry") || "";
+  const country = countryCode || undefined; // Use the already-checked countryCode
   const region = headers.get("cf-region") || undefined;
   const regionCode = headers.get("cf-regioncode") || undefined; // ISO region code
-  const city = headers.get("cf-city") || "";
+  const city = headers.get("cf-city") || undefined;
   const postalCode = headers.get("cf-postalcode") || undefined; // Postal/ZIP code
   const latitude = headers.get("cf-latitude");
   const longitude = headers.get("cf-longitude");
@@ -67,7 +67,7 @@ function getLocationFromCloudflareHeaders(
   return {
     ip: ip,
     country: country, // CF provides country code, not full name
-    countryCode: country,
+    countryCode: countryCode, // Use the already-checked countryCode
     region: regionCode || region, // Prefer regionCode if available, fallback to region
     regionName: region, // Full region name
     city: city,
