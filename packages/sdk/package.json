@@ -26,16 +26,30 @@
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "BKLIT_ENVIRONMENT=production tsup src/index.ts --format esm,cjs --dts --clean",
-    "dev": "BKLIT_ENVIRONMENT=development BKLIT_DEBUG=true tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "BKLIT_ENVIRONMENT=production tsup src/index.ts src/nextjs.tsx --format esm,cjs --dts --clean",
+    "dev": "BKLIT_ENVIRONMENT=development BKLIT_DEBUG=true tsup src/index.ts src/nextjs.tsx --format esm,cjs --dts --watch",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "next": ">=13.0.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./nextjs": {
+      "types": "./dist/nextjs.d.ts",
+      "import": "./dist/nextjs.mjs",
+      "require": "./dist/nextjs.js"
     }
   },
   "files": [

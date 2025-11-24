@@ -655,6 +655,7 @@ function buildHeaders(apiKey?: string): HeadersInit {
 // Store configuration globally for manual tracking
 declare global {
   interface Window {
+    initBklit?: (options: BklitOptions) => void;
     trackPageView?: () => void;
     trackEvent?: (
       trackingId: string,
@@ -674,6 +675,7 @@ declare global {
 // Make functions available globally
 // Only expose to window in browser environment
 if (typeof window !== "undefined") {
+  window.initBklit = initBklit;
   window.trackPageView = trackPageView;
   window.trackEvent = trackEvent;
   window.clearBklitSession = clearBklitSession;
