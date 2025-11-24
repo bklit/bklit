@@ -12,6 +12,8 @@ pnpm add @bklit/sdk
 
 ## Quick Start
 
+### Vanilla JavaScript / React
+
 ```javascript
 import { initBklit } from "@bklit/sdk";
 
@@ -23,9 +25,46 @@ initBklit({
 });
 ```
 
+### Next.js
+
+For Next.js applications, use the `BklitComponent`:
+
+```tsx
+import { BklitComponent } from "@bklit/sdk/nextjs";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html>
+      <body>
+        <BklitComponent
+          projectId="your-project-id"
+          apiKey="your-api-key"
+          debug={process.env.NODE_ENV === "development"}
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
 Get your `projectId` and `apiKey` from your [Bklit Dashboard](https://app.bklit.com).
 
 ## Configuration Options
+
+### `BklitComponent` (Next.js)
+
+**Props:**
+
+- `projectId` (string, **required**) - Your unique project identifier
+- `apiKey` (string, optional) - Your API authentication token
+- `apiHost` (string, optional) - API endpoint URL. Defaults to `https://app.bklit.com/api/track`
+- `environment` (string, optional) - Environment mode: `"development"` or `"production"`. Defaults to `"production"`
+- `debug` (boolean, optional) - Enable debug logging. Defaults to `false`
 
 ### `initBklit(options)`
 
