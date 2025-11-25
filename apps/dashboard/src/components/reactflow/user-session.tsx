@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@bklit/ui/components/badge";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactFlow, {
   addEdge,
@@ -25,7 +26,7 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { format } from "date-fns";
-import { Clock } from "lucide-react";
+import { ArrowUpFromDot, Clock, CornerDownRight, Timer } from "lucide-react";
 import { cleanUrl } from "@/lib/utils";
 
 // Types for session data
@@ -101,86 +102,119 @@ function WebPageNode({ data }: NodeProps) {
               <Clock className="w-3 h-3" />
               <span>{data.timestamp}</span>
             </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span>Visited {visitCount} times</span>
+            </div>
           </div>
 
           {navigation && navigation.length > 0 ? (
-            <div className="border-t pt-3 space-y-2">
-              <div className="text-xs font-medium text-muted-foreground mb-2">
-                Navigation
-              </div>
-              {visitCount && visitCount > 1 && (
-                <div className="text-xs text-muted-foreground mb-2">
-                  Visited {visitCount} times
-                </div>
-              )}
-              <div className="space-y-1.5 text-xs">
-                {navigation.map((item, idx) => {
-                  if (item.type === "from") {
-                    if (item.page === "Entry") {
-                      return (
+            <div className="border-t pt-3 text-xs">
+              {navigation.map((item, idx) => {
+                // Check if we need to insert a "..." separator
+                const needsSeparator =
+                  item.type === "from" &&
+                  idx > 0 &&
+                  navigation[idx - 1]?.type === "to" &&
+                  navigation[idx - 1]?.page !== item.page &&
+                  navigation[idx - 1]?.page !== "Exit";
+
+                // Render separator if needed
+                const separator = needsSeparator ? (
+                  <div className="w-6 h-6 flex items-center justify-center">
+                    <ArrowUpFromDot
+                      size={12}
+                      key={`separator-${idx}`}
+                      className="rotate-180 text-muted-foreground/30"
+                    />
+                  </div>
+                ) : null;
+
+                if (item.type === "from") {
+                  if (item.page === "Entry") {
+                    return (
+                      <>
+                        {separator}
                         <div
                           key={idx}
-                          className="flex items-center justify-between text-muted-foreground"
+                          className="flex flex-col gap-1 text-muted-foreground"
                         >
-                          <span className="font-semibold text-foreground">
-                            Entry
-                          </span>
+                          <Badge variant="success">Entry</Badge>
                           {item.time !== undefined && (
-                            <span className="text-muted-foreground/70">
-                              {formatDuration(item.time)}
-                            </span>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <div className="w-6 h-6 flex items-center justify-center">
+                                <Timer
+                                  size={12}
+                                  className="text-muted-foreground/30"
+                                />
+                              </div>
+                              viewed for {formatDuration(item.time)}
+                            </div>
                           )}
                         </div>
-                      );
-                    }
+                      </>
+                    );
                   }
+                }
 
-                  if (item.type === "to") {
-                    if (item.page === "Exit") {
-                      return (
+                if (item.type === "to") {
+                  if (item.page === "Exit") {
+                    return (
+                      <>
+                        {separator}
                         <div
                           key={idx}
-                          className="flex items-center gap-1.5 text-muted-foreground"
+                          className="flex items-center gap-2 text-muted-foreground mt-0.5"
                         >
-                          <span className="font-semibold text-foreground">
-                            Exit
-                          </span>
+                          <div className="w-6 h-6 flex items-center justify-center">
+                            <CornerDownRight size={14} className="ml-2" />
+                          </div>
+                          <Badge variant="destructive">Exit</Badge>
                         </div>
-                      );
-                    }
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-1.5 text-muted-foreground"
-                      >
-                        <span className="font-medium">to:</span>
-                        <span>{item.page}</span>
-                      </div>
+                      </>
                     );
                   }
+                  return (
+                    <div
+                      key={idx}
+                      className="flex flex-row items-center gap-2 text-muted-foreground"
+                    >
+                      <div className="w-6 h-6 flex items-center justify-center">
+                        <CornerDownRight size={14} className="ml-2" />
+                      </div>
+                      <span>{item.page}</span>
+                    </div>
+                  );
+                }
 
-                  if (item.type === "from") {
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-muted-foreground"
-                      >
-                        <span>
-                          <span className="font-medium">from:</span>{" "}
+                if (item.type === "from") {
+                  return (
+                    <>
+                      {separator}
+                      <div key={idx} className="flex flex-col gap-1">
+                        <Badge variant="alternative">
+                          <span className="text-xs font-medium opacity-60">
+                            from
+                          </span>{" "}
                           <span>{item.page}</span>
-                        </span>
+                        </Badge>
                         {item.time !== undefined && (
-                          <span className="text-muted-foreground/70">
-                            {formatDuration(item.time)}
-                          </span>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="w-6 h-6 flex items-center justify-center">
+                              <Timer
+                                size={12}
+                                className="text-muted-foreground/30"
+                              />
+                            </div>
+                            viewed for {formatDuration(item.time)}
+                          </div>
                         )}
                       </div>
-                    );
-                  }
+                    </>
+                  );
+                }
 
-                  return null;
-                })}
-              </div>
+                return null;
+              })}
             </div>
           ) : null}
         </CardContent>
