@@ -73,9 +73,13 @@ function WebPageNode({ data }: NodeProps) {
     | Array<{ type: "from" | "to"; page: string; time?: number }>
     | undefined;
   const visitCount = data.visitCount as number | undefined;
+  const opacity = data.opacity as number | undefined;
 
   return (
-    <div className="min-w-[280px]">
+    <div
+      className="min-w-[280px] transition-opacity duration-200"
+      style={{ opacity: opacity ?? 1 }}
+    >
       <Handle
         type="target"
         position={Position.Left}
@@ -616,6 +620,7 @@ export function UserSession({ session }: UserSessionProps) {
   const isDragging = useRef(false);
   const startY = useRef(0);
   const startHeight = useRef(0);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
 
   const initialNodes = useMemo(
     () => generateNodesFromSession(session),
@@ -631,8 +636,63 @@ export function UserSession({ session }: UserSessionProps) {
     [initialNodes, initialEdges],
   );
 
-  const [nodesState, , onNodesChange] = useNodesState(layoutedNodes);
-  const [edgesState, , onEdgesChange] = useEdgesState(layoutedEdges);
+  const nodesWithOpacity = useMemo(() => {
+    if (hoveredEdgeId) {
+      const hoveredEdge = layoutedEdges.find((e) => e.id === hoveredEdgeId);
+      if (hoveredEdge) {
+        const relatedNodeIds = new Set([
+          hoveredEdge.source,
+          hoveredEdge.target,
+        ]);
+        return layoutedNodes.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            opacity: relatedNodeIds.has(node.id) ? 1 : 0.3,
+          },
+        }));
+      }
+    }
+
+    return layoutedNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        opacity: 1,
+      },
+    }));
+  }, [layoutedNodes, layoutedEdges, hoveredEdgeId]);
+
+  const edgesWithOpacity = useMemo(() => {
+    if (hoveredEdgeId) {
+      return layoutedEdges.map((edge) => ({
+        ...edge,
+        style: {
+          ...edge.style,
+          opacity: edge.id === hoveredEdgeId ? 1 : 0.3,
+        },
+      }));
+    }
+
+    return layoutedEdges.map((edge) => ({
+      ...edge,
+      style: {
+        ...edge.style,
+        opacity: 1,
+      },
+    }));
+  }, [layoutedEdges, hoveredEdgeId]);
+
+  const [nodesState, setNodes, onNodesChange] = useNodesState(nodesWithOpacity);
+  const [edgesState, setEdges, onEdgesChange] = useEdgesState(edgesWithOpacity);
+
+  useEffect(() => {
+    setNodes(nodesWithOpacity);
+  }, [nodesWithOpacity, setNodes]);
+
+  useEffect(() => {
+    setEdges(edgesWithOpacity);
+  }, [edgesWithOpacity, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -687,6 +747,8 @@ export function UserSession({ session }: UserSessionProps) {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onEdgeMouseEnter={(_event, edge) => setHoveredEdgeId(edge.id)}
+        onEdgeMouseLeave={() => setHoveredEdgeId(null)}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.5}
