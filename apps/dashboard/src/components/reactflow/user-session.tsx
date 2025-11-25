@@ -386,6 +386,16 @@ function generateNodesFromSession(session: SessionData): Node[] {
   }
 
   const nodes: Node[] = [];
+  const lastPageViewIndex = session.pageViewEvents.length - 1;
+  const lastPageView = session.pageViewEvents[lastPageViewIndex];
+  const lastPageUrlKey = lastPageView
+    ? cleanUrl(lastPageView.url, session.site.domain)
+    : null;
+  const firstPageView = session.pageViewEvents[0];
+  const firstPageUrlKey = firstPageView
+    ? cleanUrl(firstPageView.url, session.site.domain)
+    : null;
+  const isExitAlsoEntry = lastPageUrlKey === firstPageUrlKey;
 
   pageVisits.forEach((visits, urlKey) => {
     const pageView = session.pageViewEvents[visits.firstVisit];
@@ -405,6 +415,8 @@ function generateNodesFromSession(session: SessionData): Node[] {
     if (urlKey === "/") title = "Home";
     else if (urlKey === "") title = "Root";
 
+    const isExitPage = urlKey === lastPageUrlKey;
+
     nodes.push({
       id: urlKey,
       type: "webPage",
@@ -419,6 +431,9 @@ function generateNodesFromSession(session: SessionData): Node[] {
         preview: title,
         visitCount: visits.count,
         column: visits.column,
+        row: isExitPage && !isExitAlsoEntry ? 1 : 0,
+        isExitPage,
+        isExitAlsoEntry,
         navigation: sortedSequence,
       },
     });
@@ -432,6 +447,12 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
   const transitionCounts = new Map<string, number>();
   const loopCounts = new Map<string, number>();
 
+  const lastPageViewIndex = session.pageViewEvents.length - 1;
+  const lastPageView = session.pageViewEvents[lastPageViewIndex];
+  const lastPageUrlKey = lastPageView
+    ? cleanUrl(lastPageView.url, session.site.domain)
+    : null;
+
   for (let i = 0; i < session.pageViewEvents.length - 1; i++) {
     const currentPage = session.pageViewEvents[i];
     const nextPage = session.pageViewEvents[i + 1];
@@ -443,7 +464,12 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
 
     if (currentUrlKey === nextUrlKey) continue;
 
-    const edgeKey = `${currentUrlKey}->${nextUrlKey}`;
+    const isLastTransition = i === lastPageViewIndex - 1;
+    const targetUrlKey = isLastTransition ? lastPageUrlKey : nextUrlKey;
+
+    if (!targetUrlKey) continue;
+
+    const edgeKey = `${currentUrlKey}->${targetUrlKey}`;
     const count = transitionCounts.get(edgeKey) || 0;
     transitionCounts.set(edgeKey, count + 1);
 
@@ -457,30 +483,52 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
 
     let loopTargetHandle = "left";
     if (isLoop) {
-      const loopCount = loopCounts.get(nextUrlKey) || 0;
-      loopCounts.set(nextUrlKey, loopCount + 1);
+      const loopCount = loopCounts.get(targetUrlKey) || 0;
+      loopCounts.set(targetUrlKey, loopCount + 1);
       loopTargetHandle = loopCount % 2 === 0 ? "top" : "bottom";
     }
 
-    edges.push({
-      id: uniqueEdgeId,
-      source: currentUrlKey,
-      sourceHandle: "right",
-      target: nextUrlKey,
-      targetHandle: loopTargetHandle,
-      animated: true,
-      type: "smoothstep",
-      style: {
-        stroke: isLoop ? "var(--primary)" : "var(--bklit-300)",
-        strokeWidth: 3,
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-        color: isLoop ? "var(--primary)" : "var(--bklit-300)",
-      },
-    });
+    if (isLastTransition) {
+      edges.push({
+        id: `${uniqueEdgeId}->exit`,
+        source: currentUrlKey,
+        sourceHandle: "right",
+        target: targetUrlKey,
+        targetHandle: "bottom",
+        animated: true,
+        type: "smoothstep",
+        style: {
+          stroke: "var(--bklit-300)",
+          strokeWidth: 3,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+          color: "var(--bklit-300)",
+        },
+      });
+    } else {
+      edges.push({
+        id: uniqueEdgeId,
+        source: currentUrlKey,
+        sourceHandle: "right",
+        target: targetUrlKey,
+        targetHandle: loopTargetHandle,
+        animated: true,
+        type: "smoothstep",
+        style: {
+          stroke: isLoop ? "var(--primary)" : "var(--bklit-300)",
+          strokeWidth: 3,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+          color: isLoop ? "var(--primary)" : "var(--bklit-300)",
+        },
+      });
+    }
   }
 
   return edges;
@@ -510,21 +558,26 @@ function getLayoutedElements(
     }
   });
 
-  const layoutedNodes = nodes.map((node) => {
+  const regularNodes = nodes.filter(
+    (n) =>
+      !(n.data.isExitPage as boolean) || (n.data.isExitAlsoEntry as boolean),
+  );
+  const exitNode = nodes.find(
+    (n) =>
+      (n.data.isExitPage as boolean) && !(n.data.isExitAlsoEntry as boolean),
+  );
+
+  const sortedRegularNodes = [...regularNodes].sort(
+    (a, b) => (a.data.column as number) - (b.data.column as number),
+  );
+
+  const layoutedRegularNodes = sortedRegularNodes.map((node) => {
     const column = node.data.column as number;
-    const nodesInColumn = nodesByColumn.get(column) || [];
-    const indexInColumn = nodesInColumn.findIndex((n) => n.id === node.id);
+    const row = node.data.row as number;
+    const verticalOffset = column * 80;
 
     const x = column * columnSpacing;
-
-    let y = 0;
-    if (nodesInColumn.length === 1) {
-      y = 0;
-    } else {
-      const columnHeight = (nodesInColumn.length - 1) * rowSpacing;
-      const startY = -columnHeight / 2;
-      y = startY + indexInColumn * rowSpacing;
-    }
+    const y = row * rowSpacing + verticalOffset;
 
     return {
       ...node,
@@ -534,6 +587,26 @@ function getLayoutedElements(
       },
     };
   });
+
+  let layoutedNodes = layoutedRegularNodes;
+
+  if (exitNode) {
+    const exitColumn = exitNode.data.column as number;
+    const verticalOffset = exitColumn * 80;
+    const x = exitColumn * columnSpacing;
+    const y = rowSpacing + verticalOffset;
+
+    layoutedNodes = [
+      ...layoutedRegularNodes,
+      {
+        ...exitNode,
+        position: {
+          x: x - nodeWidth / 2,
+          y: y - nodeHeight / 2,
+        },
+      },
+    ];
+  }
 
   return { nodes: layoutedNodes, edges };
 }
