@@ -82,21 +82,21 @@ function WebPageNode({ data }: NodeProps) {
         type="target"
         position={Position.Left}
         id="left"
-        className="size-3 sr-only"
+        className="sr-only"
       />
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        className="size-3 sr-only"
+        className="sr-only"
       />
       <Handle
         type="target"
         position={Position.Bottom}
         id="bottom"
-        className="size-3 sr-only"
+        className="sr-only"
       />
-      <Card className="shadow-xl bg-bklit-800 border-2">
+      <Card className="relative shadow-xl bg-bklit-800 border-2">
         <CardHeader className="pb-1">
           <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
           <CardDescription>
@@ -235,7 +235,7 @@ function WebPageNode({ data }: NodeProps) {
         type="source"
         position={Position.Right}
         id="right"
-        className="size-3"
+        className="sr-only"
       />
     </div>
   );
@@ -433,7 +433,7 @@ function generateNodesFromSession(session: SessionData): Node[] {
       data: {
         title,
         url: pageView.url,
-        timestamp: format(new Date(pageView.timestamp), "HH:mm:ss"),
+        timestamp: format(new Date(pageView.timestamp), "PPp"),
         location,
         visitors: "1",
         timeOnPage: formatDuration(visits.timeOnPage),
@@ -502,14 +502,14 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
       animated: true,
       type: "smoothstep",
       style: {
-        stroke: isLoop ? "#8b5cf6" : "#6b7280",
+        stroke: isLoop ? "var(--primary)" : "var(--bklit-300)",
         strokeWidth: 3,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 20,
         height: 20,
-        color: isLoop ? "#8b5cf6" : "#6b7280",
+        color: isLoop ? "var(--primary)" : "var(--bklit-300)",
       },
     });
   }

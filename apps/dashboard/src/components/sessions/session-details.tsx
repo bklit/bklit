@@ -10,7 +10,7 @@ import {
 import { Kbd } from "@bklit/ui/components/kbd";
 import { Separator } from "@bklit/ui/components/separator";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/header/page-header";
@@ -166,9 +166,7 @@ export function SessionDetails({
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Started</span>
                 <span className="text-sm font-medium">
-                  {formatDistanceToNow(new Date(sessionData.startedAt), {
-                    addSuffix: true,
-                  })}
+                  {format(new Date(sessionData.startedAt), "PPp")}
                 </span>
               </div>
               <div className="flex justify-between">
