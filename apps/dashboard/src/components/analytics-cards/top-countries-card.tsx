@@ -1,4 +1,3 @@
-import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
@@ -20,7 +19,6 @@ export async function TopCountriesCard({
 }: TopCountriesCardProps) {
   const topCountries = await getTopCountries({ projectId, userId });
 
-  // Limit to top 10 and prepare percentage per country (not displayed, used in data attribute)
   const top10 = topCountries.slice(0, 10);
   const totalTop10Views = top10.reduce(
     (sum, c) => sum + (Number(c.views) || 0),

@@ -13,8 +13,10 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { CircleFlag } from "react-circle-flags";
 import { PageHeader } from "@/components/header/page-header";
 import { UserSession } from "@/components/reactflow/user-session";
+import { getCountryCodeForFlag } from "@/lib/maps/country-coordinates";
 import { cleanUrl } from "@/lib/utils";
 import {
   getBrowserFromUserAgent,
@@ -223,7 +225,13 @@ export function SessionDetails({
                     <span className="text-sm text-muted-foreground">
                       Country
                     </span>
-                    <span className="text-sm font-medium">
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      <CircleFlag
+                        countryCode={
+                          getCountryCodeForFlag(sessionData.country) || "us"
+                        }
+                        className="size-4"
+                      />
                       {sessionData.country}
                     </span>
                   </div>
