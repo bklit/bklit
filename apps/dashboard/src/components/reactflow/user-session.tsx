@@ -735,10 +735,7 @@ export function UserSession({ session }: UserSessionProps) {
   }, [handleMouseMove, handleMouseUp]);
 
   return (
-    <div
-      className="w-full relative border-2 rounded-xl overflow-clip"
-      style={{ height: `${height}px` }}
-    >
+    <div className="w-full relative border-2 rounded-xl overflow-clip h-[720px]">
       <ReactFlow
         nodes={nodesState}
         edges={edgesState}
