@@ -18,7 +18,6 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
@@ -26,7 +25,7 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { format } from "date-fns";
-import { Clock, TrendingDown } from "lucide-react";
+import { Clock } from "lucide-react";
 import { cleanUrl } from "@/lib/utils";
 
 // Types for session data
@@ -64,6 +63,11 @@ interface UserSessionProps {
 
 // Custom node component for web pages
 function WebPageNode({ data }: NodeProps) {
+  const navigation = data.navigation as
+    | Array<{ type: "from" | "to"; page: string; time?: number }>
+    | undefined;
+  const visitCount = data.visitCount as number | undefined;
+
   return (
     <div className="min-w-[280px]">
       <Handle
@@ -86,42 +90,99 @@ function WebPageNode({ data }: NodeProps) {
       />
       <Card className="shadow-lg border-2 hover:shadow-xl transition-shadow">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">
-              {data.title}
-            </CardTitle>
-            <Badge
-              variant={
-                data.type === "entry"
-                  ? "default"
-                  : data.type === "exit"
-                    ? "destructive"
-                    : "secondary"
-              }
-            >
-              {data.type}
-            </Badge>
-          </div>
-          <div className="text-xs text-muted-foreground">
+          <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
+          <div className="text-xs text-muted-foreground mt-1">
             {cleanUrl(data.url)}
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 space-y-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs">
               <Clock className="w-3 h-3" />
               <span>{data.timestamp}</span>
             </div>
-            {data.timeOnPage && (
-              <div className="flex items-center gap-2 text-xs">
-                <TrendingDown className="w-3 h-3" />
-                <span>{data.timeOnPage} on page</span>
-              </div>
-            )}
           </div>
-          {/* <div className="mt-3 h-16 bg-muted rounded border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground">
-            {data.preview}
-          </div> */}
+
+          {navigation && navigation.length > 0 ? (
+            <div className="border-t pt-3 space-y-2">
+              <div className="text-xs font-medium text-muted-foreground mb-2">
+                Navigation
+              </div>
+              {visitCount && visitCount > 1 && (
+                <div className="text-xs text-muted-foreground mb-2">
+                  Visited {visitCount} times
+                </div>
+              )}
+              <div className="space-y-1.5 text-xs">
+                {navigation.map((item, idx) => {
+                  if (item.type === "from") {
+                    if (item.page === "Entry") {
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between text-muted-foreground"
+                        >
+                          <span className="font-semibold text-foreground">
+                            Entry
+                          </span>
+                          {item.time !== undefined && (
+                            <span className="text-muted-foreground/70">
+                              {formatDuration(item.time)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    }
+                  }
+
+                  if (item.type === "to") {
+                    if (item.page === "Exit") {
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-1.5 text-muted-foreground"
+                        >
+                          <span className="font-semibold text-foreground">
+                            Exit
+                          </span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 text-muted-foreground"
+                      >
+                        <span className="font-medium">to:</span>
+                        <span>{item.page}</span>
+                      </div>
+                    );
+                  }
+
+                  if (item.type === "from") {
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-muted-foreground"
+                      >
+                        <span>
+                          <span className="font-medium">from:</span>{" "}
+                          <span>{item.page}</span>
+                        </span>
+                        {item.time !== undefined && (
+                          <span className="text-muted-foreground/70">
+                            {formatDuration(item.time)}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })}
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
       <Handle
@@ -216,6 +277,86 @@ function generateNodesFromSession(session: SessionData): Node[] {
     }
   });
 
+  // Helper to format page title
+  const formatPageTitle = (key: string): string => {
+    if (key === "/") return "Home";
+    if (key === "") return "Root";
+    return key;
+  };
+
+  // Generate chronological navigation sequence for each page
+  const navigationSequences = new Map<
+    string,
+    Array<{ type: "from" | "to"; page: string; time?: number; index: number }>
+  >();
+
+  // Initialize navigation sequences
+  pageVisits.forEach((_, urlKey) => {
+    navigationSequences.set(urlKey, []);
+  });
+
+  // Track navigation flow chronologically with time spent
+  for (let i = 0; i < session.pageViewEvents.length; i++) {
+    const currentPage = session.pageViewEvents[i];
+    if (!currentPage) continue;
+
+    const currentUrlKey = cleanUrl(currentPage.url, session.site.domain);
+    const currentNav = navigationSequences.get(currentUrlKey);
+    if (!currentNav) continue;
+
+    // Calculate time spent on this page
+    const currentPageTime = new Date(currentPage.timestamp).getTime();
+    const nextPage = session.pageViewEvents[i + 1];
+    const leaveTime = nextPage
+      ? new Date(nextPage.timestamp).getTime()
+      : sessionEndTime;
+    const timeSpent = Math.floor((leaveTime - currentPageTime) / 1000);
+
+    // Add "from" entry
+    if (i === 0) {
+      // Entry page
+      currentNav.push({
+        type: "from",
+        page: "Entry",
+        time: timeSpent,
+        index: i,
+      });
+    } else {
+      // From previous page
+      const prevPage = session.pageViewEvents[i - 1];
+      if (prevPage) {
+        const prevUrlKey = cleanUrl(prevPage.url, session.site.domain);
+        if (prevUrlKey !== currentUrlKey) {
+          currentNav.push({
+            type: "from",
+            page: formatPageTitle(prevUrlKey),
+            time: timeSpent,
+            index: i,
+          });
+        }
+      }
+    }
+
+    // Add "to" entry
+    if (nextPage) {
+      const nextUrlKey = cleanUrl(nextPage.url, session.site.domain);
+      if (nextUrlKey !== currentUrlKey) {
+        currentNav.push({
+          type: "to",
+          page: formatPageTitle(nextUrlKey),
+          index: i,
+        });
+      }
+    } else {
+      // Exit
+      currentNav.push({
+        type: "to",
+        page: "Exit",
+        index: i,
+      });
+    }
+  }
+
   // Generate nodes for unique pages
   const nodes: Node[] = [];
 
@@ -223,13 +364,12 @@ function generateNodesFromSession(session: SessionData): Node[] {
     const pageView = session.pageViewEvents[visits.firstVisit];
     if (!pageView) return;
 
-    const isFirst = visits.firstVisit === 0;
-    const isLast = visits.lastVisit === session.pageViewEvents.length - 1;
+    const navSequence = navigationSequences.get(urlKey) || [];
 
-    let type: "entry" | "browse" | "exit";
-    if (isFirst) type = "entry";
-    else if (isLast) type = "exit";
-    else type = "browse";
+    // Sort by index to maintain chronological order, then create a clean sequence
+    const sortedSequence = navSequence
+      .sort((a, b) => a.index - b.index)
+      .map(({ type, page, time }) => ({ type, page, time }));
 
     const location =
       [session.country, session.city].filter(Boolean).join(", ") ||
@@ -252,7 +392,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
       data: {
         title,
         url: pageView.url,
-        type,
         timestamp: format(new Date(pageView.timestamp), "HH:mm:ss"),
         location,
         visitors: "1",
@@ -260,6 +399,7 @@ function generateNodesFromSession(session: SessionData): Node[] {
         preview: title,
         visitCount: visits.count,
         column: visits.column, // Store column for layout
+        navigation: sortedSequence,
       },
     });
   });
