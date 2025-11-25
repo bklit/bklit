@@ -36,7 +36,6 @@ import {
 } from "lucide-react";
 import { cleanUrl } from "@/lib/utils";
 
-// Types for session data
 interface PageViewEvent {
   id: string;
   url: string;
@@ -69,7 +68,6 @@ interface UserSessionProps {
   session: SessionData;
 }
 
-// Custom node component for web pages
 function WebPageNode({ data }: NodeProps) {
   const navigation = data.navigation as
     | Array<{ type: "from" | "to"; page: string; time?: number }>
@@ -122,7 +120,6 @@ function WebPageNode({ data }: NodeProps) {
           {navigation && navigation.length > 0 ? (
             <div className="border-t pt-3 text-xs">
               {navigation.map((item, idx) => {
-                // Check if we need to insert a "..." separator
                 const needsSeparator =
                   item.type === "from" &&
                   idx > 0 &&
@@ -130,7 +127,6 @@ function WebPageNode({ data }: NodeProps) {
                   navigation[idx - 1]?.page !== item.page &&
                   navigation[idx - 1]?.page !== "Exit";
 
-                // Render separator if needed
                 const separator = needsSeparator ? (
                   <div className="w-6 h-6 flex items-center justify-center">
                     <ArrowUpFromDot
@@ -241,7 +237,6 @@ function WebPageNode({ data }: NodeProps) {
   );
 }
 
-// Custom edge with conversion rate
 function ConversionEdge({ data }: EdgeProps) {
   return (
     <div className="bg-background border rounded px-2 py-1 text-xs font-medium shadow-sm">
@@ -258,7 +253,6 @@ const edgeTypes = {
   conversion: ConversionEdge,
 };
 
-// Helper function to format duration
 function formatDuration(seconds: number | null): string {
   if (!seconds) return "0s";
   if (seconds < 60) return `${seconds}s`;
@@ -268,13 +262,11 @@ function formatDuration(seconds: number | null): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-// Helper function to generate nodes from session data
 function generateNodesFromSession(session: SessionData): Node[] {
   if (session.pageViewEvents.length === 0) {
     return [];
   }
 
-  // Create a map to track unique pages and their visit counts
   const pageVisits = new Map<
     string,
     {
@@ -283,20 +275,20 @@ function generateNodesFromSession(session: SessionData): Node[] {
       lastVisit: number;
       urls: string[];
       timeOnPage: number;
-      column: number; // Track which column this page appears in
+      column: number;
     }
   >();
 
-  // Calculate time spent on each page
   const sessionEndTime = session.endedAt
     ? new Date(session.endedAt).getTime()
     : Date.now();
+
+  let uniqueColumnCounter = 0;
 
   session.pageViewEvents.forEach((pageView, index) => {
     const urlKey = cleanUrl(pageView.url, session.site.domain);
     const existing = pageVisits.get(urlKey);
 
-    // Calculate time spent on this page visit
     const currentTime = new Date(pageView.timestamp).getTime();
     const nextPageView = session.pageViewEvents[index + 1];
     const nextTime = nextPageView
@@ -318,30 +310,26 @@ function generateNodesFromSession(session: SessionData): Node[] {
         lastVisit: index,
         urls: [pageView.url],
         timeOnPage: timeSpent,
-        column: index, // First appearance determines column
+        column: uniqueColumnCounter++,
       });
     }
   });
 
-  // Helper to format page title
   const formatPageTitle = (key: string): string => {
     if (key === "/") return "Home";
     if (key === "") return "Root";
     return key;
   };
 
-  // Generate chronological navigation sequence for each page
   const navigationSequences = new Map<
     string,
     Array<{ type: "from" | "to"; page: string; time?: number; index: number }>
   >();
 
-  // Initialize navigation sequences
   pageVisits.forEach((_, urlKey) => {
     navigationSequences.set(urlKey, []);
   });
 
-  // Track navigation flow chronologically with time spent
   for (let i = 0; i < session.pageViewEvents.length; i++) {
     const currentPage = session.pageViewEvents[i];
     if (!currentPage) continue;
@@ -350,7 +338,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
     const currentNav = navigationSequences.get(currentUrlKey);
     if (!currentNav) continue;
 
-    // Calculate time spent on this page
     const currentPageTime = new Date(currentPage.timestamp).getTime();
     const nextPage = session.pageViewEvents[i + 1];
     const leaveTime = nextPage
@@ -358,9 +345,7 @@ function generateNodesFromSession(session: SessionData): Node[] {
       : sessionEndTime;
     const timeSpent = Math.floor((leaveTime - currentPageTime) / 1000);
 
-    // Add "from" entry
     if (i === 0) {
-      // Entry page
       currentNav.push({
         type: "from",
         page: "Entry",
@@ -368,7 +353,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
         index: i,
       });
     } else {
-      // From previous page
       const prevPage = session.pageViewEvents[i - 1];
       if (prevPage) {
         const prevUrlKey = cleanUrl(prevPage.url, session.site.domain);
@@ -383,7 +367,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
       }
     }
 
-    // Add "to" entry
     if (nextPage) {
       const nextUrlKey = cleanUrl(nextPage.url, session.site.domain);
       if (nextUrlKey !== currentUrlKey) {
@@ -394,7 +377,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
         });
       }
     } else {
-      // Exit
       currentNav.push({
         type: "to",
         page: "Exit",
@@ -403,7 +385,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
     }
   }
 
-  // Generate nodes for unique pages
   const nodes: Node[] = [];
 
   pageVisits.forEach((visits, urlKey) => {
@@ -412,7 +393,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
 
     const navSequence = navigationSequences.get(urlKey) || [];
 
-    // Sort by index to maintain chronological order, then create a clean sequence
     const sortedSequence = navSequence
       .sort((a, b) => a.index - b.index)
       .map(({ type, page, time }) => ({ type, page, time }));
@@ -421,7 +401,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
       [session.country, session.city].filter(Boolean).join(", ") ||
       "Unknown location";
 
-    // Use the URL pathname as the title, or the full URL if no pathname
     let title = urlKey;
     if (urlKey === "/") title = "Home";
     else if (urlKey === "") title = "Root";
@@ -429,7 +408,7 @@ function generateNodesFromSession(session: SessionData): Node[] {
     nodes.push({
       id: urlKey,
       type: "webPage",
-      position: { x: 0, y: 0 }, // Will be set by layout function
+      position: { x: 0, y: 0 },
       data: {
         title,
         url: pageView.url,
@@ -439,7 +418,7 @@ function generateNodesFromSession(session: SessionData): Node[] {
         timeOnPage: formatDuration(visits.timeOnPage),
         preview: title,
         visitCount: visits.count,
-        column: visits.column, // Store column for layout
+        column: visits.column,
         navigation: sortedSequence,
       },
     });
@@ -448,14 +427,11 @@ function generateNodesFromSession(session: SessionData): Node[] {
   return nodes;
 }
 
-// Helper function to generate edges from session data
-// Creates separate edges for each transition to avoid overlapping
 function generateEdgesFromSession(session: SessionData): Edge[] {
   const edges: Edge[] = [];
   const transitionCounts = new Map<string, number>();
   const loopCounts = new Map<string, number>();
 
-  // Track all transitions between pages sequentially
   for (let i = 0; i < session.pageViewEvents.length - 1; i++) {
     const currentPage = session.pageViewEvents[i];
     const nextPage = session.pageViewEvents[i + 1];
@@ -465,31 +441,24 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
     const currentUrlKey = cleanUrl(currentPage.url, session.site.domain);
     const nextUrlKey = cleanUrl(nextPage.url, session.site.domain);
 
-    // Skip if same page (refresh)
     if (currentUrlKey === nextUrlKey) continue;
 
-    // Create unique edge ID for each transition
     const edgeKey = `${currentUrlKey}->${nextUrlKey}`;
     const count = transitionCounts.get(edgeKey) || 0;
     transitionCounts.set(edgeKey, count + 1);
 
-    // For repeated transitions, create unique ID with index
     const uniqueEdgeId = count > 0 ? `${edgeKey}-${count}` : edgeKey;
 
-    // Determine if this is a loop (going back to a previous page)
     const isLoop =
       i > 0 &&
       session.pageViewEvents
         .slice(0, i)
         .some((prev) => cleanUrl(prev.url, session.site.domain) === nextUrlKey);
 
-    // For loops, connect to top/bottom handles instead of left
-    // Track loop count per target page to alternate handles
     let loopTargetHandle = "left";
     if (isLoop) {
       const loopCount = loopCounts.get(nextUrlKey) || 0;
       loopCounts.set(nextUrlKey, loopCount + 1);
-      // Alternate between top and bottom for multiple loops to the same page
       loopTargetHandle = loopCount % 2 === 0 ? "top" : "bottom";
     }
 
@@ -517,7 +486,6 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
   return edges;
 }
 
-// Layout function that positions nodes in columns based on visit sequence
 function getLayoutedElements(
   nodes: Node[],
   edges: Edge[],
@@ -527,10 +495,9 @@ function getLayoutedElements(
 } {
   const nodeWidth = 300;
   const nodeHeight = 200;
-  const columnSpacing = 400; // Horizontal spacing between columns
-  const rowSpacing = 250; // Vertical spacing for nodes in same column
+  const columnSpacing = 400;
+  const rowSpacing = 250;
 
-  // Group nodes by column (based on first visit order)
   const nodesByColumn = new Map<number, Node[]>();
   nodes.forEach((node) => {
     const column = node.data.column as number;
@@ -543,30 +510,26 @@ function getLayoutedElements(
     }
   });
 
-  // Position nodes in columns
   const layoutedNodes = nodes.map((node) => {
     const column = node.data.column as number;
     const nodesInColumn = nodesByColumn.get(column) || [];
     const indexInColumn = nodesInColumn.findIndex((n) => n.id === node.id);
 
-    // Calculate x position based on column
     const x = column * columnSpacing;
 
-    // Calculate y position - center nodes in column, or stack if multiple
     let y = 0;
     if (nodesInColumn.length === 1) {
-      y = 0; // Center single node
+      y = 0;
     } else {
-      // Stack multiple nodes vertically
-      const totalHeight = (nodesInColumn.length - 1) * rowSpacing;
-      const startY = -totalHeight / 2;
+      const columnHeight = (nodesInColumn.length - 1) * rowSpacing;
+      const startY = -columnHeight / 2;
       y = startY + indexInColumn * rowSpacing;
     }
 
     return {
       ...node,
       position: {
-        x: x - nodeWidth / 2, // Center the node
+        x: x - nodeWidth / 2,
         y: y - nodeHeight / 2,
       },
     };
@@ -626,7 +589,6 @@ export function UserSession({ session }: UserSessionProps) {
     document.body.style.userSelect = "";
   }, []);
 
-  // Add event listeners for mouse move and up
   useEffect(() => {
     if (typeof window !== "undefined") {
       document.addEventListener("mousemove", handleMouseMove);
