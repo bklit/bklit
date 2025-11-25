@@ -22,11 +22,18 @@ import "reactflow/dist/style.css";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
 import { format } from "date-fns";
-import { ArrowUpFromDot, Clock, CornerDownRight, Timer } from "lucide-react";
+import {
+  ArrowUpFromDot,
+  Clock,
+  CornerDownRight,
+  Eye,
+  Timer,
+} from "lucide-react";
 import { cleanUrl } from "@/lib/utils";
 
 // Types for session data
@@ -75,35 +82,40 @@ function WebPageNode({ data }: NodeProps) {
         type="target"
         position={Position.Left}
         id="left"
-        className="w-3 h-3"
+        className="size-3 sr-only"
       />
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        className="w-3 h-3"
+        className="size-3 sr-only"
       />
       <Handle
         type="target"
         position={Position.Bottom}
         id="bottom"
-        className="w-3 h-3"
+        className="size-3 sr-only"
       />
-      <Card className="shadow-lg border-2 hover:shadow-xl transition-shadow">
-        <CardHeader className="pb-3">
+      <Card className="shadow-xl bg-bklit-800 border-2">
+        <CardHeader className="pb-1">
           <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
-          <div className="text-xs text-muted-foreground mt-1">
-            {cleanUrl(data.url)}
-          </div>
+          <CardDescription>
+            <code className="text-xs text-muted-foreground font-mono">
+              {cleanUrl(data.url)}
+            </code>
+          </CardDescription>
         </CardHeader>
-        <CardContent className="pt-0 space-y-3">
+        <CardContent className="space-y-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs">
-              <Clock className="w-3 h-3" />
-              <span>{data.timestamp}</span>
+              <Clock className="size-3" />
+              <span className="text-muted-foreground">{data.timestamp}</span>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span>Visited {visitCount} times</span>
+              <Eye className="size-3" />
+              <span className="text-muted-foreground">
+                Visited {visitCount} times
+              </span>
             </div>
           </div>
 
@@ -223,7 +235,7 @@ function WebPageNode({ data }: NodeProps) {
         type="source"
         position={Position.Right}
         id="right"
-        className="w-3 h-3"
+        className="size-3"
       />
     </div>
   );
@@ -414,11 +426,6 @@ function generateNodesFromSession(session: SessionData): Node[] {
     if (urlKey === "/") title = "Home";
     else if (urlKey === "") title = "Root";
 
-    // Add visit count if more than 1
-    if (visits.count > 1) {
-      title += ` (${visits.count}x)`;
-    }
-
     nodes.push({
       id: urlKey,
       type: "webPage",
@@ -602,17 +609,6 @@ export function UserSession({ session }: UserSessionProps) {
     [edgesState, onEdgesChange],
   );
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      isDragging.current = true;
-      startY.current = e.clientY;
-      startHeight.current = height;
-      document.body.style.cursor = "ns-resize";
-      document.body.style.userSelect = "none";
-    },
-    [height],
-  );
-
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging.current) return;
 
@@ -644,34 +640,32 @@ export function UserSession({ session }: UserSessionProps) {
   }, [handleMouseMove, handleMouseUp]);
 
   return (
-    <div className="w-full h-full">
-      <div
-        className="w-full bg-background relative"
-        style={{ height: `${height}px` }}
+    <div
+      className="w-full relative border-2 rounded-xl overflow-clip"
+      style={{ height: `${height}px` }}
+    >
+      <ReactFlow
+        nodes={nodesState}
+        edges={edgesState}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.5}
+        maxZoom={1.5}
       >
-        <ReactFlow
-          nodes={nodesState}
-          edges={edgesState}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.5}
-          maxZoom={1.5}
-        >
-          <Controls />
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-        </ReactFlow>
-        <button
-          className="absolute -bottom-1 left-0 w-full h-1 bg-border/60 cursor-ns-resize transition border-0 p-0 hover:bg-primary/70 active:bg-primary "
-          onMouseDown={handleMouseDown}
-          aria-label="Resize handle"
-          type="button"
+        <Controls className="bg-bklit-800 [&>button]:bg-bklit-700! [&>button]:border-border! [&>button>svg]:fill-current! [&>button>svg]:text-bklit-300!" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
+          size={1}
+          color="var(--bklit-300)"
+          className="bg-bklit-700"
         />
-      </div>
+      </ReactFlow>
     </div>
   );
 }

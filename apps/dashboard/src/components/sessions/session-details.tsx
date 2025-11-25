@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-// import { Funnel } from "@bklit/ui/components/charts/funnel";
 import { Kbd } from "@bklit/ui/components/kbd";
 import { Separator } from "@bklit/ui/components/separator";
 import { useQuery } from "@tanstack/react-query";
@@ -140,12 +139,6 @@ export function SessionDetails({
 
   const browser = getBrowserFromUserAgent(sessionData.userAgent);
   const deviceType = getDeviceTypeFromUserAgent(sessionData.userAgent);
-
-  const funnelData = sessionData.pageViewEvents.map((pageView) => ({
-    id: pageView.id,
-    value: 1,
-    label: cleanUrl(pageView.url, sessionData.project.domain),
-  }));
 
   return (
     <>
@@ -282,7 +275,7 @@ export function SessionDetails({
                         key={pageView.id}
                         className="flex items-center space-x-4 group/row"
                       >
-                        <div className="shrink-0 size-8 rounded-full text-bklit-100 flex items-center justify-center text-sm font-semibold bg-bklit-600 group-first/row:bg-primary group-first/row:text-primary-foreground">
+                        <div className="shrink-0 size-8 rounded-full text-bklit-100 flex items-center justify-center text-sm font-semibold bg-bklit-600 group-first/row:bg-teal-900 group-first/row:text-teal-500">
                           {index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -291,7 +284,7 @@ export function SessionDetails({
                           </div>
                         </div>
                         {index === 0 && (
-                          <Badge variant="outline" size="lg">
+                          <Badge variant="success" size="lg">
                             Entry
                           </Badge>
                         )}
@@ -313,23 +306,15 @@ export function SessionDetails({
         </div>
 
         <div className="w-9/12">
-          <Card>
-            <CardHeader>
-              <CardTitle>Page Flow</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserSession
-                session={{
-                  ...sessionData,
-                  site: {
-                    name: sessionData.project.name,
-                    domain: sessionData.project.domain,
-                  },
-                }}
-              />
-              {/* <Funnel data={funnelData} /> */}
-            </CardContent>
-          </Card>
+          <UserSession
+            session={{
+              ...sessionData,
+              site: {
+                name: sessionData.project.name,
+                domain: sessionData.project.domain,
+              },
+            }}
+          />
         </div>
       </div>
     </>
