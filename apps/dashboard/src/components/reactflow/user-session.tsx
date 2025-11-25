@@ -25,9 +25,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import dagre from "dagre";
 import { format } from "date-fns";
-import { Clock, TrendingDown, Users } from "lucide-react";
+import { Clock, TrendingDown } from "lucide-react";
+import { cleanUrl } from "@/lib/utils";
 
 // Types for session data
 interface PageViewEvent {
@@ -66,7 +66,24 @@ interface UserSessionProps {
 function WebPageNode({ data }: NodeProps) {
   return (
     <div className="min-w-[280px]">
-      <Handle type="target" position={Position.Top} className="w-3 h-3" />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        className="w-3 h-3"
+      />
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        className="w-3 h-3"
+      />
+      <Handle
+        type="target"
+        position={Position.Bottom}
+        id="bottom"
+        className="w-3 h-3"
+      />
       <Card className="shadow-lg border-2 hover:shadow-xl transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -85,7 +102,9 @@ function WebPageNode({ data }: NodeProps) {
               {data.type}
             </Badge>
           </div>
-          <div className="text-xs text-muted-foreground">{data.url}</div>
+          <div className="text-xs text-muted-foreground">
+            {cleanUrl(data.url)}
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="space-y-2">
@@ -93,23 +112,24 @@ function WebPageNode({ data }: NodeProps) {
               <Clock className="w-3 h-3" />
               <span>{data.timestamp}</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <Users className="w-3 h-3" />
-              <span>{data.location}</span>
-            </div>
-            {data.avgTime && (
+            {data.timeOnPage && (
               <div className="flex items-center gap-2 text-xs">
                 <TrendingDown className="w-3 h-3" />
-                <span>{data.avgTime} on page</span>
+                <span>{data.timeOnPage} on page</span>
               </div>
             )}
           </div>
-          <div className="mt-3 h-16 bg-muted rounded border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground">
+          {/* <div className="mt-3 h-16 bg-muted rounded border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground">
             {data.preview}
-          </div>
+          </div> */}
         </CardContent>
       </Card>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        className="w-3 h-3"
+      />
     </div>
   );
 }
@@ -141,17 +161,7 @@ function formatDuration(seconds: number | null): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-// Helper function to get a unique key for a URL
-function getUrlKey(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.pathname || "/";
-  } catch {
-    return url;
-  }
-}
-
-// Helper function to generate nodes from session data with dagre layout
+// Helper function to generate nodes from session data
 function generateNodesFromSession(session: SessionData): Node[] {
   if (session.pageViewEvents.length === 0) {
     return [];
@@ -160,16 +170,37 @@ function generateNodesFromSession(session: SessionData): Node[] {
   // Create a map to track unique pages and their visit counts
   const pageVisits = new Map<
     string,
-    { count: number; firstVisit: number; lastVisit: number; urls: string[] }
+    {
+      count: number;
+      firstVisit: number;
+      lastVisit: number;
+      urls: string[];
+      timeOnPage: number;
+      column: number; // Track which column this page appears in
+    }
   >();
 
+  // Calculate time spent on each page
+  const sessionEndTime = session.endedAt
+    ? new Date(session.endedAt).getTime()
+    : Date.now();
+
   session.pageViewEvents.forEach((pageView, index) => {
-    const urlKey = getUrlKey(pageView.url);
+    const urlKey = cleanUrl(pageView.url, session.site.domain);
     const existing = pageVisits.get(urlKey);
+
+    // Calculate time spent on this page visit
+    const currentTime = new Date(pageView.timestamp).getTime();
+    const nextPageView = session.pageViewEvents[index + 1];
+    const nextTime = nextPageView
+      ? new Date(nextPageView.timestamp).getTime()
+      : sessionEndTime;
+    const timeSpent = Math.floor((nextTime - currentTime) / 1000);
 
     if (existing) {
       existing.count++;
       existing.lastVisit = index;
+      existing.timeOnPage += timeSpent;
       if (!existing.urls.includes(pageView.url)) {
         existing.urls.push(pageView.url);
       }
@@ -179,6 +210,8 @@ function generateNodesFromSession(session: SessionData): Node[] {
         firstVisit: index,
         lastVisit: index,
         urls: [pageView.url],
+        timeOnPage: timeSpent,
+        column: index, // First appearance determines column
       });
     }
   });
@@ -215,7 +248,7 @@ function generateNodesFromSession(session: SessionData): Node[] {
     nodes.push({
       id: urlKey,
       type: "webPage",
-      position: { x: 0, y: 0 }, // Will be set by dagre
+      position: { x: 0, y: 0 }, // Will be set by layout function
       data: {
         title,
         url: pageView.url,
@@ -223,9 +256,10 @@ function generateNodesFromSession(session: SessionData): Node[] {
         timestamp: format(new Date(pageView.timestamp), "HH:mm:ss"),
         location,
         visitors: "1",
-        avgTime: "0s",
+        timeOnPage: formatDuration(visits.timeOnPage),
         preview: title,
         visitCount: visits.count,
+        column: visits.column, // Store column for layout
       },
     });
   });
@@ -233,134 +267,126 @@ function generateNodesFromSession(session: SessionData): Node[] {
   return nodes;
 }
 
-// Helper function to generate edges from session data with bidirectional support
+// Helper function to generate edges from session data
+// Creates separate edges for each transition to avoid overlapping
 function generateEdgesFromSession(session: SessionData): Edge[] {
   const edges: Edge[] = [];
-  const edgeMap = new Map<
-    string,
-    {
-      count: number;
-      totalTime: number;
-      lastTime: number;
-      bidirectional: boolean;
-    }
-  >();
+  const transitionCounts = new Map<string, number>();
+  const loopCounts = new Map<string, number>();
 
-  // Track all transitions between pages
+  // Track all transitions between pages sequentially
   for (let i = 0; i < session.pageViewEvents.length - 1; i++) {
     const currentPage = session.pageViewEvents[i];
     const nextPage = session.pageViewEvents[i + 1];
 
     if (!currentPage || !nextPage) continue;
 
-    const currentUrlKey = getUrlKey(currentPage.url);
-    const nextUrlKey = getUrlKey(nextPage.url);
+    const currentUrlKey = cleanUrl(currentPage.url, session.site.domain);
+    const nextUrlKey = cleanUrl(nextPage.url, session.site.domain);
 
     // Skip if same page (refresh)
     if (currentUrlKey === nextUrlKey) continue;
 
-    // Create a consistent edge key (alphabetical order to avoid duplicates)
-    const [firstKey, secondKey] = [currentUrlKey, nextUrlKey].sort();
-    const edgeKey = `${firstKey}->${secondKey}`;
+    // Create unique edge ID for each transition
+    const edgeKey = `${currentUrlKey}->${nextUrlKey}`;
+    const count = transitionCounts.get(edgeKey) || 0;
+    transitionCounts.set(edgeKey, count + 1);
 
-    // Calculate time difference
-    const timeDiff = Math.floor(
-      (new Date(nextPage.timestamp).getTime() -
-        new Date(currentPage.timestamp).getTime()) /
-        1000,
-    );
+    // For repeated transitions, create unique ID with index
+    const uniqueEdgeId = count > 0 ? `${edgeKey}-${count}` : edgeKey;
 
-    if (edgeMap.has(edgeKey)) {
-      const existing = edgeMap.get(edgeKey);
-      if (existing) {
-        existing.count++;
-        existing.totalTime += timeDiff;
-        existing.lastTime = timeDiff;
-        existing.bidirectional = true;
-      }
-    } else {
-      edgeMap.set(edgeKey, {
-        count: 1,
-        totalTime: timeDiff,
-        lastTime: timeDiff,
-        bidirectional: false,
-      });
+    // Determine if this is a loop (going back to a previous page)
+    const isLoop =
+      i > 0 &&
+      session.pageViewEvents
+        .slice(0, i)
+        .some((prev) => cleanUrl(prev.url, session.site.domain) === nextUrlKey);
+
+    // For loops, connect to top/bottom handles instead of left
+    // Track loop count per target page to alternate handles
+    let loopTargetHandle = "left";
+    if (isLoop) {
+      const loopCount = loopCounts.get(nextUrlKey) || 0;
+      loopCounts.set(nextUrlKey, loopCount + 1);
+      // Alternate between top and bottom for multiple loops to the same page
+      loopTargetHandle = loopCount % 2 === 0 ? "top" : "bottom";
     }
-  }
-
-  // Create edges with bidirectional markers
-  edgeMap.forEach((data, edgeKey) => {
-    const edgeParts = edgeKey.split("->");
-    const source = edgeParts[0];
-    const target = edgeParts[1];
-
-    if (!source || !target) return;
-
-    const avgTime = Math.round(data.totalTime / data.count);
-    const label =
-      data.count > 1
-        ? `${data.count}x (${formatDuration(avgTime)})`
-        : formatDuration(data.lastTime);
 
     edges.push({
-      id: edgeKey,
-      source,
-      target,
-      label,
-      labelStyle: { fontSize: 12, fontWeight: 600 },
+      id: uniqueEdgeId,
+      source: currentUrlKey,
+      sourceHandle: "right",
+      target: nextUrlKey,
+      targetHandle: loopTargetHandle,
+      animated: true,
       type: "smoothstep",
       style: {
-        stroke: data.bidirectional ? "#8b5cf6" : "#6b7280",
+        stroke: isLoop ? "#8b5cf6" : "#6b7280",
         strokeWidth: 3,
-        strokeDasharray: "5,5",
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 20,
         height: 20,
-        color: data.bidirectional ? "#8b5cf6" : "#6b7280",
+        color: isLoop ? "#8b5cf6" : "#6b7280",
       },
-      markerStart: data.bidirectional
-        ? {
-            type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-            color: "#8b5cf6",
-          }
-        : undefined,
     });
-  });
+  }
 
   return edges;
 }
 
-// Dagre layout function
-function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction, nodesep: 100, ranksep: 150 });
+// Layout function that positions nodes in columns based on visit sequence
+function getLayoutedElements(
+  nodes: Node[],
+  edges: Edge[],
+): {
+  nodes: Node[];
+  edges: Edge[];
+} {
+  const nodeWidth = 300;
+  const nodeHeight = 200;
+  const columnSpacing = 400; // Horizontal spacing between columns
+  const rowSpacing = 250; // Vertical spacing for nodes in same column
 
-  // Set nodes
+  // Group nodes by column (based on first visit order)
+  const nodesByColumn = new Map<number, Node[]>();
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 300, height: 200 });
+    const column = node.data.column as number;
+    if (!nodesByColumn.has(column)) {
+      nodesByColumn.set(column, []);
+    }
+    const columnNodes = nodesByColumn.get(column);
+    if (columnNodes) {
+      columnNodes.push(node);
+    }
   });
 
-  // Set edges
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  // Calculate layout
-  dagre.layout(dagreGraph);
-
-  // Apply layout to nodes
+  // Position nodes in columns
   const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
+    const column = node.data.column as number;
+    const nodesInColumn = nodesByColumn.get(column) || [];
+    const indexInColumn = nodesInColumn.findIndex((n) => n.id === node.id);
+
+    // Calculate x position based on column
+    const x = column * columnSpacing;
+
+    // Calculate y position - center nodes in column, or stack if multiple
+    let y = 0;
+    if (nodesInColumn.length === 1) {
+      y = 0; // Center single node
+    } else {
+      // Stack multiple nodes vertically
+      const totalHeight = (nodesInColumn.length - 1) * rowSpacing;
+      const startY = -totalHeight / 2;
+      y = startY + indexInColumn * rowSpacing;
+    }
+
     return {
       ...node,
       position: {
-        x: nodeWithPosition.x - 150, // Center the node
-        y: nodeWithPosition.y - 100,
+        x: x - nodeWidth / 2, // Center the node
+        y: y - nodeHeight / 2,
       },
     };
   });
@@ -444,32 +470,34 @@ export function UserSession({ session }: UserSessionProps) {
   }, [handleMouseMove, handleMouseUp]);
 
   return (
-    <div
-      className="w-full bg-background relative"
-      style={{ height: `${height}px` }}
-    >
-      <ReactFlow
-        nodes={nodesState}
-        edges={edgesState}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.5}
-        maxZoom={1.5}
+    <div className="w-full h-full">
+      <div
+        className="w-full bg-background relative"
+        style={{ height: `${height}px` }}
       >
-        <Controls />
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-      </ReactFlow>
-      <button
-        className="absolute -bottom-1 left-0 w-full h-1 bg-border/60 cursor-ns-resize transition border-0 p-0 hover:bg-primary/70 active:bg-primary "
-        onMouseDown={handleMouseDown}
-        aria-label="Resize handle"
-        type="button"
-      />
+        <ReactFlow
+          nodes={nodesState}
+          edges={edgesState}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.5}
+          maxZoom={1.5}
+        >
+          <Controls />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+        </ReactFlow>
+        <button
+          className="absolute -bottom-1 left-0 w-full h-1 bg-border/60 cursor-ns-resize transition border-0 p-0 hover:bg-primary/70 active:bg-primary "
+          onMouseDown={handleMouseDown}
+          aria-label="Resize handle"
+          type="button"
+        />
+      </div>
     </div>
   );
 }

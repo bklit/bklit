@@ -7,10 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+// import { Funnel } from "@bklit/ui/components/charts/funnel";
 import { Kbd } from "@bklit/ui/components/kbd";
 import { Separator } from "@bklit/ui/components/separator";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/header/page-header";
@@ -139,6 +140,12 @@ export function SessionDetails({
 
   const browser = getBrowserFromUserAgent(sessionData.userAgent);
   const deviceType = getDeviceTypeFromUserAgent(sessionData.userAgent);
+
+  const funnelData = sessionData.pageViewEvents.map((pageView) => ({
+    id: pageView.id,
+    value: 1,
+    label: cleanUrl(pageView.url, sessionData.project.domain),
+  }));
 
   return (
     <>
@@ -320,6 +327,7 @@ export function SessionDetails({
                   },
                 }}
               />
+              {/* <Funnel data={funnelData} /> */}
             </CardContent>
           </Card>
         </div>
