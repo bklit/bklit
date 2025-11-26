@@ -1,4 +1,5 @@
 "use client";
+import { Fragment } from "react";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -276,11 +277,8 @@ export function SessionDetails({
                     sessionData.project.domain,
                   );
                   return (
-                    <>
-                      <div
-                        key={pageView.id}
-                        className="flex items-center space-x-4 group/row"
-                      >
+                    <Fragment key={pageView.id}>
+                      <div className="flex items-center space-x-4 group/row">
                         <div className="shrink-0 size-8 rounded-full text-bklit-100 flex items-center justify-center text-sm font-semibold bg-bklit-600 group-first/row:bg-teal-900 group-first/row:text-teal-500">
                           {index + 1}
                         </div>
@@ -303,7 +301,7 @@ export function SessionDetails({
                       {index !== sessionData.pageViewEvents.length - 1 && (
                         <div className="block w-0.5 h-2 bg-bklit-500 ml-3.5" />
                       )}
-                    </>
+                    </Fragment>
                   );
                 },
               )}

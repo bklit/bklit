@@ -1,7 +1,14 @@
 "use client";
 
 import { Badge } from "@bklit/ui/components/badge";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -144,12 +151,9 @@ function WebPageNode({ data }: NodeProps) {
                 if (item.type === "from") {
                   if (item.page === "Entry") {
                     return (
-                      <>
+                      <Fragment key={idx}>
                         {separator}
-                        <div
-                          key={idx}
-                          className="flex flex-col gap-1 text-muted-foreground"
-                        >
+                        <div className="flex flex-col gap-1 text-muted-foreground">
                           <Badge variant="success">Entry</Badge>
                           {item.time !== undefined && (
                             <div className="flex items-center gap-2 text-muted-foreground">
@@ -163,7 +167,7 @@ function WebPageNode({ data }: NodeProps) {
                             </div>
                           )}
                         </div>
-                      </>
+                      </Fragment>
                     );
                   }
                 }
@@ -171,18 +175,15 @@ function WebPageNode({ data }: NodeProps) {
                 if (item.type === "to") {
                   if (item.page === "Exit") {
                     return (
-                      <>
+                      <Fragment key={idx}>
                         {separator}
-                        <div
-                          key={idx}
-                          className="flex items-center gap-2 text-muted-foreground mt-0.5"
-                        >
+                        <div className="flex items-center gap-2 text-muted-foreground mt-0.5">
                           <div className="w-6 h-6 flex items-center justify-center">
                             <CornerDownRight size={14} className="ml-2" />
                           </div>
                           <Badge variant="destructive">Exit</Badge>
                         </div>
-                      </>
+                      </Fragment>
                     );
                   }
                   return (
@@ -200,9 +201,9 @@ function WebPageNode({ data }: NodeProps) {
 
                 if (item.type === "from") {
                   return (
-                    <>
+                    <Fragment key={idx}>
                       {separator}
-                      <div key={idx} className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1">
                         <Badge variant="alternative">
                           <span className="text-xs font-medium opacity-60">
                             from
@@ -221,7 +222,7 @@ function WebPageNode({ data }: NodeProps) {
                           </div>
                         )}
                       </div>
-                    </>
+                    </Fragment>
                   );
                 }
 
