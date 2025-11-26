@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "@bklit/ui/components/badge";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -18,18 +26,23 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import dagre from "dagre";
 import { format } from "date-fns";
-import { Clock, TrendingDown, Users } from "lucide-react";
+import {
+  ArrowUpFromDot,
+  Clock,
+  CornerDownRight,
+  Eye,
+  Timer,
+} from "lucide-react";
+import { cleanUrl } from "@/lib/utils";
 
-// Types for session data
 interface PageViewEvent {
   id: string;
   url: string;
@@ -62,59 +75,173 @@ interface UserSessionProps {
   session: SessionData;
 }
 
-// Custom node component for web pages
 function WebPageNode({ data }: NodeProps) {
+  const navigation = data.navigation as
+    | Array<{ type: "from" | "to"; page: string; time?: number }>
+    | undefined;
+  const visitCount = data.visitCount as number | undefined;
+  const opacity = data.opacity as number | undefined;
+
   return (
-    <div className="min-w-[280px]">
-      <Handle type="target" position={Position.Top} className="w-3 h-3" />
-      <Card className="shadow-lg border-2 hover:shadow-xl transition-shadow">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">
-              {data.title}
-            </CardTitle>
-            <Badge
-              variant={
-                data.type === "entry"
-                  ? "default"
-                  : data.type === "exit"
-                    ? "destructive"
-                    : "secondary"
-              }
-            >
-              {data.type}
-            </Badge>
-          </div>
-          <div className="text-xs text-muted-foreground">{data.url}</div>
+    <div
+      className="min-w-[280px] transition-opacity duration-200"
+      style={{ opacity: opacity ?? 1 }}
+    >
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        className="sr-only"
+      />
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        className="sr-only"
+      />
+      <Handle
+        type="target"
+        position={Position.Bottom}
+        id="bottom"
+        className="sr-only"
+      />
+      <Card className="relative shadow-xl bg-bklit-800 border-2">
+        <CardHeader className="pb-1">
+          <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
+          <CardDescription>
+            <code className="text-xs text-muted-foreground font-mono">
+              {cleanUrl(data.url)}
+            </code>
+          </CardDescription>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="space-y-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs">
-              <Clock className="w-3 h-3" />
-              <span>{data.timestamp}</span>
+              <Clock className="size-3" />
+              <span className="text-muted-foreground">{data.timestamp}</span>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <Users className="w-3 h-3" />
-              <span>{data.location}</span>
+              <Eye className="size-3" />
+              <span className="text-muted-foreground">
+                Visited {visitCount} times
+              </span>
             </div>
-            {data.avgTime && (
-              <div className="flex items-center gap-2 text-xs">
-                <TrendingDown className="w-3 h-3" />
-                <span>{data.avgTime} on page</span>
-              </div>
-            )}
           </div>
-          <div className="mt-3 h-16 bg-muted rounded border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground">
-            {data.preview}
-          </div>
+
+          {navigation && navigation.length > 0 ? (
+            <div className="border-t pt-3 text-xs">
+              {navigation.map((item, idx) => {
+                const needsSeparator =
+                  item.type === "from" &&
+                  idx > 0 &&
+                  navigation[idx - 1]?.type === "to" &&
+                  navigation[idx - 1]?.page !== item.page &&
+                  navigation[idx - 1]?.page !== "Exit";
+
+                const separator = needsSeparator ? (
+                  <div className="w-6 h-6 flex items-center justify-center">
+                    <ArrowUpFromDot
+                      size={12}
+                      key={`separator-${idx}`}
+                      className="rotate-180 text-muted-foreground/30"
+                    />
+                  </div>
+                ) : null;
+
+                if (item.type === "from") {
+                  if (item.page === "Entry") {
+                    return (
+                      <Fragment key={idx}>
+                        {separator}
+                        <div className="flex flex-col gap-1 text-muted-foreground">
+                          <Badge variant="success">Entry</Badge>
+                          {item.time !== undefined && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <div className="w-6 h-6 flex items-center justify-center">
+                                <Timer
+                                  size={12}
+                                  className="text-muted-foreground/30"
+                                />
+                              </div>
+                              viewed for {formatDuration(item.time)}
+                            </div>
+                          )}
+                        </div>
+                      </Fragment>
+                    );
+                  }
+                }
+
+                if (item.type === "to") {
+                  if (item.page === "Exit") {
+                    return (
+                      <Fragment key={idx}>
+                        {separator}
+                        <div className="flex items-center gap-2 text-muted-foreground mt-0.5">
+                          <div className="w-6 h-6 flex items-center justify-center">
+                            <CornerDownRight size={14} className="ml-2" />
+                          </div>
+                          <Badge variant="destructive">Exit</Badge>
+                        </div>
+                      </Fragment>
+                    );
+                  }
+                  return (
+                    <div
+                      key={idx}
+                      className="flex flex-row items-center gap-2 text-muted-foreground"
+                    >
+                      <div className="w-6 h-6 flex items-center justify-center">
+                        <CornerDownRight size={14} className="ml-2" />
+                      </div>
+                      <span>{item.page}</span>
+                    </div>
+                  );
+                }
+
+                if (item.type === "from") {
+                  return (
+                    <Fragment key={idx}>
+                      {separator}
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="alternative">
+                          <span className="text-xs font-medium opacity-60">
+                            from
+                          </span>{" "}
+                          <span>{item.page}</span>
+                        </Badge>
+                        {item.time !== undefined && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="w-6 h-6 flex items-center justify-center">
+                              <Timer
+                                size={12}
+                                className="text-muted-foreground/30"
+                              />
+                            </div>
+                            viewed for {formatDuration(item.time)}
+                          </div>
+                        )}
+                      </div>
+                    </Fragment>
+                  );
+                }
+
+                return null;
+              })}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        className="sr-only"
+      />
     </div>
   );
 }
 
-// Custom edge with conversion rate
 function ConversionEdge({ data }: EdgeProps) {
   return (
     <div className="bg-background border rounded px-2 py-1 text-xs font-medium shadow-sm">
@@ -131,7 +258,6 @@ const edgeTypes = {
   conversion: ConversionEdge,
 };
 
-// Helper function to format duration
 function formatDuration(seconds: number | null): string {
   if (!seconds) return "0s";
   if (seconds < 60) return `${seconds}s`;
@@ -141,35 +267,44 @@ function formatDuration(seconds: number | null): string {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-// Helper function to get a unique key for a URL
-function getUrlKey(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.pathname || "/";
-  } catch {
-    return url;
-  }
-}
-
-// Helper function to generate nodes from session data with dagre layout
 function generateNodesFromSession(session: SessionData): Node[] {
   if (session.pageViewEvents.length === 0) {
     return [];
   }
 
-  // Create a map to track unique pages and their visit counts
   const pageVisits = new Map<
     string,
-    { count: number; firstVisit: number; lastVisit: number; urls: string[] }
+    {
+      count: number;
+      firstVisit: number;
+      lastVisit: number;
+      urls: string[];
+      timeOnPage: number;
+      column: number;
+    }
   >();
 
+  const sessionEndTime = session.endedAt
+    ? new Date(session.endedAt).getTime()
+    : Date.now();
+
+  let uniqueColumnCounter = 0;
+
   session.pageViewEvents.forEach((pageView, index) => {
-    const urlKey = getUrlKey(pageView.url);
+    const urlKey = cleanUrl(pageView.url, session.site.domain);
     const existing = pageVisits.get(urlKey);
+
+    const currentTime = new Date(pageView.timestamp).getTime();
+    const nextPageView = session.pageViewEvents[index + 1];
+    const nextTime = nextPageView
+      ? new Date(nextPageView.timestamp).getTime()
+      : sessionEndTime;
+    const timeSpent = Math.floor((nextTime - currentTime) / 1000);
 
     if (existing) {
       existing.count++;
       existing.lastVisit = index;
+      existing.timeOnPage += timeSpent;
       if (!existing.urls.includes(pageView.url)) {
         existing.urls.push(pageView.url);
       }
@@ -179,53 +314,132 @@ function generateNodesFromSession(session: SessionData): Node[] {
         firstVisit: index,
         lastVisit: index,
         urls: [pageView.url],
+        timeOnPage: timeSpent,
+        column: uniqueColumnCounter++,
       });
     }
   });
 
-  // Generate nodes for unique pages
+  const formatPageTitle = (key: string): string => {
+    if (key === "/") return "Home";
+    if (key === "") return "Root";
+    return key;
+  };
+
+  const navigationSequences = new Map<
+    string,
+    Array<{ type: "from" | "to"; page: string; time?: number; index: number }>
+  >();
+
+  pageVisits.forEach((_, urlKey) => {
+    navigationSequences.set(urlKey, []);
+  });
+
+  for (let i = 0; i < session.pageViewEvents.length; i++) {
+    const currentPage = session.pageViewEvents[i];
+    if (!currentPage) continue;
+
+    const currentUrlKey = cleanUrl(currentPage.url, session.site.domain);
+    const currentNav = navigationSequences.get(currentUrlKey);
+    if (!currentNav) continue;
+
+    const currentPageTime = new Date(currentPage.timestamp).getTime();
+    const nextPage = session.pageViewEvents[i + 1];
+    const leaveTime = nextPage
+      ? new Date(nextPage.timestamp).getTime()
+      : sessionEndTime;
+    const timeSpent = Math.floor((leaveTime - currentPageTime) / 1000);
+
+    if (i === 0) {
+      currentNav.push({
+        type: "from",
+        page: "Entry",
+        time: timeSpent,
+        index: i,
+      });
+    } else {
+      const prevPage = session.pageViewEvents[i - 1];
+      if (prevPage) {
+        const prevUrlKey = cleanUrl(prevPage.url, session.site.domain);
+        if (prevUrlKey !== currentUrlKey) {
+          currentNav.push({
+            type: "from",
+            page: formatPageTitle(prevUrlKey),
+            time: timeSpent,
+            index: i,
+          });
+        }
+      }
+    }
+
+    if (nextPage) {
+      const nextUrlKey = cleanUrl(nextPage.url, session.site.domain);
+      if (nextUrlKey !== currentUrlKey) {
+        currentNav.push({
+          type: "to",
+          page: formatPageTitle(nextUrlKey),
+          index: i,
+        });
+      }
+    } else {
+      currentNav.push({
+        type: "to",
+        page: "Exit",
+        index: i,
+      });
+    }
+  }
+
   const nodes: Node[] = [];
+  const lastPageViewIndex = session.pageViewEvents.length - 1;
+  const lastPageView = session.pageViewEvents[lastPageViewIndex];
+  const lastPageUrlKey = lastPageView
+    ? cleanUrl(lastPageView.url, session.site.domain)
+    : null;
+  const firstPageView = session.pageViewEvents[0];
+  const firstPageUrlKey = firstPageView
+    ? cleanUrl(firstPageView.url, session.site.domain)
+    : null;
+  const isExitAlsoEntry = lastPageUrlKey === firstPageUrlKey;
 
   pageVisits.forEach((visits, urlKey) => {
     const pageView = session.pageViewEvents[visits.firstVisit];
     if (!pageView) return;
 
-    const isFirst = visits.firstVisit === 0;
-    const isLast = visits.lastVisit === session.pageViewEvents.length - 1;
+    const navSequence = navigationSequences.get(urlKey) || [];
 
-    let type: "entry" | "browse" | "exit";
-    if (isFirst) type = "entry";
-    else if (isLast) type = "exit";
-    else type = "browse";
+    const sortedSequence = navSequence
+      .sort((a, b) => a.index - b.index)
+      .map(({ type, page, time }) => ({ type, page, time }));
 
     const location =
       [session.country, session.city].filter(Boolean).join(", ") ||
       "Unknown location";
 
-    // Use the URL pathname as the title, or the full URL if no pathname
     let title = urlKey;
     if (urlKey === "/") title = "Home";
     else if (urlKey === "") title = "Root";
 
-    // Add visit count if more than 1
-    if (visits.count > 1) {
-      title += ` (${visits.count}x)`;
-    }
+    const isExitPage = urlKey === lastPageUrlKey;
 
     nodes.push({
       id: urlKey,
       type: "webPage",
-      position: { x: 0, y: 0 }, // Will be set by dagre
+      position: { x: 0, y: 0 },
       data: {
         title,
         url: pageView.url,
-        type,
-        timestamp: format(new Date(pageView.timestamp), "HH:mm:ss"),
+        timestamp: format(new Date(pageView.timestamp), "PPp"),
         location,
         visitors: "1",
-        avgTime: "0s",
+        timeOnPage: formatDuration(visits.timeOnPage),
         preview: title,
         visitCount: visits.count,
+        column: visits.column,
+        row: isExitPage && !isExitAlsoEntry ? 1 : 0,
+        isExitPage,
+        isExitAlsoEntry,
+        navigation: sortedSequence,
       },
     });
   });
@@ -233,137 +447,171 @@ function generateNodesFromSession(session: SessionData): Node[] {
   return nodes;
 }
 
-// Helper function to generate edges from session data with bidirectional support
 function generateEdgesFromSession(session: SessionData): Edge[] {
   const edges: Edge[] = [];
-  const edgeMap = new Map<
-    string,
-    {
-      count: number;
-      totalTime: number;
-      lastTime: number;
-      bidirectional: boolean;
-    }
-  >();
+  const transitionCounts = new Map<string, number>();
+  const loopCounts = new Map<string, number>();
 
-  // Track all transitions between pages
+  const lastPageViewIndex = session.pageViewEvents.length - 1;
+  const lastPageView = session.pageViewEvents[lastPageViewIndex];
+  const lastPageUrlKey = lastPageView
+    ? cleanUrl(lastPageView.url, session.site.domain)
+    : null;
+
   for (let i = 0; i < session.pageViewEvents.length - 1; i++) {
     const currentPage = session.pageViewEvents[i];
     const nextPage = session.pageViewEvents[i + 1];
 
     if (!currentPage || !nextPage) continue;
 
-    const currentUrlKey = getUrlKey(currentPage.url);
-    const nextUrlKey = getUrlKey(nextPage.url);
+    const currentUrlKey = cleanUrl(currentPage.url, session.site.domain);
+    const nextUrlKey = cleanUrl(nextPage.url, session.site.domain);
 
-    // Skip if same page (refresh)
     if (currentUrlKey === nextUrlKey) continue;
 
-    // Create a consistent edge key (alphabetical order to avoid duplicates)
-    const [firstKey, secondKey] = [currentUrlKey, nextUrlKey].sort();
-    const edgeKey = `${firstKey}->${secondKey}`;
+    const isLastTransition = i === lastPageViewIndex - 1;
+    const targetUrlKey = isLastTransition ? lastPageUrlKey : nextUrlKey;
 
-    // Calculate time difference
-    const timeDiff = Math.floor(
-      (new Date(nextPage.timestamp).getTime() -
-        new Date(currentPage.timestamp).getTime()) /
-        1000,
-    );
+    if (!targetUrlKey) continue;
 
-    if (edgeMap.has(edgeKey)) {
-      const existing = edgeMap.get(edgeKey);
-      if (existing) {
-        existing.count++;
-        existing.totalTime += timeDiff;
-        existing.lastTime = timeDiff;
-        existing.bidirectional = true;
-      }
+    const edgeKey = `${currentUrlKey}->${targetUrlKey}`;
+    const count = transitionCounts.get(edgeKey) || 0;
+    transitionCounts.set(edgeKey, count + 1);
+
+    const uniqueEdgeId = count > 0 ? `${edgeKey}-${count}` : edgeKey;
+
+    const isLoop =
+      i > 0 &&
+      session.pageViewEvents
+        .slice(0, i)
+        .some((prev) => cleanUrl(prev.url, session.site.domain) === nextUrlKey);
+
+    let loopTargetHandle = "left";
+    if (isLoop) {
+      const loopCount = loopCounts.get(targetUrlKey) || 0;
+      loopCounts.set(targetUrlKey, loopCount + 1);
+      loopTargetHandle = loopCount % 2 === 0 ? "top" : "bottom";
+    }
+
+    if (isLastTransition) {
+      edges.push({
+        id: `${uniqueEdgeId}->exit`,
+        source: currentUrlKey,
+        sourceHandle: "right",
+        target: targetUrlKey,
+        targetHandle: "bottom",
+        animated: true,
+        type: "smoothstep",
+        style: {
+          stroke: "var(--bklit-300)",
+          strokeWidth: 3,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+          color: "var(--bklit-300)",
+        },
+      });
     } else {
-      edgeMap.set(edgeKey, {
-        count: 1,
-        totalTime: timeDiff,
-        lastTime: timeDiff,
-        bidirectional: false,
+      edges.push({
+        id: uniqueEdgeId,
+        source: currentUrlKey,
+        sourceHandle: "right",
+        target: targetUrlKey,
+        targetHandle: loopTargetHandle,
+        animated: true,
+        type: "smoothstep",
+        style: {
+          stroke: isLoop ? "var(--primary)" : "var(--bklit-300)",
+          strokeWidth: 3,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+          color: isLoop ? "var(--primary)" : "var(--bklit-300)",
+        },
       });
     }
   }
 
-  // Create edges with bidirectional markers
-  edgeMap.forEach((data, edgeKey) => {
-    const edgeParts = edgeKey.split("->");
-    const source = edgeParts[0];
-    const target = edgeParts[1];
-
-    if (!source || !target) return;
-
-    const avgTime = Math.round(data.totalTime / data.count);
-    const label =
-      data.count > 1
-        ? `${data.count}x (${formatDuration(avgTime)})`
-        : formatDuration(data.lastTime);
-
-    edges.push({
-      id: edgeKey,
-      source,
-      target,
-      label,
-      labelStyle: { fontSize: 12, fontWeight: 600 },
-      type: "smoothstep",
-      style: {
-        stroke: data.bidirectional ? "#8b5cf6" : "#6b7280",
-        strokeWidth: 3,
-        strokeDasharray: "5,5",
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-        color: data.bidirectional ? "#8b5cf6" : "#6b7280",
-      },
-      markerStart: data.bidirectional
-        ? {
-            type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-            color: "#8b5cf6",
-          }
-        : undefined,
-    });
-  });
-
   return edges;
 }
 
-// Dagre layout function
-function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction, nodesep: 100, ranksep: 150 });
+function getLayoutedElements(
+  nodes: Node[],
+  edges: Edge[],
+): {
+  nodes: Node[];
+  edges: Edge[];
+} {
+  const nodeWidth = 300;
+  const nodeHeight = 200;
+  const columnSpacing = 400;
+  const rowSpacing = 250;
 
-  // Set nodes
+  const nodesByColumn = new Map<number, Node[]>();
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 300, height: 200 });
+    const column = node.data.column as number;
+    if (!nodesByColumn.has(column)) {
+      nodesByColumn.set(column, []);
+    }
+    const columnNodes = nodesByColumn.get(column);
+    if (columnNodes) {
+      columnNodes.push(node);
+    }
   });
 
-  // Set edges
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
+  const regularNodes = nodes.filter(
+    (n) =>
+      !(n.data.isExitPage as boolean) || (n.data.isExitAlsoEntry as boolean),
+  );
+  const exitNode = nodes.find(
+    (n) =>
+      (n.data.isExitPage as boolean) && !(n.data.isExitAlsoEntry as boolean),
+  );
 
-  // Calculate layout
-  dagre.layout(dagreGraph);
+  const sortedRegularNodes = [...regularNodes].sort(
+    (a, b) => (a.data.column as number) - (b.data.column as number),
+  );
 
-  // Apply layout to nodes
-  const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
+  const layoutedRegularNodes = sortedRegularNodes.map((node) => {
+    const column = node.data.column as number;
+    const row = node.data.row as number;
+    const verticalOffset = column * 80;
+
+    const x = column * columnSpacing;
+    const y = row * rowSpacing + verticalOffset;
+
     return {
       ...node,
       position: {
-        x: nodeWithPosition.x - 150, // Center the node
-        y: nodeWithPosition.y - 100,
+        x: x - nodeWidth / 2,
+        y: y - nodeHeight / 2,
       },
     };
   });
+
+  let layoutedNodes = layoutedRegularNodes;
+
+  if (exitNode) {
+    const exitColumn = exitNode.data.column as number;
+    const verticalOffset = exitColumn * 80;
+    const x = exitColumn * columnSpacing;
+    const y = rowSpacing + verticalOffset;
+
+    layoutedNodes = [
+      ...layoutedRegularNodes,
+      {
+        ...exitNode,
+        position: {
+          x: x - nodeWidth / 2,
+          y: y - nodeHeight / 2,
+        },
+      },
+    ];
+  }
 
   return { nodes: layoutedNodes, edges };
 }
@@ -373,6 +621,7 @@ export function UserSession({ session }: UserSessionProps) {
   const isDragging = useRef(false);
   const startY = useRef(0);
   const startHeight = useRef(0);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
 
   const initialNodes = useMemo(
     () => generateNodesFromSession(session),
@@ -388,8 +637,63 @@ export function UserSession({ session }: UserSessionProps) {
     [initialNodes, initialEdges],
   );
 
-  const [nodesState, , onNodesChange] = useNodesState(layoutedNodes);
-  const [edgesState, , onEdgesChange] = useEdgesState(layoutedEdges);
+  const nodesWithOpacity = useMemo(() => {
+    if (hoveredEdgeId) {
+      const hoveredEdge = layoutedEdges.find((e) => e.id === hoveredEdgeId);
+      if (hoveredEdge) {
+        const relatedNodeIds = new Set([
+          hoveredEdge.source,
+          hoveredEdge.target,
+        ]);
+        return layoutedNodes.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            opacity: relatedNodeIds.has(node.id) ? 1 : 0.3,
+          },
+        }));
+      }
+    }
+
+    return layoutedNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        opacity: 1,
+      },
+    }));
+  }, [layoutedNodes, layoutedEdges, hoveredEdgeId]);
+
+  const edgesWithOpacity = useMemo(() => {
+    if (hoveredEdgeId) {
+      return layoutedEdges.map((edge) => ({
+        ...edge,
+        style: {
+          ...edge.style,
+          opacity: edge.id === hoveredEdgeId ? 1 : 0.3,
+        },
+      }));
+    }
+
+    return layoutedEdges.map((edge) => ({
+      ...edge,
+      style: {
+        ...edge.style,
+        opacity: 1,
+      },
+    }));
+  }, [layoutedEdges, hoveredEdgeId]);
+
+  const [nodesState, setNodes, onNodesChange] = useNodesState(nodesWithOpacity);
+  const [edgesState, setEdges, onEdgesChange] = useEdgesState(edgesWithOpacity);
+
+  useEffect(() => {
+    setNodes(nodesWithOpacity);
+  }, [nodesWithOpacity, setNodes]);
+
+  useEffect(() => {
+    setEdges(edgesWithOpacity);
+  }, [edgesWithOpacity, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -400,17 +704,6 @@ export function UserSession({ session }: UserSessionProps) {
       }
     },
     [edgesState, onEdgesChange],
-  );
-
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      isDragging.current = true;
-      startY.current = e.clientY;
-      startHeight.current = height;
-      document.body.style.cursor = "ns-resize";
-      document.body.style.userSelect = "none";
-    },
-    [height],
   );
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -430,7 +723,6 @@ export function UserSession({ session }: UserSessionProps) {
     document.body.style.userSelect = "";
   }, []);
 
-  // Add event listeners for mouse move and up
   useEffect(() => {
     if (typeof window !== "undefined") {
       document.addEventListener("mousemove", handleMouseMove);
@@ -444,10 +736,7 @@ export function UserSession({ session }: UserSessionProps) {
   }, [handleMouseMove, handleMouseUp]);
 
   return (
-    <div
-      className="w-full bg-background relative"
-      style={{ height: `${height}px` }}
-    >
+    <div className="w-full relative border-2 rounded-xl overflow-clip h-[720px]">
       <ReactFlow
         nodes={nodesState}
         edges={edgesState}
@@ -456,20 +745,22 @@ export function UserSession({ session }: UserSessionProps) {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onEdgeMouseEnter={(_event, edge) => setHoveredEdgeId(edge.id)}
+        onEdgeMouseLeave={() => setHoveredEdgeId(null)}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.5}
         maxZoom={1.5}
       >
-        <Controls />
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+        <Controls className="bg-bklit-800 [&>button]:bg-bklit-700! [&>button]:border-border! [&>button>svg]:fill-current! [&>button>svg]:text-bklit-300!" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
+          size={1}
+          color="var(--bklit-300)"
+          className="bg-bklit-700"
+        />
       </ReactFlow>
-      <button
-        className="absolute -bottom-1 left-0 w-full h-1 bg-border/60 cursor-ns-resize transition border-0 p-0 hover:bg-primary/70 active:bg-primary "
-        onMouseDown={handleMouseDown}
-        aria-label="Resize handle"
-        type="button"
-      />
     </div>
   );
 }

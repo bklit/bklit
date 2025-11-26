@@ -109,9 +109,7 @@ export function getCountryNameFromCode(countryCode: string): string {
   const normalizedCode = countryCode.toUpperCase().trim();
 
   // First try to find by alpha-2 code (2-letter)
-  let found = coordinates.find(
-    (coord) => coord.alpha2Code === normalizedCode,
-  );
+  let found = coordinates.find((coord) => coord.alpha2Code === normalizedCode);
 
   // If not found, try alpha-3 code (3-letter)
   if (!found) {

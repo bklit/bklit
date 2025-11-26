@@ -15,6 +15,7 @@
     "./hooks/*": "./src/hooks/*.ts"
   },
   "dependencies": {
+    "@nivo/funnel": "^0.99.0",
     "@number-flow/react": "^0.5.10",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
