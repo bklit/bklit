@@ -119,16 +119,15 @@ export function transformSessionsToSankey(
         value: Number(value),
       };
     })
-    .filter(
-      (link): link is SankeyLink =>
-        link !== null && link.value > 0,
-    );
+    .filter((link): link is SankeyLink => link !== null && link.value > 0);
 
   const result = { nodes, links };
-  
+
   console.log("Transformed Sankey Data:", {
     sessionsProcessed: sessions.length,
-    sessionsWithPageViews: sessions.filter((s) => s.pageViewEvents && s.pageViewEvents.length > 0).length,
+    sessionsWithPageViews: sessions.filter(
+      (s) => s.pageViewEvents && s.pageViewEvents.length > 0,
+    ).length,
     uniquePages: pages.length,
     pages: pages,
     totalTransitions: transitions.size,
@@ -168,24 +167,36 @@ function removeCyclesSmart(
   links: Array<{ source: string; target: string; value: number }>,
 ): Array<{ source: string; target: string; value: number }> {
   // First, handle bidirectional links by keeping the one with higher value
-  const linkMap = new Map<string, { source: string; target: string; value: number }>();
-  const bidirectionalPairs = new Map<string, { forward?: { source: string; target: string; value: number }; backward?: { source: string; target: string; value: number } }>();
+  const linkMap = new Map<
+    string,
+    { source: string; target: string; value: number }
+  >();
+  const bidirectionalPairs = new Map<
+    string,
+    {
+      forward?: { source: string; target: string; value: number };
+      backward?: { source: string; target: string; value: number };
+    }
+  >();
 
   links.forEach((link) => {
     const linkKey = `${link.source}->${link.target}`;
     const reverseKey = `${link.target}->${link.source}`;
-    
+
     linkMap.set(linkKey, link);
-    
+
     // Check if there's a bidirectional pair
     if (linkMap.has(reverseKey)) {
       const reverseLink = linkMap.get(reverseKey)!;
-      const pairKey = link.source < link.target ? `${link.source}<->${link.target}` : `${link.target}<->${link.source}`;
-      
+      const pairKey =
+        link.source < link.target
+          ? `${link.source}<->${link.target}`
+          : `${link.target}<->${link.source}`;
+
       if (!bidirectionalPairs.has(pairKey)) {
         bidirectionalPairs.set(pairKey, {});
       }
-      
+
       const pair = bidirectionalPairs.get(pairKey)!;
       if (link.source < link.target) {
         pair.forward = link;
@@ -203,16 +214,22 @@ function removeCyclesSmart(
     if (pair.forward && pair.backward) {
       if (pair.forward.value >= pair.backward.value) {
         linksToRemove.add(`${pair.backward.source}->${pair.backward.target}`);
-        console.log(`NivoSankey: Bidirectional link detected, keeping forward (${pair.forward.value} >= ${pair.backward.value}):`, {
-          keeping: `${pair.forward.source}->${pair.forward.target}`,
-          removing: `${pair.backward.source}->${pair.backward.target}`,
-        });
+        console.log(
+          `NivoSankey: Bidirectional link detected, keeping forward (${pair.forward.value} >= ${pair.backward.value}):`,
+          {
+            keeping: `${pair.forward.source}->${pair.forward.target}`,
+            removing: `${pair.backward.source}->${pair.backward.target}`,
+          },
+        );
       } else {
         linksToRemove.add(`${pair.forward.source}->${pair.forward.target}`);
-        console.log(`NivoSankey: Bidirectional link detected, keeping backward (${pair.backward.value} > ${pair.forward.value}):`, {
-          keeping: `${pair.backward.source}->${pair.backward.target}`,
-          removing: `${pair.forward.source}->${pair.forward.target}`,
-        });
+        console.log(
+          `NivoSankey: Bidirectional link detected, keeping backward (${pair.backward.value} > ${pair.forward.value}):`,
+          {
+            keeping: `${pair.backward.source}->${pair.backward.target}`,
+            removing: `${pair.forward.source}->${pair.forward.target}`,
+          },
+        );
       }
     }
   });
@@ -224,7 +241,10 @@ function removeCyclesSmart(
   });
 
   // Now detect remaining cycles and break them by removing the weakest link in each cycle
-  const graph = new Map<string, Array<{ target: string; value: number; linkKey: string }>>();
+  const graph = new Map<
+    string,
+    Array<{ target: string; value: number; linkKey: string }>
+  >();
   nodes.forEach((node) => {
     graph.set(node, []);
   });
@@ -240,31 +260,38 @@ function removeCyclesSmart(
   const visited = new Set<string>();
   const recStack = new Set<string>();
 
-  function findCycles(node: string, path: Array<{ node: string; linkKey?: string }>): void {
+  function findCycles(
+    node: string,
+    path: Array<{ node: string; linkKey?: string }>,
+  ): void {
     if (recStack.has(node)) {
       const cycleStart = path.findIndex((p) => p.node === node);
       if (cycleStart >= 0) {
         const cycle = path.slice(cycleStart);
         cycle.push({ node, linkKey: undefined });
-        
+
         // Find the weakest link in the cycle
         let weakestLink: string | null = null;
         let weakestValue = Infinity;
-        
+
         for (let i = 0; i < cycle.length - 1; i++) {
           const linkKey = cycle[i].linkKey;
           if (linkKey) {
-            const link = filteredLinks.find((l) => `${l.source}->${l.target}` === linkKey);
+            const link = filteredLinks.find(
+              (l) => `${l.source}->${l.target}` === linkKey,
+            );
             if (link && link.value < weakestValue) {
               weakestValue = link.value;
               weakestLink = linkKey;
             }
           }
         }
-        
+
         if (weakestLink) {
           cycleLinks.add(weakestLink);
-          console.log(`NivoSankey: Breaking cycle by removing weakest link: ${weakestLink} (value: ${weakestValue})`);
+          console.log(
+            `NivoSankey: Breaking cycle by removing weakest link: ${weakestLink} (value: ${weakestValue})`,
+          );
         }
       }
       return;
@@ -279,7 +306,10 @@ function removeCyclesSmart(
 
     const neighbors = graph.get(node) || [];
     for (const neighbor of neighbors) {
-      findCycles(neighbor.target, [...path, { node, linkKey: neighbor.linkKey }]);
+      findCycles(neighbor.target, [
+        ...path,
+        { node, linkKey: neighbor.linkKey },
+      ]);
     }
 
     recStack.delete(node);
@@ -309,11 +339,9 @@ function removeCyclesSmart(
   return filteredLinks;
 }
 
-export function transformToNivoSankey(
-  sankeyData: SankeyData,
-): NivoSankeyData {
+export function transformToNivoSankey(sankeyData: SankeyData): NivoSankeyData {
   const nodeIdMap = new Map<number, string>();
-  
+
   const nodes: NivoSankeyNode[] = sankeyData.nodes.map((node, index) => {
     const id = node.name;
     nodeIdMap.set(index, id);
@@ -324,11 +352,11 @@ export function transformToNivoSankey(
     .map((link) => {
       const sourceId = nodeIdMap.get(link.source);
       const targetId = nodeIdMap.get(link.target);
-      
+
       if (!sourceId || !targetId || sourceId === targetId) {
         return null;
       }
-      
+
       return {
         source: sourceId,
         target: targetId,
@@ -338,17 +366,14 @@ export function transformToNivoSankey(
     .filter((link): link is NivoSankeyLink => link !== null);
 
   const nodeIds = nodes.map((n) => n.id);
-  
+
   console.log("NivoSankey: Before cycle removal:", {
     nodeCount: nodeIds.length,
     linkCount: allLinks.length,
     links: allLinks.map((l) => `${l.source}->${l.target}`),
   });
 
-  const linksWithoutCycles = removeCyclesSmart(
-    nodeIds,
-    allLinks,
-  );
+  const linksWithoutCycles = removeCyclesSmart(nodeIds, allLinks);
 
   console.log("NivoSankey: After cycle removal:", {
     originalLinkCount: allLinks.length,
@@ -358,4 +383,3 @@ export function transformToNivoSankey(
 
   return { nodes, links: linksWithoutCycles };
 }
-

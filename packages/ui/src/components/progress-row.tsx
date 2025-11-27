@@ -49,10 +49,7 @@ export const ProgressRow = ({
       {percentage && (
         <div className="flex h-0.5 bg-muted">
           <div
-            className={cn(
-              "flex h-full rounded-full",
-              !color && "bg-primary"
-            )}
+            className={cn("flex h-full rounded-full", !color && "bg-primary")}
             style={{
               width: `${percentage}%`,
               ...(color && { backgroundColor: color }),

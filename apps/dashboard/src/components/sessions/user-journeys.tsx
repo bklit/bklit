@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardContent,
@@ -8,8 +9,6 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { SankeyNivo } from "@bklit/ui/components/charts/sankey-nivo";
-import { transformToNivoSankey } from "./sankey-utils";
-import { Button } from "@bklit/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -23,16 +22,14 @@ import { Filter } from "lucide-react";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import { useTRPC } from "@/trpc/react";
+import { transformToNivoSankey } from "./sankey-utils";
 
 interface UserJourneysProps {
   organizationId: string;
   projectId: string;
 }
 
-export function UserJourneys({
-  organizationId,
-  projectId,
-}: UserJourneysProps) {
+export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
   const trpc = useTRPC();
 
   const [dateParams] = useQueryStates(
@@ -120,9 +117,7 @@ export function UserJourneys({
         };
       })
       .filter(
-        (
-          link,
-        ): link is { source: number; target: number; value: number } =>
+        (link): link is { source: number; target: number; value: number } =>
           link !== null,
       );
 
@@ -219,4 +214,3 @@ export function UserJourneys({
     </Card>
   );
 }
-

@@ -553,7 +553,10 @@ export const sessionRouter = createTRPCRouter({
             value,
           };
         })
-        .filter((link): link is { source: number; target: number; value: number } => link !== null);
+        .filter(
+          (link): link is { source: number; target: number; value: number } =>
+            link !== null,
+        );
 
       return { nodes, links };
     }),
