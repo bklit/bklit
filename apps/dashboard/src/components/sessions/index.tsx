@@ -64,7 +64,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
   const endDate = dateParams.endDate ?? undefined;
 
-  // Get sessions using tRPC for stats
+  // Get sessions using tRPC for stats - query will automatically refetch when startDate/endDate change
   const { data: sessionsData, isLoading } = useQuery(
     trpc.session.getRecent.queryOptions({
       projectId,
