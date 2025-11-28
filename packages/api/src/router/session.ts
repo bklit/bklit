@@ -547,10 +547,7 @@ export const sessionRouter = createTRPCRouter({
 
         for (const [to, value] of innerMap.entries()) {
           const targetIndex = nodeMap.get(to);
-          if (
-            targetIndex === undefined ||
-            sourceIndex === targetIndex
-          ) {
+          if (targetIndex === undefined || sourceIndex === targetIndex) {
             continue;
           }
           links.push({
