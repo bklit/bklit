@@ -498,7 +498,7 @@ export const sessionRouter = createTRPCRouter({
       }
 
       const pageSet = new Set<string>();
-      const transitions = new Map<string, number>();
+      const transitions = new Map<string, Map<string, number>>();
 
       for (const session of sessions) {
         if (session.pageViewEvents.length === 0) continue;
@@ -519,8 +519,12 @@ export const sessionRouter = createTRPCRouter({
           if (from !== to) {
             pageSet.add(from);
             pageSet.add(to);
-            const key = `${from}->${to}`;
-            transitions.set(key, (transitions.get(key) || 0) + 1);
+            let innerMap = transitions.get(from);
+            if (!innerMap) {
+              innerMap = new Map<string, number>();
+              transitions.set(from, innerMap);
+            }
+            innerMap.set(to, (innerMap.get(to) || 0) + 1);
           }
         }
       }
@@ -535,28 +539,27 @@ export const sessionRouter = createTRPCRouter({
         name: page === "/" ? "Home" : page,
       }));
 
-      const links = Array.from(transitions.entries())
-        .map(([key, value]) => {
-          const [from, to] = key.split("->");
-          const sourceIndex = nodeMap.get(from);
+      const links: Array<{ source: number; target: number; value: number }> =
+        [];
+      for (const [from, innerMap] of transitions.entries()) {
+        const sourceIndex = nodeMap.get(from);
+        if (sourceIndex === undefined) continue;
+
+        for (const [to, value] of innerMap.entries()) {
           const targetIndex = nodeMap.get(to);
           if (
-            sourceIndex === undefined ||
             targetIndex === undefined ||
             sourceIndex === targetIndex
           ) {
-            return null;
+            continue;
           }
-          return {
+          links.push({
             source: sourceIndex,
             target: targetIndex,
             value,
-          };
-        })
-        .filter(
-          (link): link is { source: number; target: number; value: number } =>
-            link !== null,
-        );
+          });
+        }
+      }
 
       return { nodes, links };
     }),
