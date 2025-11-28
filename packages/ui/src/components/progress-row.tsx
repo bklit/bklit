@@ -8,6 +8,7 @@ interface ProgressRowProps {
   icon?: React.ReactNode;
   className?: string;
   variant?: "default" | "secondary";
+  color?: string;
 }
 
 export const ProgressRow = ({
@@ -17,6 +18,7 @@ export const ProgressRow = ({
   icon,
   className,
   variant = "default",
+  color,
 }: ProgressRowProps) => {
   if (percentage < 0) {
     percentage = 0;
@@ -47,8 +49,11 @@ export const ProgressRow = ({
       {percentage && (
         <div className="flex h-0.5 bg-muted">
           <div
-            className="flex h-full bg-primary rounded-full"
-            style={{ width: `${percentage}%` }}
+            className={cn("flex h-full rounded-full", !color && "bg-primary")}
+            style={{
+              width: `${percentage}%`,
+              ...(color && { backgroundColor: color }),
+            }}
           />
         </div>
       )}

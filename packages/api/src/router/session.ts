@@ -431,4 +431,133 @@ export const sessionRouter = createTRPCRouter({
 
       return recentSessions;
     }),
+  getJourneys: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const dateFilter =
+        input.startDate || input.endDate
+          ? {
+              startedAt: {
+                ...(input.startDate && { gte: input.startDate }),
+                ...(input.endDate && { lte: input.endDate }),
+              },
+            }
+          : undefined;
+
+      const sessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          ...(dateFilter && dateFilter),
+        },
+        include: {
+          pageViewEvents: {
+            orderBy: { timestamp: "asc" },
+            select: {
+              url: true,
+            },
+          },
+        },
+      });
+
+      function extractPath(url: string): string {
+        try {
+          const urlObj = new URL(url);
+          const pathname = urlObj.pathname;
+          return pathname === "" ? "/" : pathname;
+        } catch {
+          const match = url.match(/^https?:\/\/[^/]+(\/.*)?$/);
+          if (match) {
+            return match[1] || "/";
+          }
+          return url;
+        }
+      }
+
+      const pageSet = new Set<string>();
+      const transitions = new Map<string, Map<string, number>>();
+
+      for (const session of sessions) {
+        if (session.pageViewEvents.length === 0) continue;
+
+        const paths = session.pageViewEvents.map((event) =>
+          extractPath(event.url),
+        );
+
+        const entryPage = paths[0];
+        const exitPage = paths[paths.length - 1];
+
+        pageSet.add(entryPage);
+        pageSet.add(exitPage);
+
+        for (let i = 0; i < paths.length - 1; i++) {
+          const from = paths[i];
+          const to = paths[i + 1];
+          if (from !== to) {
+            pageSet.add(from);
+            pageSet.add(to);
+            let innerMap = transitions.get(from);
+            if (!innerMap) {
+              innerMap = new Map<string, number>();
+              transitions.set(from, innerMap);
+            }
+            innerMap.set(to, (innerMap.get(to) || 0) + 1);
+          }
+        }
+      }
+
+      const pages = Array.from(pageSet).sort();
+      const nodeMap = new Map<string, number>();
+      pages.forEach((page, index) => {
+        nodeMap.set(page, index);
+      });
+
+      const nodes = pages.map((page) => ({
+        name: page === "/" ? "Home" : page,
+      }));
+
+      const links: Array<{ source: number; target: number; value: number }> =
+        [];
+      for (const [from, innerMap] of transitions.entries()) {
+        const sourceIndex = nodeMap.get(from);
+        if (sourceIndex === undefined) continue;
+
+        for (const [to, value] of innerMap.entries()) {
+          const targetIndex = nodeMap.get(to);
+          if (targetIndex === undefined || sourceIndex === targetIndex) {
+            continue;
+          }
+          links.push({
+            source: sourceIndex,
+            target: targetIndex,
+            value,
+          });
+        }
+      }
+
+      return { nodes, links };
+    }),
 });
