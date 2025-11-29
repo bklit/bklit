@@ -111,7 +111,8 @@ export function ViewsCard({
   );
 
   const sessionStats: SessionAnalyticsSummary = {
-    totalSessions: sessionData?.totalSessions ?? initialSessionData.totalSessions,
+    totalSessions:
+      sessionData?.totalSessions ?? initialSessionData.totalSessions,
     bounceRate: sessionData?.bounceRate ?? initialSessionData.bounceRate,
   };
 

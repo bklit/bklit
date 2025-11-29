@@ -7,8 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { MonitorSmartphone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { MonitorSmartphone } from "lucide-react";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { getMobileDesktopStats } from "@/actions/analytics-actions";

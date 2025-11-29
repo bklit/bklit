@@ -19,10 +19,7 @@ interface BounceRateCardProps {
   userId: string;
 }
 
-export function BounceRateCard({
-  projectId,
-  userId,
-}: BounceRateCardProps) {
+export function BounceRateCard({ projectId, userId }: BounceRateCardProps) {
   const [dateParams] = useQueryStates(
     {
       startDate: parseAsIsoDateTime,

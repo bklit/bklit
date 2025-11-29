@@ -896,7 +896,9 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
             return date;
           })();
 
-      const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+      const normalizedEndDate = endDate
+        ? endOfDay(endDate)
+        : endOfDay(new Date());
 
       const dateFilter = {
         timestamp: {

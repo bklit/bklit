@@ -8,20 +8,17 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
-import { CircleFlag } from "react-circle-flags";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
+import { CircleFlag } from "react-circle-flags";
 import { getTopCountries } from "@/actions/analytics-actions";
 import type { AnalyticsCardProps } from "@/types/analytics-cards";
 import { NoDataCard } from "./no-data-card";
 
 type TopCountriesCardProps = AnalyticsCardProps;
 
-export function TopCountriesCard({
-  projectId,
-  userId,
-}: TopCountriesCardProps) {
+export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
   const [dateParams] = useQueryStates(
     {
       startDate: parseAsIsoDateTime,

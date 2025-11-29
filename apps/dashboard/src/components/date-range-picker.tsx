@@ -66,20 +66,22 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
 
   const isDefaultRange = useMemo(() => {
     if (!dateParams.startDate || !dateParams.endDate) return false;
-    
+
     const today = new Date();
     const defaultEndDate = endOfDay(today);
     const defaultStartDate = startOfDay(today);
     defaultStartDate.setDate(defaultStartDate.getDate() - 30);
-    
+
     const normalizedCurrentStart = startOfDay(dateParams.startDate);
     const normalizedCurrentEnd = endOfDay(dateParams.endDate);
-    
+
     const defaultStartDateStr = defaultStartDate.toISOString().split("T")[0];
     const defaultEndDateStr = defaultEndDate.toISOString().split("T")[0];
-    const currentStartDateStr = normalizedCurrentStart.toISOString().split("T")[0];
+    const currentStartDateStr = normalizedCurrentStart
+      .toISOString()
+      .split("T")[0];
     const currentEndDateStr = normalizedCurrentEnd.toISOString().split("T")[0];
-    
+
     return (
       currentStartDateStr === defaultStartDateStr &&
       currentEndDateStr === defaultEndDateStr
@@ -92,15 +94,16 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
     const normalizedStartDate = localRange?.from
       ? startOfDay(localRange.from)
       : null;
-    const normalizedEndDate = localRange?.to
-      ? endOfDay(localRange.to)
-      : null;
+    const normalizedEndDate = localRange?.to ? endOfDay(localRange.to) : null;
 
     setDateParams({
       startDate: normalizedStartDate,
       endDate: normalizedEndDate,
     });
-    onRangeChange?.(normalizedStartDate ?? undefined, normalizedEndDate ?? undefined);
+    onRangeChange?.(
+      normalizedStartDate ?? undefined,
+      normalizedEndDate ?? undefined,
+    );
     setIsOpen(false);
   };
 
