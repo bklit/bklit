@@ -15,6 +15,7 @@ import {
   getAnalyticsStats,
   getSessionAnalytics,
 } from "@/actions/analytics-actions";
+import { endOfDay, startOfDay } from "@/lib/date-utils";
 import { useTRPC } from "@/trpc/react";
 import type { SessionAnalyticsSummary } from "@/types/analytics-cards";
 
@@ -46,14 +47,16 @@ export function ViewsCard({
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
+    if (dateParams.startDate) return startOfDay(dateParams.startDate);
     if (!dateParams.endDate) return undefined;
-    const date = new Date();
+    const date = startOfDay(new Date());
     date.setDate(date.getDate() - 30);
     return date;
   }, [dateParams.startDate, dateParams.endDate]);
 
-  const endDate = dateParams.endDate ?? undefined;
+  const endDate = useMemo(() => {
+    return dateParams.endDate ? endOfDay(dateParams.endDate) : undefined;
+  }, [dateParams.endDate]);
 
   const trpc = useTRPC();
 

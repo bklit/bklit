@@ -36,6 +36,16 @@ export async function getTopCountries(
 
   const { projectId, startDate, endDate } = validation.data;
 
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
@@ -48,18 +58,12 @@ export async function getTopCountries(
         throw new Error("Site not found or access denied");
       }
 
-      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
-      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
-
-      const dateFilter =
-        normalizedStartDate || normalizedEndDate
-          ? {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(normalizedEndDate && { lte: normalizedEndDate }),
-              },
-            }
-          : undefined;
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const topCountries = await prisma.pageViewEvent.groupBy({
         by: ["country", "countryCode"],
@@ -67,7 +71,7 @@ export async function getTopCountries(
           projectId,
           country: { not: null },
           countryCode: { not: null },
-          ...(dateFilter && dateFilter),
+          ...dateFilter,
         },
         _count: {
           country: true,
@@ -90,8 +94,8 @@ export async function getTopCountries(
     },
     [
       `${projectId}-top-countries`,
-      startDate?.toISOString(),
-      endDate?.toISOString(),
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
     ],
     {
       revalidate: 300,
@@ -118,6 +122,16 @@ export async function getAnalyticsStats(
 
   const { projectId, startDate, endDate } = validation.data;
 
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
@@ -129,16 +143,6 @@ export async function getAnalyticsStats(
       if (!site) {
         throw new Error("Site not found or access denied");
       }
-
-      const defaultStartDate = startDate
-        ? startOfDay(startDate)
-        : (() => {
-            const date = startOfDay(new Date());
-            date.setDate(date.getDate() - 30);
-            return date;
-          })();
-
-      const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
       const dateFilter = {
         timestamp: {
@@ -183,8 +187,8 @@ export async function getAnalyticsStats(
     },
     [
       `${projectId}-analytics-stats`,
-      startDate?.toISOString(),
-      endDate?.toISOString(),
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
     ],
     {
       revalidate: 300,
@@ -785,6 +789,16 @@ export async function getMobileDesktopStats(
 
   const { projectId, startDate, endDate } = validation.data;
 
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
@@ -797,25 +811,19 @@ export async function getMobileDesktopStats(
         throw new Error("Site not found or access denied");
       }
 
-      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
-      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
-
-      const dateFilter =
-        normalizedStartDate || normalizedEndDate
-          ? {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(normalizedEndDate && { lte: normalizedEndDate }),
-              },
-            }
-          : undefined;
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const uniqueMobileVisits = await prisma.pageViewEvent.groupBy({
         by: ["sessionId", "ip"],
         where: {
           projectId,
           mobile: true,
-          ...(dateFilter && dateFilter),
+          ...dateFilter,
         },
         _count: {
           sessionId: true,
@@ -827,7 +835,7 @@ export async function getMobileDesktopStats(
         where: {
           projectId,
           mobile: false,
-          ...(dateFilter && dateFilter),
+          ...dateFilter,
         },
         _count: {
           sessionId: true,
@@ -841,8 +849,8 @@ export async function getMobileDesktopStats(
     },
     [
       `${projectId}-mobile-desktop-stats`,
-      startDate?.toISOString(),
-      endDate?.toISOString(),
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
     ],
     {
       revalidate: 300,
@@ -880,23 +888,27 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         throw new Error("Site not found or access denied");
       }
 
-      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
-      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
+      const defaultStartDate = startDate
+        ? startOfDay(startDate)
+        : (() => {
+            const date = startOfDay(new Date());
+            date.setDate(date.getDate() - 30);
+            return date;
+          })();
 
-      const dateFilter =
-        normalizedStartDate || normalizedEndDate
-          ? {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(normalizedEndDate && { lte: normalizedEndDate }),
-              },
-            }
-          : undefined;
+      const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const events = await prisma.pageViewEvent.findMany({
         where: {
           projectId,
-          ...(dateFilter && dateFilter),
+          ...dateFilter,
         },
         select: { url: true },
       });
@@ -921,8 +933,8 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
     },
     [
       `${projectId}-top-pages`,
-      startDate?.toISOString(),
-      endDate?.toISOString(),
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
     ],
     {
       revalidate: 60,
@@ -949,6 +961,16 @@ export async function getBrowserStats(
 
   const { projectId, startDate, endDate } = validation.data;
 
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
@@ -961,24 +983,18 @@ export async function getBrowserStats(
         throw new Error("Site not found or access denied");
       }
 
-      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
-      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
-
-      const dateFilter =
-        normalizedStartDate || normalizedEndDate
-          ? {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(normalizedEndDate && { lte: normalizedEndDate }),
-              },
-            }
-          : undefined;
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const pageViews = await prisma.pageViewEvent.findMany({
         where: {
           projectId,
           userAgent: { not: null },
-          ...(dateFilter && dateFilter),
+          ...dateFilter,
         },
         select: {
           userAgent: true,
@@ -1025,8 +1041,8 @@ export async function getBrowserStats(
     },
     [
       `${projectId}-browser-stats`,
-      startDate?.toISOString(),
-      endDate?.toISOString(),
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
     ],
     {
       revalidate: 300,
@@ -1053,6 +1069,16 @@ export async function getSessionAnalytics(
 
   const { projectId, startDate, endDate } = validation.data;
 
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
@@ -1064,16 +1090,6 @@ export async function getSessionAnalytics(
       if (!site) {
         throw new Error("Site not found or access denied");
       }
-
-      const defaultStartDate = startDate
-        ? startOfDay(startDate)
-        : (() => {
-            const date = startOfDay(new Date());
-            date.setDate(date.getDate() - 30);
-            return date;
-          })();
-
-      const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
       const dateFilter = {
         startedAt: {
