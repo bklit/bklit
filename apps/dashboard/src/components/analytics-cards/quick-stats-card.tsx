@@ -19,23 +19,23 @@ import { endOfDay, startOfDay } from "@/lib/date-utils";
 import { useTRPC } from "@/trpc/react";
 import type { SessionAnalyticsSummary } from "@/types/analytics-cards";
 
-interface ViewsCardProps {
+interface QuickStatsCardProps {
   projectId: string;
   organizationId: string;
   userId: string;
   initialStats: Awaited<ReturnType<typeof getAnalyticsStats>>;
   initialSessionData: Awaited<ReturnType<typeof getSessionAnalytics>>;
-  initialLiveUsers: number;
+  initialConversions: number;
 }
 
-export function ViewsCard({
+export function QuickStatsCard({
   projectId,
   organizationId,
   userId,
   initialStats,
   initialSessionData,
-  initialLiveUsers,
-}: ViewsCardProps) {
+  initialConversions,
+}: QuickStatsCardProps) {
   const [dateParams] = useQueryStates(
     {
       startDate: parseAsIsoDateTime,
@@ -48,14 +48,15 @@ export function ViewsCard({
 
   const startDate = useMemo(() => {
     if (dateParams.startDate) return startOfDay(dateParams.startDate);
-    if (!dateParams.endDate) return undefined;
     const date = startOfDay(new Date());
     date.setDate(date.getDate() - 30);
     return date;
-  }, [dateParams.startDate, dateParams.endDate]);
+  }, [dateParams.startDate]);
 
   const endDate = useMemo(() => {
-    return dateParams.endDate ? endOfDay(dateParams.endDate) : undefined;
+    return dateParams.endDate
+      ? endOfDay(dateParams.endDate)
+      : endOfDay(new Date());
   }, [dateParams.endDate]);
 
   const trpc = useTRPC();
@@ -84,30 +85,13 @@ export function ViewsCard({
     initialData: initialSessionData,
   });
 
-  const {
-    data: liveUsers,
-    isLoading,
-    error,
-  } = useQuery(
-    trpc.session.liveUsers.queryOptions(
-      {
-        projectId,
-        organizationId,
-      },
-      {
-        refetchInterval: 15000,
-        staleTime: 10000,
-        initialData: initialLiveUsers,
-        refetchOnWindowFocus: false,
-        refetchOnMount: true,
-        retry: (failureCount, error) => {
-          if (error instanceof Error && error.name === "AbortError") {
-            return false;
-          }
-          return failureCount < 3;
-        },
-      },
-    ),
+  const { data: conversionsData } = useQuery(
+    trpc.event.getConversions.queryOptions({
+      projectId,
+      organizationId,
+      startDate,
+      endDate,
+    }),
   );
 
   const sessionStats: SessionAnalyticsSummary = {
@@ -156,9 +140,11 @@ export function ViewsCard({
             </div>
             <div>
               <div className="text-2xl font-bold">
-                <NumberFlow value={liveUsers ?? initialLiveUsers} />
+                <NumberFlow
+                  value={conversionsData?.conversions ?? initialConversions}
+                />
               </div>
-              <div className="text-sm text-muted-foreground">Live Users</div>
+              <div className="text-sm text-muted-foreground">Conversions</div>
             </div>
           </div>
         </div>

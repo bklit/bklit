@@ -885,9 +885,7 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         return date;
       })();
 
-  const normalizedEndDate = endDate
-    ? endOfDay(endDate)
-    : endOfDay(new Date());
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
   return await cache(
     async () => {
@@ -1165,6 +1163,82 @@ const getLiveUsersSchema = z.object({
   userId: z.string(),
 });
 
+const getConversionsSchema = z.object({
+  projectId: z.string(),
+  userId: z.string(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+});
+
+export async function getConversions(
+  params: z.infer<typeof getConversionsSchema>,
+) {
+  const validation = getConversionsSchema.safeParse(params);
+
+  if (!validation.success) {
+    throw new Error(validation.error.message);
+  }
+
+  const { projectId, startDate, endDate } = validation.data;
+
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
+  return await cache(
+    async () => {
+      const site = await prisma.project.findFirst({
+        where: {
+          id: projectId,
+        },
+      });
+
+      if (!site) {
+        throw new Error("Site not found or access denied");
+      }
+
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
+
+      const trackedEvents = await prisma.trackedEvent.findMany({
+        where: {
+          eventDefinition: { projectId },
+          ...dateFilter,
+        },
+        select: {
+          sessionId: true,
+        },
+      });
+
+      const uniqueSessionIds = new Set<string>();
+      for (const event of trackedEvents) {
+        if (event.sessionId) {
+          uniqueSessionIds.add(event.sessionId);
+        }
+      }
+
+      return uniqueSessionIds.size;
+    },
+    [
+      `${projectId}-conversions-${defaultStartDate.toISOString()}-${normalizedEndDate.toISOString()}`,
+    ],
+    {
+      revalidate: 60,
+      tags: [`${projectId}-analytics`],
+    },
+  )();
+}
+
 export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
   const validation = getLiveUsersSchema.safeParse(params);
 
@@ -1198,9 +1272,9 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
       const liveUsers = await prisma.trackedSession.count({
         where: {
           projectId,
-          endedAt: null, // Active sessions only
+          endedAt: null,
           startedAt: {
-            gte: thirtyMinutesAgo, // Only count sessions started in last 30 minutes
+            gte: thirtyMinutesAgo,
           },
         },
       });
@@ -1214,7 +1288,7 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
     },
     [`${projectId}-live-users`],
     {
-      revalidate: 30, // 30 seconds - more frequent updates for live data
+      revalidate: 30,
       tags: [`${projectId}-analytics`],
     },
   )();
