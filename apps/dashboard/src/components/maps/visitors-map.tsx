@@ -455,7 +455,7 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
       </CardHeader>
       <CardContent className="h-full w-full p-0 overflow-visible">
         <div ref={containerRef} className="relative w-full h-full">
-          <div className="w-full h-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl">
+          <div className="w-full h-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl [&_svg_path]:cursor-default">
             <ResponsiveChoropleth
               data={visitorsData}
               features={features}
