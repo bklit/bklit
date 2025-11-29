@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@bklit/ui/components/avatar";
+import { Avatar, AvatarImage } from "@bklit/ui/components/avatar";
 import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
@@ -32,7 +28,6 @@ import {
 } from "@bklit/ui/components/table";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import Image from "next/image";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import React, { useMemo } from "react";
 import { getSourceFavicon } from "@/lib/utils/get-source-favicon";
