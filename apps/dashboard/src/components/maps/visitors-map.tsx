@@ -467,7 +467,7 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
               valueFormat=".2s"
               projectionType="naturalEarth1"
               projectionScale={185}
-              projectionTranslation={[0.5, 0.6]}
+              projectionTranslation={[0.5, 0.65]}
               borderWidth={0.5}
               borderColor="var(--background)"
               legends={[]}

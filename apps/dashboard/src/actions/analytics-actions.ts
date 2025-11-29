@@ -710,7 +710,9 @@ export async function getUniqueVisitorsByCountry(
 
       // Filter out null values and return
       return visitorsData.filter(
-        (item): item is {
+        (
+          item,
+        ): item is {
           id: string;
           value: number;
           totalSessions: number;

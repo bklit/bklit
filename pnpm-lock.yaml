@@ -6,52 +6,9 @@ settings:
 
 catalogs:
   default:
-    '@t3-oss/env-nextjs':
-      specifier: ^0.13.8
-      version: 0.13.8
-    '@tanstack/react-query':
-      specifier: ^5.80.7
-      version: 5.90.5
-    '@trpc/client':
-      specifier: ^11.4.0
-      version: 11.7.1
-    '@trpc/server':
-      specifier: ^11.4.0
-      version: 11.7.1
-    '@trpc/tanstack-react-query':
-      specifier: ^11.4.0
-      version: 11.7.1
     '@types/node':
       specifier: ^20
       version: 20.19.24
-    dotenv-cli:
-      specifier: ^10.0.0
-      version: 10.0.0
-    next:
-      specifier: ^16.0.1
-      version: 16.0.1
-    resend:
-      specifier: ^4.0.0
-      version: 4.8.0
-    superjson:
-      specifier: ^2.2.2
-      version: 2.2.2
-    typescript:
-      specifier: ^5.8.3
-      version: 5.9.3
-    zod:
-      specifier: ^3.25.49
-      version: 3.25.76
-  prisma:
-    '@prisma/client':
-      specifier: ^6.18.0
-      version: 6.18.0
-    '@prisma/extension-accelerate':
-      specifier: ^2.0.2
-      version: 2.0.2
-    prisma:
-      specifier: ^6.18.0
-      version: 6.18.0
   react19:
     '@types/react':
       specifier: ^19
@@ -545,9 +502,6 @@ importers:
   packages/ui:
     dependencies:
       '@nivo/funnel':
-        specifier: ^0.99.0
-        version: 0.99.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@nivo/geo':
         specifier: ^0.99.0
         version: 0.99.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@nivo/sankey':
@@ -12833,6 +12787,10 @@ snapshots:
     optionalDependencies:
       supports-color: 10.2.2
 
+  debug@4.4.3:
+    dependencies:
+      ms: 2.1.3
+
   debug@4.4.3(supports-color@10.2.2):
     dependencies:
       ms: 2.1.3
@@ -13566,7 +13524,7 @@ snapshots:
     dependencies:
       basic-ftp: 5.0.5
       data-uri-to-buffer: 6.0.2
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -13756,14 +13714,14 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -14414,7 +14372,7 @@ snapshots:
   micromark@4.0.2:
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       decode-named-character-reference: 1.2.0
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.3
@@ -14858,7 +14816,7 @@ snapshots:
     dependencies:
       '@tootallnate/quickjs-emscripten': 0.23.0
       agent-base: 7.1.4
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       get-uri: 6.0.5
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
@@ -15116,7 +15074,7 @@ snapshots:
   proxy-agent@6.5.0:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       lru-cache: 7.18.3
@@ -15820,7 +15778,7 @@ snapshots:
   socks-proxy-agent@8.0.5:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       socks: 2.8.7
     transitivePeerDependencies:
       - supports-color
