@@ -1003,4 +1003,70 @@ export const eventRouter = {
         desktopEvents,
       };
     }),
+
+  getConversions: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: { id: input.projectId, organizationId: input.organizationId },
+        include: {
+          organization: {
+            include: { members: { where: { userId: ctx.session.user.id } } },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
+      const dateFilter =
+        normalizedStartDate || normalizedEndDate
+          ? {
+              timestamp: {
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
+              },
+            }
+          : undefined;
+
+      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
+        where: {
+          eventDefinition: { projectId: input.projectId },
+          ...(dateFilter && dateFilter),
+        },
+        select: {
+          sessionId: true,
+        },
+      });
+
+      const uniqueSessionIds = new Set<string>();
+      for (const event of trackedEvents) {
+        if (event.sessionId) {
+          uniqueSessionIds.add(event.sessionId);
+        }
+      }
+
+      return {
+        conversions: uniqueSessionIds.size,
+      };
+    }),
 } satisfies TRPCRouterRecord;

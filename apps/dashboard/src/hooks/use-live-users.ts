@@ -11,12 +11,14 @@ interface UseLiveUsersProps {
 export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
   const trpc = useTRPC();
 
+  const enabled = !!projectId && !!organizationId;
+
   const {
     data: liveUsers,
     isLoading,
     error,
-  } = useQuery(
-    trpc.session.liveUsers.queryOptions(
+  } = useQuery({
+    ...trpc.session.liveUsers.queryOptions(
       {
         projectId,
         organizationId,
@@ -35,7 +37,8 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
         },
       },
     ),
-  );
+    enabled,
+  });
 
   return {
     liveUsers: liveUsers ?? 0,

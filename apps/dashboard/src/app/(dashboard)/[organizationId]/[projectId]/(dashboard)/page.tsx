@@ -1,17 +1,17 @@
 import { Suspense } from "react";
 import {
   getAnalyticsStats,
-  getLiveUsers,
+  getConversions,
   getSessionAnalytics,
 } from "@/actions/analytics-actions";
 import { BounceRateCard } from "@/components/analytics-cards/bounce-rate-card";
 import { BrowserStatsCard } from "@/components/analytics-cards/browser-stats-card";
 import { MobileDesktopCard } from "@/components/analytics-cards/mobile-desktop-card";
 import { AnalyticsCardSkeleton } from "@/components/analytics-cards/no-data-card";
+import { QuickStatsCard } from "@/components/analytics-cards/quick-stats-card";
 import { RecentPageViewsCard } from "@/components/analytics-cards/recent-page-views-card";
 import { SessionAnalyticsCard } from "@/components/analytics-cards/session-analytics-card";
 import { TopCountriesCard } from "@/components/analytics-cards/top-countries-card";
-import { ViewsCard } from "@/components/analytics-cards/views-card";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { VisitorsMap } from "@/components/maps/visitors-map";
@@ -41,7 +41,7 @@ export default async function AnalyticsPage({
     ? endOfDay(new Date(endDateParam))
     : endOfDay(new Date());
 
-  const [initialStats, initialSessionData, initialLiveUsers] =
+  const [initialStats, initialSessionData, initialConversions] =
     await Promise.all([
       getAnalyticsStats({
         projectId,
@@ -55,7 +55,12 @@ export default async function AnalyticsPage({
         startDate,
         endDate,
       }),
-      getLiveUsers({ projectId, userId: session.user.id }),
+      getConversions({
+        projectId,
+        userId: session.user.id,
+        startDate,
+        endDate,
+      }),
     ]);
 
   return (
@@ -72,13 +77,13 @@ export default async function AnalyticsPage({
       md:grid-cols-2 lg:grid-cols-3"
         >
           <Suspense fallback={<AnalyticsCardSkeleton />}>
-            <ViewsCard
+            <QuickStatsCard
               projectId={projectId}
               organizationId={organizationId}
               userId={session.user.id}
               initialStats={initialStats}
               initialSessionData={initialSessionData}
-              initialLiveUsers={initialLiveUsers}
+              initialConversions={initialConversions}
             />
           </Suspense>
           <Suspense fallback={<AnalyticsCardSkeleton />}>
