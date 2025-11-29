@@ -11,8 +11,9 @@ import {
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { endOfDay, startOfDay } from "@/lib/date-utils";
 
 interface DateRangePickerProps {
   onRangeChange?: (startDate?: Date, endDate?: Date) => void;
@@ -31,38 +32,82 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
 
   const startDate = useMemo(() => {
     if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date;
-  }, [dateParams.startDate, dateParams.endDate]);
+    return undefined;
+  }, [dateParams.startDate]);
 
   const endDate = dateParams.endDate ?? undefined;
 
-  // Local state for the calendar selection
   const [localRange, setLocalRange] = useState<DateRange | undefined>({
     from: startDate,
     to: endDate,
   });
 
+  useEffect(() => {
+    setLocalRange({
+      from: startDate,
+      to: endDate,
+    });
+  }, [startDate, endDate]);
+
   const [isOpen, setIsOpen] = useState(false);
 
-  const hasActiveFilters =
-    dateParams.startDate !== null || dateParams.endDate !== null;
+  useEffect(() => {
+    if (dateParams.startDate === null && dateParams.endDate === null) {
+      const defaultEndDate = endOfDay(new Date());
+      const defaultStartDate = startOfDay(new Date());
+      defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+
+      setDateParams({
+        startDate: defaultStartDate,
+        endDate: defaultEndDate,
+      });
+    }
+  }, [dateParams.startDate, dateParams.endDate, setDateParams]);
+
+  const isDefaultRange = useMemo(() => {
+    if (!dateParams.startDate || !dateParams.endDate) return false;
+    const defaultEndDate = endOfDay(new Date());
+    const defaultStartDate = startOfDay(new Date());
+    defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+    
+    return (
+      dateParams.startDate.getTime() === defaultStartDate.getTime() &&
+      dateParams.endDate.getTime() === defaultEndDate.getTime()
+    );
+  }, [dateParams.startDate, dateParams.endDate]);
+
+  const hasActiveFilters = !isDefaultRange;
 
   const applyDateRange = () => {
+    const normalizedStartDate = localRange?.from
+      ? startOfDay(localRange.from)
+      : null;
+    const normalizedEndDate = localRange?.to
+      ? endOfDay(localRange.to)
+      : null;
+
     setDateParams({
-      startDate: localRange?.from ?? null,
-      endDate: localRange?.to ?? null,
+      startDate: normalizedStartDate,
+      endDate: normalizedEndDate,
     });
-    onRangeChange?.(localRange?.from, localRange?.to);
+    onRangeChange?.(normalizedStartDate ?? undefined, normalizedEndDate ?? undefined);
     setIsOpen(false);
   };
 
   const clearFilters = () => {
-    setDateParams({ startDate: null, endDate: null });
-    setLocalRange({ from: undefined, to: undefined });
-    onRangeChange?.(undefined, undefined);
+    const defaultEndDate = endOfDay(new Date());
+    const defaultStartDate = startOfDay(new Date());
+    defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+
+    setDateParams({
+      startDate: defaultStartDate,
+      endDate: defaultEndDate,
+    });
+    setLocalRange({
+      from: defaultStartDate,
+      to: defaultEndDate,
+    });
+    onRangeChange?.(defaultStartDate, defaultEndDate);
   };
 
   const handleOpenChange = (open: boolean) => {

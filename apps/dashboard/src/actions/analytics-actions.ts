@@ -4,6 +4,7 @@ import { prisma } from "@bklit/db/client";
 import { unstable_cache as cache } from "next/cache";
 import { z } from "zod";
 import { cleanupStaleSessions } from "@/actions/session-actions";
+import { endOfDay, startOfDay } from "@/lib/date-utils";
 import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import type { BrowserStats, TopPageData } from "@/types/analytics";
 import type {
@@ -47,12 +48,15 @@ export async function getTopCountries(
         throw new Error("Site not found or access denied");
       }
 
+      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
+      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
+
       const dateFilter =
-        startDate || endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(startDate && { gte: startDate }),
-                ...(endDate && { lte: endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -127,26 +131,21 @@ export async function getAnalyticsStats(
       }
 
       const defaultStartDate = startDate
-        ? startDate
+        ? startOfDay(startDate)
         : (() => {
-            const date = new Date();
+            const date = startOfDay(new Date());
             date.setDate(date.getDate() - 30);
             return date;
           })();
 
-      const dateFilter =
-        startDate || endDate
-          ? {
-              timestamp: {
-                ...(defaultStartDate && { gte: defaultStartDate }),
-                ...(endDate && { lte: endDate }),
-              },
-            }
-          : {
-              timestamp: {
-                gte: defaultStartDate,
-              },
-            };
+      const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const [totalViews, recentViews, uniquePages, uniqueVisits] =
         await Promise.all([
@@ -798,12 +797,15 @@ export async function getMobileDesktopStats(
         throw new Error("Site not found or access denied");
       }
 
+      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
+      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
+
       const dateFilter =
-        startDate || endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(startDate && { gte: startDate }),
-                ...(endDate && { lte: endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -878,12 +880,15 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         throw new Error("Site not found or access denied");
       }
 
+      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
+      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
+
       const dateFilter =
-        startDate || endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(startDate && { gte: startDate }),
-                ...(endDate && { lte: endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -956,12 +961,15 @@ export async function getBrowserStats(
         throw new Error("Site not found or access denied");
       }
 
+      const normalizedStartDate = startDate ? startOfDay(startDate) : undefined;
+      const normalizedEndDate = endDate ? endOfDay(endDate) : undefined;
+
       const dateFilter =
-        startDate || endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(startDate && { gte: startDate }),
-                ...(endDate && { lte: endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -1058,26 +1066,21 @@ export async function getSessionAnalytics(
       }
 
       const defaultStartDate = startDate
-        ? startDate
+        ? startOfDay(startDate)
         : (() => {
-            const date = new Date();
+            const date = startOfDay(new Date());
             date.setDate(date.getDate() - 30);
             return date;
           })();
 
-      const dateFilter =
-        startDate || endDate
-          ? {
-              startedAt: {
-                ...(defaultStartDate && { gte: defaultStartDate }),
-                ...(endDate && { lte: endDate }),
-              },
-            }
-          : {
-              startedAt: {
-                gte: defaultStartDate,
-              },
-            };
+      const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
+      const dateFilter = {
+        startedAt: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const sessions = await prisma.trackedSession.findMany({
         where: {

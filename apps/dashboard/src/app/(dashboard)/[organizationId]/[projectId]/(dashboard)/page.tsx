@@ -16,6 +16,7 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { VisitorsMap } from "@/components/maps/visitors-map";
 import { authenticated } from "@/lib/auth";
+import { endOfDay, startOfDay } from "@/lib/date-utils";
 
 export default async function AnalyticsPage({
   params,
@@ -30,13 +31,15 @@ export default async function AnalyticsPage({
   const session = await authenticated();
 
   const startDate = startDateParam
-    ? new Date(startDateParam)
+    ? startOfDay(new Date(startDateParam))
     : (() => {
-        const date = new Date();
+        const date = startOfDay(new Date());
         date.setDate(date.getDate() - 30);
         return date;
       })();
-  const endDate = endDateParam ? new Date(endDateParam) : undefined;
+  const endDate = endDateParam
+    ? endOfDay(new Date(endDateParam))
+    : endOfDay(new Date());
 
   const [initialStats, initialSessionData, initialLiveUsers] =
     await Promise.all([
