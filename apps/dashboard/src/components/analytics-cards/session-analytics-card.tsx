@@ -2,7 +2,9 @@ import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
+  CardAction,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
@@ -40,11 +42,14 @@ export async function SessionAnalyticsCard({
     <Card>
       <CardHeader>
         <CardTitle>Recent Sessions</CardTitle>
-        <Button asChild size="sm" variant="ghost">
-          <Link href={`/${organizationId || ""}/${projectId}/sessions`}>
-            View All
-          </Link>
-        </Button>
+        <CardDescription>The most recent sessions.</CardDescription>
+        <CardAction>
+          <Button asChild size="sm" variant="ghost">
+            <Link href={`/${organizationId || ""}/${projectId}/sessions`}>
+              View All
+            </Link>
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col">
@@ -54,13 +59,12 @@ export async function SessionAnalyticsCard({
             </p>
           ) : (
             sessions.map((session) => {
-              console.log("session 🎃", session);
               const browser = getBrowserFromUserAgent(session.userAgent);
               const deviceType = getDeviceTypeFromUserAgent(session.userAgent);
               return (
                 <Link
                   key={session.id}
-                  href={`/${organizationId || ""}/${projectId}/session/${session.id}`}
+                  href={`/${organizationId || ""}/${projectId}/sessions/${session.id}`}
                   className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex flex-col">
@@ -69,15 +73,15 @@ export async function SessionAnalyticsCard({
                       <span className="text-muted-foreground">
                         {getDeviceIcon(deviceType)}
                       </span>
-                      <span>{session.pageViewEvents.length} pages</span>
+                      <span className="text-sm">
+                        {session.pageViewEvents.length} pages
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">
-                      {formatDistanceToNow(new Date(session.startedAt), {
-                        addSuffix: true,
-                      })}
-                    </Badge>
+                  <div className="gap-2 text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(session.startedAt), {
+                      addSuffix: true,
+                    })}
                   </div>
                 </Link>
               );
