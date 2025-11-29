@@ -417,7 +417,6 @@ export async function getCountryVisitStats(
 
 const getCountryVisitorStatsSchema = z.object({
   projectId: z.string(),
-  userId: z.string(),
 });
 
 export async function getCountryVisitorStats(
@@ -592,7 +591,6 @@ export async function debugCountryCodes(
 
 const getUniqueVisitorsByCountrySchema = z.object({
   projectId: z.string(),
-  userId: z.string(),
 });
 
 export async function getUniqueVisitorsByCountry(

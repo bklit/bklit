@@ -217,10 +217,9 @@ const numericToAlpha3: Record<string, string> = {
 
 interface VisitorsMapProps {
   projectId: string;
-  userId: string;
 }
 
-export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
+export function VisitorsMap({ projectId }: VisitorsMapProps) {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [visitorsData, setVisitorsData] = useState<
     {
@@ -269,7 +268,7 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
   useEffect(() => {
     async function loadVisitorsData() {
       try {
-        const data = await getUniqueVisitorsByCountry({ projectId, userId });
+        const data = await getUniqueVisitorsByCountry({ projectId });
         setVisitorsData(data);
       } catch (error) {
         console.error("Error loading visitors data:", error);
@@ -277,10 +276,10 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
       }
     }
 
-    if (projectId && userId) {
+    if (projectId) {
       loadVisitorsData();
     }
-  }, [projectId, userId]);
+  }, [projectId]);
 
   useEffect(() => {
     if (!isMounted || loading || !containerRef.current) return;
@@ -400,35 +399,52 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
     "var(--primary)",
   ];
 
-  // Calculate ranges for the legend (dividing maxValue into 5 equal ranges)
-  const range1 = Math.floor(maxValue * 0.2);
-  const range2 = Math.floor(maxValue * 0.4);
-  const range3 = Math.floor(maxValue * 0.6);
-  const range4 = Math.floor(maxValue * 0.8);
+  // Calculate ranges for the legend with proper handling for small values
+  let legendItems: { label: string; color: string }[];
 
-  const legendItems = [
-    { label: "No data", color: "var(--region)" },
-    {
-      label: `1-${range1.toLocaleString()}`,
-      color: customColors[0] || "var(--primary)",
-    },
-    {
-      label: `${(range1 + 1).toLocaleString()}-${range2.toLocaleString()}`,
-      color: customColors[1] || "var(--primary)",
-    },
-    {
-      label: `${(range2 + 1).toLocaleString()}-${range3.toLocaleString()}`,
-      color: customColors[2] || "var(--primary)",
-    },
-    {
-      label: `${(range3 + 1).toLocaleString()}-${range4.toLocaleString()}`,
-      color: customColors[3] || "var(--primary)",
-    },
-    {
-      label: `${(range4 + 1).toLocaleString()}+`,
-      color: customColors[4] || "var(--primary)",
-    },
-  ];
+  if (maxValue < 5) {
+    // Simplified legend for tiny datasets - show discrete values
+    const items = [{ label: "No data", color: "var(--region)" }];
+    for (let i = 1; i <= Math.min(maxValue, 4); i++) {
+      const isLast = i === maxValue;
+      items.push({
+        label: isLast ? `${i}+` : i.toString(),
+        color: customColors[Math.min(i - 1, 4)] || "var(--primary)",
+      });
+    }
+    legendItems = items;
+  } else {
+    // For larger datasets, compute step to ensure non-zero, non-overlapping ranges
+    const step = Math.max(1, Math.ceil(maxValue / 5));
+    const range1 = step;
+    const range2 = step * 2;
+    const range3 = step * 3;
+    const range4 = step * 4;
+
+    legendItems = [
+      { label: "No data", color: "var(--region)" },
+      {
+        label: `1-${range1.toLocaleString()}`,
+        color: customColors[0] || "var(--primary)",
+      },
+      {
+        label: `${(range1 + 1).toLocaleString()}-${range2.toLocaleString()}`,
+        color: customColors[1] || "var(--primary)",
+      },
+      {
+        label: `${(range2 + 1).toLocaleString()}-${range3.toLocaleString()}`,
+        color: customColors[2] || "var(--primary)",
+      },
+      {
+        label: `${(range3 + 1).toLocaleString()}-${range4.toLocaleString()}`,
+        color: customColors[3] || "var(--primary)",
+      },
+      {
+        label: `${(range4 + 1).toLocaleString()}+`,
+        color: customColors[4] || "var(--primary)",
+      },
+    ];
+  }
 
   if (!isMounted) {
     return (
