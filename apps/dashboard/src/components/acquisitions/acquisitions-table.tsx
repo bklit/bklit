@@ -1,9 +1,15 @@
 "use client";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@bklit/ui/components/avatar";
 import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
@@ -26,8 +32,10 @@ import {
 } from "@bklit/ui/components/table";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
+import Image from "next/image";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import React, { useMemo } from "react";
+import { getSourceFavicon } from "@/lib/utils/get-source-favicon";
 import { useTRPC } from "@/trpc/react";
 
 interface AcquisitionsTableProps {
@@ -90,11 +98,21 @@ export function AcquisitionsTable({
     }),
   );
 
+  const { data: projectData } = useQuery(
+    trpc.project.fetch.queryOptions({
+      id: projectId,
+      organizationId,
+    }),
+  );
+
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Traffic Sources</CardTitle>
+          <CardDescription>
+            A look at where your traffic is coming from.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -112,6 +130,9 @@ export function AcquisitionsTable({
       <Card>
         <CardHeader>
           <CardTitle>Traffic Sources</CardTitle>
+          <CardDescription>
+            A look at where your traffic is coming from.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
@@ -127,6 +148,9 @@ export function AcquisitionsTable({
       <Card>
         <CardHeader>
           <CardTitle>Traffic Sources</CardTitle>
+          <CardDescription>
+            A look at where your traffic is coming from.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
@@ -141,6 +165,9 @@ export function AcquisitionsTable({
     <Card>
       <CardHeader>
         <CardTitle>Traffic Sources</CardTitle>
+        <CardDescription>
+          A look at where your traffic is coming from.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {acquisitionsData.acquisitions.length === 0 ? (
@@ -160,49 +187,63 @@ export function AcquisitionsTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {acquisitionsData.acquisitions.map((acquisition) => (
-                <TableRow key={acquisition.source}>
-                  <TableCell className="font-medium">
-                    <div>{acquisition.source}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      size="lg"
-                      variant={
-                        sourceTypeVariants[
-                          acquisition.sourceType as keyof typeof sourceTypeVariants
-                        ] || "outline"
-                      }
-                    >
-                      {acquisition.sourceType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {acquisition.viewCount}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {acquisition.uniqueUserCount}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {acquisition.avgViewsPerUser}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    <div className="space-y-1">
-                      <div>
-                        {formatDistanceToNow(new Date(acquisition.lastViewed), {
-                          addSuffix: true,
-                        })}
+              {acquisitionsData.acquisitions.map((acquisition) => {
+                const sourceFavicon = getSourceFavicon(
+                  acquisition.source,
+                  projectData?.domain,
+                );
+                return (
+                  <TableRow key={acquisition.source}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="size-4 bg-gray-200 ring-1 ring-gray-200">
+                          <AvatarImage src={sourceFavicon} />
+                        </Avatar>
+                        {acquisition.source}
                       </div>
-                      <div className="text-xs">
-                        {format(
-                          new Date(acquisition.lastViewed),
-                          "MMM d, HH:mm",
-                        )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        size="lg"
+                        variant={
+                          sourceTypeVariants[
+                            acquisition.sourceType as keyof typeof sourceTypeVariants
+                          ] || "outline"
+                        }
+                      >
+                        {acquisition.sourceType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">
+                      {acquisition.viewCount}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">
+                      {acquisition.uniqueUserCount}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">
+                      {acquisition.avgViewsPerUser}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      <div className="space-y-1">
+                        <div>
+                          {formatDistanceToNow(
+                            new Date(acquisition.lastViewed),
+                            {
+                              addSuffix: true,
+                            },
+                          )}
+                        </div>
+                        <div className="text-xs">
+                          {format(
+                            new Date(acquisition.lastViewed),
+                            "MMM d, HH:mm",
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}
