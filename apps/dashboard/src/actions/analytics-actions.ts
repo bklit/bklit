@@ -876,6 +876,19 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
 
   const { projectId, limit, startDate, endDate } = validation.data;
 
+  // Calculate dates outside cache function for cache key
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate
+    ? endOfDay(endDate)
+    : endOfDay(new Date());
+
   return await cache(
     async () => {
       const site = await prisma.project.findFirst({
@@ -887,18 +900,6 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
       if (!site) {
         throw new Error("Site not found or access denied");
       }
-
-      const defaultStartDate = startDate
-        ? startOfDay(startDate)
-        : (() => {
-            const date = startOfDay(new Date());
-            date.setDate(date.getDate() - 30);
-            return date;
-          })();
-
-      const normalizedEndDate = endDate
-        ? endOfDay(endDate)
-        : endOfDay(new Date());
 
       const dateFilter = {
         timestamp: {

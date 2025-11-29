@@ -15,6 +15,7 @@ import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { getTopPages } from "@/actions/analytics-actions";
+import { endOfDay, startOfDay } from "@/lib/date-utils";
 import type { AnalyticsCardProps } from "@/types/analytics-cards";
 import { NoDataCard } from "./no-data-card";
 
@@ -36,14 +37,18 @@ export function RecentPageViewsCard({
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
-    const date = new Date();
+    if (dateParams.startDate) return startOfDay(dateParams.startDate);
+    // Default to 30 days ago if no start date is provided
+    const date = startOfDay(new Date());
     date.setDate(date.getDate() - 30);
     return date;
-  }, [dateParams.startDate, dateParams.endDate]);
+  }, [dateParams.startDate]);
 
-  const endDate = dateParams.endDate ?? undefined;
+  const endDate = useMemo(() => {
+    return dateParams.endDate
+      ? endOfDay(dateParams.endDate)
+      : endOfDay(new Date());
+  }, [dateParams.endDate]);
 
   const { data: topPages, isLoading } = useQuery({
     queryKey: ["top-pages", projectId, startDate, endDate],
