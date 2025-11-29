@@ -1028,7 +1028,7 @@ export const eventRouter = {
         !project.organization ||
         project.organization.members.length === 0
       ) {
-        throw new Error("Forbidden");
+        throw new TRPCError({ code: "FORBIDDEN" });
       }
 
       const normalizedStartDate = input.startDate
