@@ -563,10 +563,12 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
             <div className="flex flex-col gap-1.5">
               {legendItems.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <div
-                    className="size-4 rounded-sm border border-border backdrop-blur-sm"
-                    style={{ backgroundColor: item.color }}
-                  />
+                  <div className="size-4 rounded-sm border border-border backdrop-blur-sm bg-background overflow-clip">
+                    <div
+                      className="size-full bg-background"
+                      style={{ backgroundColor: item.color }}
+                    />
+                  </div>
                   <span className="text-xs text-foreground">{item.label}</span>
                 </div>
               ))}
