@@ -10,12 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { formatDistanceToNow } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
-import { useTRPC } from "@/trpc/react";
 import {
   getBrowserFromUserAgent,
   getBrowserIcon,
@@ -24,6 +23,7 @@ import {
   getDeviceIcon,
   getDeviceTypeFromUserAgent,
 } from "@/lib/utils/get-device-icon";
+import { useTRPC } from "@/trpc/react";
 import type { SessionAnalyticsCardProps } from "@/types/analytics-cards";
 import { NoDataCard } from "./no-data-card";
 
@@ -97,7 +97,7 @@ export function SessionAnalyticsCard({
         <CardDescription>The most recent sessions.</CardDescription>
         <CardAction>
           <Button asChild size="sm" variant="ghost">
-            <Link href={`/${organizationId || ""}/${projectId}/sessions`}>
+            <Link href={`/${organizationId}/${projectId}/sessions`}>
               View All
             </Link>
           </Button>

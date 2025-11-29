@@ -1,7 +1,9 @@
 "use client";
 
+import { Button } from "@bklit/ui/components/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -9,6 +11,7 @@ import {
 } from "@bklit/ui/components/card";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { getTopPages } from "@/actions/analytics-actions";
@@ -18,6 +21,7 @@ import { NoDataCard } from "./no-data-card";
 type RecentPageViewsCardProps = AnalyticsCardProps;
 
 export function RecentPageViewsCard({
+  organizationId,
   projectId,
   userId,
 }: RecentPageViewsCardProps) {
@@ -85,6 +89,13 @@ export function RecentPageViewsCard({
       <CardHeader>
         <CardTitle>Popular Pages</CardTitle>
         <CardDescription>The most popular pages by views.</CardDescription>
+        <CardAction>
+          <Button asChild size="sm" variant="ghost">
+            <Link href={`/${organizationId}/${projectId}/pageviews`}>
+              View All
+            </Link>
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col">

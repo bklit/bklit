@@ -87,6 +87,7 @@ export default async function AnalyticsPage({
           <Suspense fallback={<AnalyticsCardSkeleton />}>
             <RecentPageViewsCard
               projectId={projectId}
+              organizationId={organizationId}
               userId={session.user.id}
             />
           </Suspense>
