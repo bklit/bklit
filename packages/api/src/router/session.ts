@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { endOfDay, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const sessionRouter = createTRPCRouter({
@@ -29,12 +30,19 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -124,12 +132,19 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -200,12 +215,19 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -458,12 +480,19 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;

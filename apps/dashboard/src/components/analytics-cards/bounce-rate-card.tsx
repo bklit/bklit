@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,6 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { useQuery } from "@tanstack/react-query";
+import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { useMemo } from "react";
 import { getSessionAnalytics } from "@/actions/analytics-actions";
 import { BounceRateChart } from "@/components/analytics-cards/bounce-rate-chart";
 import { NoDataCard } from "./no-data-card";
@@ -14,17 +19,55 @@ interface BounceRateCardProps {
   userId: string;
 }
 
-export async function BounceRateCard({
-  projectId,
-  userId,
-}: BounceRateCardProps) {
-  const data = await getSessionAnalytics({
-    projectId,
-    userId,
-    days: 30,
+export function BounceRateCard({ projectId, userId }: BounceRateCardProps) {
+  const [dateParams] = useQueryStates(
+    {
+      startDate: parseAsIsoDateTime,
+      endDate: parseAsIsoDateTime,
+    },
+    {
+      history: "push",
+    },
+  );
+
+  const startDate = useMemo(() => {
+    if (dateParams.startDate) return dateParams.startDate;
+    if (!dateParams.endDate) return undefined;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [dateParams.startDate, dateParams.endDate]);
+
+  const endDate = dateParams.endDate ?? undefined;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["session-analytics", projectId, startDate, endDate],
+    queryFn: () =>
+      getSessionAnalytics({
+        projectId,
+        userId,
+        startDate,
+        endDate,
+      }),
   });
 
-  if (data.totalSessions === 0) {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Bounce Rate</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[200px]">
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data || data.totalSessions === 0) {
     return (
       <NoDataCard title="Bounce Rate" description="Sessions that bounced" />
     );

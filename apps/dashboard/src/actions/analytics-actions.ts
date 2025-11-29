@@ -4,6 +4,7 @@ import { prisma } from "@bklit/db/client";
 import { unstable_cache as cache } from "next/cache";
 import { z } from "zod";
 import { cleanupStaleSessions } from "@/actions/session-actions";
+import { endOfDay, startOfDay } from "@/lib/date-utils";
 import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import type { BrowserStats, TopPageData } from "@/types/analytics";
 import type {
@@ -20,6 +21,8 @@ import type {
 const getTopCountriesSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 export async function getTopCountries(
@@ -31,7 +34,17 @@ export async function getTopCountries(
     throw new Error(validation.error.message);
   }
 
-  const { projectId } = validation.data;
+  const { projectId, startDate, endDate } = validation.data;
+
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
   return await cache(
     async () => {
@@ -45,12 +58,20 @@ export async function getTopCountries(
         throw new Error("Site not found or access denied");
       }
 
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
+
       const topCountries = await prisma.pageViewEvent.groupBy({
         by: ["country", "countryCode"],
         where: {
           projectId,
           country: { not: null },
           countryCode: { not: null },
+          ...dateFilter,
         },
         _count: {
           country: true,
@@ -71,9 +92,13 @@ export async function getTopCountries(
         }),
       );
     },
-    [`${projectId}-top-countries`],
+    [
+      `${projectId}-top-countries`,
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
+    ],
     {
-      revalidate: 300, // 5 minutes
+      revalidate: 300,
       tags: [`${projectId}-analytics`],
     },
   )();
@@ -82,7 +107,8 @@ export async function getTopCountries(
 const getAnalyticsStatsSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
-  days: z.number().default(7),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 export async function getAnalyticsStats(
@@ -94,7 +120,17 @@ export async function getAnalyticsStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, days } = validation.data;
+  const { projectId, startDate, endDate } = validation.data;
+
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
   return await cache(
     async () => {
@@ -108,8 +144,12 @@ export async function getAnalyticsStats(
         throw new Error("Site not found or access denied");
       }
 
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const [totalViews, recentViews, uniquePages, uniqueVisits] =
         await Promise.all([
@@ -119,13 +159,11 @@ export async function getAnalyticsStats(
           prisma.pageViewEvent.count({
             where: {
               projectId,
-              timestamp: {
-                gte: startDate,
-              },
+              ...dateFilter,
             },
           }),
           prisma.pageViewEvent.findMany({
-            where: { projectId },
+            where: { projectId, ...dateFilter },
             distinct: ["url"],
             select: { url: true },
           }),
@@ -133,6 +171,7 @@ export async function getAnalyticsStats(
             where: {
               projectId,
               ip: { not: null },
+              ...dateFilter,
             },
             distinct: ["ip"],
             select: { ip: true },
@@ -146,9 +185,13 @@ export async function getAnalyticsStats(
         uniqueVisits: uniqueVisits.length,
       };
     },
-    [`${projectId}-analytics-stats`],
+    [
+      `${projectId}-analytics-stats`,
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
+    ],
     {
-      revalidate: 300, // 5 minutes
+      revalidate: 300,
       tags: [`${projectId}-analytics`],
     },
   )();
@@ -731,6 +774,8 @@ export async function getUniqueVisitorsByCountry(
 const getMobileDesktopStatsSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 export async function getMobileDesktopStats(
@@ -742,7 +787,17 @@ export async function getMobileDesktopStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId } = validation.data;
+  const { projectId, startDate, endDate } = validation.data;
+
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
   return await cache(
     async () => {
@@ -756,24 +811,31 @@ export async function getMobileDesktopStats(
         throw new Error("Site not found or access denied");
       }
 
-      // Get unique mobile visits by session (or IP if no session)
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
+
       const uniqueMobileVisits = await prisma.pageViewEvent.groupBy({
         by: ["sessionId", "ip"],
         where: {
           projectId,
           mobile: true,
+          ...dateFilter,
         },
         _count: {
           sessionId: true,
         },
       });
 
-      // Get unique desktop visits by session (or IP if no session)
       const uniqueDesktopVisits = await prisma.pageViewEvent.groupBy({
         by: ["sessionId", "ip"],
         where: {
           projectId,
           mobile: false,
+          ...dateFilter,
         },
         _count: {
           sessionId: true,
@@ -785,9 +847,13 @@ export async function getMobileDesktopStats(
         desktop: uniqueDesktopVisits.length,
       };
     },
-    [`${projectId}-mobile-desktop-stats`],
+    [
+      `${projectId}-mobile-desktop-stats`,
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
+    ],
     {
-      revalidate: 300, // 5 minutes
+      revalidate: 300,
       tags: [`${projectId}-analytics`],
     },
   )();
@@ -797,6 +863,8 @@ const getTopPagesSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
   limit: z.number().default(5),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
@@ -806,7 +874,7 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
     throw new Error(validation.error.message);
   }
 
-  const { projectId, limit } = validation.data;
+  const { projectId, limit, startDate, endDate } = validation.data;
 
   return await cache(
     async () => {
@@ -820,9 +888,30 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         throw new Error("Site not found or access denied");
       }
 
-      // Fetch all page view events for the site
+      const defaultStartDate = startDate
+        ? startOfDay(startDate)
+        : (() => {
+            const date = startOfDay(new Date());
+            date.setDate(date.getDate() - 30);
+            return date;
+          })();
+
+      const normalizedEndDate = endDate
+        ? endOfDay(endDate)
+        : endOfDay(new Date());
+
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
+
       const events = await prisma.pageViewEvent.findMany({
-        where: { projectId },
+        where: {
+          projectId,
+          ...dateFilter,
+        },
         select: { url: true },
       });
 
@@ -844,9 +933,13 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
 
       return topPages;
     },
-    [`${projectId}-top-pages`],
+    [
+      `${projectId}-top-pages`,
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
+    ],
     {
-      revalidate: 60, // 1 minute
+      revalidate: 60,
       tags: [`${projectId}-analytics`],
     },
   )();
@@ -855,6 +948,8 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
 const getBrowserStatsSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 export async function getBrowserStats(
@@ -866,7 +961,17 @@ export async function getBrowserStats(
     throw new Error(validation.error.message);
   }
 
-  const { projectId } = validation.data;
+  const { projectId, startDate, endDate } = validation.data;
+
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
   return await cache(
     async () => {
@@ -880,11 +985,18 @@ export async function getBrowserStats(
         throw new Error("Site not found or access denied");
       }
 
-      // Get all page views with user agent data
+      const dateFilter = {
+        timestamp: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
+
       const pageViews = await prisma.pageViewEvent.findMany({
         where: {
           projectId,
           userAgent: { not: null },
+          ...dateFilter,
         },
         select: {
           userAgent: true,
@@ -929,9 +1041,13 @@ export async function getBrowserStats(
 
       return browserData;
     },
-    [`${projectId}-browser-stats`],
+    [
+      `${projectId}-browser-stats`,
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
+    ],
     {
-      revalidate: 300, // 5 minutes
+      revalidate: 300,
       tags: [`${projectId}-analytics`],
     },
   )();
@@ -940,7 +1056,8 @@ export async function getBrowserStats(
 const getSessionAnalyticsSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
-  days: z.number().default(30),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 export async function getSessionAnalytics(
@@ -952,7 +1069,17 @@ export async function getSessionAnalytics(
     throw new Error(validation.error.message);
   }
 
-  const { projectId, days } = validation.data;
+  const { projectId, startDate, endDate } = validation.data;
+
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
 
   return await cache(
     async () => {
@@ -966,15 +1093,17 @@ export async function getSessionAnalytics(
         throw new Error("Site not found or access denied");
       }
 
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
+      const dateFilter = {
+        startedAt: {
+          gte: defaultStartDate,
+          lte: normalizedEndDate,
+        },
+      };
 
       const sessions = await prisma.trackedSession.findMany({
         where: {
           projectId,
-          startedAt: {
-            gte: startDate,
-          },
+          ...dateFilter,
         },
         include: {
           pageViewEvents: {
@@ -1015,12 +1144,16 @@ export async function getSessionAnalytics(
         bounceRate: Math.round(bounceRate * 100) / 100,
         avgSessionDuration: Math.round(avgSessionDuration),
         avgPageViews: Math.round(avgPageViews * 100) / 100,
-        recentSessions: sessions.slice(0, 5), // Return last 5 sessions for display
+        recentSessions: sessions.slice(0, 5),
       };
     },
-    [`${projectId}-session-analytics`],
+    [
+      `${projectId}-session-analytics`,
+      startDate?.toISOString(),
+      endDate?.toISOString(),
+    ],
     {
-      revalidate: 300, // 5 minutes
+      revalidate: 300,
       tags: [`${projectId}-analytics`],
     },
   )();

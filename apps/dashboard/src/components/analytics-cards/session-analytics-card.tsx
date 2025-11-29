@@ -1,3 +1,5 @@
+"use client";
+
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -8,9 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { getRecentSessions } from "@/actions/session-actions";
+import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { useMemo } from "react";
 import {
   getBrowserFromUserAgent,
   getBrowserIcon,
@@ -19,16 +23,64 @@ import {
   getDeviceIcon,
   getDeviceTypeFromUserAgent,
 } from "@/lib/utils/get-device-icon";
+import { useTRPC } from "@/trpc/react";
 import type { SessionAnalyticsCardProps } from "@/types/analytics-cards";
 import { NoDataCard } from "./no-data-card";
 
-export async function SessionAnalyticsCard({
+export function SessionAnalyticsCard({
   projectId,
   organizationId,
 }: SessionAnalyticsCardProps) {
-  const sessions = await getRecentSessions(projectId, 10);
+  const [dateParams] = useQueryStates(
+    {
+      startDate: parseAsIsoDateTime,
+      endDate: parseAsIsoDateTime,
+    },
+    {
+      history: "push",
+    },
+  );
 
-  // If no data return empty card
+  const startDate = useMemo(() => {
+    if (dateParams.startDate) return dateParams.startDate;
+    if (!dateParams.endDate) return undefined;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [dateParams.startDate, dateParams.endDate]);
+
+  const endDate = dateParams.endDate ?? undefined;
+
+  const trpc = useTRPC();
+
+  const { data: sessionsData, isLoading } = useQuery(
+    trpc.session.getRecent.queryOptions({
+      projectId,
+      organizationId,
+      limit: 10,
+      startDate,
+      endDate,
+    }),
+  );
+
+  const sessions = sessionsData?.sessions || [];
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Sessions</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[200px]">
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (sessions.length === 0) {
     return (
       <NoDataCard
@@ -45,7 +97,7 @@ export async function SessionAnalyticsCard({
         <CardDescription>The most recent sessions.</CardDescription>
         <CardAction>
           <Button asChild size="sm" variant="ghost">
-            <Link href={`/${organizationId || ""}/${projectId}/sessions`}>
+            <Link href={`/${organizationId}/${projectId}/sessions`}>
               View All
             </Link>
           </Button>

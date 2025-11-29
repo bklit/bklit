@@ -3,12 +3,13 @@
 // Common props for analytics cards
 export interface AnalyticsCardProps {
   projectId: string;
+  organizationId?: string;
   userId: string;
 }
 
 export interface SessionAnalyticsCardProps {
   projectId: string;
-  organizationId?: string;
+  organizationId: string;
 }
 
 // Extended analytics types for cards

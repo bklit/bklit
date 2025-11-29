@@ -1,6 +1,7 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
+import { endOfDay, startOfDay } from "../lib/date-utils";
 import { protectedProcedure } from "../trpc";
 
 export const eventRouter = {
@@ -117,12 +118,19 @@ export const eventRouter = {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -226,12 +234,19 @@ export const eventRouter = {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -554,12 +569,19 @@ export const eventRouter = {
         throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -814,12 +836,19 @@ export const eventRouter = {
         throw new Error("Forbidden");
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
@@ -907,12 +936,19 @@ export const eventRouter = {
         throw new Error("Forbidden");
       }
 
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
       const dateFilter =
-        input.startDate || input.endDate
+        normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
-                ...(input.startDate && { gte: input.startDate }),
-                ...(input.endDate && { lte: input.endDate }),
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
               },
             }
           : undefined;
