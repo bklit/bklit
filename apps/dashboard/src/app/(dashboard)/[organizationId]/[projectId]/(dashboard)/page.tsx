@@ -12,8 +12,8 @@ import { RecentPageViewsCard } from "@/components/analytics-cards/recent-page-vi
 import { SessionAnalyticsCard } from "@/components/analytics-cards/session-analytics-card";
 import { TopCountriesCard } from "@/components/analytics-cards/top-countries-card";
 import { ViewsCard } from "@/components/analytics-cards/views-card";
-import { WorldMapCard } from "@/components/analytics-cards/world-map-card";
 import { PageHeader } from "@/components/header/page-header";
+import { VisitorsMap } from "@/components/maps/visitors-map";
 import { authenticated } from "@/lib/auth";
 
 export default async function AnalyticsPage({
@@ -62,11 +62,11 @@ export default async function AnalyticsPage({
           </Suspense>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="col-span-2">
-            <WorldMapCard />
+        <div className="grid gap-4 md:grid-cols-12">
+          <div className="col-span-8">
+            <VisitorsMap projectId={projectId} />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-4">
             <Suspense fallback={<AnalyticsCardSkeleton />}>
               <SessionAnalyticsCard
                 projectId={projectId}
