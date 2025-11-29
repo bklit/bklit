@@ -415,6 +415,135 @@ export async function getCountryVisitStats(
   )();
 }
 
+const getCountryVisitorStatsSchema = z.object({
+  projectId: z.string(),
+  userId: z.string(),
+});
+
+export async function getCountryVisitorStats(
+  params: z.infer<typeof getCountryVisitorStatsSchema>,
+) {
+  const validation = getCountryVisitorStatsSchema.safeParse(params);
+
+  if (!validation.success) {
+    throw new Error(validation.error.message);
+  }
+
+  const { projectId } = validation.data;
+
+  return await cache(
+    async () => {
+      const site = await prisma.project.findFirst({
+        where: {
+          id: projectId,
+        },
+      });
+
+      if (!site) {
+        throw new Error("Site not found or access denied");
+      }
+
+      // Get all unique sessions grouped by country
+      const sessionsByCountry = await prisma.trackedSession.groupBy({
+        by: ["country"],
+        where: {
+          projectId,
+          country: { not: null },
+        },
+        _count: {
+          country: true,
+        },
+      });
+
+      // Get country codes by joining with pageViewEvents
+      const countriesWithStats = await Promise.all(
+        sessionsByCountry.map(async (sessionGroup) => {
+          const country = sessionGroup.country || "";
+
+          // Get countryCode from a related pageViewEvent
+          const samplePageView = await prisma.pageViewEvent.findFirst({
+            where: {
+              projectId,
+              country,
+              countryCode: { not: null },
+            },
+            select: {
+              countryCode: true,
+            },
+          });
+
+          const countryCode = samplePageView?.countryCode;
+          if (!countryCode) {
+            return null;
+          }
+
+          const coordinates = findCountryCoordinates(countryCode);
+          if (!coordinates) {
+            return null;
+          }
+
+          // Get mobile vs desktop breakdown from sessions
+          const mobileSessions = await prisma.trackedSession.count({
+            where: {
+              projectId,
+              country,
+              pageViewEvents: {
+                some: {
+                  mobile: true,
+                },
+              },
+            },
+          });
+
+          const desktopSessions = await prisma.trackedSession.count({
+            where: {
+              projectId,
+              country,
+              pageViewEvents: {
+                some: {
+                  mobile: false,
+                },
+              },
+            },
+          });
+
+          return {
+            country,
+            countryCode,
+            totalVisits: Number(sessionGroup._count.country) || 0,
+            mobileVisits: Number(mobileSessions) || 0,
+            desktopVisits: Number(desktopSessions) || 0,
+            uniqueVisits: Number(sessionGroup._count.country) || 0, // Sessions are unique visitors
+            coordinates: coordinates
+              ? ([coordinates.longitude, coordinates.latitude] as [
+                  number,
+                  number,
+                ])
+              : null,
+          };
+        }),
+      );
+
+      // Filter out countries without coordinates and sort by visits
+      const result = countriesWithStats
+        .filter(
+          (country: CountryStats | null) =>
+            country !== null && country.coordinates !== null,
+        )
+        .sort(
+          (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits,
+        );
+
+      return result;
+    },
+    [`${projectId}-country-visitor-stats`],
+    {
+      revalidate: 300, // 5 minutes
+      tags: [`${projectId}-analytics`],
+    },
+  )();
+}
+
 export async function debugCountryCodes(
   params: z.infer<typeof getCountryVisitStatsSchema>,
 ) {
@@ -459,6 +588,94 @@ export async function debugCountryCodes(
   );
 
   return uniqueCountryCodes;
+}
+
+const getUniqueVisitorsByCountrySchema = z.object({
+  projectId: z.string(),
+  userId: z.string(),
+});
+
+export async function getUniqueVisitorsByCountry(
+  params: z.infer<typeof getUniqueVisitorsByCountrySchema>,
+) {
+  const validation = getUniqueVisitorsByCountrySchema.safeParse(params);
+
+  if (!validation.success) {
+    throw new Error(validation.error.message);
+  }
+
+  const { projectId } = validation.data;
+
+  return await cache(
+    async () => {
+      const site = await prisma.project.findFirst({
+        where: {
+          id: projectId,
+        },
+      });
+
+      if (!site) {
+        throw new Error("Site not found or access denied");
+      }
+
+      // Get unique sessions grouped by country
+      const sessionsByCountry = await prisma.trackedSession.groupBy({
+        by: ["country"],
+        where: {
+          projectId,
+          country: { not: null },
+        },
+        _count: {
+          country: true,
+        },
+      });
+
+      // Map to alpha-3 codes and get visitor counts
+      const visitorsData = await Promise.all(
+        sessionsByCountry.map(async (sessionGroup) => {
+          const country = sessionGroup.country || "";
+
+          // Get countryCode from a related pageViewEvent
+          const samplePageView = await prisma.pageViewEvent.findFirst({
+            where: {
+              projectId,
+              country,
+              countryCode: { not: null },
+            },
+            select: {
+              countryCode: true,
+            },
+          });
+
+          const countryCode = samplePageView?.countryCode;
+          if (!countryCode) {
+            return null;
+          }
+
+          // Get alpha-3 code from coordinates
+          const coordinates = findCountryCoordinates(countryCode);
+          if (!coordinates || !coordinates.alpha3Code) {
+            return null;
+          }
+
+          return {
+            id: coordinates.alpha3Code,
+            value: Number(sessionGroup._count.country) || 0,
+          };
+        }),
+      );
+
+      // Filter out null values and return
+      return visitorsData.filter(
+        (item): item is { id: string; value: number } => item !== null,
+      );
+    },
+    [`${projectId}-unique-visitors-by-country`],
+    {
+      revalidate: 300, // 5 minutes
+      tags: [`${projectId}-analytics`],
+    },
+  )();
 }
 
 const getMobileDesktopStatsSchema = z.object({
