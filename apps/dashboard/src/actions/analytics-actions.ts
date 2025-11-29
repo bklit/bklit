@@ -630,7 +630,7 @@ export async function getUniqueVisitorsByCountry(
         },
       });
 
-      // Map to alpha-3 codes and get visitor counts
+      // Map to alpha-3 codes and get visitor counts with additional stats
       const visitorsData = await Promise.all(
         sessionsByCountry.map(async (sessionGroup) => {
           const country = sessionGroup.country || "";
@@ -658,16 +658,66 @@ export async function getUniqueVisitorsByCountry(
             return null;
           }
 
+          const totalSessions = Number(sessionGroup._count.country) || 0;
+
+          // Get bounce rate for this country
+          const bouncedSessions = await prisma.trackedSession.count({
+            where: {
+              projectId,
+              country,
+              didBounce: true,
+            },
+          });
+
+          const bounceRate =
+            totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
+
+          // Get mobile vs desktop breakdown
+          const mobileSessions = await prisma.trackedSession.count({
+            where: {
+              projectId,
+              country,
+              pageViewEvents: {
+                some: {
+                  mobile: true,
+                },
+              },
+            },
+          });
+
+          const desktopSessions = await prisma.trackedSession.count({
+            where: {
+              projectId,
+              country,
+              pageViewEvents: {
+                some: {
+                  mobile: false,
+                },
+              },
+            },
+          });
+
           return {
             id: coordinates.alpha3Code,
-            value: Number(sessionGroup._count.country) || 0,
+            value: totalSessions,
+            totalSessions,
+            bounceRate: Math.round(bounceRate * 100) / 100,
+            mobileSessions,
+            desktopSessions,
           };
         }),
       );
 
       // Filter out null values and return
       return visitorsData.filter(
-        (item): item is { id: string; value: number } => item !== null,
+        (item): item is {
+          id: string;
+          value: number;
+          totalSessions: number;
+          bounceRate: number;
+          mobileSessions: number;
+          desktopSessions: number;
+        } => item !== null,
       );
     },
     [`${projectId}-unique-visitors-by-country`],

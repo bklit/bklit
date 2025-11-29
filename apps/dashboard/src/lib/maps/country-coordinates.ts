@@ -118,3 +118,27 @@ export function getCountryNameFromCode(countryCode: string): string {
 
   return found?.country || "Unknown";
 }
+
+/**
+ * Get alpha-2 country code (2-letter) from a 2-letter or 3-letter country code
+ * @param countryCode - ISO 3166-1 alpha-2 (2-letter) or alpha-3 (3-letter) country code
+ * @returns Alpha-2 country code (lowercase), or "xx" if not found
+ */
+export function getAlpha2Code(countryCode: string): string {
+  if (!countryCode) {
+    return "xx";
+  }
+
+  const coordinates = getCountryCoordinates();
+  const normalizedCode = countryCode.toUpperCase().trim();
+
+  // First try to find by alpha-2 code (2-letter)
+  let found = coordinates.find((coord) => coord.alpha2Code === normalizedCode);
+
+  // If not found, try alpha-3 code (3-letter)
+  if (!found) {
+    found = coordinates.find((coord) => coord.alpha3Code === normalizedCode);
+  }
+
+  return found?.alpha2Code?.toLowerCase() || "xx";
+}

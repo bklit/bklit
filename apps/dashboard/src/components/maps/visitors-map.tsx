@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
@@ -8,16 +9,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { Separator } from "@bklit/ui/components/separator";
 import { ResponsiveChoropleth } from "@nivo/geo";
 import * as d3 from "d3";
 import type { Feature } from "geojson";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Monitor, Plus, Smartphone } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import { getUniqueVisitorsByCountry } from "@/actions/analytics-actions";
-import { getCountryNameFromCode } from "@/lib/maps/country-coordinates";
+import {
+  getAlpha2Code,
+  getCountryNameFromCode,
+} from "@/lib/maps/country-coordinates";
 
 // ISO 3166-1 numeric to alpha-3 code mapping (for TopoJSON feature IDs)
 const numericToAlpha3: Record<string, string> = {
@@ -218,7 +223,14 @@ interface VisitorsMapProps {
 export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [visitorsData, setVisitorsData] = useState<
-    { id: string; value: number }[]
+    {
+      id: string;
+      value: number;
+      totalSessions: number;
+      bounceRate: number;
+      mobileSessions: number;
+      desktopSessions: number;
+    }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -388,22 +400,32 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
     "var(--primary)",
   ];
 
+  // Calculate ranges for the legend (dividing maxValue into 5 equal ranges)
+  const range1 = Math.floor(maxValue * 0.2);
+  const range2 = Math.floor(maxValue * 0.4);
+  const range3 = Math.floor(maxValue * 0.6);
+  const range4 = Math.floor(maxValue * 0.8);
+
   const legendItems = [
-    { label: "0", color: customColors[0] || "var(--region)" },
+    { label: "No data", color: "var(--region)" },
     {
-      label: Math.floor(maxValue * 0.25).toLocaleString(),
-      color: customColors[1] || "var(--region)",
+      label: `1-${range1.toLocaleString()}`,
+      color: customColors[0] || "var(--primary)",
     },
     {
-      label: Math.floor(maxValue * 0.5).toLocaleString(),
-      color: customColors[2] || "var(--region)",
+      label: `${(range1 + 1).toLocaleString()}-${range2.toLocaleString()}`,
+      color: customColors[1] || "var(--primary)",
     },
     {
-      label: Math.floor(maxValue * 0.75).toLocaleString(),
-      color: customColors[3] || "var(--region)",
+      label: `${(range2 + 1).toLocaleString()}-${range3.toLocaleString()}`,
+      color: customColors[2] || "var(--primary)",
     },
     {
-      label: maxValue.toLocaleString(),
+      label: `${(range3 + 1).toLocaleString()}-${range4.toLocaleString()}`,
+      color: customColors[3] || "var(--primary)",
+    },
+    {
+      label: `${(range4 + 1).toLocaleString()}+`,
       color: customColors[4] || "var(--primary)",
     },
   ];
@@ -424,16 +446,16 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
   }
 
   return (
-    <Card className="p-0 relative h-full">
-      <CardHeader className="absolute top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl overflow-clip">
+    <Card className="p-0 relative h-full overflow-visible z-30">
+      <CardHeader className="absolute top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl">
         <CardTitle>Visitors by Country</CardTitle>
         <CardDescription>
           A map of the world with the number of unique visitors per country.
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-full w-full p-0">
+      <CardContent className="h-full w-full p-0 overflow-visible">
         <div ref={containerRef} className="relative w-full h-full">
-          <div className="w-full h-full cursor-grab active:cursor-grabbing">
+          <div className="w-full h-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl">
             <ResponsiveChoropleth
               data={visitorsData}
               features={features}
@@ -457,27 +479,76 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
                 const featureId = feature.id || "";
                 const data = visitorsData.find((d) => d.id === featureId);
                 const countryName = getCountryNameFromCode(featureId);
+                const alpha2Code = getAlpha2Code(featureId);
                 const displayName =
                   countryName !== "Unknown"
                     ? countryName
                     : feature.properties?.name || featureId || "Unknown";
                 return (
-                  <Card className="w-80 bg-card/85 backdrop-blur-sm">
+                  <Card className="w-80 bg-card/85 backdrop-blur-sm z-60">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <CircleFlag
-                          countryCode={featureId.toLowerCase()}
+                          countryCode={alpha2Code}
                           className="size-4"
                         />
-                        {displayName} - {featureId}
+                        {displayName}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="text-sm text-muted-foreground">
-                        {data
-                          ? `${data.value.toLocaleString()} unique visitors`
-                          : "No data"}
-                      </div>
+                    <CardContent className="space-y-2">
+                      {data ? (
+                        <>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">
+                                Unique visitors
+                              </span>
+                              <Badge variant="secondary">
+                                {data.totalSessions.toLocaleString()}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">
+                                Bounce rate
+                              </span>
+                              <Badge
+                                variant={
+                                  data.bounceRate > 30
+                                    ? "destructive"
+                                    : "success"
+                                }
+                              >
+                                {data.bounceRate.toFixed(1)}%
+                              </Badge>
+                            </div>
+                          </div>
+                          <Separator />
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex gap-2 items-center text-sm text-muted-foreground">
+                                <Smartphone className="size-4" />
+                                Mobile
+                              </span>
+                              <Badge variant="secondary">
+                                {data.mobileSessions.toLocaleString()}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex gap-2 items-center text-sm text-muted-foreground">
+                                <Monitor className="size-4" />
+                                Desktop
+                              </span>
+                              <Badge variant="secondary">
+                                {data.desktopSessions.toLocaleString()}
+                              </Badge>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          No data
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -485,7 +556,7 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
             />
           </div>
 
-          <div className="absolute bottom-4 left-6 z-10 bg-card/85 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg">
+          <div className="absolute bottom-4 left-6">
             <div className="text-xs font-medium text-muted-foreground mb-2">
               Unique Visitors
             </div>
@@ -493,18 +564,16 @@ export function VisitorsMap({ projectId, userId }: VisitorsMapProps) {
               {legendItems.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div
-                    className="size-4 rounded-sm border border-border"
+                    className="size-4 rounded-sm border border-border backdrop-blur-sm"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-xs text-muted-foreground">
-                    {item.label}
-                  </span>
+                  <span className="text-xs text-foreground">{item.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="absolute bottom-4 right-6 z-10 flex flex-col gap-2">
+          <div className="absolute bottom-4 right-6 flex flex-col gap-2">
             <Button
               size="icon"
               variant="secondary"
