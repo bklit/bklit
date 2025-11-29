@@ -8,9 +8,10 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { PieDonut } from "@bklit/ui/components/charts/pie-donut";
-
+import { useQuery } from "@tanstack/react-query";
 import { Compass } from "lucide-react";
-import { useEffect, useState } from "react";
+import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { useMemo } from "react";
 import { getBrowserStats } from "@/actions/analytics-actions";
 import { NoDataCard } from "./no-data-card";
 
@@ -20,29 +21,36 @@ interface BrowserStatsCardProps {
 }
 
 export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
-  const [browserStats, setBrowserStats] = useState<
-    { browser: string; count: number }[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  // no local hover needed when using PieDonut
+  const [dateParams] = useQueryStates(
+    {
+      startDate: parseAsIsoDateTime,
+      endDate: parseAsIsoDateTime,
+    },
+    {
+      history: "push",
+    },
+  );
 
-  useEffect(() => {
-    const fetchBrowserStats = async () => {
-      try {
-        const stats = await getBrowserStats({
-          projectId,
-          userId,
-        });
-        setBrowserStats(stats);
-      } catch (error) {
-        console.error("Failed to fetch browser stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const startDate = useMemo(() => {
+    if (dateParams.startDate) return dateParams.startDate;
+    if (!dateParams.endDate) return undefined;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [dateParams.startDate, dateParams.endDate]);
 
-    fetchBrowserStats();
-  }, [projectId, userId]);
+  const endDate = dateParams.endDate ?? undefined;
+
+  const { data: browserStats, isLoading: loading } = useQuery({
+    queryKey: ["browser-stats", projectId, startDate, endDate],
+    queryFn: () =>
+      getBrowserStats({
+        projectId,
+        userId,
+        startDate,
+        endDate,
+      }),
+  });
 
   if (loading) {
     return (
@@ -57,6 +65,16 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
           </div>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (!browserStats) {
+    return (
+      <NoDataCard
+        title="Browser Usage"
+        description="Page visits by browser"
+        icon={<Compass size={16} />}
+      />
     );
   }
 

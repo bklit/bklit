@@ -12,22 +12,46 @@ import { RecentPageViewsCard } from "@/components/analytics-cards/recent-page-vi
 import { SessionAnalyticsCard } from "@/components/analytics-cards/session-analytics-card";
 import { TopCountriesCard } from "@/components/analytics-cards/top-countries-card";
 import { ViewsCard } from "@/components/analytics-cards/views-card";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { VisitorsMap } from "@/components/maps/visitors-map";
 import { authenticated } from "@/lib/auth";
 
 export default async function AnalyticsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ organizationId: string; projectId: string }>;
+  searchParams: Promise<{ startDate?: string; endDate?: string }>;
 }) {
   const { organizationId, projectId } = await params;
+  const { startDate: startDateParam, endDate: endDateParam } =
+    await searchParams;
   const session = await authenticated();
+
+  const startDate = startDateParam
+    ? new Date(startDateParam)
+    : (() => {
+        const date = new Date();
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+  const endDate = endDateParam ? new Date(endDateParam) : undefined;
 
   const [initialStats, initialSessionData, initialLiveUsers] =
     await Promise.all([
-      getAnalyticsStats({ projectId, userId: session.user.id }),
-      getSessionAnalytics({ projectId, userId: session.user.id }),
+      getAnalyticsStats({
+        projectId,
+        userId: session.user.id,
+        startDate,
+        endDate,
+      }),
+      getSessionAnalytics({
+        projectId,
+        userId: session.user.id,
+        startDate,
+        endDate,
+      }),
       getLiveUsers({ projectId, userId: session.user.id }),
     ]);
 
@@ -36,7 +60,9 @@ export default async function AnalyticsPage({
       <PageHeader
         title={`Welcome back, ${session.user.name}!`}
         description="Quick insights..."
-      />
+      >
+        <DateRangePicker />
+      </PageHeader>
       <div className="container mx-auto flex flex-col gap-4">
         <div
           className="grid gap-4 
@@ -46,6 +72,7 @@ export default async function AnalyticsPage({
             <ViewsCard
               projectId={projectId}
               organizationId={organizationId}
+              userId={session.user.id}
               initialStats={initialStats}
               initialSessionData={initialSessionData}
               initialLiveUsers={initialLiveUsers}

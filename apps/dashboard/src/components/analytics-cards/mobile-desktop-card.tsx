@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -6,6 +8,9 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { MonitorSmartphone } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { useMemo } from "react";
 import { getMobileDesktopStats } from "@/actions/analytics-actions";
 import { MobileDesktopChart } from "@/components/analytics-cards/mobile-desktop-chart";
 import { NoDataCard } from "./no-data-card";
@@ -15,14 +20,66 @@ interface MobileDesktopCardProps {
   userId: string;
 }
 
-export async function MobileDesktopCard({
+export function MobileDesktopCard({
   projectId,
   userId,
 }: MobileDesktopCardProps) {
-  const stats = await getMobileDesktopStats({
-    projectId,
-    userId,
+  const [dateParams] = useQueryStates(
+    {
+      startDate: parseAsIsoDateTime,
+      endDate: parseAsIsoDateTime,
+    },
+    {
+      history: "push",
+    },
+  );
+
+  const startDate = useMemo(() => {
+    if (dateParams.startDate) return dateParams.startDate;
+    if (!dateParams.endDate) return undefined;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [dateParams.startDate, dateParams.endDate]);
+
+  const endDate = dateParams.endDate ?? undefined;
+
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["mobile-desktop-stats", projectId, startDate, endDate],
+    queryFn: () =>
+      getMobileDesktopStats({
+        projectId,
+        userId,
+        startDate,
+        endDate,
+      }),
   });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Mobile/Desktop</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[200px]">
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <NoDataCard
+        title="Mobile/Desktop"
+        description="Unique page visits by device type."
+        icon={<MonitorSmartphone size={16} />}
+      />
+    );
+  }
 
   const totalVisits = stats.desktop + stats.mobile;
 
