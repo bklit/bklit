@@ -12,7 +12,6 @@ import { RecentPageViewsCard } from "@/components/analytics-cards/recent-page-vi
 import { SessionAnalyticsCard } from "@/components/analytics-cards/session-analytics-card";
 import { TopCountriesCard } from "@/components/analytics-cards/top-countries-card";
 import { ViewsCard } from "@/components/analytics-cards/views-card";
-// import { WorldMapCard } from "@/components/analytics-cards/world-map-card";
 import { PageHeader } from "@/components/header/page-header";
 import { VisitorsMap } from "@/components/maps/visitors-map";
 import { authenticated } from "@/lib/auth";
