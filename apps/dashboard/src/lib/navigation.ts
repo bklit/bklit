@@ -1,5 +1,6 @@
 import {
   Eye,
+  Funnel,
   Layers2,
   MousePointerClick,
   PanelsTopLeft,
@@ -64,6 +65,17 @@ export const navigationConfig: NavigationConfig = {
       title: "Events",
       icon: MousePointerClick,
       href: "/[organizationId]/[projectId]/events",
+    },
+    {
+      title: "Funnels",
+      icon: Funnel,
+      href: "/[organizationId]/[projectId]/funnels",
+      items: [
+        {
+          title: "Builder",
+          href: "/[organizationId]/[projectId]/funnels/builder",
+        },
+      ],
     },
     {
       title: "Pageviews",
