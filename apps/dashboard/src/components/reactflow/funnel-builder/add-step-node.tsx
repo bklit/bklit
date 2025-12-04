@@ -21,10 +21,10 @@ export const AddStepNode = memo(function AddStepNode({ id, data }: NodeProps) {
   return (
     <button
       className={cn(
-        "relative bg-card border-2 border-dashed rounded-xl p-6",
-        "hover:border-primary hover:bg-secondary/50 transition-all duration-200",
+        "relative bg-card border-2 border-dashed border-primary rounded-xl p-6",
+        "hover:border-primary transition-all duration-200",
         "cursor-pointer min-w-[200px] group",
-        isEditing ? "border-blue-500 border-solid" : "border-primary/40",
+        isEditing && "border-solid",
       )}
       onClick={() => nodeData.onConfigure(id)}
       type="button"
@@ -49,11 +49,13 @@ export const AddStepNode = memo(function AddStepNode({ id, data }: NodeProps) {
         </div>
       </div>
 
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="bg-primary border-background size-3"
-      />
+      {!isFirstNode && (
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="bg-primary border-background size-3"
+        />
+      )}
     </button>
   );
 });

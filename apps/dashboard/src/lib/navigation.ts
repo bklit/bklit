@@ -72,6 +72,10 @@ export const navigationConfig: NavigationConfig = {
       href: "/[organizationId]/[projectId]/funnels",
       items: [
         {
+          title: "Overview",
+          href: "/[organizationId]/[projectId]/funnels",
+        },
+        {
           title: "Builder",
           href: "/[organizationId]/[projectId]/funnels/builder",
         },

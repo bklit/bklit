@@ -7,6 +7,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@bklit/ui/components/sheet";
@@ -17,7 +18,7 @@ import {
   TabsTrigger,
 } from "@bklit/ui/components/tabs";
 import { cn } from "@bklit/ui/lib/utils";
-import { Check, Copy, Globe, Zap } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { StepData, StepType } from "./funnel-builder";
 
@@ -25,6 +26,7 @@ interface StepConfigSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (data: StepData) => void;
+  onDelete?: () => void;
   onLiveUpdate?: (data: Partial<StepData>) => void;
   initialData?: StepData;
 }
@@ -45,6 +47,7 @@ export function StepConfigSheet({
   open,
   onOpenChange,
   onSave,
+  onDelete,
   onLiveUpdate,
   initialData,
 }: StepConfigSheetProps) {
@@ -140,20 +143,14 @@ export function StepConfigSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 px-4">
+        <div className="px-4">
           <Tabs
             value={activeTab}
             onValueChange={(v) => handleTabChange(v as StepType)}
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="pageview" className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                Pageview
-              </TabsTrigger>
-              <TabsTrigger value="event" className="flex items-center gap-2">
-                <Zap className="w-4 h-4" />
-                Event
-              </TabsTrigger>
+              <TabsTrigger value="pageview">Pageview</TabsTrigger>
+              <TabsTrigger value="event">Event</TabsTrigger>
             </TabsList>
 
             <TabsContent value="pageview" className="mt-6 space-y-4">
@@ -231,15 +228,24 @@ export function StepConfigSheet({
             </TabsContent>
           </Tabs>
         </div>
-
-        <div className="mt-8 flex justify-end gap-3 px-4 pb-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={!isValid}>
-            Save Step
-          </Button>
-        </div>
+        <SheetFooter>
+          <div className="flex justify-between w-full">
+            {onDelete && (
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onDelete();
+                  onOpenChange(false);
+                }}
+              >
+                Delete Step
+              </Button>
+            )}
+            <Button onClick={handleSave} disabled={!isValid}>
+              Save Step
+            </Button>
+          </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

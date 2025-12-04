@@ -1,18 +1,20 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { Button } from "@bklit/ui/components/button";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   addEdge,
   Background,
   BackgroundVariant,
   type Connection,
+  ControlButton,
   Controls,
   type Edge,
-  MarkerType,
+  type EdgeChange,
+  MiniMap,
   type Node,
   type NodeTypes,
   type OnConnectEnd,
-  Panel,
   ReactFlow,
   ReactFlowProvider,
   useEdgesState,
@@ -21,8 +23,7 @@ import {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-import { Button } from "@bklit/ui/components/button";
-import { Funnel } from "lucide-react";
+import { SquareChartGantt } from "lucide-react";
 import { AddStepNode } from "./add-step-node";
 import { FunnelStepNode } from "./funnel-step-node";
 import { StepConfigSheet } from "./step-config-sheet";
@@ -63,9 +64,24 @@ function FunnelBuilderInner() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [editingStepData, setEditingStepData] = useState<Partial<StepData>>({});
+  const [showMiniMap, setShowMiniMap] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const connectingNodeId = useRef<string | null>(null);
   const { screenToFlowPosition } = useReactFlow();
+
+  // Prevent edge deletion - only allow edges to be removed when target node is deleted
+  const handleEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      // Filter out delete operations - edges can only be removed when nodes are deleted
+      const filteredChanges = changes.filter(
+        (change) => change.type !== "remove",
+      );
+      if (filteredChanges.length > 0) {
+        onEdgesChange(filteredChanges);
+      }
+    },
+    [onEdgesChange],
+  );
 
   const handleConfigure = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);
@@ -74,13 +90,54 @@ function FunnelBuilderInner() {
 
   const handleDelete = useCallback(
     (nodeId: string) => {
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setNodes((nds) => {
+        const filtered = nds.filter((n) => n.id !== nodeId);
+        // If we're deleting the last node, add a new initial node
+        if (filtered.length === 0) {
+          const newNodeId = `step-${Date.now()}`;
+          return [
+            {
+              id: newNodeId,
+              type: "addStep",
+              position: { x: 0, y: 0 },
+              data: {
+                label: "Add Step",
+                onConfigure: handleConfigure,
+                onDelete: handleDelete,
+                isConfigured: false,
+                isFirstNode: true,
+              },
+            },
+          ];
+        }
+        return filtered;
+      });
       setEdges((eds) =>
         eds.filter((e) => e.source !== nodeId && e.target !== nodeId),
       );
     },
-    [setNodes, setEdges],
+    [setNodes, setEdges, handleConfigure],
   );
+
+  // Initialize with one node if empty
+  useEffect(() => {
+    if (nodes.length === 0) {
+      const initialNodeId = `step-${Date.now()}`;
+      const initialNode: Node = {
+        id: initialNodeId,
+        type: "addStep",
+        position: { x: 0, y: 0 },
+        data: {
+          label: "Add Step",
+          onConfigure: handleConfigure,
+          onDelete: handleDelete,
+          isConfigured: false,
+          isFirstNode: true,
+        },
+      };
+      setNodes([initialNode]);
+    }
+  }, [nodes.length, setNodes, handleConfigure, handleDelete]);
 
   const updateNodeDataLive = useCallback(
     (nodeId: string, partialData: Partial<StepData>) => {
@@ -107,33 +164,20 @@ function FunnelBuilderInner() {
     [setNodes],
   );
 
-  const addFirstStep = useCallback(() => {
-    const newNodeId = `step-${Date.now()}`;
-    const newNode: Node = {
-      id: newNodeId,
-      type: "addStep",
-      position: { x: 250, y: 200 },
-      data: {
-        label: "Add Step",
-        onConfigure: handleConfigure,
-        onDelete: handleDelete,
-        isConfigured: false,
-        isFirstNode: true,
-      },
-    };
-    setNodes([newNode]);
-    setSelectedNodeId(newNodeId);
-    setSheetOpen(true);
-    setEditingStepData({});
-  }, [setNodes, handleConfigure, handleDelete]);
-
   const onConnect = useCallback(
     (params: Connection) => {
+      // Prevent connection if source already has an outgoing edge
+      if (params.source) {
+        const hasOutgoingEdge = edges.some((e) => e.source === params.source);
+        if (hasOutgoingEdge) {
+          return;
+        }
+      }
+
       setEdges((eds) =>
         addEdge(
           {
             ...params,
-            markerEnd: { type: MarkerType.ArrowClosed },
             style: { strokeWidth: 2, strokeDasharray: "5,5" },
             animated: true,
           },
@@ -141,19 +185,35 @@ function FunnelBuilderInner() {
         ),
       );
     },
-    [setEdges],
+    [setEdges, edges],
   );
 
   const onConnectStart = useCallback(
     (_: unknown, { nodeId }: { nodeId: string | null }) => {
+      // Prevent starting connection if node already has an outgoing edge
+      if (nodeId) {
+        const hasOutgoingEdge = edges.some((e) => e.source === nodeId);
+        if (hasOutgoingEdge) {
+          return;
+        }
+      }
       connectingNodeId.current = nodeId;
     },
-    [],
+    [edges],
   );
 
   const onConnectEnd: OnConnectEnd = useCallback(
     (event) => {
       if (!connectingNodeId.current) return;
+
+      // Prevent creating new node if source already has an outgoing edge
+      const hasOutgoingEdge = edges.some(
+        (e) => e.source === connectingNodeId.current,
+      );
+      if (hasOutgoingEdge) {
+        connectingNodeId.current = null;
+        return;
+      }
 
       const targetIsPane = (event.target as HTMLElement).classList.contains(
         "react-flow__pane",
@@ -199,7 +259,6 @@ function FunnelBuilderInner() {
               id: `e-${sourceNodeId}-${newNodeId}`,
               source: sourceNodeId,
               target: newNodeId,
-              markerEnd: { type: MarkerType.ArrowClosed },
               style: { strokeWidth: 2, strokeDasharray: "5,5" },
               animated: true,
             }),
@@ -215,7 +274,14 @@ function FunnelBuilderInner() {
 
       connectingNodeId.current = null;
     },
-    [setNodes, setEdges, handleConfigure, handleDelete, screenToFlowPosition],
+    [
+      setNodes,
+      setEdges,
+      handleConfigure,
+      handleDelete,
+      screenToFlowPosition,
+      edges,
+    ],
   );
 
   const handleSaveStep = useCallback(
@@ -292,7 +358,6 @@ function FunnelBuilderInner() {
                 id: edgeId,
                 source: lastStep.id,
                 target: selectedNodeId,
-                markerEnd: { type: MarkerType.ArrowClosed },
                 style: { strokeWidth: 2, strokeDasharray: "5,5" },
                 animated: true,
               });
@@ -355,7 +420,6 @@ function FunnelBuilderInner() {
       data: {
         ...node.data,
         onConfigure: handleConfigure,
-        onDelete: handleDelete,
         isEditing: selectedNodeId === node.id && sheetOpen,
         isFirstNode:
           isFirstConfiguredNode ||
@@ -363,6 +427,19 @@ function FunnelBuilderInner() {
       },
     };
   });
+
+  const handleNodeClick = useCallback(
+    (_: unknown, { id }: { id: string }) => {
+      // Only open sheet for configured funnel steps (not addStep nodes)
+      const node = nodes.find((n) => n.id === id);
+      if (node?.type === "funnelStep") {
+        handleConfigure(id);
+      }
+    },
+    [nodes, handleConfigure],
+  );
+
+  const isInitNode = nodes.length === 1 && nodes[0]?.type === "addStep";
 
   return (
     <div
@@ -373,14 +450,15 @@ function FunnelBuilderInner() {
         nodes={nodesWithHandlers}
         edges={edges}
         onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
+        onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
-        fitView
+        fitView={isInitNode && true}
+        maxZoom={isInitNode ? 1.1 : 1.6}
         defaultEdgeOptions={{
-          markerEnd: { type: MarkerType.ArrowClosed },
           style: { strokeWidth: 2, strokeDasharray: "5,5" },
           animated: true,
         }}
@@ -390,28 +468,33 @@ function FunnelBuilderInner() {
           gap={20}
           size={1}
           color="var(--bklit-300)"
-          className="bg-bklit-700"
+          className="bg-bklit-800"
         />
-        <Controls className="bg-bklit-800 [&>button]:bg-bklit-700! [&>button]:border-border! [&>button>svg]:fill-current! [&>button>svg]:text-bklit-300!" />
-        {nodes.length === 0 && (
-          <Panel position="top-center">
-            <div className="flex flex-col items-center gap-4 p-8 bg-card border border-border rounded-xl shadow-lg">
-              <div className="w-16 h-16 rounded-full bg-bklit-600 flex items-center justify-center">
-                <Funnel size={24} />
-              </div>
-              <div className="text-center">
-                <h2 className="text-lg font-semibold text-foreground">
-                  Start Your Funnel
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Add your first step to begin building your conversion funnel
-                </p>
-              </div>
-              <Button size="lg" onClick={addFirstStep}>
-                Add First Step
-              </Button>
-            </div>
-          </Panel>
+        <Controls className="bg-bklit-800 border border-bklit-500 [&>button]:size-6! [&>button]:bg-bklit-700! [&>button]:border-b! [&>button]:border-bklit-500! [&>button>svg]:fill-current [&>button>svg]:text-bklit-300">
+          <ControlButton
+            className="[&>svg]:fill-none! border-none!"
+            onClick={() => setShowMiniMap(!showMiniMap)}
+          >
+            <SquareChartGantt size={16} />
+          </ControlButton>
+        </Controls>
+        {showMiniMap && (
+          <MiniMap
+            style={{
+              backgroundColor: "var(--bklit-600)",
+              borderRadius: "0.5rem",
+              border: "1px solid var(--border)",
+            }}
+            maskColor="color-mix(in srgb, var(--color-bklit-900), transparent 60%)"
+            nodeColor="var(--bklit-400)"
+            nodeStrokeColor="var(--bklit-400)"
+            pannable
+            zoomable
+            ariaLabel="Mini map"
+            inversePan
+            zoomStep={0.1}
+            offsetScale={0.5}
+          />
         )}
       </ReactFlow>
 
@@ -419,6 +502,9 @@ function FunnelBuilderInner() {
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
         onSave={handleSaveStep}
+        onDelete={
+          selectedNodeId ? () => handleDelete(selectedNodeId) : undefined
+        }
         onLiveUpdate={(data) =>
           selectedNodeId && updateNodeDataLive(selectedNodeId, data)
         }
@@ -440,4 +526,8 @@ export function FunnelBuilder() {
       <FunnelBuilderInner />
     </ReactFlowProvider>
   );
+}
+
+export function SaveFunnelButton() {
+  return <Button variant="default">Save Funnel</Button>;
 }
