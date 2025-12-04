@@ -5,7 +5,7 @@ packages:
 
 catalog:
   dotenv-cli: ^10.0.0
-  next: ^16.0.1
+  next: ^16.0.7
   resend: ^4.0.0
   superjson: ^2.2.2
   typescript: ^5.8.3
