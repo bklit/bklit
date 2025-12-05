@@ -15,6 +15,7 @@ import {
   type Node,
   type NodeTypes,
   type OnConnectEnd,
+  Panel,
   ReactFlow,
   ReactFlowProvider,
   useEdgesState,
@@ -496,6 +497,15 @@ function FunnelBuilderInner() {
             offsetScale={0.5}
           />
         )}
+        {nodes.length > 0 &&
+          nodes.every((node) => node.type === "funnelStep") && (
+            <Panel
+              position="top-right"
+              className="bg-bklit-800 border border-bklit-500"
+            >
+              <SaveFunnelButton />
+            </Panel>
+          )}
       </ReactFlow>
 
       <StepConfigSheet
@@ -528,6 +538,6 @@ export function FunnelBuilder() {
   );
 }
 
-export function SaveFunnelButton() {
+function SaveFunnelButton() {
   return <Button variant="default">Save Funnel</Button>;
 }
