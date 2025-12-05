@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/header/page-header";
-import { SettingsNavigation } from "@/components/settings/settings-navigation";
+import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { ProjectNotifications } from "../../../_components/project-notifications";
 
 interface NotificationSettingsPageProps {
@@ -17,8 +17,8 @@ export default async function NotificationSettingsPage({
         title="Notifications"
         description="Manage your notification preferences for this project."
       >
-        <SettingsNavigation
-          type="projectSettings"
+        <SubNavigation
+          configKey="projectSettings"
           organizationId={organizationId}
           projectId={projectId}
         />

@@ -7,20 +7,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigationConfig, replaceDynamicParams } from "@/lib/navigation";
 
-interface SettingsNavigationProps {
-  type: "organizationSettings" | "projectSettings";
+interface SubNavigationProps {
+  configKey: string;
   organizationId: string;
   projectId?: string;
 }
 
-export function SettingsNavigation({
-  type,
+export function SubNavigation({
+  configKey,
   organizationId,
   projectId,
-}: SettingsNavigationProps) {
+}: SubNavigationProps) {
   const { open } = useSidebar();
   const pathname = usePathname();
-  const items = navigationConfig[type] ?? [];
+  const items = navigationConfig[configKey] ?? [];
   const resolvedItems = replaceDynamicParams(items, organizationId, projectId);
 
   if (!open) {

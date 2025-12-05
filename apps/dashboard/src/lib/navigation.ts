@@ -143,6 +143,18 @@ export const navigationConfig: NavigationConfig = {
       href: "/[organizationId]/[projectId]/settings/notifications",
     },
   ],
+
+  // Funnel navigation
+  funnelNavigation: [
+    {
+      title: "Overview",
+      href: "/[organizationId]/[projectId]/funnels",
+    },
+    {
+      title: "Builder",
+      href: "/[organizationId]/[projectId]/funnels/builder",
+    },
+  ],
 };
 
 export function getNavigationItems(pathname: string): NavigationItem[] {

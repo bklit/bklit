@@ -119,81 +119,85 @@ export function FunnelDetails({
       <PageHeader
         title={funnel.name}
         description={funnel.description || "Funnel details and analytics"}
-        action={
-          <Button asChild variant="outline">
-            <Link href={`/${organizationId}/${projectId}/funnels`}>
-              <ArrowLeft className="mr-2 size-4" />
-              Back to Funnels
-            </Link>
-          </Button>
-        }
-      />
-
+      >
+        <Button asChild variant="outline">
+          <Link href={`/${organizationId}/${projectId}/funnels`}>
+            <ArrowLeft className="mr-2 size-4" />
+            Back to Funnels
+          </Link>
+        </Button>
+      </PageHeader>
       <div className="space-y-6">
-        {/* Funnel Overview Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Funnel Overview</CardTitle>
-            <CardDescription>
-              Basic information about this funnel
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{funnel.name}</p>
-              </div>
-              {funnel.description && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Description</p>
-                  <p className="font-medium">{funnel.description}</p>
+        <div className="grid grid-cols-4 gap-4">
+          {/* Funnel Overview Card */}
+          <div className="col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Funnel Overview</CardTitle>
+                <CardDescription>
+                  Basic information about this funnel
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="font-medium">{funnel.name}</p>
+                  </div>
+                  {funnel.description && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Description
+                      </p>
+                      <p className="font-medium">{funnel.description}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Created</p>
+                    <p className="font-medium">
+                      {format(new Date(funnel.createdAt), "PPP")}
+                    </p>
+                  </div>
+                  {funnel.endDate && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">End Date</p>
+                      <p className="font-medium">
+                        {format(new Date(funnel.endDate), "PPP")}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Steps</p>
+                    <p className="font-medium">{funnel.steps.length}</p>
+                  </div>
+                  {stats && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Total Conversions
+                      </p>
+                      <p className="font-medium">{stats.totalConversions}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-              <div>
-                <p className="text-sm text-muted-foreground">Created</p>
-                <p className="font-medium">
-                  {format(new Date(funnel.createdAt), "PPP")}
-                </p>
-              </div>
-              {funnel.endDate && (
-                <div>
-                  <p className="text-sm text-muted-foreground">End Date</p>
-                  <p className="font-medium">
-                    {format(new Date(funnel.endDate), "PPP")}
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className="text-sm text-muted-foreground">Total Steps</p>
-                <p className="font-medium">{funnel.steps.length}</p>
-              </div>
-              {stats && (
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Total Conversions
-                  </p>
-                  <p className="font-medium">{stats.totalConversions}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Funnel Chart */}
-        {chartData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Funnel Visualization</CardTitle>
-              <CardDescription>
-                Conversion flow through each step
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FunnelChart data={chartData} />
-            </CardContent>
-          </Card>
-        )}
+          {/* Funnel Chart */}
+          {chartData.length > 0 && (
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>Funnel Visualization</CardTitle>
+                <CardDescription>
+                  Conversion flow through each step
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FunnelChart data={chartData} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         {/* Steps Table */}
         <Card>

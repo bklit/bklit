@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/header/page-header";
+import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { FunnelBuilder } from "@/components/reactflow/funnel-builder/funnel-builder";
 
 interface PageProps {
@@ -13,7 +14,13 @@ export default async function FunnelsBuilderPage({ params }: PageProps) {
 
   return (
     <div className="w-full flex-1 flex flex-col gap-4 h-full">
-      <PageHeader title="Funnels" description="Build your funnels with ease." />
+      <PageHeader title="Funnels" description="Build your funnels with ease.">
+        <SubNavigation
+          configKey="funnelNavigation"
+          organizationId={organizationId}
+          projectId={projectId}
+        />
+      </PageHeader>
       <FunnelBuilder organizationId={organizationId} projectId={projectId} />
     </div>
   );

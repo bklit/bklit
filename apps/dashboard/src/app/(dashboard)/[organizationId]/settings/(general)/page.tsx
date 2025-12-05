@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/header/page-header";
-import { SettingsNavigation } from "@/components/settings/settings-navigation";
+import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 import { OrganizationSettings } from "../../_components/organization-settings";
@@ -21,8 +21,8 @@ export default async function OrganizationSettingsPage({
         title="Settings"
         description="Manage your organization settings."
       >
-        <SettingsNavigation
-          type="organizationSettings"
+        <SubNavigation
+          configKey="organizationSettings"
           organizationId={organizationId}
         />
       </PageHeader>

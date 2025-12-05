@@ -13,8 +13,8 @@ import { MemberRole } from "@bklit/utils/roles";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
 import { PageHeader } from "@/components/header/page-header";
+import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { FormPermissions } from "@/components/permissions/form-permissions";
-import { SettingsNavigation } from "@/components/settings/settings-navigation";
 import { authenticated } from "@/lib/auth";
 
 async function getSiteData(
@@ -70,8 +70,8 @@ export default async function ProjectDashboardPage({
         title="Project settings"
         description="Manage your projects settings."
       >
-        <SettingsNavigation
-          type="projectSettings"
+        <SubNavigation
+          configKey="projectSettings"
           organizationId={organizationId}
           projectId={projectId}
         />

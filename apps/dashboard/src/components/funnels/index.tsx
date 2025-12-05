@@ -8,6 +8,7 @@ import { parseAsInteger, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
+import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
 import { FunnelsTable } from "./funnels-table";
@@ -68,32 +69,35 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
       <PageHeader
         title="Funnels"
         description="Track and analyze conversion funnels"
-        action={
-          <Button asChild>
-            <Link href={`/${organizationId}/${projectId}/funnels/builder`}>
-              <Plus className="mr-2 size-4" />
-              Create Funnel
-            </Link>
-          </Button>
-        }
-      />
+        // action={
+        //   <Button asChild>
+        //     <Link href={`/${organizationId}/${projectId}/funnels/builder`}>
+        //       <Plus className="mr-2 size-4" />
+        //       Create Funnel
+        //     </Link>
+        //   </Button>
+        // }
+      >
+        <SubNavigation
+          configKey="funnelNavigation"
+          organizationId={organizationId}
+          projectId={projectId}
+        />
+        <DateRangePicker
+          startDate={dateParams.startDate}
+          endDate={dateParams.endDate}
+          onStartDateChange={(date) => {
+            setDateParams({ startDate: date });
+            setPaginationParams({ page: 1 });
+          }}
+          onEndDateChange={(date) => {
+            setDateParams({ endDate: date });
+            setPaginationParams({ page: 1 });
+          }}
+        />
+      </PageHeader>
 
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <DateRangePicker
-            startDate={dateParams.startDate}
-            endDate={dateParams.endDate}
-            onStartDateChange={(date) => {
-              setDateParams({ startDate: date });
-              setPaginationParams({ page: 1 });
-            }}
-            onEndDateChange={(date) => {
-              setDateParams({ endDate: date });
-              setPaginationParams({ page: 1 });
-            }}
-          />
-        </div>
-
         <Stats
           items={[
             {

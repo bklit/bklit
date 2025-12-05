@@ -1,7 +1,7 @@
 import { ApiTokens } from "@/components/api-tokens/api-tokens";
 // import { CreateTokenButton } from "@/components/api-tokens/create-token-button";
 import { PageHeader } from "@/components/header/page-header";
-import { SettingsNavigation } from "@/components/settings/settings-navigation";
+import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
@@ -24,8 +24,8 @@ export default async function ApiTokensSettingsPage({
         title="API Tokens"
         description="Manage API tokens for authenticating your tracking requests."
       >
-        <SettingsNavigation
-          type="organizationSettings"
+        <SubNavigation
+          configKey="organizationSettings"
           organizationId={organizationId}
         />
       </PageHeader>
