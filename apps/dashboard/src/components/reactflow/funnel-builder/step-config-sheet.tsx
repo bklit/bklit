@@ -1,8 +1,30 @@
 "use client";
 
 import { Button } from "@bklit/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@bklit/ui/components/dialog";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@bklit/ui/components/empty";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@bklit/ui/components/field";
 import { Input } from "@bklit/ui/components/input";
-import { Label } from "@bklit/ui/components/label";
 import {
   Sheet,
   SheetContent,
@@ -11,6 +33,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@bklit/ui/components/sheet";
+import { Skeleton } from "@bklit/ui/components/skeleton";
 import {
   Tabs,
   TabsContent,
@@ -18,8 +41,13 @@ import {
   TabsTrigger,
 } from "@bklit/ui/components/tabs";
 import { cn } from "@bklit/ui/lib/utils";
-import { Check, Copy } from "lucide-react";
+import { useForm } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
+import { Activity, Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { useTRPC } from "@/trpc/react";
 import type { StepData, StepType } from "./funnel-builder";
 
 interface StepConfigSheetProps {
@@ -29,19 +57,22 @@ interface StepConfigSheetProps {
   onDelete?: () => void;
   onLiveUpdate?: (data: Partial<StepData>) => void;
   initialData?: StepData;
+  projectId: string;
+  organizationId: string;
 }
 
-const sampleEvents = [
-  { name: "Sign Up", eventName: "user_signup" },
-  { name: "Login", eventName: "user_login" },
-  { name: "Add to Cart", eventName: "add_to_cart" },
-  { name: "Checkout Started", eventName: "checkout_started" },
-  { name: "Purchase Complete", eventName: "purchase_complete" },
-  { name: "Newsletter Subscribe", eventName: "newsletter_subscribe" },
-  { name: "Download App", eventName: "download_app" },
-  { name: "Share Content", eventName: "share_content" },
-  { name: "Video Play", eventName: "video_play" },
-];
+const pageviewSchema = z.object({
+  type: z.literal("pageview"),
+  name: z.string().min(1, "Step name is required"),
+  url: z.string().min(1, "URL is required"),
+});
+
+const eventSchema = z.object({
+  type: z.literal("event"),
+  eventName: z.string().min(1, "Event must be selected"),
+});
+
+const stepSchema = z.discriminatedUnion("type", [pageviewSchema, eventSchema]);
 
 export function StepConfigSheet({
   open,
@@ -50,74 +81,136 @@ export function StepConfigSheet({
   onDelete,
   onLiveUpdate,
   initialData,
+  projectId,
+  organizationId,
 }: StepConfigSheetProps) {
   const [activeTab, setActiveTab] = useState<StepType>(
     initialData?.type || "pageview",
   );
-  const [name, setName] = useState(initialData?.name || "");
-  const [url, setUrl] = useState(initialData?.url || "");
-  const [selectedEvent, setSelectedEvent] = useState<string | null>(
-    initialData?.eventName || null,
-  );
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [copiedEvent, setCopiedEvent] = useState<string | null>(null);
 
+  const trpc = useTRPC();
+
+  // Fetch events from tRPC
+  const { data: events, isLoading: eventsLoading } = useQuery(
+    trpc.event.list.queryOptions({
+      projectId,
+      organizationId,
+    }),
+  );
+
+  const form = useForm({
+    defaultValues: {
+      type: (initialData?.type || "pageview") as StepType,
+      name: initialData?.name || "",
+      url: initialData?.url || "",
+      eventName: initialData?.eventName || "",
+    },
+    validators: {
+      onSubmit: stepSchema,
+    },
+    onSubmit: async ({ value }) => {
+      if (value.type === "pageview") {
+        onSave({
+          type: "pageview",
+          name: value.name.trim(),
+          url: value.url.trim(),
+        });
+      } else {
+        const selectedEvent = events?.find(
+          (e) => e.trackingId === value.eventName,
+        );
+        if (!selectedEvent) {
+          form.setFieldMeta("eventName", (prev) => ({
+            ...prev,
+            errorMap: {
+              onSubmit: ["Selected event not found"],
+            },
+          }));
+          return;
+        }
+        onSave({
+          type: "event",
+          name: selectedEvent.name,
+          eventName: selectedEvent.trackingId,
+          eventCode: `analytics.track("${selectedEvent.trackingId}")`,
+        });
+      }
+    },
+  });
+
+  // Reset form when sheet opens or initialData changes
   useEffect(() => {
     if (open) {
-      setActiveTab(initialData?.type || "pageview");
-      setName(initialData?.name || "");
-      setUrl(initialData?.url || "");
-      setSelectedEvent(initialData?.eventName || null);
+      const type = initialData?.type || "pageview";
+      setActiveTab(type);
+      form.setFieldValue("type", type);
+      form.setFieldValue("name", initialData?.name || "");
+      form.setFieldValue("url", initialData?.url || "");
+      form.setFieldValue("eventName", initialData?.eventName || "");
     }
-  }, [open, initialData]);
+  }, [open, initialData, form]);
 
-  const handleNameChange = (value: string) => {
-    setName(value);
-    onLiveUpdate?.({ type: activeTab, name: value, url });
-  };
-
-  const handleUrlChange = (value: string) => {
-    setUrl(value);
-    onLiveUpdate?.({ type: activeTab, name, url: value });
-  };
+  // Live update when form values change
+  useEffect(() => {
+    const subscription = form.store.subscribe((state) => {
+      const values = state.values;
+      if (!values || !values.type) return;
+      
+      if (values.type === "pageview") {
+        onLiveUpdate?.({
+          type: "pageview",
+          name: values.name || "",
+          url: values.url || "",
+        });
+      } else if (values.type === "event" && values.eventName) {
+        const selectedEvent = events?.find(
+          (e) => e.trackingId === values.eventName,
+        );
+        if (selectedEvent) {
+          onLiveUpdate?.({
+            type: "event",
+            name: selectedEvent.name,
+            eventName: selectedEvent.trackingId,
+          });
+        }
+      }
+    });
+    return () => subscription();
+  }, [form, onLiveUpdate, events]);
 
   const handleTabChange = (value: StepType) => {
     setActiveTab(value);
-    if (value === "event" && selectedEvent) {
-      const event = sampleEvents.find((e) => e.eventName === selectedEvent);
-      onLiveUpdate?.({
-        type: value,
-        name: event?.name || "",
-        eventName: selectedEvent,
-      });
+    form.setFieldValue("type", value);
+    if (value === "event" && form.state.values.eventName) {
+      const selectedEvent = events?.find(
+        (e) => e.trackingId === form.state.values.eventName,
+      );
+      if (selectedEvent) {
+        onLiveUpdate?.({
+          type: "event",
+          name: selectedEvent.name,
+          eventName: selectedEvent.trackingId,
+        });
+      }
     } else {
-      onLiveUpdate?.({ type: value, name, url });
+      onLiveUpdate?.({
+        type: "pageview",
+        name: form.state.values.name,
+        url: form.state.values.url,
+      });
     }
   };
 
   const handleEventSelect = (eventName: string) => {
-    setSelectedEvent(eventName);
-    const event = sampleEvents.find((e) => e.eventName === eventName);
-    if (event) {
+    form.setFieldValue("eventName", eventName);
+    const selectedEvent = events?.find((e) => e.trackingId === eventName);
+    if (selectedEvent) {
       onLiveUpdate?.({
         type: "event",
-        name: event.name,
-        eventName: event.eventName,
-      });
-    }
-  };
-
-  const handleSave = () => {
-    if (activeTab === "pageview") {
-      if (!name.trim() || !url.trim()) return;
-      onSave({ type: "pageview", name: name.trim(), url: url.trim() });
-    } else {
-      const event = sampleEvents.find((e) => e.eventName === selectedEvent);
-      if (!event) return;
-      onSave({
-        type: "event",
-        name: event.name,
-        eventName: event.eventName,
-        eventCode: `analytics.track("${event.eventName}")`,
+        name: selectedEvent.name,
+        eventName: selectedEvent.trackingId,
       });
     }
   };
@@ -126,127 +219,222 @@ export function StepConfigSheet({
     navigator.clipboard.writeText(`analytics.track("${eventName}")`);
     setCopiedEvent(eventName);
     setTimeout(() => setCopiedEvent(null), 2000);
+    toast.success("Code copied to clipboard");
   };
 
-  const isValid =
-    activeTab === "pageview"
-      ? name.trim() && url.trim()
-      : selectedEvent !== null;
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete();
+      setOpenDeleteDialog(false);
+      onOpenChange(false);
+    }
+  };
+
+  const isValid = form.state.isValid;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Configure Funnel Step</SheetTitle>
-          <SheetDescription>
-            Choose a step type and configure its properties.
-          </SheetDescription>
-        </SheetHeader>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Configure Funnel Step</SheetTitle>
+            <SheetDescription>
+              Choose a step type and configure its properties.
+            </SheetDescription>
+          </SheetHeader>
 
-        <div className="px-4">
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => handleTabChange(v as StepType)}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit();
+            }}
+            className="px-4"
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="pageview">Pageview</TabsTrigger>
-              <TabsTrigger value="event">Event</TabsTrigger>
-            </TabsList>
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => handleTabChange(v as StepType)}
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="pageview">Pageview</TabsTrigger>
+                <TabsTrigger value="event">Event</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="pageview" className="mt-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="step-name">Step Name</Label>
-                <Input
-                  id="step-name"
-                  placeholder="e.g., Homepage Visit"
-                  value={name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                />
-              </div>
+              <TabsContent value="pageview" className="mt-6 space-y-4">
+                <form.Field name="name">
+                  {(field) => (
+                    <FieldGroup>
+                      <FieldLabel>Step Name</FieldLabel>
+                      <Input
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="e.g., Homepage Visit"
+                      />
+                      <FieldError>{field.state.meta.errors[0]}</FieldError>
+                    </FieldGroup>
+                  )}
+                </form.Field>
 
-              <div className="space-y-2">
-                <Label htmlFor="page-url">Page URL</Label>
-                <Input
-                  id="page-url"
-                  placeholder="e.g., /pricing or https://example.com/pricing"
-                  value={url}
-                  onChange={(e) => handleUrlChange(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter the full URL or a path pattern to match
-                </p>
-              </div>
-            </TabsContent>
+                <form.Field name="url">
+                  {(field) => (
+                    <FieldGroup>
+                      <FieldLabel>Page URL</FieldLabel>
+                      <Input
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="e.g., / or /pricing"
+                      />
+                      <FieldDescription>
+                        Enter the full URL or a path pattern to match (e.g., "/"
+                        for homepage)
+                      </FieldDescription>
+                      <FieldError>{field.state.meta.errors[0]}</FieldError>
+                    </FieldGroup>
+                  )}
+                </form.Field>
+              </TabsContent>
 
-            <TabsContent value="event" className="mt-6">
-              <div className="space-y-2 mb-4">
-                <Label>Select an Event</Label>
-                <p className="text-xs text-muted-foreground">
-                  Choose from your tracked events below
-                </p>
-              </div>
+              <TabsContent value="event" className="mt-6">
+                <div className="space-y-2 mb-4">
+                  <FieldLabel>Select an Event</FieldLabel>
+                  <FieldDescription>
+                    Choose from your tracked events below
+                  </FieldDescription>
+                </div>
 
-              <div className="grid gap-2 max-h-[400px] overflow-y-auto pr-1">
-                {sampleEvents.map((event) => (
-                  <button
-                    type="button"
-                    key={event.eventName}
-                    className={cn(
-                      "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all",
-                      selectedEvent === event.eventName
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50 hover:bg-secondary/50",
+                {eventsLoading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 3 }, () => (
+                      <Skeleton key={crypto.randomUUID()} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : !events || events.length === 0 ? (
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Activity size={16} />
+                      </EmptyMedia>
+                      <EmptyTitle>No events found</EmptyTitle>
+                    </EmptyHeader>
+                    <EmptyContent>
+                      <EmptyDescription>
+                        You haven't created any events yet. Create an event to
+                        use it in your funnel.
+                      </EmptyDescription>
+                    </EmptyContent>
+                  </Empty>
+                ) : (
+                  <form.Field name="eventName">
+                    {(field) => (
+                      <>
+                        <div className="grid gap-2 max-h-[400px] overflow-y-auto pr-1">
+                          {events.map((event) => (
+                            <button
+                              type="button"
+                              key={event.id}
+                              className={cn(
+                                "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all",
+                                field.state.value === event.trackingId
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:border-primary/50 hover:bg-secondary/50",
+                              )}
+                              onClick={() => {
+                                field.handleChange(event.trackingId);
+                                handleEventSelect(event.trackingId);
+                              }}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm text-foreground">
+                                  {event.name}
+                                </p>
+                                <code className="text-xs text-muted-foreground font-mono">
+                                  {event.trackingId}
+                                </code>
+                              </div>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyCode(event.trackingId);
+                                }}
+                              >
+                                {copiedEvent === event.trackingId ? (
+                                  <Check className="w-4 h-4 text-green-500" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </button>
+                          ))}
+                        </div>
+                        <FieldError className="mt-2">
+                          {field.state.meta.errors[0]}
+                        </FieldError>
+                      </>
                     )}
-                    onClick={() => handleEventSelect(event.eventName)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-foreground">
-                        {event.name}
-                      </p>
-                      <code className="text-xs text-muted-foreground font-mono">
-                        {event.eventName}
-                      </code>
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopyCode(event.eventName);
-                      }}
-                    >
-                      {copiedEvent === event.eventName ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </button>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-        <SheetFooter>
-          <div className="flex justify-between w-full">
-            {onDelete && (
+                  </form.Field>
+                )}
+              </TabsContent>
+            </Tabs>
+          </form>
+
+          <SheetFooter>
+            <div className="flex justify-between w-full">
+              {onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setOpenDeleteDialog(true)}
+                >
+                  Delete Step
+                </Button>
+              )}
               <Button
-                variant="destructive"
-                onClick={() => {
-                  onDelete();
-                  onOpenChange(false);
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  form.handleSubmit();
                 }}
+                disabled={!isValid}
               >
-                Delete Step
+                Save Step
               </Button>
-            )}
-            <Button onClick={handleSave} disabled={!isValid}>
-              Save Step
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Step</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete this
+              step from the funnel.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpenDeleteDialog(false)}
+            >
+              Cancel
             </Button>
-          </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Delete Step
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { apiTokenRouter } from "./router/api-token";
 import { authRouter } from "./router/auth";
 import { emailRouter } from "./router/email";
 import { eventRouter } from "./router/event";
+import { funnelRouter } from "./router/funnel";
 import { invitationRouter } from "./router/invitation";
 import { notificationRouter } from "./router/notification";
 import { organizationRouter } from "./router/organization";
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   project: projectRouter,
   organization: organizationRouter,
   event: eventRouter,
+  funnel: funnelRouter,
   session: sessionRouter,
   pageview: pageviewRouter,
   acquisition: acquisitionRouter,

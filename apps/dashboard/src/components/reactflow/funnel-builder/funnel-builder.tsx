@@ -2,7 +2,8 @@
 
 import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
   addEdge,
   Background,
@@ -21,6 +22,8 @@ import {
   useNodesState,
   useReactFlow,
 } from "reactflow";
+import { toast } from "sonner";
+import { createFunnel } from "@/actions/funnel-actions";
 import "reactflow/dist/style.css";
 
 import { ButtonGroup } from "@bklit/ui/components/button-group";
@@ -36,6 +39,7 @@ import {
 import { AddStepNode } from "./add-step-node";
 import { FunnelSettingsSheet } from "./funnel-settings-sheet";
 import { FunnelStepNode } from "./funnel-step-node";
+import { FunnelSuccessDialog } from "./funnel-success-dialog";
 import { StepConfigSheet } from "./step-config-sheet";
 
 export type StepType = "pageview" | "event";
@@ -68,7 +72,15 @@ const nodeTypes: NodeTypes = {
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
-function FunnelBuilderInner() {
+interface FunnelBuilderInnerProps {
+  organizationId: string;
+  projectId: string;
+}
+
+function FunnelBuilderInner({
+  organizationId,
+  projectId,
+}: FunnelBuilderInnerProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -77,6 +89,14 @@ function FunnelBuilderInner() {
   const [showMiniMap, setShowMiniMap] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isEditingFunnel, setIsEditingFunnel] = useState(false);
+  const [funnelName, setFunnelName] = useState("");
+  const [funnelEndDate, setFunnelEndDate] = useState<Date | null>(null);
+  const [showNameError, setShowNameError] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdFunnelId, setCreatedFunnelId] = useState<string | null>(null);
+  const [createdFunnelName, setCreatedFunnelName] = useState<string>("");
+  const router = useRouter();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const connectingNodeId = useRef<string | null>(null);
   const pendingAddStepNodeId = useRef<string | null>(null);
@@ -553,6 +573,103 @@ function FunnelBuilderInner() {
     fitView({ padding: 0.2, maxZoom: 1.6 });
   }, [fitView]);
 
+  const handleSaveFunnelSettings = useCallback(
+    (data: { name: string; endDate?: Date | null }) => {
+      setFunnelName(data.name);
+      setFunnelEndDate(data.endDate || null);
+      setShowNameError(false);
+      toast.success("Funnel settings saved");
+    },
+    [],
+  );
+
+  const handleSaveFunnel = useCallback(() => {
+    // Validate: need at least 2 configured steps and a funnel name
+    const configuredSteps = nodes.filter((n) => n.type === "funnelStep");
+    const hasMinimumSteps = configuredSteps.length >= 2;
+    const hasFunnelName = funnelName.trim().length > 0;
+
+    if (!hasMinimumSteps || !hasFunnelName) {
+      // Open settings sheet with error
+      setShowNameError(true);
+      setIsEditingFunnel(true);
+      if (!hasFunnelName) {
+        toast.error("Funnel name is required");
+      }
+      if (!hasMinimumSteps) {
+        toast.error("A funnel must have at least 2 configured steps");
+      }
+      return;
+    }
+
+    // Prepare steps data with positions
+    const steps = configuredSteps
+      .map((node) => {
+        const stepData = node.data.stepData as StepData | undefined;
+        if (!stepData) {
+          console.error("Step data missing for node:", node.id);
+          return null;
+        }
+
+        // Validate step data
+        if (stepData.type === "pageview" && (!stepData.name || !stepData.url)) {
+          console.error("Invalid pageview step:", stepData);
+          return null;
+        }
+        if (stepData.type === "event" && !stepData.eventName) {
+          console.error("Invalid event step:", stepData);
+          return null;
+        }
+
+        return {
+          type: stepData.type,
+          name: stepData.name,
+          url: stepData.url,
+          eventName: stepData.eventName,
+          eventCode: stepData.eventCode,
+          positionX: node.position.x,
+          positionY: node.position.y,
+        };
+      })
+      .filter((step): step is NonNullable<typeof step> => step !== null);
+
+    if (steps.length !== configuredSteps.length) {
+      toast.error(
+        "Some steps are incomplete. Please configure all steps before saving.",
+      );
+      return;
+    }
+
+    if (steps.length < 2) {
+      toast.error("A funnel must have at least 2 configured steps");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const result = await createFunnel({
+          name: funnelName.trim(),
+          projectId,
+          organizationId,
+          steps,
+          endDate: funnelEndDate || undefined,
+        });
+
+        if (result.success && result.data) {
+          // Store created funnel ID for success dialog
+          setCreatedFunnelId(result.data.id);
+          setCreatedFunnelName(result.data.name);
+          setShowSuccessDialog(true);
+        } else {
+          toast.error(result.error || "Failed to save funnel");
+        }
+      } catch (error) {
+        console.error("Error saving funnel:", error);
+        toast.error("An unexpected error occurred while saving the funnel");
+      }
+    });
+  }, [nodes, funnelName, funnelEndDate, projectId, organizationId, router]);
+
   const handleAddStep = useCallback(() => {
     // Check if there's already an addStep node - if so, just open it
     const existingAddStepNode = nodes.find((n) => n.type === "addStep");
@@ -662,8 +779,12 @@ function FunnelBuilderInner() {
             >
               Edit funnel
             </Button>
-            <Button variant="secondary" disabled={nodes.length <= 1}>
-              Save
+            <Button
+              variant={nodes.length > 1 ? "default" : "secondary"}
+              onClick={handleSaveFunnel}
+              disabled={isPending || nodes.length <= 1}
+            >
+              {isPending ? "Saving..." : "Save"}
             </Button>
           </ButtonGroup>
         </Panel>
@@ -671,8 +792,40 @@ function FunnelBuilderInner() {
 
       <FunnelSettingsSheet
         open={isEditingFunnel}
-        onOpenChange={setIsEditingFunnel}
+        onOpenChange={(open) => {
+          setIsEditingFunnel(open);
+          if (!open) {
+            setShowNameError(false);
+          }
+        }}
+        onSave={handleSaveFunnelSettings}
+        initialName={funnelName}
+        initialEndDate={funnelEndDate}
+        showNameError={showNameError}
       />
+
+      {createdFunnelId && (
+        <FunnelSuccessDialog
+          open={showSuccessDialog}
+          onOpenChange={setShowSuccessDialog}
+          funnelId={createdFunnelId}
+          funnelName={createdFunnelName}
+          organizationId={organizationId}
+          projectId={projectId}
+          onContinueAdding={() => {
+            // Reset builder state
+            setNodes([]);
+            setEdges([]);
+            setFunnelName("");
+            setFunnelEndDate(null);
+            setCreatedFunnelId(null);
+            setCreatedFunnelName("");
+            setSelectedNodeId(null);
+            setSheetOpen(false);
+            // Will create initial node via useEffect
+          }}
+        />
+      )}
 
       <StepConfigSheet
         open={sheetOpen}
@@ -691,15 +844,28 @@ function FunnelBuilderInner() {
                 | undefined)
             : undefined
         }
+        projectId={projectId}
+        organizationId={organizationId}
       />
     </div>
   );
 }
 
-export function FunnelBuilder() {
+interface FunnelBuilderProps {
+  organizationId: string;
+  projectId: string;
+}
+
+export function FunnelBuilder({
+  organizationId,
+  projectId,
+}: FunnelBuilderProps) {
   return (
     <ReactFlowProvider>
-      <FunnelBuilderInner />
+      <FunnelBuilderInner
+        organizationId={organizationId}
+        projectId={projectId}
+      />
     </ReactFlowProvider>
   );
 }

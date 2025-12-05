@@ -127,6 +127,7 @@ model Project {
   trackedEvents    TrackedEvent[]
   trackedSessions  TrackedSession[]
   apiTokenProjects ApiTokenProject[]
+  funnels          Funnel[]
 
   @@index([organizationId])
 }
@@ -302,4 +303,40 @@ model ApiHealthAlertState {
   @@index([endpoint])
   @@index([isInAlertState])
   @@map("api_health_alert_state")
+}
+
+model Funnel {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  projectId   String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  endDate     DateTime?
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  steps       FunnelStep[]
+
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("funnel")
+}
+
+model FunnelStep {
+  id         String   @id @default(cuid())
+  funnelId   String
+  type       String
+  name       String
+  url        String?
+  eventName  String?
+  eventCode  String?
+  positionX  Float
+  positionY  Float
+  stepOrder  Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  funnel     Funnel   @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+
+  @@index([funnelId])
+  @@index([funnelId, stepOrder])
+  @@map("funnel_step")
 }

@@ -1,15 +1,27 @@
-import { Button } from "@bklit/ui/components/button";
-import { Link, Plus } from "lucide-react";
+import type { Metadata } from "next";
+import { Funnels } from "@/components/funnels";
+import { prefetch, trpc } from "@/trpc/server";
 
-export default function FunnelsPage() {
-  return (
-    <div className="h-full min-h-[900px]">
-      <Button asChild size="lg">
-        <Link href="/funnels/builder">
-          <Plus className="mr-2 size-4" />
-          Create Funnel
-        </Link>
-      </Button>
-    </div>
+export const metadata: Metadata = {
+  title: "Funnels",
+};
+
+interface PageProps {
+  params: Promise<{
+    organizationId: string;
+    projectId: string;
+  }>;
+}
+
+export default async function FunnelsPage({ params }: PageProps) {
+  const { organizationId, projectId } = await params;
+
+  prefetch(
+    trpc.funnel.list.queryOptions({
+      projectId,
+      organizationId,
+    }),
   );
+
+  return <Funnels organizationId={organizationId} projectId={projectId} />;
 }
