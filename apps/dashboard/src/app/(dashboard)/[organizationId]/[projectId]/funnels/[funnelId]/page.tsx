@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { FunnelDetails } from "@/components/funnels/funnel-details";
 import { prefetch, trpc } from "@/trpc/server";
 
 export const metadata: Metadata = {
@@ -18,26 +19,31 @@ export default async function FunnelDetailPage({ params }: PageProps) {
   const { organizationId, projectId, funnelId } = await params;
 
   try {
-    prefetch(
-      trpc.funnel.getById.queryOptions({
-        funnelId,
-        projectId,
-        organizationId,
-      }),
-    );
-  } catch (error) {
+    await Promise.all([
+      prefetch(
+        trpc.funnel.getById.queryOptions({
+          funnelId,
+          projectId,
+          organizationId,
+        }),
+      ),
+      prefetch(
+        trpc.funnel.getStats.queryOptions({
+          funnelId,
+          projectId,
+          organizationId,
+        }),
+      ),
+    ]);
+  } catch {
     notFound();
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Funnel Details</h1>
-        <p className="text-muted-foreground">
-          Funnel detail page - to be implemented
-        </p>
-      </div>
-    </div>
+    <FunnelDetails
+      organizationId={organizationId}
+      projectId={projectId}
+      funnelId={funnelId}
+    />
   );
 }
-

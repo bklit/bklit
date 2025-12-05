@@ -1,6 +1,10 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
+import {
+  buildEventDefinitionMap,
+  matchSessionToFunnel,
+} from "../lib/funnel-utils";
 import { endOfDay, startOfDay } from "../lib/date-utils";
 import { protectedProcedure } from "../trpc";
 
@@ -433,25 +437,177 @@ export const funnelRouter = {
         ? endOfDay(input.endDate)
         : undefined;
 
-      // Calculate conversions and drop-offs for each step
-      // This is a placeholder - actual implementation will query session/pageview/event data
-      // For now, return empty stats structure
+      // Handle empty funnels (no steps)
+      if (funnel.steps.length === 0) {
+        return {
+          funnelId: funnel.id,
+          totalConversions: 0,
+          totalDropOffs: 0,
+          overallConversionRate: 0,
+          stepStats: [],
+        };
+      }
+
+      // Handle funnel endDate - if set, only count sessions before endDate
+      const effectiveEndDate = funnel.endDate
+        ? normalizedEndDate
+          ? new Date(
+              Math.min(
+                funnel.endDate.getTime(),
+                normalizedEndDate.getTime(),
+              ),
+            )
+          : funnel.endDate
+        : normalizedEndDate;
+
+      // Build event definition map for efficient event matching
+      const eventTrackingIds = funnel.steps
+        .filter((step) => step.type === "event" && step.eventName)
+        .map((step) => step.eventName!);
+
+      const eventDefinitionMap = await buildEventDefinitionMap(
+        ctx.prisma,
+        input.projectId,
+        eventTrackingIds,
+      );
+
+      // Query sessions with pageviews and events
+      const sessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          startedAt: {
+            ...(normalizedStartDate && { gte: normalizedStartDate }),
+            ...(effectiveEndDate && { lte: effectiveEndDate }),
+          },
+        },
+        select: {
+          id: true,
+          pageViewEvents: {
+            where: {
+              timestamp: {
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(effectiveEndDate && { lte: effectiveEndDate }),
+              },
+            },
+            select: {
+              url: true,
+              timestamp: true,
+            },
+            orderBy: {
+              timestamp: "asc",
+            },
+          },
+          trackedEvents: {
+            where: {
+              timestamp: {
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(effectiveEndDate && { lte: effectiveEndDate }),
+              },
+            },
+            select: {
+              timestamp: true,
+              eventDefinition: {
+                select: {
+                  trackingId: true,
+                },
+              },
+            },
+            orderBy: {
+              timestamp: "asc",
+            },
+          },
+        },
+      });
+
+      // Track step completions per session
+      const stepCompletionsBySession = new Map<
+        string,
+        Array<{ stepId: string; stepOrder: number }>
+      >();
+
+      for (const session of sessions) {
+        const completions = matchSessionToFunnel(
+          session,
+          funnel.steps,
+          eventDefinitionMap,
+        );
+        stepCompletionsBySession.set(
+          session.id,
+          completions.map((c) => ({
+            stepId: c.stepId,
+            stepOrder: c.stepOrder,
+          })),
+        );
+      }
+
+      // Calculate step stats
       const stepStats = funnel.steps.map((step, index) => {
-        // TODO: Calculate actual conversions from session/pageview/event data
+        // Count sessions that completed this step
+        const conversions = Array.from(stepCompletionsBySession.values()).filter(
+          (completions) =>
+            completions.some((c) => c.stepId === step.id),
+        ).length;
+
+        // Count drop-offs: sessions that completed previous step but not this one
+        let dropOffs = 0;
+        if (index > 0) {
+          const previousStep = funnel.steps[index - 1];
+          const previousStepCompletions = Array.from(
+            stepCompletionsBySession.values(),
+          ).filter((completions) =>
+            completions.some((c) => c.stepId === previousStep.id),
+          ).length;
+          dropOffs = previousStepCompletions - conversions;
+        }
+
+        // Calculate conversion rate
+        let conversionRate = 0;
+        if (index === 0) {
+          // First step: conversion rate is 100% (everyone who started)
+          conversionRate = conversions > 0 ? 100 : 0;
+        } else {
+          const previousStep = funnel.steps[index - 1];
+          const previousStepConversions = Array.from(
+            stepCompletionsBySession.values(),
+          ).filter((completions) =>
+            completions.some((c) => c.stepId === previousStep.id),
+          ).length;
+          if (previousStepConversions > 0) {
+            conversionRate =
+              (conversions / previousStepConversions) * 100;
+          }
+        }
+
         return {
           stepId: step.id,
           stepOrder: step.stepOrder,
-          conversions: 0,
-          dropOffs: 0,
-          conversionRate: 0,
+          conversions,
+          dropOffs,
+          conversionRate: Number(conversionRate.toFixed(2)),
         };
       });
 
+      // Calculate overall stats
+      const firstStepConversions =
+        stepStats.length > 0 ? stepStats[0]!.conversions : 0;
+      const lastStepConversions =
+        stepStats.length > 0
+          ? stepStats[stepStats.length - 1]!.conversions
+          : 0;
+      const totalDropOffs = stepStats.reduce(
+        (sum, stat) => sum + stat.dropOffs,
+        0,
+      );
+      const overallConversionRate =
+        firstStepConversions > 0
+          ? (lastStepConversions / firstStepConversions) * 100
+          : 0;
+
       return {
         funnelId: funnel.id,
-        totalConversions: 0,
-        totalDropOffs: 0,
-        overallConversionRate: 0,
+        totalConversions: lastStepConversions,
+        totalDropOffs,
+        overallConversionRate: Number(overallConversionRate.toFixed(2)),
         stepStats,
       };
     }),
