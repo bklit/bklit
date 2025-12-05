@@ -1,14 +1,13 @@
 "use client";
 
 import { Button } from "@bklit/ui/components/button";
+import { cn } from "@bklit/ui/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   addEdge,
   Background,
   BackgroundVariant,
   type Connection,
-  ControlButton,
-  Controls,
   type Edge,
   type EdgeChange,
   MiniMap,
@@ -24,8 +23,18 @@ import {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-import { SquareChartGantt } from "lucide-react";
+import { ButtonGroup } from "@bklit/ui/components/button-group";
+import {
+  ImageUpscale,
+  Maximize2,
+  Minimize2,
+  Plus,
+  SquareChartGantt,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { AddStepNode } from "./add-step-node";
+import { FunnelSettingsSheet } from "./funnel-settings-sheet";
 import { FunnelStepNode } from "./funnel-step-node";
 import { StepConfigSheet } from "./step-config-sheet";
 
@@ -66,9 +75,12 @@ function FunnelBuilderInner() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [editingStepData, setEditingStepData] = useState<Partial<StepData>>({});
   const [showMiniMap, setShowMiniMap] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isEditingFunnel, setIsEditingFunnel] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const connectingNodeId = useRef<string | null>(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const pendingAddStepNodeId = useRef<string | null>(null);
+  const { screenToFlowPosition, zoomIn, zoomOut, fitView } = useReactFlow();
 
   // Prevent edge deletion - only allow edges to be removed when target node is deleted
   const handleEdgesChange = useCallback(
@@ -84,10 +96,18 @@ function FunnelBuilderInner() {
     [onEdgesChange],
   );
 
-  const handleConfigure = useCallback((nodeId: string) => {
-    setSelectedNodeId(nodeId);
-    setSheetOpen(true);
-  }, []);
+  const handleConfigure = useCallback(
+    (nodeId: string) => {
+      // Clear pending node tracking if editing an existing node
+      const node = nodes.find((n) => n.id === nodeId);
+      if (node && node.id !== pendingAddStepNodeId.current) {
+        pendingAddStepNodeId.current = null;
+      }
+      setSelectedNodeId(nodeId);
+      setSheetOpen(true);
+    },
+    [nodes],
+  );
 
   const handleDelete = useCallback(
     (nodeId: string) => {
@@ -189,6 +209,94 @@ function FunnelBuilderInner() {
     [setEdges, edges],
   );
 
+  // Shared function to create a new step node
+  const createNewStepNode = useCallback(
+    (options?: {
+      sourceNodeId?: string | null;
+      position?: { x: number; y: number };
+    }) => {
+      // Check if there's already an addStep node - if so, don't create a new one
+      const existingAddStepNode = nodes.find((n) => n.type === "addStep");
+      if (existingAddStepNode) {
+        // Just open the sheet for the existing addStep node
+        handleConfigure(existingAddStepNode.id);
+        return;
+      }
+
+      const newNodeId = `step-${Date.now()}`;
+      let sourceNodeId = options?.sourceNodeId;
+      let newPosition = options?.position;
+
+      // If no position provided, calculate from last step
+      if (!newPosition) {
+        const configuredSteps = nodes.filter((n) => n.type === "funnelStep");
+        const lastStep =
+          configuredSteps.find((step) => {
+            return !edges.some((e) => e.source === step.id);
+          }) || configuredSteps[configuredSteps.length - 1];
+
+        if (lastStep) {
+          newPosition = {
+            x: lastStep.position.x + 300,
+            y: lastStep.position.y,
+          };
+          // If no source provided, use the last step
+          if (!sourceNodeId) {
+            sourceNodeId = lastStep.id;
+          }
+        } else {
+          newPosition = { x: 0, y: 0 };
+        }
+      }
+
+      const newNode: Node = {
+        id: newNodeId,
+        type: "addStep",
+        position: newPosition,
+        data: {
+          label: "Add Step",
+          onConfigure: handleConfigure,
+          onDelete: handleDelete,
+          isConfigured: false,
+          isFirstNode: false,
+        },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+
+      // Create edge if we have a source node
+      if (sourceNodeId) {
+        setEdges((eds) => {
+          const edgeId = `e-${sourceNodeId}-${newNodeId}`;
+          const edgeExists = eds.some((e) => e.id === edgeId);
+
+          if (!edgeExists) {
+            return eds.concat({
+              id: edgeId,
+              source: sourceNodeId,
+              target: newNodeId,
+              style: { strokeWidth: 2, strokeDasharray: "5,5" },
+              animated: true,
+            });
+          }
+
+          return eds;
+        });
+      }
+
+      // Track this as a pending addStep node (will be deleted if sheet closes without saving)
+      pendingAddStepNodeId.current = newNodeId;
+
+      // Open the configuration sheet for the new node
+      setTimeout(() => {
+        setSelectedNodeId(newNodeId);
+        setSheetOpen(true);
+        setEditingStepData({});
+      }, 100);
+    },
+    [nodes, edges, setNodes, setEdges, handleConfigure, handleDelete],
+  );
+
   const onConnectStart = useCallback(
     (_: unknown, { nodeId }: { nodeId: string | null }) => {
       // Prevent starting connection if node already has an outgoing edge
@@ -235,54 +343,18 @@ function FunnelBuilderInner() {
           y: clientY,
         });
 
-        const newNodeId = `step-${Date.now()}`;
-        const newNode: Node = {
-          id: newNodeId,
-          type: "addStep",
+        createNewStepNode({
+          sourceNodeId: connectingNodeId.current,
           position: {
             x: position.x - 100,
             y: position.y - 40,
           },
-          data: {
-            label: "Add Step",
-            onConfigure: handleConfigure,
-            onDelete: handleDelete,
-            isConfigured: false,
-            isFirstNode: false,
-          },
-        };
-
-        setNodes((nds) => nds.concat(newNode));
-        const sourceNodeId = connectingNodeId.current;
-        if (sourceNodeId) {
-          setEdges((eds) =>
-            eds.concat({
-              id: `e-${sourceNodeId}-${newNodeId}`,
-              source: sourceNodeId,
-              target: newNodeId,
-              style: { strokeWidth: 2, strokeDasharray: "5,5" },
-              animated: true,
-            }),
-          );
-        }
-
-        setTimeout(() => {
-          setSelectedNodeId(newNodeId);
-          setSheetOpen(true);
-          setEditingStepData({});
-        }, 100);
+        });
       }
 
       connectingNodeId.current = null;
     },
-    [
-      setNodes,
-      setEdges,
-      handleConfigure,
-      handleDelete,
-      screenToFlowPosition,
-      edges,
-    ],
+    [screenToFlowPosition, createNewStepNode, edges],
   );
 
   const handleSaveStep = useCallback(
@@ -367,6 +439,9 @@ function FunnelBuilderInner() {
             return eds;
           });
         }
+
+        // Clear pending node tracking since we saved
+        pendingAddStepNodeId.current = null;
       }
       setSheetOpen(false);
       setSelectedNodeId(null);
@@ -387,6 +462,30 @@ function FunnelBuilderInner() {
     (open: boolean) => {
       setSheetOpen(open);
       if (!open) {
+        // If closing sheet and we have a pending addStep node, delete it
+        if (
+          pendingAddStepNodeId.current &&
+          selectedNodeId === pendingAddStepNodeId.current
+        ) {
+          const nodeToDelete = nodes.find(
+            (n) => n.id === pendingAddStepNodeId.current,
+          );
+          // Only delete if it's still an addStep node (not configured)
+          if (nodeToDelete?.type === "addStep") {
+            setNodes((nds) =>
+              nds.filter((n) => n.id !== pendingAddStepNodeId.current),
+            );
+            setEdges((eds) =>
+              eds.filter(
+                (e) =>
+                  e.source !== pendingAddStepNodeId.current &&
+                  e.target !== pendingAddStepNodeId.current,
+              ),
+            );
+          }
+          pendingAddStepNodeId.current = null;
+        }
+
         // Reset editing state on the node
         if (selectedNodeId) {
           setNodes((nds) =>
@@ -408,7 +507,7 @@ function FunnelBuilderInner() {
         setEditingStepData({});
       }
     },
-    [selectedNodeId, setNodes],
+    [selectedNodeId, nodes, setNodes, setEdges],
   );
 
   const nodesWithHandlers = nodes.map((node) => {
@@ -431,21 +530,49 @@ function FunnelBuilderInner() {
 
   const handleNodeClick = useCallback(
     (_: unknown, { id }: { id: string }) => {
-      // Only open sheet for configured funnel steps (not addStep nodes)
+      // Open sheet for both funnelStep and addStep nodes
       const node = nodes.find((n) => n.id === id);
-      if (node?.type === "funnelStep") {
+      if (node?.type === "funnelStep" || node?.type === "addStep") {
+        // Clear pending node tracking since we're editing an existing node
+        pendingAddStepNodeId.current = null;
         handleConfigure(id);
       }
     },
     [nodes, handleConfigure],
   );
 
+  const handleZoomIn = useCallback(() => {
+    zoomIn();
+  }, [zoomIn]);
+
+  const handleZoomOut = useCallback(() => {
+    zoomOut();
+  }, [zoomOut]);
+
+  const handleFitView = useCallback(() => {
+    fitView({ padding: 0.2, maxZoom: 1.6 });
+  }, [fitView]);
+
+  const handleAddStep = useCallback(() => {
+    // Check if there's already an addStep node - if so, just open it
+    const existingAddStepNode = nodes.find((n) => n.type === "addStep");
+    if (existingAddStepNode) {
+      handleConfigure(existingAddStepNode.id);
+      return;
+    }
+    // Otherwise create a new one
+    createNewStepNode();
+  }, [nodes, handleConfigure, createNewStepNode]);
+
   const isInitNode = nodes.length === 1 && nodes[0]?.type === "addStep";
 
   return (
     <div
       ref={reactFlowWrapper}
-      className="w-full relative border-2 rounded-xl overflow-clip h-full min-h-[720px]"
+      className={cn(
+        "w-full relative border-2 rounded-xl overflow-clip h-full min-h-[720px]",
+        isFullScreen && "absolute inset-0",
+      )}
     >
       <ReactFlow
         nodes={nodesWithHandlers}
@@ -471,14 +598,7 @@ function FunnelBuilderInner() {
           color="var(--bklit-300)"
           className="bg-bklit-800"
         />
-        <Controls className="bg-bklit-800 border border-bklit-500 [&>button]:size-6! [&>button]:bg-bklit-700! [&>button]:border-b! [&>button]:border-bklit-500! [&>button>svg]:fill-current [&>button>svg]:text-bklit-300">
-          <ControlButton
-            className="[&>svg]:fill-none! border-none!"
-            onClick={() => setShowMiniMap(!showMiniMap)}
-          >
-            <SquareChartGantt size={16} />
-          </ControlButton>
-        </Controls>
+
         {showMiniMap && (
           <MiniMap
             style={{
@@ -495,18 +615,64 @@ function FunnelBuilderInner() {
             inversePan
             zoomStep={0.1}
             offsetScale={0.5}
+            position="bottom-left"
           />
         )}
-        {nodes.length > 0 &&
-          nodes.every((node) => node.type === "funnelStep") && (
-            <Panel
-              position="top-right"
-              className="bg-bklit-800 border border-bklit-500"
+
+        <Panel position="top-right">
+          <ButtonGroup orientation="horizontal">
+            <Button variant="secondary" onClick={handleZoomIn}>
+              <ZoomIn size={16} />
+            </Button>
+            <Button variant="secondary" onClick={handleZoomOut}>
+              <ZoomOut size={16} />
+            </Button>
+            <Button variant="secondary" onClick={handleFitView}>
+              <ImageUpscale size={16} />
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowMiniMap(!showMiniMap)}
             >
-              <SaveFunnelButton />
-            </Panel>
-          )}
+              <SquareChartGantt size={16} />
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setIsFullScreen(!isFullScreen)}
+            >
+              {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </Button>
+          </ButtonGroup>
+        </Panel>
+
+        <Panel position="top-left">
+          <ButtonGroup orientation="horizontal">
+            <Button
+              variant="secondary"
+              onClick={handleAddStep}
+              disabled={nodes.length === 1 && nodes[0]?.type === "addStep"}
+            >
+              <Plus size={16} />
+              Add step
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setIsEditingFunnel(!isEditingFunnel)}
+              disabled={nodes.length === 1 && nodes[0]?.type === "addStep"}
+            >
+              Edit funnel
+            </Button>
+            <Button variant="secondary" disabled={nodes.length <= 1}>
+              Save
+            </Button>
+          </ButtonGroup>
+        </Panel>
       </ReactFlow>
+
+      <FunnelSettingsSheet
+        open={isEditingFunnel}
+        onOpenChange={setIsEditingFunnel}
+      />
 
       <StepConfigSheet
         open={sheetOpen}
@@ -536,8 +702,4 @@ export function FunnelBuilder() {
       <FunnelBuilderInner />
     </ReactFlowProvider>
   );
-}
-
-function SaveFunnelButton() {
-  return <Button variant="default">Save Funnel</Button>;
 }

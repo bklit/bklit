@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@bklit/ui/components/badge";
 import { Plus } from "lucide-react";
 import { memo } from "react";
 import { Handle, type NodeProps, Position } from "reactflow";
@@ -21,9 +22,9 @@ export const AddStepNode = memo(function AddStepNode({ id, data }: NodeProps) {
   return (
     <button
       className={cn(
-        "relative bg-card border-2 border-dashed border-primary rounded-xl p-6",
-        "hover:border-primary transition-all duration-200",
-        "cursor-pointer min-w-[200px] group",
+        "relative bg-card border-2 rounded-xl border-dashed border-primary p-4 min-w-[240px] max-w-[320px]",
+        "shadow-sm hover:shadow-md transition-all duration-200 hover:cursor-pointer active:cursor-grabbing",
+        "group",
         isEditing && "border-solid",
       )}
       onClick={() => nodeData.onConfigure(id)}
@@ -37,16 +38,16 @@ export const AddStepNode = memo(function AddStepNode({ id, data }: NodeProps) {
         />
       )}
 
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-          <Plus className="w-6 h-6 text-primary" />
+      <div className="flex flex-col w-full items-center gap-3 relative">
+        <span className="flex items-center justify-center size-12 bg-bklit-600 text-primary rounded-full">
+          <Plus size={16} />
+        </span>
+
+        <div className="block text-sm font-medium w-0 min-w-full truncate text-center">
+          Add Step
         </div>
-        <div className="text-center">
-          <p className="font-medium text-foreground">Add Step</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Click to configure
-          </p>
-        </div>
+
+        <Badge variant="code">Pageview or Event</Badge>
       </div>
 
       {!isFirstNode && (
