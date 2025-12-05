@@ -41,7 +41,9 @@ export function FunnelSuccessDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="items-center text-center">
           <CheckCircle className="size-12 text-green-500 mb-2" />
-          <DialogTitle className="text-2xl font-bold">Funnel Created</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">
+            Funnel Created
+          </DialogTitle>
           <DialogDescription className="text-muted-foreground">
             <div className="space-y-2 text-center mt-2">
               <div>
@@ -60,11 +62,7 @@ export function FunnelSuccessDialog({
           >
             Continue Adding Another Funnel
           </Button>
-          <Button
-            type="button"
-            asChild
-            className="w-full sm:w-auto"
-          >
+          <Button type="button" asChild className="w-full sm:w-auto">
             <Link
               href={`/${organizationId}/${projectId}/funnels/${funnelId}`}
               onClick={() => onOpenChange(false)}
@@ -77,4 +75,3 @@ export function FunnelSuccessDialog({
     </Dialog>
   );
 }
-

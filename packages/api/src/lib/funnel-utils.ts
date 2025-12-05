@@ -174,7 +174,10 @@ export function matchSessionToFunnel(
 
     if (currentStep.type === "pageview" && event.type === "pageview") {
       // Match pageview step
-      if (currentStep.url && matchPageviewToStep(event.url || "", currentStep.url)) {
+      if (
+        currentStep.url &&
+        matchPageviewToStep(event.url || "", currentStep.url)
+      ) {
         stepMatched = true;
       }
     } else if (currentStep.type === "event" && event.type === "event") {
@@ -200,4 +203,3 @@ export function matchSessionToFunnel(
 
   return completions;
 }
-

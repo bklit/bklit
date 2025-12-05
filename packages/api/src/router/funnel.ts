@@ -1,11 +1,10 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
-
+import { endOfDay, startOfDay } from "../lib/date-utils";
 import {
   buildEventDefinitionMap,
   matchSessionToFunnel,
 } from "../lib/funnel-utils";
-import { endOfDay, startOfDay } from "../lib/date-utils";
 import { protectedProcedure } from "../trpc";
 
 const stepSchema = z.object({
@@ -204,7 +203,9 @@ export const funnelRouter = {
       }
 
       // Sort steps by positionX (left to right) to calculate stepOrder
-      const sortedSteps = [...input.steps].sort((a, b) => a.positionX - b.positionX);
+      const sortedSteps = [...input.steps].sort(
+        (a, b) => a.positionX - b.positionX,
+      );
 
       return ctx.prisma.funnel.create({
         data: {
@@ -286,7 +287,9 @@ export const funnelRouter = {
       // If steps are provided, update them
       if (input.steps) {
         // Sort steps by positionX to calculate stepOrder
-        const sortedSteps = [...input.steps].sort((a, b) => a.positionX - b.positionX);
+        const sortedSteps = [...input.steps].sort(
+          (a, b) => a.positionX - b.positionX,
+        );
 
         // Delete all existing steps and create new ones
         await ctx.prisma.funnelStep.deleteMany({
@@ -317,7 +320,9 @@ export const funnelRouter = {
         },
         data: {
           ...(input.name && { name: input.name }),
-          ...(input.description !== undefined && { description: input.description }),
+          ...(input.description !== undefined && {
+            description: input.description,
+          }),
           ...(input.endDate !== undefined && { endDate: input.endDate }),
         },
         include: {
@@ -452,10 +457,7 @@ export const funnelRouter = {
       const effectiveEndDate = funnel.endDate
         ? normalizedEndDate
           ? new Date(
-              Math.min(
-                funnel.endDate.getTime(),
-                normalizedEndDate.getTime(),
-              ),
+              Math.min(funnel.endDate.getTime(), normalizedEndDate.getTime()),
             )
           : funnel.endDate
         : normalizedEndDate;
@@ -543,9 +545,10 @@ export const funnelRouter = {
       // Calculate step stats
       const stepStats = funnel.steps.map((step, index) => {
         // Count sessions that completed this step
-        const conversions = Array.from(stepCompletionsBySession.values()).filter(
-          (completions) =>
-            completions.some((c) => c.stepId === step.id),
+        const conversions = Array.from(
+          stepCompletionsBySession.values(),
+        ).filter((completions) =>
+          completions.some((c) => c.stepId === step.id),
         ).length;
 
         // Count drop-offs: sessions that completed previous step but not this one
@@ -573,8 +576,7 @@ export const funnelRouter = {
             completions.some((c) => c.stepId === previousStep.id),
           ).length;
           if (previousStepConversions > 0) {
-            conversionRate =
-              (conversions / previousStepConversions) * 100;
+            conversionRate = (conversions / previousStepConversions) * 100;
           }
         }
 
@@ -591,9 +593,7 @@ export const funnelRouter = {
       const firstStepConversions =
         stepStats.length > 0 ? stepStats[0]!.conversions : 0;
       const lastStepConversions =
-        stepStats.length > 0
-          ? stepStats[stepStats.length - 1]!.conversions
-          : 0;
+        stepStats.length > 0 ? stepStats[stepStats.length - 1]!.conversions : 0;
       const totalDropOffs = stepStats.reduce(
         (sum, stat) => sum + stat.dropOffs,
         0,
@@ -612,4 +612,3 @@ export const funnelRouter = {
       };
     }),
 } satisfies TRPCRouterRecord;
-

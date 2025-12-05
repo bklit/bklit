@@ -14,10 +14,7 @@ export default async function FunnelsBuilderPage({ params }: PageProps) {
   return (
     <div className="w-full flex-1 flex flex-col gap-4 h-full">
       <PageHeader title="Funnels" description="Build your funnels with ease." />
-      <FunnelBuilder
-        organizationId={organizationId}
-        projectId={projectId}
-      />
+      <FunnelBuilder organizationId={organizationId} projectId={projectId} />
     </div>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@bklit/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { parseAsInteger, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
@@ -116,4 +116,3 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
     </>
   );
 }
-

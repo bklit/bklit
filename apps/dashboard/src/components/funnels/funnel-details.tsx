@@ -63,9 +63,7 @@ export function FunnelDetails({
     if (!funnel?.steps) return [];
 
     return funnel.steps.map((step) => {
-      const stepStat = stats?.stepStats.find(
-        (s) => s.stepId === step.id,
-      );
+      const stepStat = stats?.stepStats.find((s) => s.stepId === step.id);
       const conversions = stepStat?.conversions ?? 0;
 
       return {
@@ -136,7 +134,9 @@ export function FunnelDetails({
         <Card>
           <CardHeader>
             <CardTitle>Funnel Overview</CardTitle>
-            <CardDescription>Basic information about this funnel</CardDescription>
+            <CardDescription>
+              Basic information about this funnel
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -260,4 +260,3 @@ export function FunnelDetails({
     </>
   );
 }
-

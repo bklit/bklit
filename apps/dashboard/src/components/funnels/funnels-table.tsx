@@ -130,19 +130,20 @@ export function FunnelsTable({
                         }
                       />
                     </PaginationItem>
-                    {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => onPageChange(page)}
-                            isActive={page === pagination.page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ),
-                    )}
+                    {Array.from(
+                      { length: pagination.totalPages },
+                      (_, i) => i + 1,
+                    ).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => onPageChange(page)}
+                          isActive={page === pagination.page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => {
@@ -167,4 +168,3 @@ export function FunnelsTable({
     </Card>
   );
 }
-

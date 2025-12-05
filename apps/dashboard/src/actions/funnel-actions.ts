@@ -69,7 +69,9 @@ export async function createFunnel(data: {
     }
 
     // Sort steps by positionX (left to right) to calculate stepOrder
-    const sortedSteps = [...data.steps].sort((a, b) => a.positionX - b.positionX);
+    const sortedSteps = [...data.steps].sort(
+      (a, b) => a.positionX - b.positionX,
+    );
 
     const funnel = await prisma.funnel.create({
       data: {
@@ -168,7 +170,9 @@ export async function updateFunnel(data: {
       }
 
       // Sort steps by positionX to calculate stepOrder
-      const sortedSteps = [...data.steps].sort((a, b) => a.positionX - b.positionX);
+      const sortedSteps = [...data.steps].sort(
+        (a, b) => a.positionX - b.positionX,
+      );
 
       // Delete all existing steps and create new ones
       await prisma.funnelStep.deleteMany({
@@ -199,7 +203,9 @@ export async function updateFunnel(data: {
       },
       data: {
         ...(data.name && { name: data.name }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.endDate !== undefined && { endDate: data.endDate }),
       },
       include: {
@@ -277,4 +283,3 @@ export async function deleteFunnel(data: {
     return { success: false, error: "Failed to delete funnel" };
   }
 }
-

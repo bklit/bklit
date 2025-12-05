@@ -157,7 +157,7 @@ export function StepConfigSheet({
     const subscription = form.store.subscribe((state) => {
       const values = state.values;
       if (!values || !values.type) return;
-      
+
       if (values.type === "pageview") {
         onLiveUpdate?.({
           type: "pageview",
@@ -306,7 +306,10 @@ export function StepConfigSheet({
                 {eventsLoading ? (
                   <div className="space-y-2">
                     {Array.from({ length: 3 }, () => (
-                      <Skeleton key={crypto.randomUUID()} className="h-16 w-full" />
+                      <Skeleton
+                        key={crypto.randomUUID()}
+                        className="h-16 w-full"
+                      />
                     ))}
                   </div>
                 ) : !events || events.length === 0 ? (
@@ -425,11 +428,7 @@ export function StepConfigSheet({
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDelete}
-            >
+            <Button type="button" variant="destructive" onClick={handleDelete}>
               Delete Step
             </Button>
           </DialogFooter>
