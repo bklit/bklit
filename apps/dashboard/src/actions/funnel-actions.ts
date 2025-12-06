@@ -236,6 +236,9 @@ export async function deleteFunnel(data: {
     const funnel = await prisma.funnel.findFirst({
       where: {
         id: data.funnelId,
+        project: {
+          organizationId: data.organizationId,
+        },
       },
       include: {
         project: {
