@@ -26,10 +26,7 @@ interface FunnelsChartProps {
   projectId: string;
 }
 
-export function FunnelsChart({
-  organizationId,
-  projectId,
-}: FunnelsChartProps) {
+export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
   const trpc = useTRPC();
 
   const [dateParams] = useQueryStates(
@@ -150,10 +147,7 @@ export function FunnelsChart({
                 />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              stroke="var(--bklit-500)"
-              strokeDasharray="3 3"
-            />
+            <CartesianGrid stroke="var(--bklit-500)" strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -203,4 +197,3 @@ export function FunnelsChart({
     </Card>
   );
 }
-
