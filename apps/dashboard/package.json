@@ -37,6 +37,7 @@
     "dagre": "^0.8.5",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.511.0",
+    "mapbox-gl": "^3.17.0",
     "motion": "^12.23.24",
     "next": "catalog:",
     "next-themes": "^0.4.6",

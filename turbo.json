@@ -30,7 +30,8 @@
         "TRIGGER_API_KEY",
         "TRIGGER_API_URL",
         "ALERT_EMAIL",
-        "HEALTH_CHECK_SECRET"
+        "HEALTH_CHECK_SECRET",
+        "NEXT_PUBLIC_MAPBOX_TOKEN"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "dependsOn": ["^build", "^db:generate"],
