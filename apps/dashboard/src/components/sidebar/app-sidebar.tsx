@@ -75,7 +75,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
         {isProjectLevel ? (
-          <NavProject projectName={project?.name} items={resolvedItems} />
+          <NavProject
+            projectName={project?.name}
+            projectId={projectId}
+            organizationId={organizationId}
+            items={resolvedItems}
+          />
         ) : (
           <NavWorkspace
             workspaceName={organization?.name}
