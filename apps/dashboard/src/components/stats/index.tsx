@@ -6,6 +6,7 @@ import {
 } from "@bklit/ui/components/card";
 import NumberFlow from "@number-flow/react";
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StatItem {
   icon: LucideIcon;
@@ -16,6 +17,7 @@ interface StatItem {
 
 interface StatsProps {
   items: StatItem[];
+  variant?: "default" | "glass";
 }
 
 const getGridColsClass = (count: number): string => {
@@ -30,7 +32,7 @@ const getGridColsClass = (count: number): string => {
   return colsMap[count] || "md:grid-cols-4";
 };
 
-export const Stats = ({ items }: StatsProps) => {
+export const Stats = ({ items, variant = "default" }: StatsProps) => {
   const gridColsClass = getGridColsClass(items.length);
 
   return (
@@ -38,7 +40,13 @@ export const Stats = ({ items }: StatsProps) => {
       {items.map((item) => {
         const Icon = item.icon;
         return (
-          <Card key={item.name} className="gap-0">
+          <Card
+            key={item.name}
+            className={cn(
+              "gap-0",
+              variant === "glass" && "bg-card/80 backdrop-blur-sm",
+            )}
+          >
             <CardHeader className="pb-1">
               <div className="flex items-center gap-2">
                 <Icon className="size-4 text-muted-foreground" />

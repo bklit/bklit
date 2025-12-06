@@ -1,4 +1,5 @@
 import {
+  Earth,
   Eye,
   Funnel,
   Layers2,
@@ -90,6 +91,11 @@ export const navigationConfig: NavigationConfig = {
       title: "Acquisitions",
       icon: SendHorizontal,
       href: "/[organizationId]/[projectId]/acquisitions",
+    },
+    {
+      title: "Live",
+      icon: Earth,
+      href: "/[organizationId]/[projectId]/live",
     },
     {
       title: "Settings",
@@ -200,4 +206,10 @@ export function replaceDynamicParams(
       ? replaceDynamicParams(item.items, organizationId, projectId, userId)
       : undefined,
   }));
+}
+
+export function getLiveNavigationItems(
+  items: NavigationItem[],
+): NavigationItem[] {
+  return items.filter((item) => item.href.includes("/live"));
 }

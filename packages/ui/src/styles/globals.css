@@ -190,3 +190,7 @@
 @utility progressive-blur {
   @apply backdrop-blur-md mask-b-from-65%;
 }
+
+.mapboxgl-ctrl-logo {
+  @apply hidden!;
+}

@@ -392,6 +392,203 @@ export const sessionRouter = createTRPCRouter({
 
       return liveUsers;
     }),
+  liveUserLocations: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Check if user has access to the project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      // Clean up stale sessions first
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      await ctx.prisma.trackedSession.updateMany({
+        where: {
+          projectId: input.projectId,
+          endedAt: null,
+          startedAt: {
+            lt: thirtyMinutesAgo,
+          },
+        },
+        data: {
+          endedAt: new Date(),
+          duration: 1800, // 30 minutes in seconds
+          didBounce: false,
+        },
+      });
+
+      // Get active sessions with their latest page view location
+      const liveSessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          endedAt: null, // Active sessions only
+          startedAt: {
+            gte: thirtyMinutesAgo, // Only count sessions started in last 30 minutes
+          },
+        },
+        include: {
+          pageViewEvents: {
+            orderBy: { timestamp: "desc" },
+            take: 10, // Get recent page views to find one with valid location
+          },
+        },
+      });
+
+      // Helper function to validate coordinates
+      const isValidCoordinate = (
+        lat: number | null,
+        lon: number | null,
+      ): boolean => {
+        if (lat === null || lon === null) return false;
+        // Check if coordinates are valid (not 0,0 and within valid ranges)
+        // 0,0 is in the Gulf of Guinea and indicates missing/invalid data
+        if (lat === 0 && lon === 0) return false;
+        // Valid latitude: -90 to 90, Valid longitude: -180 to 180
+        return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+      };
+
+      // Helper function to parse browser from userAgent
+      const getBrowserFromUserAgent = (userAgent: string | null): string => {
+        if (!userAgent) return "Unknown";
+        if (userAgent.includes("Chrome") && !userAgent.includes("Edge"))
+          return "Chrome";
+        if (userAgent.includes("Firefox")) return "Firefox";
+        if (userAgent.includes("Safari") && !userAgent.includes("Chrome"))
+          return "Safari";
+        if (userAgent.includes("Edge")) return "Edge";
+        return "Other";
+      };
+
+      // Helper function to parse device type from userAgent
+      const getDeviceTypeFromUserAgent = (userAgent: string | null): string => {
+        if (!userAgent) return "Unknown";
+        const ua = userAgent.toLowerCase();
+        if (
+          ua.includes("ipad") ||
+          (ua.includes("android") && !ua.includes("mobile"))
+        ) {
+          return "Tablet";
+        }
+        if (
+          ua.includes("iphone") ||
+          ua.includes("ipod") ||
+          (ua.includes("android") && ua.includes("mobile")) ||
+          ua.includes("mobile")
+        ) {
+          return "Mobile";
+        }
+        return "Desktop";
+      };
+
+      // Country center coordinates fallback (GeoJSON format: [longitude, latitude])
+      // Using coordinates from country-coordinates.json
+      const countryCenterCoords: Record<string, [number, number]> = {
+        BG: [25, 43], // Bulgaria (Sofia region)
+        US: [-95.7129, 37.0902], // United States
+        GB: [-3.436, 55.3781], // United Kingdom
+        DE: [10.4515, 51.1657], // Germany
+        FR: [2.2137, 46.2276], // France
+        IT: [12.5674, 41.8719], // Italy
+        ES: [-3.7492, 40.4637], // Spain
+        NL: [5.2913, 52.1326], // Netherlands
+        CA: [-106.3468, 56.1304], // Canada
+        AU: [133.7751, -25.2744], // Australia
+        // Add more countries as needed - format: [longitude, latitude]
+      };
+
+      // Filter to only sessions with valid location data and format as GeoJSON features
+      return liveSessions
+        .map((session) => {
+          // Find the most recent page view with valid coordinates
+          const pageViewWithLocation = session.pageViewEvents.find((pve) =>
+            isValidCoordinate(pve.lat, pve.lon),
+          );
+
+          let coordinates: [number, number] | null = null;
+          let city: string | null = null;
+          let country: string | null = null;
+          let countryCode: string | null = null;
+
+          if (pageViewWithLocation) {
+            // Use exact coordinates if available
+            coordinates = [
+              pageViewWithLocation.lon!,
+              pageViewWithLocation.lat!,
+            ] as [number, number];
+            city = pageViewWithLocation.city;
+            country = pageViewWithLocation.country;
+            countryCode = pageViewWithLocation.countryCode;
+          } else {
+            // Fallback to country center coordinates if we have country code
+            const mostRecentPageView = session.pageViewEvents[0];
+            if (mostRecentPageView?.countryCode) {
+              const countryCodeUpper =
+                mostRecentPageView.countryCode.toUpperCase();
+              const centerCoords = countryCenterCoords[countryCodeUpper];
+
+              if (centerCoords) {
+                coordinates = centerCoords;
+                city = mostRecentPageView.city;
+                country = mostRecentPageView.country;
+                countryCode = mostRecentPageView.countryCode;
+              } else {
+                // Log when country code exists but we don't have center coordinates
+                console.log(
+                  `No center coordinates for country code: ${countryCodeUpper}`,
+                );
+              }
+            }
+          }
+
+          if (!coordinates) {
+            return null;
+          }
+
+          const userAgent = session.userAgent;
+          const browser = getBrowserFromUserAgent(userAgent);
+          const deviceType = getDeviceTypeFromUserAgent(userAgent);
+
+          return {
+            id: session.id,
+            coordinates,
+            city,
+            country,
+            countryCode,
+            startedAt: session.startedAt,
+            browser,
+            deviceType,
+          };
+        })
+        .filter(
+          (location): location is NonNullable<typeof location> =>
+            location !== null,
+        );
+    }),
   recentSessions: protectedProcedure
     .input(
       z.object({
@@ -588,5 +785,162 @@ export const sessionRouter = createTRPCRouter({
       }
 
       return { nodes, links };
+    }),
+  liveTopCountries: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+      const liveSessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          endedAt: null,
+          startedAt: {
+            gte: thirtyMinutesAgo,
+          },
+        },
+        include: {
+          pageViewEvents: {
+            orderBy: { timestamp: "desc" },
+            take: 1,
+            select: {
+              country: true,
+              countryCode: true,
+            },
+          },
+        },
+      });
+
+      const countryCounts: Record<
+        string,
+        { country: string; countryCode: string; count: number }
+      > = {};
+
+      for (const session of liveSessions) {
+        const latestPageView = session.pageViewEvents[0];
+        if (!latestPageView?.country || !latestPageView?.countryCode) {
+          continue;
+        }
+
+        const key =
+          latestPageView.countryCode || latestPageView.country || "unknown";
+        if (!countryCounts[key]) {
+          countryCounts[key] = {
+            country: latestPageView.country || "Unknown",
+            countryCode: latestPageView.countryCode || "",
+            count: 0,
+          };
+        }
+        countryCounts[key].count += 1;
+      }
+
+      return Object.values(countryCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+        .map((c) => ({
+          country: c.country,
+          countryCode: c.countryCode,
+          views: c.count,
+        }));
+    }),
+  liveTopPages: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        limit: z.number().default(5),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+      const liveSessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          endedAt: null,
+          startedAt: {
+            gte: thirtyMinutesAgo,
+          },
+        },
+        include: {
+          pageViewEvents: {
+            orderBy: { timestamp: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      const pathCounts: Record<string, number> = {};
+
+      for (const session of liveSessions) {
+        const latestPageView = session.pageViewEvents[0];
+        if (latestPageView?.url) {
+          let path = latestPageView.url;
+          try {
+            path = new URL(latestPageView.url).pathname;
+          } catch {
+            // Keep original path if URL parsing fails
+          }
+          pathCounts[path] = (pathCounts[path] || 0) + 1;
+        }
+      }
+
+      return Object.entries(pathCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, input.limit)
+        .map(([path, count]) => ({ path, count }));
     }),
 });

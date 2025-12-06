@@ -3,6 +3,7 @@
 import { BklitLogo } from "@bklit/ui/icons/bklit";
 import NumberFlow from "@number-flow/react";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { authClient } from "@/auth/client";
 import { NavUser } from "@/components/nav/nav-user";
@@ -60,10 +61,15 @@ export function SiteHeader() {
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full bg-red-400" />
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-7 rounded-full bg-red-400 pointer-events-none blur-xl opacity-80" />
                 </div>
-                <span>
-                  <NumberFlow value={liveUsers} />
-                </span>
-                <span>Live users</span>
+                <Link
+                  href={`/${organizationId}/${projectId}/live`}
+                  className="flex items-center gap-2 text-xs text-muted-foreground font-medium"
+                >
+                  <span>
+                    <NumberFlow value={liveUsers} />
+                  </span>
+                  <span>Live users</span>
+                </Link>
               </motion.div>
             )}
           </AnimatePresence>
