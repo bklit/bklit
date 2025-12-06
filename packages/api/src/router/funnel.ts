@@ -288,25 +288,27 @@ export const funnelRouter = {
           (a, b) => a.positionX - b.positionX,
         );
 
-        // Delete all existing steps and create new ones
-        await ctx.prisma.funnelStep.deleteMany({
-          where: {
-            funnelId: input.funnelId,
-          },
-        });
+        // Delete all existing steps and create new ones atomically
+        await ctx.prisma.$transaction(async (tx) => {
+          await tx.funnelStep.deleteMany({
+            where: {
+              funnelId: input.funnelId,
+            },
+          });
 
-        await ctx.prisma.funnelStep.createMany({
-          data: sortedSteps.map((step, index) => ({
-            funnelId: input.funnelId,
-            type: step.type,
-            name: step.name,
-            url: step.url,
-            eventName: step.eventName,
-            eventCode: step.eventCode,
-            positionX: step.positionX,
-            positionY: step.positionY,
-            stepOrder: index + 1,
-          })),
+          await tx.funnelStep.createMany({
+            data: sortedSteps.map((step, index) => ({
+              funnelId: input.funnelId,
+              type: step.type,
+              name: step.name,
+              url: step.url,
+              eventName: step.eventName,
+              eventCode: step.eventCode,
+              positionX: step.positionX,
+              positionY: step.positionY,
+              stepOrder: index + 1,
+            })),
+          });
         });
       }
 
