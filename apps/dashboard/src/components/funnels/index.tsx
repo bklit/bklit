@@ -69,14 +69,6 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
       <PageHeader
         title="Funnels"
         description="Track and analyze conversion funnels"
-        // action={
-        //   <Button asChild>
-        //     <Link href={`/${organizationId}/${projectId}/funnels/builder`}>
-        //       <Plus className="mr-2 size-4" />
-        //       Create Funnel
-        //     </Link>
-        //   </Button>
-        // }
       >
         <SubNavigation
           configKey="funnelNavigation"

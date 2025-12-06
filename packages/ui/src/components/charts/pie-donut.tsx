@@ -104,12 +104,12 @@ export function PieDonut({
   }, [hoverKey]);
 
   return (
-    <div className="grid grid-cols-1 grid-rows-1 aspect-square max-h-[250px] mx-auto justify-center items-center">
+    <div className="grid grid-cols-1 grid-rows-1 aspect-square mx-auto justify-center items-center">
       <div className="col-start-1 row-start-1 flex justify-center items-center">
         <ChartContainer
           id={chartId}
           config={chartConfig}
-          className={cn("mx-auto aspect-square max-h-[250px]", className)}
+          className={cn("mx-auto aspect-square", className)}
         >
           <PieChart accessibilityLayer>
             <Pie
@@ -172,23 +172,26 @@ export function PieDonut({
                   ).payload;
                   return (
                     <div className="flex items-center justify-center gap-4 pt-3">
-                      {payload?.map((item) => (
-                        <button
-                          key={item.dataKey || item.value}
-                          type="button"
-                          className="flex items-center gap-1.5"
-                          onMouseEnter={() =>
-                            onLegendEnter(item.dataKey || item.value)
-                          }
-                          onMouseLeave={onLegendLeave}
-                        >
-                          <div
-                            className="h-2 w-2 shrink-0 rounded-[2px]"
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <span className="capitalize">{item.value}</span>
-                        </button>
-                      ))}
+                      {payload?.map((item) => {
+                        const key = item.dataKey || item.value || "";
+                        const label =
+                          chartConfig[key]?.label || item.value || "";
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            className="flex items-center gap-1.5"
+                            onMouseEnter={() => onLegendEnter(key)}
+                            onMouseLeave={onLegendLeave}
+                          >
+                            <div
+                              className="h-2 w-2 shrink-0 rounded-[2px]"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            <span className="capitalize">{label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   );
                 }}

@@ -287,7 +287,7 @@ export function PageviewsChart({
                 </defs>
                 <CartesianGrid
                   stroke="var(--bklit-500)"
-                  strokeDasharray="3 3"
+                  strokeDasharray="5 5"
                 />
                 <XAxis
                   dataKey="date"
