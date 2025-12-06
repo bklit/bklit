@@ -23,6 +23,8 @@ import {
   getAlpha2Code,
   getCountryCoordinates,
 } from "@/lib/maps/country-coordinates";
+import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
+import { getDeviceIcon } from "@/lib/utils/get-device-icon";
 
 interface LiveMapProps {
   projectId: string;
@@ -439,7 +441,15 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Country</span>
-                    <Badge variant="secondary">{countryName}</Badge>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {countryName}
+                      </span>
+                      <CircleFlag
+                        countryCode={countryCode}
+                        className="size-4"
+                      />
+                    </div>
                   </div>
                   {selectedUser.city && (
                     <div className="flex items-center justify-between">
@@ -450,15 +460,13 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
                   {selectedUser.deviceType && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Device type</span>
-                      <Badge variant="secondary">
-                        {selectedUser.deviceType}
-                      </Badge>
+                      {getDeviceIcon(selectedUser.deviceType || "")}
                     </div>
                   )}
                   {selectedUser.browser && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Browser</span>
-                      <Badge variant="secondary">{selectedUser.browser}</Badge>
+                      {getBrowserIcon(selectedUser.browser)}
                     </div>
                   )}
                 </div>
@@ -476,7 +484,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
                     <span className="text-sm text-muted-foreground">
                       Status
                     </span>
-                    <Badge variant="default" className="bg-green-500">
+                    <Badge variant="success" size="lg">
                       Live
                     </Badge>
                   </div>
