@@ -460,7 +460,10 @@ export const sessionRouter = createTRPCRouter({
       });
 
       // Helper function to validate coordinates
-      const isValidCoordinate = (lat: number | null, lon: number | null): boolean => {
+      const isValidCoordinate = (
+        lat: number | null,
+        lon: number | null,
+      ): boolean => {
         if (lat === null || lon === null) return false;
         // Check if coordinates are valid (not 0,0 and within valid ranges)
         // 0,0 is in the Gulf of Guinea and indicates missing/invalid data
@@ -472,9 +475,11 @@ export const sessionRouter = createTRPCRouter({
       // Helper function to parse browser from userAgent
       const getBrowserFromUserAgent = (userAgent: string | null): string => {
         if (!userAgent) return "Unknown";
-        if (userAgent.includes("Chrome") && !userAgent.includes("Edge")) return "Chrome";
+        if (userAgent.includes("Chrome") && !userAgent.includes("Edge"))
+          return "Chrome";
         if (userAgent.includes("Firefox")) return "Firefox";
-        if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) return "Safari";
+        if (userAgent.includes("Safari") && !userAgent.includes("Chrome"))
+          return "Safari";
         if (userAgent.includes("Edge")) return "Edge";
         return "Other";
       };
@@ -483,7 +488,10 @@ export const sessionRouter = createTRPCRouter({
       const getDeviceTypeFromUserAgent = (userAgent: string | null): string => {
         if (!userAgent) return "Unknown";
         const ua = userAgent.toLowerCase();
-        if (ua.includes("ipad") || (ua.includes("android") && !ua.includes("mobile"))) {
+        if (
+          ua.includes("ipad") ||
+          (ua.includes("android") && !ua.includes("mobile"))
+        ) {
           return "Tablet";
         }
         if (
@@ -539,9 +547,10 @@ export const sessionRouter = createTRPCRouter({
             // Fallback to country center coordinates if we have country code
             const mostRecentPageView = session.pageViewEvents[0];
             if (mostRecentPageView?.countryCode) {
-              const countryCodeUpper = mostRecentPageView.countryCode.toUpperCase();
+              const countryCodeUpper =
+                mostRecentPageView.countryCode.toUpperCase();
               const centerCoords = countryCenterCoords[countryCodeUpper];
-              
+
               if (centerCoords) {
                 coordinates = centerCoords;
                 city = mostRecentPageView.city;
@@ -575,7 +584,10 @@ export const sessionRouter = createTRPCRouter({
             deviceType,
           };
         })
-        .filter((location): location is NonNullable<typeof location> => location !== null);
+        .filter(
+          (location): location is NonNullable<typeof location> =>
+            location !== null,
+        );
     }),
   recentSessions: protectedProcedure
     .input(
@@ -839,7 +851,8 @@ export const sessionRouter = createTRPCRouter({
           continue;
         }
 
-        const key = latestPageView.countryCode || latestPageView.country || "unknown";
+        const key =
+          latestPageView.countryCode || latestPageView.country || "unknown";
         if (!countryCounts[key]) {
           countryCounts[key] = {
             country: latestPageView.country || "Unknown",

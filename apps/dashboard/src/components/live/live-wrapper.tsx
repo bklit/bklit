@@ -1,8 +1,8 @@
 "use client";
 
+import { LiveMap } from "@/components/maps/live-map";
 import { LiveMapProvider } from "@/contexts/live-map-context";
 import { Live } from "./index";
-import { LiveMap } from "@/components/maps/live-map";
 
 interface LiveWrapperProps {
   projectId: string;
@@ -17,4 +17,3 @@ export function LiveWrapper({ projectId, organizationId }: LiveWrapperProps) {
     </LiveMapProvider>
   );
 }
-

@@ -11,10 +11,13 @@ export default async function LivePage({
   await authenticated();
   const { organizationId, projectId } = await params;
 
-  const organization = await api.organization.fetch({ id: organizationId });
+  const [organization, liveUsers] = await Promise.all([
+    api.organization.fetch({ id: organizationId }),
+    api.session.liveUsers({ projectId, organizationId }),
+  ]);
 
-  if (organization.plan !== "pro") {
-    redirect(`/${organizationId}`);
+  if (organization.plan !== "pro" || liveUsers < 1) {
+    redirect(`/${organizationId}/${projectId}`);
   }
 
   return <LiveWrapper projectId={projectId} organizationId={organizationId} />;

@@ -1,29 +1,43 @@
 "use client";
 
-import { createContext, useContext, useRef, type ReactNode } from "react";
+import { createContext, type ReactNode, useContext, useRef } from "react";
 
 interface LiveMapContextValue {
-  centerOnCountry: (countryCode: string | null, countryName?: string | null) => void;
-  registerCenterFunction: (fn: (countryCode: string | null, countryName?: string | null) => void) => void;
+  centerOnCountry: (
+    countryCode: string | null,
+    countryName?: string | null,
+  ) => void;
+  registerCenterFunction: (
+    fn: (countryCode: string | null, countryName?: string | null) => void,
+  ) => void;
 }
 
 const LiveMapContext = createContext<LiveMapContextValue | null>(null);
 
 export function LiveMapProvider({ children }: { children: ReactNode }) {
-  const centerFunctionRef = useRef<((countryCode: string | null, countryName?: string | null) => void) | null>(null);
+  const centerFunctionRef = useRef<
+    ((countryCode: string | null, countryName?: string | null) => void) | null
+  >(null);
 
-  const registerCenterFunction = (fn: (countryCode: string | null, countryName?: string | null) => void) => {
+  const registerCenterFunction = (
+    fn: (countryCode: string | null, countryName?: string | null) => void,
+  ) => {
     centerFunctionRef.current = fn;
   };
 
-  const centerOnCountry = (countryCode: string | null, countryName?: string | null) => {
+  const centerOnCountry = (
+    countryCode: string | null,
+    countryName?: string | null,
+  ) => {
     if (centerFunctionRef.current) {
       centerFunctionRef.current(countryCode, countryName);
     }
   };
 
   return (
-    <LiveMapContext.Provider value={{ centerOnCountry, registerCenterFunction }}>
+    <LiveMapContext.Provider
+      value={{ centerOnCountry, registerCenterFunction }}
+    >
       {children}
     </LiveMapContext.Provider>
   );
@@ -36,4 +50,3 @@ export function useLiveMap() {
   }
   return context;
 }
-
