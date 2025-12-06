@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
@@ -146,9 +147,9 @@ export function PageviewsTable({
                         {page.title}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground font-mono">
-                        <code className="py-1 px-2 bg-background border border-border/10 rounded-md">
+                        <Badge variant="code" size="lg">
                           {page.path}
-                        </code>
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-sm font-medium">
                         {page.viewCount}

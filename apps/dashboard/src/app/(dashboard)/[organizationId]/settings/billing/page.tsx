@@ -3,8 +3,8 @@ import { headers } from "next/headers";
 import { auth } from "@/auth/server";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/header/page-header";
+import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { PricingTable } from "@/components/plans/pricing-table";
-import { SettingsNavigation } from "@/components/settings/settings-navigation";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
@@ -62,8 +62,8 @@ export default async function BillingPage({
           title="Billing"
           description={`Manage subscription and billing information for ${organization.name}.`}
         >
-          <SettingsNavigation
-            type="organizationSettings"
+          <SubNavigation
+            configKey="organizationSettings"
             organizationId={organizationId}
           />
         </PageHeader>

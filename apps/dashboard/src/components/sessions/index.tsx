@@ -64,12 +64,11 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
   const endDate = dateParams.endDate ?? undefined;
 
-  // Get sessions using tRPC for stats - query will automatically refetch when startDate/endDate change
   const { data: sessionsData, isLoading } = useQuery(
     trpc.session.getRecent.queryOptions({
       projectId,
       organizationId,
-      limit: 1000, // Get a large number for stats
+      limit: 1000,
       startDate,
       endDate,
     }),
@@ -80,40 +79,8 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
   const sankeyData = useMemo(() => {
     if (!allSessions || allSessions.length === 0) {
-      console.log("No sessions available for sankey chart");
       return { nodes: [], links: [] };
     }
-
-    const sessionsWithPageViews = allSessions.filter(
-      (s) => s.pageViewEvents && s.pageViewEvents.length > 0,
-    );
-
-    console.log("Raw sessions data:", {
-      sessionCount: allSessions.length,
-      sessionsWithPageViews: sessionsWithPageViews.length,
-      firstSessionWithPages: sessionsWithPageViews[0]
-        ? {
-            id: sessionsWithPageViews[0].id,
-            pageViewCount: sessionsWithPageViews[0].pageViewEvents?.length || 0,
-            pageViews: sessionsWithPageViews[0].pageViewEvents?.map((pv) => ({
-              url: pv.url,
-              timestamp: pv.timestamp,
-            })),
-          }
-        : null,
-      samplePageViewEvents: sessionsWithPageViews.slice(0, 3).map((s) => ({
-        sessionId: s.id,
-        pageViewCount: s.pageViewEvents?.length || 0,
-        paths: s.pageViewEvents?.map((pv) => {
-          try {
-            const urlObj = new URL(pv.url);
-            return urlObj.pathname || "/";
-          } catch {
-            return pv.url;
-          }
-        }),
-      })),
-    });
 
     return transformSessionsToSankey(allSessions as SessionWithPageViews[]);
   }, [allSessions]);
@@ -125,13 +92,11 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
     return transformToNivoSankey(sankeyData);
   }, [sankeyData]);
 
-  // Calculate entry and exit points
   const { entryPoints, exitPoints } = useMemo(() => {
     if (!nivoSankeyData || !nivoSankeyData.links.length) {
       return { entryPoints: [], exitPoints: [] };
     }
 
-    // Track incoming and outgoing links for each node
     const incomingLinks = new Map<string, number>();
     const outgoingLinks = new Map<string, number>();
     const nodeValues = new Map<string, number>();
@@ -158,9 +123,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
       );
     });
 
-    // Entry points: nodes with no incoming links (only outgoing)
     const entries: Array<{ id: string; value: number }> = [];
-    // Exit points: nodes with no outgoing links (only incoming)
     const exits: Array<{ id: string; value: number }> = [];
 
     nivoSankeyData.nodes.forEach((node) => {

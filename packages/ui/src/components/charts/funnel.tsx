@@ -1,4 +1,8 @@
-import { ResponsiveFunnel } from "@nivo/funnel";
+import {
+  type FunnelPart,
+  type PartTooltipProps,
+  ResponsiveFunnel,
+} from "@nivo/funnel";
 
 interface FunnelProps {
   data: {
@@ -6,6 +10,36 @@ interface FunnelProps {
     value: number;
     label: string;
   }[];
+}
+
+function FunnelTooltip(props: PartTooltipProps<FunnelPart<any>>) {
+  const {
+    part: { id, value, formattedValue, color, label, data },
+  } = props;
+
+  const displayValue =
+    formattedValue || (value !== undefined ? value.toLocaleString() : "");
+  const displayLabel = label || data?.label || id || "Step";
+
+  return (
+    <div className="border-border/50 bg-background grid min-w-32 items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
+      <div className="font-medium">{displayLabel}</div>
+      <div className="flex items-center gap-2">
+        {color && (
+          <div
+            className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+            style={{ backgroundColor: color }}
+          />
+        )}
+        <div className="flex flex-1 justify-between leading-none items-center">
+          <span className="text-muted-foreground">Conversions</span>
+          <span className="text-foreground font-mono font-medium tabular-nums">
+            {displayValue || "0"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function Funnel({ data }: FunnelProps) {
@@ -38,11 +72,19 @@ export function Funnel({ data }: FunnelProps) {
         currentBorderWidth={40}
         enableLabel={true}
         motionConfig="gentle"
+        tooltip={FunnelTooltip}
         theme={{
           text: {
             fill: "hsl(0, 0%, 85%)",
             fontSize: 12,
             fontWeight: 500,
+          },
+          grid: {
+            line: {
+              stroke: "var(--bklit-500)",
+              strokeDasharray: "5 5",
+              strokeWidth: 1,
+            },
           },
           tooltip: {
             container: {

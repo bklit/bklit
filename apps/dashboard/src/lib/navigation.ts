@@ -1,5 +1,6 @@
 import {
   Eye,
+  Funnel,
   Layers2,
   MousePointerClick,
   PanelsTopLeft,
@@ -66,6 +67,21 @@ export const navigationConfig: NavigationConfig = {
       href: "/[organizationId]/[projectId]/events",
     },
     {
+      title: "Funnels",
+      icon: Funnel,
+      href: "/[organizationId]/[projectId]/funnels",
+      items: [
+        {
+          title: "Overview",
+          href: "/[organizationId]/[projectId]/funnels",
+        },
+        {
+          title: "Builder",
+          href: "/[organizationId]/[projectId]/funnels/builder",
+        },
+      ],
+    },
+    {
       title: "Pageviews",
       icon: Eye,
       href: "/[organizationId]/[projectId]/pageviews",
@@ -125,6 +141,18 @@ export const navigationConfig: NavigationConfig = {
     {
       title: "Notifications",
       href: "/[organizationId]/[projectId]/settings/notifications",
+    },
+  ],
+
+  // Funnel navigation
+  funnelNavigation: [
+    {
+      title: "Overview",
+      href: "/[organizationId]/[projectId]/funnels",
+    },
+    {
+      title: "Builder",
+      href: "/[organizationId]/[projectId]/funnels/builder",
     },
   ],
 };

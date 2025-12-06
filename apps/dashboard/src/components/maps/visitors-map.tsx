@@ -469,7 +469,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
           A map of the world with the number of unique visitors per country.
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-full w-full p-0 overflow-visible">
+      <CardContent className="h-full w-full p-0 overflow-visible min-h-[460px]">
         <div ref={containerRef} className="relative w-full h-full">
           <div className="w-full h-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl [&_svg_path]:cursor-default">
             <ResponsiveChoropleth
