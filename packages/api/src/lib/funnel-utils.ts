@@ -129,12 +129,14 @@ export function matchSessionToFunnel(
   steps: Array<{
     id: string;
     stepOrder: number;
-    type: string;
+    type: "pageview" | "event";
     url?: string | null;
     eventName?: string | null;
   }>,
-  eventDefinitionMap: Map<string, string>,
 ): StepCompletion[] {
+  // Sort steps by stepOrder (clone to avoid mutating external state)
+  const sortedSteps = [...steps].sort((a, b) => a.stepOrder - b.stepOrder);
+
   const completions: StepCompletion[] = [];
 
   // Combine and sort all events by timestamp
@@ -164,29 +166,34 @@ export function matchSessionToFunnel(
   // Process events in chronological order
   for (const event of allEvents) {
     // If we've completed all steps, stop
-    if (currentStepIndex >= steps.length) {
+    if (currentStepIndex >= sortedSteps.length) {
       break;
     }
 
-    const currentStep = steps[currentStepIndex];
+    const currentStep = sortedSteps[currentStepIndex];
 
     let stepMatched = false;
 
-    if (currentStep.type === "pageview" && event.type === "pageview") {
-      // Match pageview step
-      if (
-        currentStep.url &&
-        matchPageviewToStep(event.url || "", currentStep.url)
-      ) {
-        stepMatched = true;
+    // Type-safe matching with narrowed types
+    if (currentStep.type === "pageview") {
+      if (event.type === "pageview") {
+        // Match pageview step
+        if (
+          currentStep.url &&
+          matchPageviewToStep(event.url || "", currentStep.url)
+        ) {
+          stepMatched = true;
+        }
       }
-    } else if (currentStep.type === "event" && event.type === "event") {
-      // Match event step
-      if (
-        currentStep.eventName &&
-        event.eventTrackingId === currentStep.eventName
-      ) {
-        stepMatched = true;
+    } else if (currentStep.type === "event") {
+      if (event.type === "event") {
+        // Match event step
+        if (
+          currentStep.eventName &&
+          event.eventTrackingId === currentStep.eventName
+        ) {
+          stepMatched = true;
+        }
       }
     }
 

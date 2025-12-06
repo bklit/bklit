@@ -1,4 +1,8 @@
-import { ResponsiveFunnel } from "@nivo/funnel";
+import {
+  ResponsiveFunnel,
+  type PartTooltipProps,
+  type FunnelPart,
+} from "@nivo/funnel";
 
 interface FunnelProps {
   data: {
@@ -8,37 +12,18 @@ interface FunnelProps {
   }[];
 }
 
-function FunnelTooltip(props: unknown) {
-  // Nivo Funnel passes props in different structures - handle all possibilities
-  const part = (props as { part?: unknown })?.part || props;
-  const partObj = part as {
-    id?: string;
-    value?: number;
-    formattedValue?: string;
-    color?: string;
-    data?: { id: string; value: number; label: string };
-    label?: string;
-  };
-
-  // Extract values from the part object
-  const id = partObj.id || partObj.data?.id || "";
-  const value = partObj.value ?? partObj.data?.value;
-  const formattedValue = partObj.formattedValue;
-  const color = partObj.color;
-  const label = partObj.label || partObj.data?.label || id;
+function FunnelTooltip(props: PartTooltipProps<FunnelPart<any>>) {
+  const {
+    part: { id, value, formattedValue, color, label, data },
+  } = props;
 
   const displayValue =
     formattedValue || (value !== undefined ? value.toLocaleString() : "");
-
-  // Debug: log to see actual structure
-  if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-    console.log("FunnelTooltip props:", props);
-    console.log("FunnelTooltip part:", part);
-  }
+  const displayLabel = label || data?.label || id || "Step";
 
   return (
     <div className="border-border/50 bg-background grid min-w-32 items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
-      <div className="font-medium">{label || id || "Step"}</div>
+      <div className="font-medium">{displayLabel}</div>
       <div className="flex items-center gap-2">
         {color && (
           <div

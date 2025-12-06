@@ -2,7 +2,7 @@
 
 import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
   addEdge,
@@ -96,7 +96,7 @@ function FunnelBuilderInner({
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdFunnelId, setCreatedFunnelId] = useState<string | null>(null);
   const [createdFunnelName, setCreatedFunnelName] = useState<string>("");
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const connectingNodeId = useRef<string | null>(null);
   const pendingAddStepNodeId = useRef<string | null>(null);
@@ -660,6 +660,16 @@ function FunnelBuilderInner({
           setCreatedFunnelId(result.data.id);
           setCreatedFunnelName(result.data.name);
           setShowSuccessDialog(true);
+          // Invalidate cached funnel queries to refresh list/stats/detail views
+          queryClient.invalidateQueries({
+            queryKey: ["funnel", "list"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["funnel", "getStats"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["funnel", "getById"],
+          });
         } else {
           toast.error(result.error || "Failed to save funnel");
         }
@@ -668,7 +678,14 @@ function FunnelBuilderInner({
         toast.error("An unexpected error occurred while saving the funnel");
       }
     });
-  }, [nodes, funnelName, funnelEndDate, projectId, organizationId, router]);
+  }, [
+    nodes,
+    funnelName,
+    funnelEndDate,
+    projectId,
+    organizationId,
+    queryClient,
+  ]);
 
   const handleAddStep = useCallback(() => {
     // Check if there's already an addStep node - if so, just open it

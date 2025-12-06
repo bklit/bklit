@@ -70,8 +70,8 @@ export function FunnelsTable({
       <CardContent>
         {isLoading ? (
           <div className="space-y-2">
-            {Array.from({ length: 5 }, () => (
-              <Skeleton key={crypto.randomUUID()} className="h-12 w-full" />
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
         ) : funnels.length === 0 ? (

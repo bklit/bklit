@@ -44,13 +44,9 @@ export function FunnelSuccessDialog({
           <DialogTitle className="text-2xl font-bold">
             Funnel Created
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            <div className="space-y-2 text-center mt-2">
-              <div>
-                Your funnel <strong>&quot;{funnelName}&quot;</strong> has been
-                successfully created.
-              </div>
-            </div>
+          <DialogDescription className="text-muted-foreground text-center mt-2">
+            Your funnel <strong>&quot;{funnelName}&quot;</strong> has been
+            successfully created.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">

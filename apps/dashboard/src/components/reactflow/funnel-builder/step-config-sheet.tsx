@@ -230,7 +230,7 @@ export function StepConfigSheet({
     }
   };
 
-  const isValid = form.state.isValid;
+  const canSubmit = form.state.canSubmit;
 
   return (
     <>
@@ -305,9 +305,9 @@ export function StepConfigSheet({
 
                 {eventsLoading ? (
                   <div className="space-y-2">
-                    {Array.from({ length: 3 }, () => (
+                    {Array.from({ length: 3 }, (_, i) => (
                       <Skeleton
-                        key={crypto.randomUUID()}
+                        key={i}
                         className="h-16 w-full"
                       />
                     ))}
@@ -402,7 +402,7 @@ export function StepConfigSheet({
                   e.preventDefault();
                   form.handleSubmit();
                 }}
-                disabled={!isValid}
+                disabled={!canSubmit}
               >
                 Save Step
               </Button>

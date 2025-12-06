@@ -104,12 +104,15 @@ export function PieDonut({
   }, [hoverKey]);
 
   return (
-    <div className="grid grid-cols-1 grid-rows-1 aspect-square mx-auto justify-center items-center">
+    <div className="grid grid-cols-1 grid-rows-1 mx-auto justify-center items-center">
       <div className="col-start-1 row-start-1 flex justify-center items-center">
         <ChartContainer
           id={chartId}
           config={chartConfig}
-          className={cn("mx-auto aspect-square", className)}
+          className={cn(
+            "mx-auto aspect-square min-h-[250px] max-h-[250px]",
+            className,
+          )}
         >
           <PieChart accessibilityLayer>
             <Pie
@@ -173,7 +176,7 @@ export function PieDonut({
                   return (
                     <div className="flex items-center justify-center gap-4 pt-3">
                       {payload?.map((item) => {
-                        const key = item.dataKey || item.value || "";
+                        const key = item.value || item.dataKey || "";
                         const label =
                           chartConfig[key]?.label || item.value || "";
                         return (

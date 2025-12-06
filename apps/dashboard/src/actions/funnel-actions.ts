@@ -174,25 +174,27 @@ export async function updateFunnel(data: {
         (a, b) => a.positionX - b.positionX,
       );
 
-      // Delete all existing steps and create new ones
-      await prisma.funnelStep.deleteMany({
-        where: {
-          funnelId: data.funnelId,
-        },
-      });
+      // Delete all existing steps and create new ones atomically
+      await prisma.$transaction(async (tx) => {
+        await tx.funnelStep.deleteMany({
+          where: {
+            funnelId: data.funnelId,
+          },
+        });
 
-      await prisma.funnelStep.createMany({
-        data: sortedSteps.map((step, index) => ({
-          funnelId: data.funnelId,
-          type: step.type,
-          name: step.name,
-          url: step.url,
-          eventName: step.eventName,
-          eventCode: step.eventCode,
-          positionX: step.positionX,
-          positionY: step.positionY,
-          stepOrder: index + 1,
-        })),
+        await tx.funnelStep.createMany({
+          data: sortedSteps.map((step, index) => ({
+            funnelId: data.funnelId,
+            type: step.type,
+            name: step.name,
+            url: step.url,
+            eventName: step.eventName,
+            eventCode: step.eventCode,
+            positionX: step.positionX,
+            positionY: step.positionY,
+            stepOrder: index + 1,
+          })),
+        });
       });
     }
 

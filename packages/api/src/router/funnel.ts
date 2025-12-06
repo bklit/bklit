@@ -1,10 +1,7 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 import { endOfDay, startOfDay } from "../lib/date-utils";
-import {
-  buildEventDefinitionMap,
-  matchSessionToFunnel,
-} from "../lib/funnel-utils";
+import { matchSessionToFunnel } from "../lib/funnel-utils";
 import { protectedProcedure } from "../trpc";
 
 const stepSchema = z.object({
@@ -462,17 +459,6 @@ export const funnelRouter = {
           : funnel.endDate
         : normalizedEndDate;
 
-      // Build event definition map for efficient event matching
-      const eventTrackingIds = funnel.steps
-        .filter((step) => step.type === "event" && step.eventName)
-        .map((step) => step.eventName!);
-
-      const eventDefinitionMap = await buildEventDefinitionMap(
-        ctx.prisma,
-        input.projectId,
-        eventTrackingIds,
-      );
-
       // Query sessions with pageviews and events
       const sessions = await ctx.prisma.trackedSession.findMany({
         where: {
@@ -531,7 +517,6 @@ export const funnelRouter = {
         const completions = matchSessionToFunnel(
           session,
           funnel.steps,
-          eventDefinitionMap,
         );
         stepCompletionsBySession.set(
           session.id,
@@ -712,22 +697,6 @@ export const funnelRouter = {
         };
       }
 
-      // Build event definition maps for all funnels
-      const allEventTrackingIds = new Set<string>();
-      for (const funnel of funnels) {
-        for (const step of funnel.steps) {
-          if (step.type === "event" && step.eventName) {
-            allEventTrackingIds.add(step.eventName);
-          }
-        }
-      }
-
-      const eventDefinitionMap = await buildEventDefinitionMap(
-        ctx.prisma,
-        input.projectId,
-        Array.from(allEventTrackingIds),
-      );
-
       // Query sessions with pageviews and events
       const sessions = await ctx.prisma.trackedSession.findMany({
         where: {
@@ -793,7 +762,6 @@ export const funnelRouter = {
           const completions = matchSessionToFunnel(
             session,
             funnel.steps,
-            eventDefinitionMap,
           );
 
           // Check if session matched first step (funnel session)

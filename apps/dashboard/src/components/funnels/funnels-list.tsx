@@ -114,8 +114,8 @@ export function FunnelsList({
         </CardHeader>
         <CardContent>
           <ItemGroup>
-            {Array.from({ length: 5 }, () => (
-              <Item key={crypto.randomUUID()}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <Item key={i}>
                 <ItemContent>
                   <Skeleton className="h-4 w-48" />
                   <Skeleton className="h-3 w-64 mt-2" />
@@ -164,17 +164,20 @@ export function FunnelsList({
                     <ItemContent>
                       <ItemTitle>{funnel.name}</ItemTitle>
                       <ItemDescription>
-                        <span>{funnel.steps.length} steps</span> &bull;{" "}
+                        <span>{funnel.steps.length} steps</span>
                         {lastSessionTimestamp && (
-                          <span>
-                            Last used{" "}
-                            {formatDistanceToNow(
-                              new Date(lastSessionTimestamp),
-                              {
-                                addSuffix: true,
-                              },
-                            )}
-                          </span>
+                          <>
+                            {" "}&bull;{" "}
+                            <span>
+                              Last used{" "}
+                              {formatDistanceToNow(
+                                new Date(lastSessionTimestamp),
+                                {
+                                  addSuffix: true,
+                                },
+                              )}
+                            </span>
+                          </>
                         )}
                       </ItemDescription>
                     </ItemContent>
