@@ -167,7 +167,8 @@ export function FunnelsList({
                         <span>{funnel.steps.length} steps</span>
                         {lastSessionTimestamp && (
                           <>
-                            {" "}&bull;{" "}
+                            {" "}
+                            &bull;{" "}
                             <span>
                               Last used{" "}
                               {formatDistanceToNow(

@@ -306,10 +306,7 @@ export function StepConfigSheet({
                 {eventsLoading ? (
                   <div className="space-y-2">
                     {Array.from({ length: 3 }, (_, i) => (
-                      <Skeleton
-                        key={i}
-                        className="h-16 w-full"
-                      />
+                      <Skeleton key={i} className="h-16 w-full" />
                     ))}
                   </div>
                 ) : !events || events.length === 0 ? (

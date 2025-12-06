@@ -516,10 +516,7 @@ export const funnelRouter = {
       >();
 
       for (const session of sessions) {
-        const completions = matchSessionToFunnel(
-          session,
-          funnel.steps,
-        );
+        const completions = matchSessionToFunnel(session, funnel.steps);
         stepCompletionsBySession.set(
           session.id,
           completions.map((c) => ({
@@ -761,10 +758,7 @@ export const funnelRouter = {
         const lastStep = funnel.steps[funnel.steps.length - 1];
 
         for (const session of sessions) {
-          const completions = matchSessionToFunnel(
-            session,
-            funnel.steps,
-          );
+          const completions = matchSessionToFunnel(session, funnel.steps);
 
           // Check if session matched first step (funnel session)
           const matchedFirstStep = completions.some(

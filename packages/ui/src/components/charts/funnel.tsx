@@ -1,7 +1,7 @@
 import {
-  ResponsiveFunnel,
-  type PartTooltipProps,
   type FunnelPart,
+  type PartTooltipProps,
+  ResponsiveFunnel,
 } from "@nivo/funnel";
 
 interface FunnelProps {
