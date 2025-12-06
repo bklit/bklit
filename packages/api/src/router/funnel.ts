@@ -603,12 +603,250 @@ export const funnelRouter = {
           ? (lastStepConversions / firstStepConversions) * 100
           : 0;
 
+      // Find last session that matched this funnel
+      let lastSessionTimestamp: Date | null = null;
+      if (stepCompletionsBySession.size > 0) {
+        const sessionIds = Array.from(stepCompletionsBySession.keys());
+        const lastSession = await ctx.prisma.trackedSession.findFirst({
+          where: {
+            id: { in: sessionIds },
+          },
+          select: {
+            startedAt: true,
+          },
+          orderBy: {
+            startedAt: "desc",
+          },
+        });
+        lastSessionTimestamp = lastSession?.startedAt ?? null;
+      }
+
       return {
         funnelId: funnel.id,
         totalConversions: lastStepConversions,
         totalDropOffs,
         overallConversionRate: Number(overallConversionRate.toFixed(2)),
         stepStats,
+        lastSessionTimestamp,
       };
+    }),
+
+  getTimeSeries: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const normalizedStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : undefined;
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : undefined;
+
+      // Get all funnels for this project
+      const funnels = await ctx.prisma.funnel.findMany({
+        where: {
+          projectId: input.projectId,
+        },
+        include: {
+          steps: {
+            orderBy: {
+              stepOrder: "asc",
+            },
+          },
+        },
+      });
+
+      if (funnels.length === 0) {
+        const endDate = input.endDate || new Date();
+        const startDate =
+          input.startDate ||
+          (() => {
+            const d = new Date(endDate);
+            d.setDate(d.getDate() - 30);
+            return d;
+          })();
+
+        const dateRange: string[] = [];
+        const currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return {
+          timeSeriesData: dateRange.map((date) => ({
+            date,
+            sessions: 0,
+            conversions: 0,
+          })),
+        };
+      }
+
+      // Build event definition maps for all funnels
+      const allEventTrackingIds = new Set<string>();
+      for (const funnel of funnels) {
+        for (const step of funnel.steps) {
+          if (step.type === "event" && step.eventName) {
+            allEventTrackingIds.add(step.eventName);
+          }
+        }
+      }
+
+      const eventDefinitionMap = await buildEventDefinitionMap(
+        ctx.prisma,
+        input.projectId,
+        Array.from(allEventTrackingIds),
+      );
+
+      // Query sessions with pageviews and events
+      const sessions = await ctx.prisma.trackedSession.findMany({
+        where: {
+          projectId: input.projectId,
+          startedAt: {
+            ...(normalizedStartDate && { gte: normalizedStartDate }),
+            ...(normalizedEndDate && { lte: normalizedEndDate }),
+          },
+        },
+        select: {
+          id: true,
+          startedAt: true,
+          pageViewEvents: {
+            where: {
+              timestamp: {
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
+              },
+            },
+            select: {
+              url: true,
+              timestamp: true,
+            },
+            orderBy: {
+              timestamp: "asc",
+            },
+          },
+          trackedEvents: {
+            where: {
+              timestamp: {
+                ...(normalizedStartDate && { gte: normalizedStartDate }),
+                ...(normalizedEndDate && { lte: normalizedEndDate }),
+              },
+            },
+            select: {
+              timestamp: true,
+              eventDefinition: {
+                select: {
+                  trackingId: true,
+                },
+              },
+            },
+            orderBy: {
+              timestamp: "asc",
+            },
+          },
+        },
+      });
+
+      // Track funnel sessions and conversions by date
+      const funnelDataByDay = new Map<
+        string,
+        { sessions: Set<string>; conversions: Set<string> }
+      >();
+
+      for (const funnel of funnels) {
+        if (funnel.steps.length === 0) continue;
+
+        const firstStep = funnel.steps[0];
+        const lastStep = funnel.steps[funnel.steps.length - 1];
+
+        for (const session of sessions) {
+          const completions = matchSessionToFunnel(
+            session,
+            funnel.steps,
+            eventDefinitionMap,
+          );
+
+          // Check if session matched first step (funnel session)
+          const matchedFirstStep = completions.some(
+            (c) => c.stepId === firstStep.id,
+          );
+          // Check if session completed last step (conversion)
+          const matchedLastStep = completions.some(
+            (c) => c.stepId === lastStep.id,
+          );
+
+          if (matchedFirstStep) {
+            const dateKey = session.startedAt.toISOString().split("T")[0] ?? "";
+            if (!funnelDataByDay.has(dateKey)) {
+              funnelDataByDay.set(dateKey, {
+                sessions: new Set(),
+                conversions: new Set(),
+              });
+            }
+            const dayData = funnelDataByDay.get(dateKey)!;
+            dayData.sessions.add(session.id);
+            if (matchedLastStep) {
+              dayData.conversions.add(session.id);
+            }
+          }
+        }
+      }
+
+      const endDate = input.endDate || new Date();
+      const startDate =
+        input.startDate ||
+        (() => {
+          const d = new Date(endDate);
+          d.setDate(d.getDate() - 30);
+          return d;
+        })();
+
+      const dateRange: string[] = [];
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        dateRange.push(currentDate.toISOString().split("T")[0] ?? "");
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const timeSeriesData = dateRange.map((date) => {
+        const dayData = funnelDataByDay.get(date);
+        return {
+          date,
+          sessions: dayData?.sessions.size || 0,
+          conversions: dayData?.conversions.size || 0,
+        };
+      });
+
+      return { timeSeriesData };
     }),
 } satisfies TRPCRouterRecord;
