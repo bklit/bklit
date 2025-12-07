@@ -19,7 +19,7 @@ export const PageHeader = () => {
           <nav className="p-4 hidden md:block">
             <ul className="flex items-center gap-2">
               <li>
-                <Button variant="ghost" asChild disabled>
+                <Button variant="ghost" asChild>
                   <Link href="#features">Product</Link>
                 </Button>
               </li>
@@ -29,7 +29,7 @@ export const PageHeader = () => {
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild disabled>
+                <Button variant="ghost" asChild>
                   <a
                     href="https://github.com/bklit/bklit/"
                     target="_blank"

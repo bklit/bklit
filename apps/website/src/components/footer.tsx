@@ -43,7 +43,7 @@ export const Footer = () => {
                     href="/pricing"
                     className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                   >
-                    <span className="text-lime-200 transition duration-100 absolute left-0 opacity-0 group-hover:opacity-100 transition-delay-100">
+                    <span className="text-lime-200 transition duration-100 absolute left-0 opacity-0 group-hover:opacity-100 delay-100">
                       ◑
                     </span>
                     <span className="transition-all duration-200 group-hover:translate-x-[20px]">

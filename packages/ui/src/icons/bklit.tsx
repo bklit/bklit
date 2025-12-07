@@ -28,7 +28,7 @@ export function BklitLogo({
       />
       <div
         className={cn(
-          "w-2/3 h-2/3 -bg-conic-180 from-white to-black absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full mix-blend-color-dodge",
+          "w-2/3 h-2/3 bg-conic-180 from-white to-black absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full mix-blend-color-dodge",
           variant === "dark" && "mix-blend-color-burn",
         )}
       />

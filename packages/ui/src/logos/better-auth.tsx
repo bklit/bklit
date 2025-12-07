@@ -4,9 +4,14 @@ interface BetterAuthProps {
   className?: string;
 }
 
-export const BetterAuth = ({ height = "30px", className }: BetterAuthProps) => {
+export const BetterAuth = ({
+  width = "auto",
+  height = "30px",
+  className,
+}: BetterAuthProps) => {
   return (
     <svg
+      width={width}
       height={height}
       viewBox="0 0 1024 256"
       fill="none"

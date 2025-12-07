@@ -195,6 +195,7 @@
   @apply hidden!;
 }
 
+/* biome-ignore lint/correctness/noUnknownProperty: corner-shape is experimental */
 .squircle {
   corner-shape: squircle;
 }

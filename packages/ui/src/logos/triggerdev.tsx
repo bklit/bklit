@@ -6,12 +6,19 @@ interface TriggerDevProps {
 }
 
 export const TriggerDev = ({
+  width = "auto",
   height = "30px",
   className,
   variant = "default",
 }: TriggerDevProps) => {
   return (
-    <svg height={height} viewBox="0 0 136 24" fill="none" className={className}>
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 136 24"
+      fill="none"
+      className={className}
+    >
       <title>TriggerDev Logo</title>
       <path
         d="M35.0754 3.21039H24.3296H24.7541V6.13998H28.3721V18.7461H31.4352V6.13998H35.0754V3.21039Z"

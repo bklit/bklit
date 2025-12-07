@@ -61,7 +61,7 @@ export const Turborepo = ({
           variant === "mono" ? "currentColor" : "url(#paint0_linear_222_137)"
         }
       />
-      {variant === "mono" && (
+      {variant !== "mono" && (
         <defs>
           <linearGradient
             id="paint0_linear_222_137"
