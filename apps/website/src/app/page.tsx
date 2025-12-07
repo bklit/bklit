@@ -1,6 +1,7 @@
+import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Github } from "lucide-react";
 import Image from "next/image";
 import { BrandTiles } from "@/components/artworks/brand-tiles";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
@@ -10,6 +11,7 @@ import { TopCountriesDemo } from "@/components/artworks/top-countries-demo";
 import { FAQ } from "@/components/faq";
 import { Features as SectionFeatures } from "@/components/features";
 import { Footer } from "@/components/footer";
+import { GithubStarCount } from "@/components/github-star-count";
 import { Hero } from "@/components/hero";
 import { PageHeader } from "@/components/page-header";
 import { Pricing } from "@/components/pricing";
@@ -22,60 +24,68 @@ export default function MarketingHomePage() {
       <PageHeader />
       <Hero />
 
-      <div className="sm:space-y-38">
-        <div className="-mt-12 sm:my-0">
-          <div
-            className={cn(
-              "relative w-full sm:min-h-[400px]",
-              "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
-            )}
-          >
-            <div className="container mx-auto max-w-full sm:max-w-6xl px-4">
-              <div className="relative grid grid-cols-1 grid-rows-1 -z-10">
-                <div className="sm:perspective-[4000px] col-start-1 row-start-1">
-                  <div
-                    className={cn(
-                      "relative sm:-translate-y-50 sm:translate-x-35 sm:rotate-x-45 sm:rotate-y-30 sm:rotate-z-320 sm:scale-150 -z-1 opacity-60",
-                      "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
-                      "sm:before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
-                    )}
-                  >
-                    <Image
-                      src="/bklit-analytics.png"
-                      alt="Bklit Analytics"
-                      width={1000}
-                      height={1000}
-                    />
-                  </div>
+      <div className="space-y-16">
+        <div
+          className={cn(
+            "relative w-full sm:min-h-[400px]",
+            "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
+          )}
+        >
+          <div className="container mx-auto max-w-full sm:max-w-6xl px-4">
+            <div className="relative grid grid-cols-1 grid-rows-1 -z-10">
+              <div className="sm:perspective-[4000px] col-start-1 row-start-1">
+                <div
+                  className={cn(
+                    "relative sm:-translate-y-50 sm:translate-x-35 sm:rotate-x-45 sm:rotate-y-30 sm:rotate-z-320 sm:scale-150 -z-1 opacity-60",
+                    "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
+                    "sm:before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
+                  )}
+                >
+                  <Image
+                    src="/bklit-analytics.png"
+                    alt="Bklit Analytics"
+                    width={1000}
+                    height={1000}
+                  />
                 </div>
               </div>
             </div>
           </div>
-
-          <SectionBasic title="Stacked" artwork={<BrandTiles />}>
-            <p className="text-lg text-muted-foreground">
-              Bklit is built with the best development tools in the industry, to
-              help you build your next big thing.
-            </p>
-            <ul className="space-y-1 text-lg">
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-emerald-500" /> Typescript
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-emerald-500" /> tRPC
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-emerald-500" /> Shadcn
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-emerald-500" /> Nuqs
-              </li>
-            </ul>
-            <Button variant="default" size="lg">
-              Get started <ArrowRight size={16} />
-            </Button>
-          </SectionBasic>
         </div>
+
+        <SectionBasic title="Stacked" artwork={<BrandTiles />}>
+          <p className="text-lg text-muted-foreground">
+            Bklit is built with the best development tools in the industry, to
+            help you build your next big thing.
+          </p>
+          <ul className="space-y-1 text-lg">
+            <li className="flex items-center gap-2">
+              <Check size={16} className="text-emerald-500" /> Typescript
+            </li>
+            <li className="flex items-center gap-2">
+              <Check size={16} className="text-emerald-500" /> tRPC
+            </li>
+            <li className="flex items-center gap-2">
+              <Check size={16} className="text-emerald-500" /> Shadcn
+            </li>
+            <li className="flex items-center gap-2">
+              <Check size={16} className="text-emerald-500" /> Nuqs
+            </li>
+          </ul>
+          <Button variant="outline" size="lg" asChild>
+            <a
+              href="https://github.com/bklit/bklit"
+              target="_blank"
+              title="Bklit on Github"
+              rel="noopener noreferrer"
+            >
+              <Github size={16} /> See on Github
+              <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
+                <GithubStarCount />
+              </span>
+            </a>
+          </Button>
+        </SectionBasic>
 
         <div className="space-y-16 px-4">
           <SectionHeader
@@ -105,8 +115,14 @@ export default function MarketingHomePage() {
               at a glance, quickly see where your visitors are coming from and
               which pages are the most popular.
             </p>
-            <Button variant="default" size="lg">
-              Get started <ArrowRight size={16} />
+            <Button variant="default" size="lg" asChild>
+              <a
+                href="https://app.bklit.com/signin?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get started <ArrowRight size={16} />
+              </a>
             </Button>
           </SectionBasic>
         </div>
@@ -153,8 +169,14 @@ export default function MarketingHomePage() {
                 <Check size={16} className="text-emerald-500" /> Next.js
               </li>
             </ul>
-            <Button variant="default" size="lg">
-              Get started <ArrowRight size={16} />
+            <Button variant="default" size="lg" asChild>
+              <a
+                href="https://app.bklit.com/signin?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Get started <ArrowRight size={16} />
+              </a>
             </Button>
           </SectionBasic>
         </div>
@@ -171,7 +193,13 @@ export default function MarketingHomePage() {
           <SectionHeader
             title="Pricing"
             description="Simple, transparent pricing for teams of all sizes."
-          />
+          >
+            <div className="flex items-center w-full justify-center">
+              <Badge variant="success" size="lg">
+                🫶 Bklit is currently in beta and free
+              </Badge>
+            </div>
+          </SectionHeader>
           <Pricing />
         </div>
       </div>

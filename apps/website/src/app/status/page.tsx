@@ -146,7 +146,7 @@ export default async function StatusPage() {
   return (
     <main className="w-full min-h-screen flex flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-3xl flex flex-col px-4 py-32 space-y-12">
+      <div className="container mx-auto max-w-3xl flex flex-col px-4 py-26 space-y-12">
         <SectionHeader
           title="API Status"
           description="Real-time health monitoring for our tracking APIs"

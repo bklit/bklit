@@ -1,5 +1,4 @@
 import { formatPrice, getPricingPlans } from "@bklit/auth/pricing";
-import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
@@ -20,7 +19,7 @@ export const Pricing = () => {
         {plans.map((plan) => (
           <Card
             key={plan.name}
-            className="relative bg-zinc-900 rounded-4xl border-none p-8"
+            className="relative bg-zinc-900 rounded-4xl border-none p-6 sm:p-8"
           >
             <CardHeader className="justify-center text-center">
               <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
@@ -50,7 +49,7 @@ export const Pricing = () => {
                     plan.benefits.map((benefit) => (
                       <li
                         key={benefit}
-                        className="flex items-center gap-3 text-sm"
+                        className="flex items-center gap-3 text-sm sm:text-lg"
                       >
                         <Check className="size-4 text-emerald-500 shrink-0" />
                         <span>{benefit}</span>

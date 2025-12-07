@@ -1,11 +1,7 @@
 "use client";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@bklit/ui/components/tooltip";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { LogoDropdown } from "./logo-dropdown";
 
@@ -28,24 +24,21 @@ export const PageHeader = () => {
                 </Button>
               </li>
               <li>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" asChild disabled>
-                      <Link href="/">Pricing</Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Coming soon</TooltipContent>
-                </Tooltip>
+                <Button variant="ghost" asChild>
+                  <Link href="/pricing">Pricing</Link>
+                </Button>
               </li>
               <li>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" asChild disabled>
-                      <Link href="/">Docs</Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Coming soon</TooltipContent>
-                </Tooltip>
+                <Button variant="ghost" asChild disabled>
+                  <a
+                    href="https://github.com/bklit/bklit/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink size={16} />
+                    Docs
+                  </a>
+                </Button>
               </li>
             </ul>
           </nav>

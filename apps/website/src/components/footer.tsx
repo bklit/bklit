@@ -14,8 +14,8 @@ export const Footer = () => {
               <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <li>
                   <Link
-                    href="/"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                    href="#"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
@@ -27,8 +27,8 @@ export const Footer = () => {
                 </li>
                 <li>
                   <Link
-                    href="/"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                    href="#"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
@@ -40,7 +40,7 @@ export const Footer = () => {
                 </li>
                 <li>
                   <Link
-                    href="/"
+                    href="/pricing"
                     className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                   >
                     <span className="text-lime-200 transition duration-100 absolute left-0 opacity-0 group-hover:opacity-100 transition-delay-100">
@@ -53,8 +53,8 @@ export const Footer = () => {
                 </li>
                 <li>
                   <Link
-                    href="/"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                    href="#"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
@@ -67,7 +67,7 @@ export const Footer = () => {
                 <li>
                   <Link
                     href="/"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
