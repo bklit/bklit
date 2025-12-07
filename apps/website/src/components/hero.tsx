@@ -1,67 +1,79 @@
+"use client";
+
 import { Button } from "@bklit/ui/components/button";
-import { ButtonGroup } from "@bklit/ui/components/button-group";
-import { Github } from "lucide-react";
-import { GithubStarCount } from "./github-star-count";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@bklit/ui/components/dialog";
+import { BklitLogo } from "@bklit/ui/icons/bklit";
+import { Play } from "lucide-react";
+import { useRef, useState } from "react";
 
 export const Hero = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlay = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const handlePlayEvent = () => {
+    setIsPlaying(true);
+  };
+
+  const handlePauseEvent = () => {
+    setIsPlaying(false);
+  };
   return (
     <div className="container mx-auto max-w-6xl flex flex-col px-4">
-      <div className="grid grid-cols-1 grid-rows-1">
-        <div className="grid grid-cols-1 grid-rows-1 col-span-1 col-start-1 row-start-1">
-          <div className="col-start-1 row-start-1 w-full flex items-start md:items-center justify-end">
-            <img
-              src="/diamond.svg"
-              alt="Bklit"
-              className="w-3/5 md:w-4/5 opacity-50 dark:opacity-100"
-            />
-          </div>
-          <div className="col-start-1 row-start-1 bg-linear-to-b from-transparent to-background" />
+      <div className="flex flex-col items-center justify-center text-center w-full space-y-6 pt-26 sm:pt-48">
+        <div className="hidden sm:flex items-center justify-center w-36 aspect-square bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl sm:rounded-[300px] squircle">
+          <BklitLogo size={90} variant="dark" />
         </div>
-        <div className="col-span-1 col-start-1 row-start-1 py py-26 pt-26 md:pt-36">
-          <div className="grid grid-cols-2 w-full">
-            <div className="py-10 space-y-6 max-w-2xl col-span-2 lg:col-span-1">
-              <h1 className="text-4xl md:text-6xl font-bold leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
-                Analytics for developers who build at scale
-              </h1>
-              <p className="font-mono text-base md:text-lg">
-                Join the companies that use our open-source analytics to track
-                what matters, understand customers, experiment faster, and turn
-                data into growth.
-              </p>
-              <div className="flex items-center gap-2">
-                <ButtonGroup>
-                  <Button variant="mono" size="lg" asChild>
-                    <a
-                      href="https://app.bklit.com/signin"
-                      target="_blank"
-                      title="Bklit Demo Dashboard"
-                      rel="noopener noreferrer"
-                    >
-                      Dashboard
-                    </a>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    asChild
-                    className="group flex items-center gap-3"
-                  >
-                    <a
-                      href="https://github.com/bklit/bklit"
-                      target="_blank"
-                      title="Bklit on Github"
-                      rel="noopener noreferrer"
-                    >
-                      <Github size={16} /> OpenSource
-                      <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
-                        <GithubStarCount />
-                      </span>
-                    </a>
-                  </Button>
-                </ButtonGroup>
-              </div>
-            </div>
-          </div>
+        <h1 className="text-3xl md:text-6xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
+          Analytics for everyone
+        </h1>
+        <p className="text-xl dark:text-white text-shadow-sm">
+          Track everything with 3 lines of code.
+        </p>
+
+        <div className="flex items-center justify-center">
+          <Dialog open={isPlaying} onOpenChange={setIsPlaying}>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                onClick={handlePlay}
+                className="flex items-center justify-center cursor-pointer size-18 bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-3xl sm:rounded-[300px] squircle transition-all duration-300 z-10 shadow-xl hover:scale-110"
+              >
+                <Play
+                  size={32}
+                  strokeWidth={1.5}
+                  className="text-primary-foreground"
+                />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="p-0 min-w-5xl aspect-video border-t-0">
+              <DialogHeader className="sr-only">
+                <DialogTitle>Bklit Demo</DialogTitle>
+              </DialogHeader>
+              <video
+                ref={videoRef}
+                src="/demo.mp4"
+                autoPlay
+                muted
+                loop
+                className="w-full h-full object-cover"
+                onPlay={handlePlayEvent}
+                onPause={handlePauseEvent}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

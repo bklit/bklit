@@ -1,4 +1,3 @@
-import { Button } from "@bklit/ui/components/button";
 import Link from "next/link";
 import { ButtonHealth } from "./button-health";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -9,45 +8,81 @@ export const Footer = () => {
       <div className="block bg-linear-to-b from-transparent to-background h-48" />
       <footer className="bg-background mt-auto">
         <div className="container mx-auto max-w-6xl flex flex-col gap-24 px-4">
-          <div className="flex flex-col gap-6 text-center justify-center items-center bg-background bg-[radial-gradient(var(--color-zinc-400)_1px,transparent_1px)] dark:bg-[radial-gradient(var(--color-zinc-800)_1px,transparent_1px)] bg-size-[10px_10px] p-8 md:p-32 border border-zinc-200 dark:border-zinc-800">
-            <h3 className="text-2xl md:text-4xl font-bold dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
-              Get started today
-            </h3>
-            <p className="text-sm md:text-md font-mono">
-              Join the companies that use our open-source analytics to track
-              what matters.
-            </p>
-            <Button asChild variant="mono" size="lg">
-              <a href="https://app.bklit.com/signin" title="Sign up">
-                Sign up
-              </a>
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-zinc-200 dark:border-zinc-800 border-dashed pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-zinc-200 dark:border-zinc-900 pt-8">
             <div className="col-span-1 space-y-4">
               <h4 className="text-base font-bold">Company</h4>
-              <ul className="flex flex-col gap-2 text-sm">
+              <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="/">Terms of use</Link>
+                  <Link
+                    href="#"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Terms of use
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Privacy policy</Link>
+                  <Link
+                    href="#"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Privacy policy
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Pricing</Link>
+                  <Link
+                    href="/pricing"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                  >
+                    <span className="text-lime-200 transition duration-100 absolute left-0 opacity-0 group-hover:opacity-100 delay-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Pricing
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Contact</Link>
+                  <Link
+                    href="#"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Contact
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Branding</Link>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Branding
+                    </span>
+                  </Link>
                 </li>
               </ul>
             </div>
             <div className="col-span-1 space-y-4">
               <h4 className="text-base font-bold">Bklit Inc.</h4>
               <p className="text-xs md:text-sm text-muted-foreground font-normal">
-                169 Madison Avenue STE 385287 New York, NY 10016 US
+                169 Madison Avenue, New York, NY 10016 US
               </p>
               <ul className="flex items-center gap-2 text-sm">
                 <li>

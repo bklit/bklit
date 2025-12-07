@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPrice, getPricingPlans } from "@bklit/auth/pricing";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -15,13 +16,6 @@ import type { Subscription } from "@polar-sh/sdk/models/components/subscription.
 import { Check, Crown } from "lucide-react";
 import { authClient } from "@/auth/client";
 import { useWorkspace } from "@/contexts/workspace-provider";
-
-function formatPrice(price: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(price / 100); // Polar uses cents
-}
 
 interface PlanConfig {
   name: string;
@@ -56,63 +50,25 @@ export function PricingTable({
     isActive: hasActiveProPlan,
   };
 
-  // Placeholder features
-  const FREE_FEATURES = [
-    "Up to 10,000 events per month",
-    "1 project",
-    "7-day data retention",
-    "Basic analytics dashboard",
-    "Core event tracking",
-    "Community support",
-  ];
-
-  const PRO_FEATURES = [
-    "Unlimited events",
-    "Unlimited projects",
-    "12-month data retention",
-    "Advanced analytics & insights",
-    "Custom event tracking",
-    "Real-time analytics",
-    "Session replay",
-    "Funnel analysis",
-    "A/B testing insights",
-    "Custom dashboards",
-    "API access",
-    "Priority support",
-  ];
-
-  // Build plans - using hardcoded plans since we get products from better-auth config
-  const freePlan: PlanConfig = {
-    name: "Free",
-    description: "Perfect for getting started",
-    price: 0,
-    interval: "month",
-    polarProductId: null,
-    benefits: FREE_FEATURES,
-  };
-
-  const proPlan: PlanConfig = {
-    name: "Pro",
-    description: "For teams who need more power",
-    price: 1000, // $10.00 in cents
-    interval: "month",
-    polarProductId:
-      process.env.NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID || "pro-plan", // Use real product ID
-    benefits: PRO_FEATURES,
-    isPopular: true,
-  };
-
-  const plans = [freePlan, proPlan];
+  // Get plans from shared pricing data
+  const pricingPlans = getPricingPlans();
+  const plans: PlanConfig[] = pricingPlans.map((plan) => ({
+    name: plan.name,
+    description: plan.description,
+    price: plan.price,
+    interval: plan.interval,
+    polarProductId: plan.polarProductId || null,
+    benefits: plan.benefits,
+    isPopular: plan.isPopular,
+  }));
 
   const isCurrentPlan = (planId: string | null) => {
     if (planId === null) {
       // Free plan is current if organization.plan is "free"
       return !isPro;
     }
-    if (
-      planId ===
-      (process.env.NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID || "pro-plan")
-    ) {
+    const proPlan = plans.find((p) => p.polarProductId !== null);
+    if (proPlan && planId === proPlan.polarProductId) {
       // Pro plan is current if organization.plan is "pro"
       return isPro;
     }
