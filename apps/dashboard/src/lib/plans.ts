@@ -27,7 +27,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   [PlanType.FREE]: {
     projectLimit: 1,
     teamMemberLimit: 1,
-    eventLimit: 10000,
+    eventLimit: 4000,
   },
   [PlanType.PRO]: {
     projectLimit: 5,

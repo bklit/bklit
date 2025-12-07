@@ -12,6 +12,7 @@ import { Features as SectionFeatures } from "@/components/features";
 import { Footer } from "@/components/footer";
 import { Hero } from "@/components/hero";
 import { PageHeader } from "@/components/page-header";
+import { Pricing } from "@/components/pricing";
 import { SectionBasic } from "@/components/section-basic";
 import { SectionHeader } from "@/components/section-header";
 
@@ -164,6 +165,14 @@ export default function MarketingHomePage() {
             description="We've got some answers to the most common questions."
           />
           <FAQ />
+        </div>
+
+        <div className="space-y-16 px-4">
+          <SectionHeader
+            title="Pricing"
+            description="Simple, transparent pricing for teams of all sizes."
+          />
+          <Pricing />
         </div>
       </div>
       <Footer />

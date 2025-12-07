@@ -313,6 +313,9 @@ importers:
 
   apps/website:
     dependencies:
+      '@bklit/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@bklit/db':
         specifier: workspace:*
         version: link:../../packages/db
