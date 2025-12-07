@@ -11,7 +11,7 @@ import { Vercel as VercelLogo } from "@bklit/ui/logos/vercel";
 export const BrandTiles = () => {
   return (
     <div className="perspective-normal">
-      <div className="grid grid-cols-2 md:grid-cols-3 -translate-y-5 rotate-x-40 rotate-y-0 text-black/50">
+      <div className="grid grid-cols-3 -translate-y-5 rotate-x-40 rotate-y-0 text-black/50">
         <div className="col-span-1 flex items-center justify-center p-8">
           <NextLogo height="50px" />
         </div>

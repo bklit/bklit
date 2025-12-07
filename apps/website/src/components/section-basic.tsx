@@ -23,7 +23,7 @@ export const SectionBasic = ({
           </div>
           <div
             className={cn(
-              "flex items-center justify-center col-span-1 bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl rounded-l-none overflow-hidden",
+              "flex items-center justify-center col-span-1 bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl rounded-t-none sm:rounded-l-none overflow-hidden",
               variant === "mono" && "from-zinc-800 to-zinc-900",
             )}
           >

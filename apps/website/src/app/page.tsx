@@ -22,22 +22,22 @@ export default function MarketingHomePage() {
       <PageHeader />
       <Hero />
 
-      <div className="space-y-38">
-        <div>
+      <div className="sm:space-y-38">
+        <div className="-mt-12 sm:my-0">
           <div
             className={cn(
-              "relative w-full min-h-[400px]",
+              "relative w-full sm:min-h-[400px]",
               "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
             )}
           >
-            <div className="container mx-auto max-w-6xl px-4">
+            <div className="container mx-auto max-w-full sm:max-w-6xl px-4">
               <div className="relative grid grid-cols-1 grid-rows-1 -z-10">
-                <div className="perspective-[4000px] col-start-1 row-start-1">
+                <div className="sm:perspective-[4000px] col-start-1 row-start-1">
                   <div
                     className={cn(
-                      "relative -translate-y-50 translate-x-35 rotate-x-45 rotate-y-30 rotate-z-320 scale-150 -z-1 opacity-60",
+                      "relative sm:-translate-y-50 sm:translate-x-35 sm:rotate-x-45 sm:rotate-y-30 sm:rotate-z-320 sm:scale-150 -z-1 opacity-60",
                       "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
-                      "before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
+                      "sm:before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
                     )}
                   >
                     <Image
