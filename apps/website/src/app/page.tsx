@@ -22,79 +22,60 @@ export default function MarketingHomePage() {
       <PageHeader />
       <Hero />
 
-      <div className="space-y-64">
-        <div
-          className={cn(
-            "relative w-full min-h-[400px]",
-            "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
-          )}
-        >
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="relative grid grid-cols-1 grid-rows-1 -z-10">
-              <div className="perspective-[4000px] col-start-1 row-start-1">
-                <div
-                  className={cn(
-                    "relative -translate-y-50 translate-x-35 rotate-x-45 rotate-y-30 rotate-z-320 scale-150 -z-1",
-                    "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
-                    "before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
-                  )}
-                >
-                  <Image
-                    src="/bklit-analytics.png"
-                    alt="Bklit Analytics"
-                    width={1000}
-                    height={1000}
-                  />
+      <div className="space-y-38">
+        <div>
+          <div
+            className={cn(
+              "relative w-full min-h-[400px]",
+              "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
+            )}
+          >
+            <div className="container mx-auto max-w-6xl px-4">
+              <div className="relative grid grid-cols-1 grid-rows-1 -z-10">
+                <div className="perspective-[4000px] col-start-1 row-start-1">
+                  <div
+                    className={cn(
+                      "relative -translate-y-50 translate-x-35 rotate-x-45 rotate-y-30 rotate-z-320 scale-150 -z-1 opacity-60",
+                      "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
+                      "before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
+                    )}
+                  >
+                    <Image
+                      src="/bklit-analytics.png"
+                      alt="Bklit Analytics"
+                      width={1000}
+                      height={1000}
+                    />
+                  </div>
                 </div>
               </div>
-              {/* <div className="perspective-normal col-start-1 row-start-1">
-                <div className="translate-y-10 translate-x-10 rotate-x-5 rotate-y-5 -rotate-z-5">
-                  <Image
-                    src="/bklit-analytics-session.png"
-                    alt="Bklit Analytics"
-                    width={1000}
-                    height={1000}
-                  />
-                </div>
-              </div>
-              <div className="perspective-normal col-start-1 row-start-1">
-                <div className="translate-y-20 translate-x-20 rotate-x-5 rotate-y-5 -rotate-z-5">
-                  <Image
-                    src="/bklit-analytics-sessions.png"
-                    alt="Bklit Analytics"
-                    width={1000}
-                    height={1000}
-                  />
-                </div>
-              </div> */}
             </div>
           </div>
-        </div>
-        {/* <VideoDemo /> */}
 
-        <SectionBasic title="Stacked" artwork={<BrandTiles />}>
-          <p className="text-lg text-muted-foreground">
-            Bklit is built with the best development tools in the industry, to
-            help you build your next big thing.
-          </p>
-          <ul className="space-y-1 text-lg">
-            <li className="flex items-center gap-2">
-              <Check size={16} className="text-emerald-500" /> Typescript
-            </li>
-            <li className="flex items-center gap-2">
-              <Check size={16} className="text-emerald-500" /> tRPC
-            </li>
-            <li className="flex items-center gap-2">
-              <Check size={16} className="text-emerald-500" /> Shadcn
-            </li>
-            <li className="flex items-center gap-2">
-              <Check size={16} className="text-emerald-500" /> Nuqs
-            </li>
-          </ul>
-          <Button variant="default" size="lg">
-            Get started <ArrowRight size={16} />
-          </Button>
-        </SectionBasic>
+          <SectionBasic title="Stacked" artwork={<BrandTiles />}>
+            <p className="text-lg text-muted-foreground">
+              Bklit is built with the best development tools in the industry, to
+              help you build your next big thing.
+            </p>
+            <ul className="space-y-1 text-lg">
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-emerald-500" /> Typescript
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-emerald-500" /> tRPC
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-emerald-500" /> Shadcn
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-emerald-500" /> Nuqs
+              </li>
+            </ul>
+            <Button variant="default" size="lg">
+              Get started <ArrowRight size={16} />
+            </Button>
+          </SectionBasic>
+        </div>
 
         <div className="space-y-16 px-4">
           <SectionHeader

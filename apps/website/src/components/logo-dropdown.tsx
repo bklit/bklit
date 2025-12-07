@@ -1,13 +1,14 @@
 "use client";
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@bklit/ui/components/dropdown-menu";
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@bklit/ui/components/context-menu";
 import { BklitLogo } from "@bklit/ui/icons/bklit";
+import Link from "next/link";
 import { useState } from "react";
 import { brandingSnippets } from "../lib/branding-snippets";
 
@@ -25,31 +26,31 @@ export const LogoDropdown = () => {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex items-center gap-3 cursor-pointer">
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <Link href="/" className="flex items-center gap-3 cursor-pointer">
           <BklitLogo size={38} className="dark:text-white text-black" />
           <span className="text-2xl font-bold">Bklit</span>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem
+        </Link>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem
           onClick={() => copyToClipboard(brandingSnippets.svg, "svg")}
         >
           {copied === "svg" ? "Copied!" : "Copy SVG"}
-        </DropdownMenuItem>
-        <DropdownMenuItem
+        </ContextMenuItem>
+        <ContextMenuItem
           onClick={() => copyToClipboard(brandingSnippets.react, "react")}
         >
           {copied === "react" ? "Copied!" : "Copy React"}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem asChild>
           <a href="/bklit-branding.zip" download title="Download branding zip">
             Download Zip
           </a>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };

@@ -11,21 +11,71 @@ export const Footer = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-zinc-200 dark:border-zinc-900 pt-8">
             <div className="col-span-1 space-y-4">
               <h4 className="text-base font-bold">Company</h4>
-              <ul className="flex flex-col gap-2 text-sm">
+              <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="/">Terms of use</Link>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Terms of use
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Privacy policy</Link>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Privacy policy
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Pricing</Link>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                  >
+                    <span className="text-lime-200 transition duration-100 absolute left-0 opacity-0 group-hover:opacity-100 transition-delay-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Pricing
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Contact</Link>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Contact
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/">Branding</Link>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                    <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                      Branding
+                    </span>
+                  </Link>
                 </li>
               </ul>
             </div>
