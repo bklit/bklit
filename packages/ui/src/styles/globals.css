@@ -194,3 +194,7 @@
 .mapboxgl-ctrl-logo {
   @apply hidden!;
 }
+
+.squircle {
+  corner-shape: squircle;
+}

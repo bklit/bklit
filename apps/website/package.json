@@ -18,6 +18,7 @@
     "next": "catalog:",
     "next-themes": "^0.4.4",
     "react": "catalog:react19",
+    "react-circle-flags": "^0.0.23",
     "react-dom": "catalog:react19",
     "recharts": "^3.3.0"
   },

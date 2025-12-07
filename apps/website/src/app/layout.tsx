@@ -30,26 +30,10 @@ export default async function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
       >
-        <div className="grid grid-cols-1 grid-rows-1 h-full">
-          <div className="col-span-1 col-start-1 row-start-1">
-            <div className="container max-w-6xl mx-auto px-4 h-full">
-              <div className="grid grid-cols-5 w-full min-h-screen h-full">
-                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
-                <div className="col-span-1 border-l border-r border-dashed border-zinc-200 dark:border-zinc-800 h-full" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col col-span-1 col-start-1 row-start-1">
-            <Providers>
-              {children}
-              <Toaster />
-            </Providers>
-          </div>
-        </div>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

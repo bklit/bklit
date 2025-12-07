@@ -56,7 +56,7 @@ const faqs: FAQItem[] = [
   },
   {
     value: "item-8",
-    question: "Can I migrate from Google Analytics?",
+    question: "Is Bklit a Google Analytics alternative?",
     answer:
       "Yes, Bklit can be used as a privacy-friendly alternative to Google Analytics. While we track similar metrics like pageviews, sessions, and events, our open-source nature and self-hosting option means you maintain complete ownership of your data without sharing it with third parties.",
   },
@@ -64,36 +64,24 @@ const faqs: FAQItem[] = [
 
 export const FAQ = () => {
   return (
-    <div className="container mx-auto max-w-6xl px-4 mt-24">
-      <div className="flex flex-col md:grid grid-cols-5">
-        <div className="col-span-3 col-start-2 p-px border-t border-b border-dashed border-zinc-200 dark:border-zinc-800">
-          <div className="bg-background">
-            <div className="flex flex-col gap-4 p-6">
-              <h3 className="text-2xl font-medium dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
-                Frequently asked questions
-              </h3>
-              <p className="font-mono text-zinc-400">
-                We've got some answers to the most common questions.
-              </p>
-            </div>
-            <div className="p-6">
-              <Accordion type="single" collapsible className="w-full">
-                {faqs.map((faq) => (
-                  <AccordionItem
-                    key={faq.value}
-                    value={faq.value}
-                    className="border-none"
-                  >
-                    <AccordionTrigger>{faq.question}</AccordionTrigger>
-                    <AccordionContent className="flex flex-col gap-4 text-balance">
-                      <p>{faq.answer}</p>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          </div>
-        </div>
+    <div className="container mx-auto max-w-4xl">
+      <div className="flex flex-col">
+        <Accordion type="single" collapsible className="w-full">
+          {faqs.map((faq) => (
+            <AccordionItem
+              key={faq.value}
+              value={faq.value}
+              className="border-none"
+            >
+              <AccordionTrigger className="text-2xl font-normal hover:cursor-pointer">
+                {faq.question}
+              </AccordionTrigger>
+              <AccordionContent className="flex flex-col gap-4 text-balance">
+                <p className="text-lg text-muted-foreground">{faq.answer}</p>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
     </div>
   );

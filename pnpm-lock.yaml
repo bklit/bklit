@@ -334,6 +334,9 @@ importers:
       react:
         specifier: catalog:react19
         version: 19.2.1
+      react-circle-flags:
+        specifier: ^0.0.23
+        version: 0.0.23(react@19.2.1)
       react-dom:
         specifier: catalog:react19
         version: 19.2.1(react@19.2.1)

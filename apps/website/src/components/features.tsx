@@ -6,10 +6,10 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    title: "Real-time data",
+    title: "Real-time",
     subtitle: "See when and where users are",
     description:
-      "Real-time analytics let you know what's happening in real-time.",
+      "Real-time analytics let you know where your visitors are in in the world and what they are interested in.",
   },
   {
     title: "Custom events",
@@ -18,59 +18,76 @@ const features: Feature[] = [
       "Custom events let you track specific user actions and interactions.",
   },
   {
-    title: "Campaign tracking",
+    title: "Campaigns",
     subtitle: "UTM parameters",
     description:
       "Campaign tracking lets you track specific campaigns and channels with UTM parameters.",
   },
   {
-    title: "Session analysis",
+    title: "Funnels",
+    subtitle: "Conversion tracking",
+    description:
+      "Funnels let you track specific user journeys and conversions through funnels you create.",
+  },
+  {
+    title: "Sessions",
     subtitle: "Entry & exit pages",
     description:
       "Session analysis lets you see the user journey and how they interact with your website.",
   },
   {
     title: "Acquisitions",
-    subtitle: "Acquisitions",
+    subtitle: "Where users are coming from",
     description:
       "Session analysis lets you see the user journey and how they interact with your website.",
   },
   {
-    title: "Global",
-    subtitle: "Geographical data",
+    title: "Devices & browsers",
+    subtitle: "What your users experience",
     description:
-      "Geographic data lets you see where your users are coming from and where they are going.",
+      "Devices and browsers allows you to see what devices and browsers your users are using to access your website.",
+  },
+  {
+    title: "Cookie-less tracking",
+    subtitle: "No feeding the monster",
+    description:
+      "By default Bklit doesn't store any indetifiable data about your users, so no cookies and completely GDPR compliant.",
+  },
+  {
+    title: "Simple SDKs",
+    subtitle: "Use with any framework",
+    description:
+      "Bklit provides simple SDKs for your website, so you can start tracking your users in minutes.",
   },
 ];
 
 export const Features = () => {
   return (
-    <>
-      <div className="bg-linear-to-b from-transparent to-background pt-20" />
-      <div className="w-full border-zinc-200 dark:border-zinc-800">
-        <div className="container mx-auto max-w-6xl px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-800 px-px border-t border-b border-zinc-200 dark:border-zinc-800">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="col-span-1 bg-background grid grid-cols-1 grid-rows-1 p-8 relative"
-              >
-                <div className="col-span-1 col-start-1 row-start-1 flex flex-col gap-6">
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-xl font-medium dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
-                      {feature.title}
-                    </h3>
-                    <h4 className="text-md font-mono">{feature.subtitle}</h4>
-                  </div>
-                  <p className="text-sm font-mono text-zinc-400">
-                    {feature.description}
-                  </p>
+    <div className="w-full">
+      <div className="container mx-auto max-w-6xl px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="col-span-1 bg-zinc-900 rounded-3xl grid grid-cols-1 grid-rows-1 p-12 relative"
+            >
+              <div className="col-span-1 col-start-1 row-start-1 flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-2xl font-regular text-white">
+                    {feature.title}
+                  </h3>
+                  <h4 className="text-base text-muted-foreground">
+                    {feature.subtitle}
+                  </h4>
                 </div>
+                <p className="text-lg text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   );
 };

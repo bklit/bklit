@@ -12,7 +12,8 @@
     "./lib/*": "./src/lib/*.ts",
     "./icons/*": "./src/icons/*.tsx",
     "./components/*": "./src/components/*.tsx",
-    "./hooks/*": "./src/hooks/*.ts"
+    "./hooks/*": "./src/hooks/*.ts",
+    "./logos/*": "./src/logos/*.tsx"
   },
   "dependencies": {
     "@nivo/funnel": "^0.99.0",
