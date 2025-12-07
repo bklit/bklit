@@ -14,7 +14,6 @@ import { Hero } from "@/components/hero";
 import { PageHeader } from "@/components/page-header";
 import { SectionBasic } from "@/components/section-basic";
 import { SectionHeader } from "@/components/section-header";
-// import { VideoDemo } from "@/components/video-demo";
 
 export default function MarketingHomePage() {
   return (
