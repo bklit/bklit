@@ -17,8 +17,7 @@ export function getPricingPlans(): PricingPlan[] {
     if (plan.polarProductId) {
       polarProductId = plan.polarProductId;
     } else if (plan.slug === "BKLIT-PRO") {
-      polarProductId =
-        process.env.NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID || "";
+      polarProductId = process.env.NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID || "";
     }
 
     return {
@@ -38,4 +37,3 @@ export function formatPrice(price: number): string {
     currency: "USD",
   }).format(price / 100); // Prices are stored in cents
 }
-

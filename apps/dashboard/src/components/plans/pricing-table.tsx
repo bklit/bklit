@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPrice, getPricingPlans } from "@bklit/auth/pricing";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -13,7 +14,6 @@ import {
 import type { CustomerSubscription } from "@polar-sh/sdk/models/components/customersubscription.js";
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
 import { Check, Crown } from "lucide-react";
-import { formatPrice, getPricingPlans } from "@bklit/auth/pricing";
 import { authClient } from "@/auth/client";
 import { useWorkspace } from "@/contexts/workspace-provider";
 
