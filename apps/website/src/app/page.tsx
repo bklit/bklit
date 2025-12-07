@@ -2,6 +2,7 @@ import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
 import { ArrowRight, Check, Github } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { BrandTiles } from "@/components/artworks/brand-tiles";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
@@ -17,6 +18,12 @@ import { PageHeader } from "@/components/page-header";
 import { Pricing } from "@/components/pricing";
 import { SectionBasic } from "@/components/section-basic";
 import { SectionHeader } from "@/components/section-header";
+
+export const metadata: Metadata = {
+  title: "Bklit Analytics",
+  description:
+    "Hosted Analytics and open-source, start tracking with 3 lines of code. A perfect replacement for Google Analytics & Mixpanel.",
+};
 
 export default function MarketingHomePage() {
   return (

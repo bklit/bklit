@@ -9,10 +9,16 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { cn } from "@bklit/ui/lib/utils";
+import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { PageHeader } from "@/components/page-header";
 import { SectionHeader } from "@/components/section-header";
 import { StatusChart } from "@/components/status-chart";
+
+export const metadata: Metadata = {
+  title: "Bklit API Status",
+  description: "Real-time health monitoring for our tracking APIs",
+};
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

@@ -1,4 +1,5 @@
 import { Badge } from "@bklit/ui/components/badge";
+import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { PageHeader } from "@/components/page-header";
 import { Pricing } from "@/components/pricing";
@@ -7,7 +8,12 @@ import { SectionHeader } from "@/components/section-header";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function StatusPage() {
+export const metadata: Metadata = {
+  title: "Bklit Pricing",
+  description: "Simple, transparent pricing for teams of all sizes.",
+};
+
+export default async function PricingPage() {
   return (
     <main className="w-full min-h-screen flex flex-col gap-32">
       <PageHeader />
