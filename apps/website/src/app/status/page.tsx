@@ -2,13 +2,16 @@ import { prisma } from "@bklit/db/client";
 import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
 import { cn } from "@bklit/ui/lib/utils";
+import { Footer } from "@/components/footer";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeader } from "@/components/section-header";
 import { StatusChart } from "@/components/status-chart";
 
 export const dynamic = "force-dynamic";
@@ -141,12 +144,14 @@ export default async function StatusPage() {
   }
 
   return (
-    <main className="w-full min-h-screen bklit-hero flex flex-col gap-32">
+    <main className="w-full min-h-screen flex flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-3xl flex flex-col px-4 py-4 md:py-8 lg:py-12 space-y-12">
-        <div>
-          <div className="flex items-center justify-between">
-            <h1 className="text-4xl font-bold mb-2">API Status</h1>
+      <div className="container mx-auto max-w-3xl flex flex-col px-4 py-32 space-y-12">
+        <SectionHeader
+          title="API Status"
+          description="Real-time health monitoring for our tracking APIs"
+        >
+          <div className="flex items-center justify-center w-full">
             {statusData &&
             typeof statusData === "object" &&
             !("error" in statusData) ? (
@@ -174,10 +179,7 @@ export default async function StatusPage() {
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground">
-            Real-time health monitoring for our tracking APIs
-          </p>
-        </div>
+        </SectionHeader>
 
         {statusData &&
         typeof statusData === "object" &&
@@ -185,10 +187,10 @@ export default async function StatusPage() {
           Object.entries(statusData).map(([endpoint, data]) => (
             <Card key={endpoint} className="space-y-4">
               <CardHeader>
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle>
-                    <code>{endpoint}</code>
-                  </CardTitle>
+                <CardTitle>
+                  <code>{endpoint}</code>
+                </CardTitle>
+                <CardAction>
                   <Badge variant="outline" size="lg" className="gap-2">
                     <span
                       className={cn(
@@ -202,9 +204,9 @@ export default async function StatusPage() {
                       {data.isCurrentlyHealthy ? "Operational" : "Degraded"}
                     </span>
                   </Badge>
-                </div>
+                </CardAction>
                 <CardDescription>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
+                  <div className="grid grid-cols-2 sm:flex gap-4 text-sm text-muted-foreground">
                     <Badge
                       variant={
                         data.uptimePercentage >= 90 ? "success" : "destructive"
@@ -249,6 +251,7 @@ export default async function StatusPage() {
           </div>
         )}
       </div>
+      <Footer />
     </main>
   );
 }
