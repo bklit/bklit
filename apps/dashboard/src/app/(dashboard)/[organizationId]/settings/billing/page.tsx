@@ -100,8 +100,8 @@ export default async function BillingPage({
         title="Billing"
         description={`Manage subscription and billing information for ${organization.name}.`}
       >
-        <SettingsNavigation
-          type="organizationSettings"
+        <SubNavigation
+          configKey="organizationSettings"
           organizationId={organizationId}
         />
       </PageHeader>
