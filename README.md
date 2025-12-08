@@ -1,7 +1,7 @@
-![hero](https://repository-images.githubusercontent.com/985341745/de876cb4-a2d4-449f-9e71-38d9910e626e)
+![hero](https://repository-images.githubusercontent.com/985341745/118def38-e6ce-446b-8ca1-d809c583f57d)
 
 <p align="center">
-	<h1 align="center"><b>Bklit Inc</b></h1>
+	<h1 align="center"><b>Bklit Analytics</b></h1>
 <p align="center">
     Run your business smarter
     <br />
@@ -158,11 +158,13 @@ The dashboard will be available at `http://localhost:3000`
 For remote testing or sharing your local instance, you can use Cloudflared to create a tunnel:
 
 1. **Start the development server** (in one terminal):
+
    ```bash
    pnpm dev
    ```
 
 2. **Start Cloudflared tunnel** (in another terminal):
+
    ```bash
    cloudflared tunnel --url http://localhost:3000
    ```
@@ -221,7 +223,6 @@ The playground is a demo application that shows how to integrate the Bklit SDK.
    The playground will be available at `http://localhost:5173`
 
    You should see tracking events in your dashboard's analytics immediately!
-
 
 ### Additional Scripts
 
