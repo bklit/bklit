@@ -14,7 +14,7 @@
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: var(--color-emerald-500);
+  --primary: var(--color-lime-500);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
@@ -22,8 +22,9 @@
   --muted-foreground: oklch(0.552 0.016 285.938);
   --accent: oklch(0.967 0.001 286.375);
   --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
+  --destructive: oklch(0.54 0.1864 11.25);
+  --destructive-foreground: oklch(0.9082 0.048775 8.6356);
+  --border: oklch(0.96 0.0053 286.3);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
   --chart-1: oklch(0.93 0.1421 124.85);
@@ -53,7 +54,8 @@
   --region: var(--bklit-100);
   --region-hover: var(--bklit-200);
 
-  --chart-negative: var(--bklit-500);
+  --chart-negative: var(--bklit-200);
+  --chart-cartesian: var(--bklit-200);
 
   --header-height: 68px;
 }
@@ -107,6 +109,7 @@
   --region-hover: var(--bklit-600);
 
   --chart-negative: var(--bklit-500);
+  --chart-cartesian: var(--bklit-500);
 }
 
 @theme inline {

@@ -20,7 +20,7 @@ const badgeVariants = cva(
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         alternative:
           "border-transparent bg-purple-900 text-purple-300 [a&]:hover:bg-purple-600 focus-visible:ring-purple-500/20",
-        code: "border-transparent bg-bklit-600 text-bklit-100 font-mono [a&]:hover:bg-muted/90 focus-visible:ring-muted-foreground/20",
+        code: "border-transparent bg-bklit-300 dark:bg-bklit-600 text-bklit-500 dark:text-bklit-100 font-mono [a&]:hover:bg-muted/90 focus-visible:ring-muted-foreground/20",
       },
       size: {
         default: "text-xs px-2 py-0.5",

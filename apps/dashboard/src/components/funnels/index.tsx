@@ -151,19 +151,15 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
                         <span className="text-xs font-medium">Funnels</span>
                       </div>
                     </div>
-                    {conversionData.map((funnel, index) => (
-                      <div key={funnel.id}>
-                        <ProgressRow
-                          label={funnel.name}
-                          value={funnel.conversionRate}
-                          percentage={funnel.conversionRate}
-                          color="var(--chart-2)"
-                          variant="secondary"
-                        />
-                        {index < conversionData.length - 1 && (
-                          <Separator className="my-2" />
-                        )}
-                      </div>
+                    {conversionData.map((funnel) => (
+                      <ProgressRow
+                        key={funnel.id}
+                        label={funnel.name}
+                        value={funnel.conversionRate}
+                        percentage={funnel.conversionRate}
+                        color="var(--chart-2)"
+                        variant="secondary"
+                      />
                     ))}
                   </div>
                 )}

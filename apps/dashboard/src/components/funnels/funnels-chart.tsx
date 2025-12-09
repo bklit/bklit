@@ -147,7 +147,10 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
                 />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="var(--bklit-500)" strokeDasharray="3 3" />
+            <CartesianGrid
+              stroke="var(--chart-cartesian)"
+              strokeDasharray="3 3"
+            />
             <XAxis
               dataKey="date"
               tickLine={false}

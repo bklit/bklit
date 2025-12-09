@@ -730,7 +730,7 @@ function FunnelBuilderInner({
           gap={20}
           size={1}
           color="var(--bklit-300)"
-          className="bg-bklit-800"
+          className="bg-white dark:bg-bklit-600"
         />
 
         {showMiniMap && (

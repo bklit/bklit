@@ -50,8 +50,8 @@ export const ProgressRow = ({
         </div>
         {value && <Badge variant="secondary">{value}</Badge>}
       </div>
-      {percentage && (
-        <div className="flex h-0.5 bg-muted">
+      {percentage !== undefined && (
+        <div className="flex h-0.5 bg-muted dark:bg-bklit-600">
           <div
             className={cn(
               "flex h-full rounded-full transition-all",
