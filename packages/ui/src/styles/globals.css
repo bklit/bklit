@@ -58,6 +58,11 @@
   --chart-cartesian: var(--bklit-200);
 
   --header-height: 68px;
+
+  .logo-dark {
+    mix-blend-mode: plus-lighter;
+    border: 1px solid red;
+  }
 }
 
 .dark {
@@ -195,6 +200,10 @@
 
 .mapboxgl-ctrl-logo {
   @apply hidden!;
+}
+
+.bklit-conic {
+  background: linear-gradient(to bottom, #000000, #ffffff);
 }
 
 /* biome-ignore lint/correctness/noUnknownProperty: corner-shape is experimental */

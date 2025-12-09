@@ -34,7 +34,7 @@ export const Hero = () => {
     <div className="container mx-auto max-w-6xl flex flex-col px-4">
       <div className="flex flex-col items-center justify-center text-center w-full space-y-6 pt-26 sm:pt-48">
         <div className="hidden sm:flex items-center justify-center w-36 aspect-square bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl sm:rounded-[300px] squircle">
-          <BklitLogo size={90} variant="dark" />
+          <BklitLogo size={90} variant="color" />
         </div>
         <h1 className="text-3xl md:text-6xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
           Analytics for everyone

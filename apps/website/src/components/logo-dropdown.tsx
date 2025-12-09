@@ -29,7 +29,7 @@ export const LogoDropdown = () => {
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href="/" className="flex items-center gap-3 cursor-pointer">
-          <BklitLogo size={38} className="dark:text-white text-black" />
+          <BklitLogo size={38} variant="mono" />
           <span className="text-2xl font-bold">Bklit</span>
         </Link>
       </ContextMenuTrigger>
