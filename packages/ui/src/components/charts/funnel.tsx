@@ -81,7 +81,7 @@ export function Funnel({ data }: FunnelProps) {
           },
           grid: {
             line: {
-              stroke: "var(--bklit-500)",
+              stroke: "var(--chart-cartesian)",
               strokeDasharray: "5 5",
               strokeWidth: 1,
             },

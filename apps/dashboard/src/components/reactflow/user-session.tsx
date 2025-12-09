@@ -1,29 +1,26 @@
 "use client";
 
 import { Badge } from "@bklit/ui/components/badge";
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { Button } from "@bklit/ui/components/button";
+import { ButtonGroup } from "@bklit/ui/components/button-group";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import ReactFlow, {
   addEdge,
   Background,
   BackgroundVariant,
   type Connection,
-  Controls,
   type Edge,
   type EdgeProps,
   Handle,
   MarkerType,
   type Node,
   type NodeProps,
+  Panel,
   Position,
+  ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import {
@@ -39,7 +36,10 @@ import {
   Clock,
   CornerDownRight,
   Eye,
+  ImageUpscale,
   Timer,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { cleanUrl } from "@/lib/utils";
 
@@ -105,7 +105,7 @@ function WebPageNode({ data }: NodeProps) {
         id="bottom"
         className="sr-only"
       />
-      <Card className="relative shadow-xl bg-bklit-800 border-2">
+      <Card className="relative border-2">
         <CardHeader className="pb-1">
           <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
           <CardDescription>
@@ -616,12 +616,9 @@ function getLayoutedElements(
   return { nodes: layoutedNodes, edges };
 }
 
-export function UserSession({ session }: UserSessionProps) {
-  const [height, setHeight] = useState(640);
-  const isDragging = useRef(false);
-  const startY = useRef(0);
-  const startHeight = useRef(0);
+function UserSessionInner({ session }: UserSessionProps) {
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
 
   const initialNodes = useMemo(
     () => generateNodesFromSession(session),
@@ -706,34 +703,17 @@ export function UserSession({ session }: UserSessionProps) {
     [edgesState, onEdgesChange],
   );
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging.current) return;
+  const handleZoomIn = useCallback(() => {
+    zoomIn();
+  }, [zoomIn]);
 
-    const deltaY = e.clientY - startY.current;
-    const newHeight = Math.max(
-      200,
-      Math.min(1000, startHeight.current + deltaY),
-    );
-    setHeight(newHeight);
-  }, []);
+  const handleZoomOut = useCallback(() => {
+    zoomOut();
+  }, [zoomOut]);
 
-  const handleMouseUp = useCallback(() => {
-    isDragging.current = false;
-    document.body.style.cursor = "";
-    document.body.style.userSelect = "";
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [handleMouseMove, handleMouseUp]);
+  const handleFitView = useCallback(() => {
+    fitView({ padding: 0.2, maxZoom: 1.5 });
+  }, [fitView]);
 
   return (
     <div className="w-full relative border-2 rounded-xl overflow-clip h-[720px]">
@@ -752,15 +732,35 @@ export function UserSession({ session }: UserSessionProps) {
         minZoom={0.5}
         maxZoom={1.5}
       >
-        <Controls className="bg-bklit-800 [&>button]:bg-bklit-700! [&>button]:border-border! [&>button>svg]:fill-current! [&>button>svg]:text-bklit-300!" />
+        <Panel position="top-right">
+          <ButtonGroup orientation="horizontal">
+            <Button variant="secondary" onClick={handleZoomIn}>
+              <ZoomIn size={16} />
+            </Button>
+            <Button variant="secondary" onClick={handleZoomOut}>
+              <ZoomOut size={16} />
+            </Button>
+            <Button variant="secondary" onClick={handleFitView}>
+              <ImageUpscale size={16} />
+            </Button>
+          </ButtonGroup>
+        </Panel>
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
           size={1}
           color="var(--bklit-300)"
-          className="bg-bklit-700"
+          className="bg-white dark:bg-bklit-600"
         />
       </ReactFlow>
     </div>
+  );
+}
+
+export function UserSession({ session }: UserSessionProps) {
+  return (
+    <ReactFlowProvider>
+      <UserSessionInner session={session} />
+    </ReactFlowProvider>
   );
 }

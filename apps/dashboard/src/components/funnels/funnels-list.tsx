@@ -149,60 +149,53 @@ export function FunnelsList({
         <CardTitle>Funnels</CardTitle>
       </CardHeader>
       <CardContent>
-        <ItemGroup>
+        <ItemGroup className="space-y-2">
           {funnels.map((funnel, index) => {
             const stats = funnelStatsQueries[index]?.data;
             const conversionRate = stats?.overallConversionRate ?? 0;
             const lastSessionTimestamp = stats?.lastSessionTimestamp;
 
             return (
-              <React.Fragment key={funnel.id}>
-                <Item asChild variant="outline">
-                  <Link
-                    href={`/${organizationId}/${projectId}/funnels/${funnel.id}`}
-                  >
-                    <ItemContent>
-                      <ItemTitle>{funnel.name}</ItemTitle>
-                      <ItemDescription>
-                        <span>{funnel.steps.length} steps</span>
-                        {lastSessionTimestamp && (
-                          <>
-                            {" "}
-                            &bull;{" "}
-                            <span>
-                              Last used{" "}
-                              {formatDistanceToNow(
-                                new Date(lastSessionTimestamp),
-                                {
-                                  addSuffix: true,
-                                },
-                              )}
-                            </span>
-                          </>
-                        )}
-                      </ItemDescription>
-                    </ItemContent>
-                    <ItemActions className="flex flex-col items-end gap-1">
-                      <Badge
-                        variant={
-                          conversionRate > 30 ? "success" : "destructive"
-                        }
-                        size="lg"
-                      >
-                        {conversionRate > 0
-                          ? conversionRate >= 99.995
-                            ? "100%"
-                            : `${conversionRate.toFixed(2)}%`
-                          : "0%"}
-                        {" conversion"}
-                      </Badge>
-                    </ItemActions>
-                  </Link>
-                </Item>
-                {index < funnels.length - 1 && (
-                  <div className="border-t border-border" />
-                )}
-              </React.Fragment>
+              <Item key={funnel.id} asChild variant="outline">
+                <Link
+                  href={`/${organizationId}/${projectId}/funnels/${funnel.id}`}
+                >
+                  <ItemContent>
+                    <ItemTitle>{funnel.name}</ItemTitle>
+                    <ItemDescription>
+                      <span>{funnel.steps.length} steps</span>
+                      {lastSessionTimestamp && (
+                        <>
+                          {" "}
+                          &bull;{" "}
+                          <span>
+                            Last used{" "}
+                            {formatDistanceToNow(
+                              new Date(lastSessionTimestamp),
+                              {
+                                addSuffix: true,
+                              },
+                            )}
+                          </span>
+                        </>
+                      )}
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions className="flex flex-col items-end gap-1">
+                    <Badge
+                      variant={conversionRate > 30 ? "success" : "destructive"}
+                      size="lg"
+                    >
+                      {conversionRate > 0
+                        ? conversionRate >= 99.995
+                          ? "100%"
+                          : `${conversionRate.toFixed(2)}%`
+                        : "0%"}
+                      {" conversion"}
+                    </Badge>
+                  </ItemActions>
+                </Link>
+              </Item>
             );
           })}
         </ItemGroup>

@@ -7,54 +7,55 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(48.8% 0.243 264.376);
-  --primary-foreground: oklch(87% 0.065 274.039);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.56 0.1686 260.53);
-  --chart-3: oklch(0.52 0.292 291.14);
-  --chart-4: oklch(0.69 0.2757 321.09);
-  --chart-5: oklch(0.7 0.1521 285.66);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: var(--color-lime-500);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.54 0.1864 11.25);
+  --destructive-foreground: oklch(0.9082 0.048775 8.6356);
+  --border: oklch(0.96 0.0053 286.3);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --chart-1: oklch(0.93 0.1421 124.85);
+  --chart-2: oklch(0.79 0.1287 184.79);
+  --chart-3: oklch(0.73 0.1749 305.37);
+  --chart-4: oklch(0.71 0.2007 357.57);
+  --chart-5: oklch(0.43 0.1017 284.94);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.21 0.006 285.885);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
 
-  --region: var(--bklit-500);
-  --region-hover: var(--bklit-600);
+  --bklit-900: oklch(0.1 0 0);
+  --bklit-800: oklch(0.159 0 0);
+  --bklit-700: oklch(0.261 0 0);
+  --bklit-600: oklch(0.339 0 0);
+  --bklit-500: oklch(0.461 0 0);
+  --bklit-400: oklch(0.649 0 0);
+  --bklit-300: oklch(0.839 0 0);
+  --bklit-200: oklch(0.9 0 0);
+  --bklit-100: oklch(0.959 0 0);
 
-  --bklit-900: oklch(1 0 none);
-  --bklit-800: oklch(0.9565 0.0135 277.06);
-  --bklit-700: oklch(0.9301 0.0205 276.95);
-  --bklit-600: oklch(0.9002 0.0263 276.38);
-  --bklit-500: oklch(0.8674 0.0306 277.55);
-  --bklit-400: oklch(0.825 0.0382 277.22);
-  --bklit-300: oklch(0.7624 0.0434 276.4);
-  --bklit-200: oklch(0.714 0.0427 276.06);
-  --bklit-100: oklch(0.6403 0.0531 275.97);
+  --region: var(--bklit-100);
+  --region-hover: var(--bklit-200);
 
-  --chart-negative: var(--bklit-500);
+  --chart-negative: var(--bklit-200);
+  --chart-cartesian: var(--bklit-200);
 
   --header-height: 68px;
 }
@@ -94,9 +95,6 @@
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: var(--bklit-200);
 
-  --region: var(--bklit-500);
-  --region-hover: var(--bklit-600);
-
   --bklit-900: oklch(0.1445 0.0047 263.79);
   --bklit-800: oklch(0.1829 0.0083 274.43);
   --bklit-700: oklch(0.2068 0.014 278.71);
@@ -107,7 +105,11 @@
   --bklit-200: oklch(0.5638 0.0358 277.43);
   --bklit-100: oklch(0.6589 0.0178 278.35);
 
+  --region: var(--bklit-500);
+  --region-hover: var(--bklit-600);
+
   --chart-negative: var(--bklit-500);
+  --chart-cartesian: var(--bklit-500);
 }
 
 @theme inline {

@@ -66,16 +66,16 @@ export default function MarketingHomePage() {
             help you build your next big thing.
           </p>
           <ul className="space-y-1 text-lg">
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 text-muted-foreground">
               <Check size={16} className="text-emerald-500" /> Typescript
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 text-muted-foreground">
               <Check size={16} className="text-emerald-500" /> tRPC
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 text-muted-foreground">
               <Check size={16} className="text-emerald-500" /> Shadcn
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 text-muted-foreground">
               <Check size={16} className="text-emerald-500" /> Nuqs
             </li>
           </ul>
@@ -169,10 +169,10 @@ export default function MarketingHomePage() {
               once and start tracking your users.
             </p>
             <ul className="space-y-1 text-lg">
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2 text-muted-foreground">
                 <Check size={16} className="text-emerald-500" /> Vanilla React
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2 text-muted-foreground">
                 <Check size={16} className="text-emerald-500" /> Next.js
               </li>
             </ul>

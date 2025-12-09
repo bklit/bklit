@@ -258,67 +258,62 @@ export function FunnelDetails({
                   Basic information about this funnel
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {funnel.description && (
                   <div>
                     <p className="text-sm text-muted-foreground">Description</p>
                     <p className="font-medium">{funnel.description}</p>
                   </div>
                 )}
-                <div>
+                <div className="flex items-center justify-between w-full">
                   <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="font-medium">
+                  <p className="font-medium text-sm">
                     {format(new Date(funnel.createdAt), "PPP")}
                   </p>
                 </div>
                 {funnel.endDate && (
-                  <div>
+                  <div className="flex items-center justify-between w-full">
                     <p className="text-sm text-muted-foreground">End Date</p>
-                    <p className="font-medium">
+                    <p className="font-medium text-sm">
                       {format(new Date(funnel.endDate), "PPP")}
                     </p>
                   </div>
                 )}
                 {stepProgressData.length > 0 && (
-                  <>
-                    <Separator />
-                    <div className="flex flex-col space-y-4">
-                      {stepProgressData.map((step, index) => (
-                        <div key={step.id} className="flex flex-col">
-                          <div className="flex items-center justify-start gap-4 pb-3">
-                            <div className="flex items-center gap-1.5">
-                              <div
-                                className="h-2 w-2 shrink-0 rounded-[2px]"
-                                style={{ backgroundColor: step.color }}
-                              />
-                              <span className="text-xs font-medium">
-                                {step.stepName}
-                              </span>
-                            </div>
+                  <div className="flex flex-col space-y-4 w-full">
+                    {stepProgressData.map((step) => (
+                      <div key={step.id} className="flex flex-col">
+                        <div className="flex items-center justify-start gap-4 pb-3">
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className="h-2 w-2 shrink-0 rounded-[2px]"
+                              style={{ backgroundColor: step.color }}
+                            />
+                            <span className="text-xs font-medium">
+                              {step.stepName}
+                            </span>
                           </div>
-                          <ProgressRow
-                            label={step.label}
-                            value={step.value}
-                            percentage={step.percentage}
-                            color={step.color}
-                            variant="secondary"
-                          />
-                          {index < stepProgressData.length - 1 && (
-                            <Separator className="mt-4" />
-                          )}
                         </div>
-                      ))}
-                    </div>
-                  </>
+                        <ProgressRow
+                          label={step.label}
+                          value={step.value}
+                          percentage={step.percentage}
+                          color={step.color}
+                          variant="secondary"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
 
-                <Separator />
                 {stats && (
-                  <div>
+                  <div className="flex items-center justify-between w-full">
                     <p className="text-sm text-muted-foreground">
                       Total Conversions
                     </p>
-                    <p className="font-medium">{stats.totalConversions}</p>
+                    <div className="text-lg font-bold">
+                      {stats.totalConversions}
+                    </div>
                   </div>
                 )}
               </CardContent>

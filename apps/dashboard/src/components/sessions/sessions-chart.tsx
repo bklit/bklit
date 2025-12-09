@@ -187,7 +187,7 @@ export function SessionsChart({
                   </linearGradient>
                 </defs>
                 <CartesianGrid
-                  stroke="var(--bklit-500)"
+                  stroke="var(--chart-cartesian)"
                   strokeDasharray="3 3"
                 />
                 <XAxis
