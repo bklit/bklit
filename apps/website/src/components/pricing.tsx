@@ -21,7 +21,7 @@ export const Pricing = () => {
             key={plan.name}
             className="relative bg-zinc-900 rounded-4xl border-none p-6 sm:p-8"
           >
-            <CardHeader className="justify-center text-center">
+            <CardHeader className="justify-center text-center text-white">
               <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
               <CardDescription className="text-muted-foreground">
                 {plan.description}
@@ -49,7 +49,7 @@ export const Pricing = () => {
                     plan.benefits.map((benefit) => (
                       <li
                         key={benefit}
-                        className="flex items-center gap-3 text-sm sm:text-lg"
+                        className="flex items-center gap-3 text-muted-foreground text-sm sm:text-lg"
                       >
                         <Check className="size-4 text-emerald-500 shrink-0" />
                         <span>{benefit}</span>

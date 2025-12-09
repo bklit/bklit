@@ -39,7 +39,7 @@ export const Hero = () => {
         <h1 className="text-3xl md:text-6xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
           Analytics for everyone
         </h1>
-        <p className="text-xl dark:text-white text-shadow-sm">
+        <p className="text-xl dark:text-white dark:text-shadow-sm">
           Track everything with 3 lines of code.
         </p>
 

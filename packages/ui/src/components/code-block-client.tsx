@@ -58,7 +58,7 @@ export function CodeBlockClient(props: Props) {
     <>
       <div
         className={cn(
-          "dark:bg-card border-input w-full min-w-0 rounded-md border p-3 text-xs [&_pre]:overflow-auto [&_pre]:leading-5! [&_pre]:bg-card! [&_pre]:p-3 [&_pre]:text-xs ",
+          "bg-card border-white dark:border-input w-full min-w-0 rounded-md border p-3 text-xs [&_pre]:overflow-auto [&_pre]:leading-5! [&_pre]:bg-card! [&_pre]:p-3 [&_pre]:text-xs ",
           footer ? "rounded-b-none" : "rounded-lg",
         )}
         data-line-numbers={lineNumbers ? "true" : "false"}
