@@ -27,11 +27,13 @@
   --border: oklch(0.96 0.0053 286.3);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
+
   --chart-1: oklch(0.93 0.1421 124.85);
   --chart-2: oklch(0.79 0.1287 184.79);
   --chart-3: oklch(0.73 0.1749 305.37);
   --chart-4: oklch(0.71 0.2007 357.57);
   --chart-5: oklch(0.43 0.1017 284.94);
+
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.21 0.006 285.885);
@@ -85,6 +87,7 @@
   --border: var(--bklit-600);
   --input: var(--bklit-600);
   --ring: var(--bklit-200);
+
   --chart-1: oklch(0.93 0.1421 124.85);
   --chart-2: oklch(0.79 0.1287 184.79);
   --chart-3: oklch(0.73 0.1749 305.37);
@@ -142,10 +145,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -164,18 +169,6 @@
   --color-bklit-300: var(--bklit-300);
   --color-bklit-200: var(--bklit-200);
   --color-bklit-100: var(--bklit-100);
-  --color-bklit-50: var(--bklit-50);
-
-  --color-brand-50: oklch(97% 0.05 264.376);
-  --color-brand-100: oklch(93% 0.08 264.376);
-  --color-brand-200: oklch(85% 0.12 264.376);
-  --color-brand-300: oklch(73% 0.16 264.376);
-  --color-brand-400: oklch(60% 0.2 264.376);
-  --color-brand-500: oklch(48.8% 0.243 264.376);
-  --color-brand-600: oklch(42% 0.24 264.376);
-  --color-brand-700: oklch(36% 0.22 264.376);
-  --color-brand-800: oklch(28% 0.19 264.376);
-  --color-brand-900: oklch(22% 0.16 264.376);
 
   --color-region: var(--region);
   --color-region-hover: var(--region-hover);
@@ -206,7 +199,7 @@
   background: linear-gradient(to bottom, #000000, #ffffff);
 }
 
-/* biome-ignore lint/correctness/noUnknownProperty: corner-shape is experimental */
 .squircle {
+  /* biome-ignore lint/correctness/noUnknownProperty: corner-shape is experimental */
   corner-shape: squircle;
 }
