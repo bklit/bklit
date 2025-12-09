@@ -19,9 +19,9 @@ export const Pricing = () => {
         {plans.map((plan) => (
           <Card
             key={plan.name}
-            className="relative bg-zinc-900 rounded-4xl border-none p-6 sm:p-8"
+            className="relative dark:bg-zinc-900 bg-bklit-100 rounded-4xl border-none p-6 sm:p-8"
           >
-            <CardHeader className="justify-center text-center text-white">
+            <CardHeader className="justify-center text-center dark:text-white text-black">
               <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
               <CardDescription className="text-muted-foreground">
                 {plan.description}
