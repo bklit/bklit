@@ -3,7 +3,6 @@ import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
 import { ArrowRight, Check, Github } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { BrandTiles } from "@/components/artworks/brand-tiles";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
 import { SankeyDemo } from "@/components/artworks/sankey-demo";
@@ -18,6 +17,7 @@ import { PageHeader } from "@/components/page-header";
 import { Pricing } from "@/components/pricing";
 import { SectionBasic } from "@/components/section-basic";
 import { SectionHeader } from "@/components/section-header";
+import { ThemeImage } from "@/components/theme-image";
 
 export const metadata: Metadata = {
   title: "Bklit Analytics",
@@ -48,8 +48,9 @@ export default function MarketingHomePage() {
                     "sm:before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
                   )}
                 >
-                  <Image
-                    src="/bklit-analytics.png"
+                  <ThemeImage
+                    srcLight="/bklit-analytics-light.png"
+                    srcDark="/bklit-analytics.png"
                     alt="Bklit Analytics"
                     width={1000}
                     height={1000}
