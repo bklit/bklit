@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@bklit/ui/lib/utils";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import type { BundledLanguage } from "shiki";
 import { codeToHtml } from "shiki";
@@ -16,15 +17,17 @@ export function CodeBlockClient(props: Props) {
   const { children, lineNumbers = false, language, footer } = props;
   const [highlightedCode, setHighlightedCode] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     let isMounted = true;
+    setIsLoading(true);
 
     async function highlightCode() {
       try {
         const html = await codeToHtml(children, {
           lang: language,
-          theme: "nord",
+          theme: resolvedTheme === "light" ? "min-light" : "nord",
         });
 
         if (isMounted) {
@@ -44,7 +47,7 @@ export function CodeBlockClient(props: Props) {
     return () => {
       isMounted = false;
     };
-  }, [children, language]);
+  }, [children, language, resolvedTheme]);
 
   if (isLoading) {
     return (

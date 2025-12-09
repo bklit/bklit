@@ -69,11 +69,11 @@ export const Features = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="col-span-1 bg-zinc-900 rounded-3xl grid grid-cols-1 grid-rows-1 p-12 relative"
+              className="col-span-1 dark:bg-zinc-900 bg-bklit-100 rounded-3xl grid grid-cols-1 grid-rows-1 p-12 relative"
             >
               <div className="col-span-1 col-start-1 row-start-1 flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-2xl font-regular text-white">
+                  <h3 className="text-2xl font-regular dark:text-white text-black">
                     {feature.title}
                   </h3>
                   <h4 className="text-base text-muted-foreground">
