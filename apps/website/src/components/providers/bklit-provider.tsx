@@ -7,7 +7,7 @@ export function BklitProvider({ children }: { children: React.ReactNode }) {
   // This overrides any NEXT_PUBLIC_BKLIT_API_HOST env var for local development
   // In production, use NEXT_PUBLIC_BKLIT_API_HOST if set, otherwise let SDK use defaults
   const isDevelopment = process.env.NODE_ENV === "development";
-  
+
   // Force localhost in development, ignore env vars
   const apiHost = isDevelopment
     ? "http://localhost:3000/api/track"

@@ -304,7 +304,9 @@ export const eventRouter = {
       // Group events by session
       type SessionGroup = {
         sessionId: string;
-        session: Awaited<ReturnType<typeof ctx.analytics.getSessionById>> | null;
+        session: Awaited<
+          ReturnType<typeof ctx.analytics.getSessionById>
+        > | null;
         events: Array<{
           id: string;
           timestamp: Date;
@@ -795,9 +797,7 @@ export const eventRouter = {
           timestamp: new Date(ev.timestamp),
           metadata: ev.metadata,
           createdAt: new Date(ev.created_at),
-          session: ev.session_id
-            ? sessionMap.get(ev.session_id) || null
-            : null,
+          session: ev.session_id ? sessionMap.get(ev.session_id) || null : null,
         })),
         timeSeriesData: timeSeriesArray,
         conversionRate: Number(conversionRate.toFixed(2)),

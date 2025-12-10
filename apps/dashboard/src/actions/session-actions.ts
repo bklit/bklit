@@ -154,8 +154,9 @@ export async function getSessionAnalytics(
     }));
 
     const totalSessions = sessionsWithPageviews.length;
-    const bouncedSessions = sessionsWithPageviews.filter((s) => s.didBounce)
-      .length;
+    const bouncedSessions = sessionsWithPageviews.filter(
+      (s) => s.didBounce,
+    ).length;
     const bounceRate =
       totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
 

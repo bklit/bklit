@@ -486,7 +486,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
         <div ref={containerRef} className="relative w-full h-full">
           <div className="w-full h-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl [&_svg_path]:cursor-default">
             <ResponsiveChoropleth
-              key={`choropleth-${projectId}-${visitorsData.map(d => d.id).join('-')}`}
+              key={`choropleth-${projectId}-${visitorsData.map((d) => d.id).join("-")}`}
               data={visitorsData}
               features={features}
               margin={{ top: 0, right: 0, bottom: 0, left: 0 }}

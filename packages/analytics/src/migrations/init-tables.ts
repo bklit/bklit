@@ -105,7 +105,9 @@ async function initTables() {
   } catch (error) {
     // Column might already exist or table might not exist yet, ignore error
     if (process.env.NODE_ENV === "development") {
-      console.log("Note: updated_at column migration skipped (may already exist)");
+      console.log(
+        "Note: updated_at column migration skipped (may already exist)",
+      );
     }
   }
 

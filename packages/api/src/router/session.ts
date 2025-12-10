@@ -586,7 +586,8 @@ export const sessionRouter = createTRPCRouter({
             countryCode = session.pageview_country_code;
           } else if (session.pageview_country_code) {
             // Fallback to country center coordinates
-            const countryCodeUpper = session.pageview_country_code.toUpperCase();
+            const countryCodeUpper =
+              session.pageview_country_code.toUpperCase();
             const centerCoords = countryCenterCoords[countryCodeUpper];
 
             if (centerCoords) {
@@ -746,10 +747,7 @@ export const sessionRouter = createTRPCRouter({
           }
           return acc;
         },
-        {} as Record<
-          string,
-          Array<{ url: string; timestamp: string }>
-        >,
+        {} as Record<string, Array<{ url: string; timestamp: string }>>,
       );
 
       const sessions = journeys.map((journey) => ({
