@@ -1,3 +1,4 @@
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
 import { endOfDay, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -47,30 +48,19 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          startedAt: true,
-          didBounce: true,
-        },
-        orderBy: { startedAt: "asc" },
+      const timeSeries = await ctx.analytics.getTimeSeries({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
       });
 
-      const sessionCountsByDay = sessions.reduce(
-        (acc, s) => {
-          const dateKey = s.startedAt.toISOString().split("T")[0] ?? "";
-          if (!acc[dateKey]) {
-            acc[dateKey] = { total: 0, engaged: 0, bounced: 0 };
-          }
-          acc[dateKey].total += 1;
-          if (s.didBounce) {
-            acc[dateKey].bounced += 1;
-          } else {
-            acc[dateKey].engaged += 1;
-          }
+      const sessionCountsByDay = timeSeries.reduce(
+        (acc, item) => {
+          acc[item.date] = {
+            total: item.total,
+            engaged: item.engaged,
+            bounced: item.bounced,
+          };
           return acc;
         },
         {} as Record<
@@ -149,28 +139,43 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: { projectId: input.projectId, ...(dateFilter && dateFilter) },
-        select: {
-          id: true,
-          startedAt: true,
-          userAgent: true,
-          pageViewEvents: {
-            select: { mobile: true },
-            orderBy: { timestamp: "asc" },
-          },
-        },
+      const sessions = await ctx.analytics.getSessions({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
+
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({ mobile: pv.mobile });
+          }
+          return acc;
+        },
+        {} as Record<string, Array<{ mobile: boolean | null }>>,
+      );
 
       const totalSessions = sessions.length;
       let mobileSessions = 0;
       let desktopSessions = 0;
 
       for (const s of sessions) {
+        const sessionPageviews = pageviewsBySession[s.session_id] || [];
         const isMobile =
-          s.pageViewEvents.some((e) => e.mobile) ||
-          (s.userAgent
-            ? /Mobile|Android|iPhone|iPad/.test(s.userAgent)
+          sessionPageviews.some((pv) => pv.mobile) ||
+          (s.user_agent
+            ? /Mobile|Android|iPhone|iPad/.test(s.user_agent)
             : false);
         if (isMobile) mobileSessions += 1;
         else desktopSessions += 1;
@@ -232,34 +237,68 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Get total count for pagination
-      const totalCount = await ctx.prisma.trackedSession.count({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
+      const allSessions = await ctx.analytics.getSessions({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT, // Get all sessions for accurate totalCount
       });
 
-      // Get paginated sessions
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "asc" },
-          },
-        },
-        orderBy: {
-          startedAt: "desc",
-        },
-        skip: (input.page - 1) * input.limit,
-        take: input.limit,
+      const totalCount = allSessions.length;
+
+      const sessions = allSessions.slice(
+        (input.page - 1) * input.limit,
+        input.page * input.limit,
+      );
+
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT, // Get all pageviews for accurate stats
       });
+
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({
+              id: pv.id,
+              url: pv.url,
+              timestamp: new Date(pv.timestamp),
+            });
+          }
+          return acc;
+        },
+        {} as Record<
+          string,
+          Array<{ id: string; url: string; timestamp: Date }>
+        >,
+      );
+
+      const sessionsWithPageviews = sessions.map((s) => ({
+        id: s.id,
+        sessionId: s.session_id,
+        startedAt: new Date(s.started_at),
+        endedAt: s.ended_at ? new Date(s.ended_at) : null,
+        duration: s.duration,
+        didBounce: s.did_bounce,
+        visitorId: s.visitor_id,
+        entryPage: s.entry_page,
+        exitPage: s.exit_page,
+        userAgent: s.user_agent,
+        country: s.country,
+        city: s.city,
+        projectId: s.project_id,
+        pageViewEvents: (pageviewsBySession[s.session_id] || []).sort(
+          (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+        ),
+      }));
 
       return {
-        sessions,
+        sessions: sessionsWithPageviews,
         totalCount,
         pagination: {
           page: input.page,

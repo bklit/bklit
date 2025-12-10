@@ -1,3 +1,4 @@
+import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
 import type { SessionData } from "@/types/geo";
 
@@ -60,7 +61,6 @@ export async function createOrUpdateSession(
   }
 }
 
-// End a session (called when user leaves)
 export async function endSession(sessionId: string) {
   try {
     const session = await prisma.trackedSession.findUnique({
@@ -75,7 +75,7 @@ export async function endSession(sessionId: string) {
       (Date.now() - session.startedAt.getTime()) / 1000,
     );
 
-    const didBounce = duration < 10; // 10 second bounce threshold
+    const didBounce = duration < 10;
 
     return await prisma.trackedSession.update({
       where: { sessionId },

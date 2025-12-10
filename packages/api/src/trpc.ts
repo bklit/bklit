@@ -7,6 +7,7 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 
+import { AnalyticsService } from "@bklit/analytics/service";
 import type { Auth } from "@bklit/auth";
 import { prisma } from "@bklit/db/client";
 import { initTRPC, TRPCError } from "@trpc/server";
@@ -38,6 +39,7 @@ export const createTRPCContext = async (opts: {
     authApi,
     session,
     prisma,
+    analytics: new AnalyticsService(),
   };
 };
 /**

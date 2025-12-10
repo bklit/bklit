@@ -1,0 +1,627 @@
+import { getClickHouseClient } from "./client";
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "./constants";
+import type {
+  EventQuery,
+  PageViewData,
+  PageViewQuery,
+  SessionQuery,
+  StatsQuery,
+  TrackedEventData,
+  TrackedSessionData,
+} from "./types";
+
+function formatDateForClickHouse(date: Date): string {
+  return date.toISOString().replace("T", " ").replace("Z", "").slice(0, 19);
+}
+
+export class AnalyticsService {
+  private client = getClickHouseClient();
+
+  async createPageView(data: PageViewData): Promise<void> {
+    await this.client.insert({
+      table: "page_view_event",
+      values: [
+        {
+          id: data.id,
+          url: data.url,
+          timestamp: data.timestamp,
+          created_at: data.createdAt || new Date(),
+          city: data.city,
+          country: data.country,
+          country_code: data.countryCode,
+          ip: data.ip,
+          isp: data.isp,
+          lat: data.lat,
+          lon: data.lon,
+          mobile: data.mobile,
+          region: data.region,
+          region_name: data.regionName,
+          timezone: data.timezone,
+          zip: data.zip,
+          user_agent: data.userAgent,
+          session_id: data.sessionId,
+          project_id: data.projectId,
+          referrer: data.referrer,
+          utm_campaign: data.utmCampaign,
+          utm_content: data.utmContent,
+          utm_medium: data.utmMedium,
+          utm_source: data.utmSource,
+          utm_term: data.utmTerm,
+        },
+      ],
+      format: "JSONEachRow",
+    });
+  }
+
+  async createTrackedEvent(data: TrackedEventData): Promise<void> {
+    await this.client.insert({
+      table: "tracked_event",
+      values: [
+        {
+          id: data.id,
+          timestamp: data.timestamp,
+          metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+          created_at: data.createdAt || new Date(),
+          event_definition_id: data.eventDefinitionId,
+          project_id: data.projectId,
+          session_id: data.sessionId,
+        },
+      ],
+      format: "JSONEachRow",
+    });
+  }
+
+  async createTrackedSession(data: TrackedSessionData): Promise<void> {
+    await this.client.insert({
+      table: "tracked_session",
+      values: [
+        {
+          id: data.id,
+          session_id: data.sessionId,
+          started_at: data.startedAt,
+          ended_at: data.endedAt,
+          duration: data.duration,
+          did_bounce: data.didBounce ?? false,
+          visitor_id: data.visitorId,
+          entry_page: data.entryPage,
+          exit_page: data.exitPage,
+          user_agent: data.userAgent,
+          country: data.country,
+          city: data.city,
+          project_id: data.projectId,
+        },
+      ],
+      format: "JSONEachRow",
+    });
+  }
+
+  async updateTrackedSession(
+    sessionId: string,
+    data: Partial<
+      Pick<TrackedSessionData, "endedAt" | "duration" | "exitPage">
+    >,
+  ): Promise<void> {
+    const existingSession = await this.client.query({
+      query: `
+        SELECT * FROM tracked_session
+        WHERE session_id = {sessionId:String}
+        ORDER BY started_at DESC
+        LIMIT 1
+      `,
+      query_params: { sessionId },
+      format: "JSONEachRow",
+    });
+
+    const sessions = (await existingSession.json()) as Array<{
+      id: string;
+      session_id: string;
+      started_at: string;
+      ended_at: string | null;
+      duration: number | null;
+      did_bounce: boolean;
+      visitor_id: string | null;
+      entry_page: string;
+      exit_page: string | null;
+      user_agent: string | null;
+      country: string | null;
+      city: string | null;
+      project_id: string;
+    }>;
+
+    if (sessions.length === 0) return;
+
+    const session = sessions[0];
+
+    await this.createTrackedSession({
+      id: session.id,
+      sessionId: session.session_id,
+      startedAt: new Date(session.started_at),
+      endedAt: data.endedAt
+        ? data.endedAt
+        : session.ended_at
+          ? new Date(session.ended_at)
+          : null,
+      duration: data.duration !== undefined ? data.duration : session.duration,
+      didBounce: session.did_bounce,
+      visitorId: session.visitor_id,
+      entryPage: session.entry_page,
+      exitPage: data.exitPage !== undefined ? data.exitPage : session.exit_page,
+      userAgent: session.user_agent,
+      country: session.country,
+      city: session.city,
+      projectId: session.project_id,
+    });
+  }
+
+  async getPageViews(query: PageViewQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 100;
+    const offset = query.offset || 0;
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          id,
+          url,
+          timestamp,
+          created_at,
+          city,
+          country,
+          country_code,
+          ip,
+          mobile,
+          user_agent,
+          session_id,
+          referrer,
+          utm_source,
+          utm_medium,
+          utm_campaign
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY timestamp DESC
+        LIMIT {limit:UInt32}
+        OFFSET {offset:UInt32}
+      `,
+      query_params: { ...params, limit, offset },
+      format: "JSONEachRow",
+    });
+
+    return (await result.json()) as Array<{
+      id: string;
+      url: string;
+      timestamp: string;
+      created_at: string;
+      city: string | null;
+      country: string | null;
+      country_code: string | null;
+      ip: string | null;
+      mobile: boolean | null;
+      user_agent: string | null;
+      session_id: string | null;
+      referrer: string | null;
+      utm_source: string | null;
+      utm_medium: string | null;
+      utm_campaign: string | null;
+    }>;
+  }
+
+  async getStats(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          count() as total_views,
+          uniq(ip) as unique_visits,
+          uniq(url) as unique_pages,
+          countIf(mobile = true) as mobile_visits,
+          countIf(mobile = false) as desktop_visits
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      total_views: number;
+      unique_visits: number;
+      unique_pages: number;
+      mobile_visits: number;
+      desktop_visits: number;
+    }>;
+
+    return (
+      rows[0] || {
+        total_views: 0,
+        unique_visits: 0,
+        unique_pages: 0,
+        mobile_visits: 0,
+        desktop_visits: 0,
+      }
+    );
+  }
+
+  async getTopCountries(query: StatsQuery & { limit?: number }) {
+    const conditions: string[] = [
+      "project_id = {projectId:String}",
+      "country IS NOT NULL",
+    ];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 10;
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          country,
+          country_code,
+          count() as visits,
+          uniq(ip) as unique_visitors
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY country, country_code
+        ORDER BY visits DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    return (await result.json()) as Array<{
+      country: string;
+      country_code: string;
+      visits: number;
+      unique_visitors: number;
+    }>;
+  }
+
+  async getSessions(query: SessionQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("started_at >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("started_at <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 100;
+    const offset = query.offset || 0;
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          id,
+          session_id,
+          started_at,
+          ended_at,
+          duration,
+          did_bounce,
+          visitor_id,
+          entry_page,
+          exit_page,
+          user_agent,
+          country,
+          city,
+          project_id
+        FROM tracked_session
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY started_at DESC
+        LIMIT {limit:UInt32}
+        OFFSET {offset:UInt32}
+      `,
+      query_params: { ...params, limit, offset },
+      format: "JSONEachRow",
+    });
+
+    return (await result.json()) as Array<{
+      id: string;
+      session_id: string;
+      started_at: string;
+      ended_at: string | null;
+      duration: number | null;
+      did_bounce: boolean;
+      visitor_id: string | null;
+      entry_page: string;
+      exit_page: string | null;
+      user_agent: string | null;
+      country: string | null;
+      city: string | null;
+      project_id: string;
+    }>;
+  }
+
+  async getSessionStats(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("started_at >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("started_at <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          count() as total_sessions,
+          countIf(did_bounce = true) as bounced_sessions,
+          avg(duration) as avg_duration
+        FROM tracked_session
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      total_sessions: number;
+      bounced_sessions: number;
+      avg_duration: number;
+    }>;
+
+    return (
+      rows[0] || {
+        total_sessions: 0,
+        bounced_sessions: 0,
+        avg_duration: 0,
+      }
+    );
+  }
+
+  async getTimeSeries(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("started_at >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("started_at <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          toDate(started_at) as date,
+          count() as total,
+          countIf(did_bounce = false) as engaged,
+          countIf(did_bounce = true) as bounced
+        FROM tracked_session
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY date
+        ORDER BY date ASC
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    return (await result.json()) as Array<{
+      date: string;
+      total: number;
+      engaged: number;
+      bounced: number;
+    }>;
+  }
+
+  async getLiveUsers(projectId: string): Promise<number> {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    const result = await this.client.query({
+      query: `
+        SELECT count() as count
+        FROM tracked_session
+        WHERE project_id = {projectId:String}
+          AND ended_at IS NULL
+          AND started_at >= {thirtyMinutesAgo:DateTime}
+      `,
+      query_params: {
+        projectId,
+        thirtyMinutesAgo: formatDateForClickHouse(thirtyMinutesAgo),
+      },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ count: number }>;
+    return rows[0]?.count || 0;
+  }
+
+  async getTrackedEvents(query: EventQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.eventDefinitionId) {
+      conditions.push("event_definition_id = {eventDefinitionId:String}");
+      params.eventDefinitionId = query.eventDefinitionId;
+    }
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 100;
+    const offset = query.offset || 0;
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          id,
+          timestamp,
+          metadata,
+          created_at,
+          event_definition_id,
+          project_id,
+          session_id
+        FROM tracked_event
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY timestamp DESC
+        LIMIT {limit:UInt32}
+        OFFSET {offset:UInt32}
+      `,
+      query_params: { ...params, limit, offset },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      id: string;
+      timestamp: string;
+      metadata: string | null;
+      created_at: string;
+      event_definition_id: string;
+      project_id: string;
+      session_id: string | null;
+    }>;
+
+    return rows.map((row) => ({
+      ...row,
+      metadata: row.metadata ? JSON.parse(row.metadata) : null,
+    }));
+  }
+
+  async getEventStats(query: EventQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.eventDefinitionId) {
+      conditions.push("event_definition_id = {eventDefinitionId:String}");
+      params.eventDefinitionId = query.eventDefinitionId;
+    }
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          count() as total_events,
+          uniq(session_id) as unique_sessions
+        FROM tracked_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      total_events: number;
+      unique_sessions: number;
+    }>;
+
+    return (
+      rows[0] || {
+        total_events: 0,
+        unique_sessions: 0,
+      }
+    );
+  }
+
+  async countPageViews(
+    projectId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId };
+
+    if (startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(startDate);
+    }
+    if (endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT count() as count
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ count: number }>;
+    return rows[0]?.count || 0;
+  }
+
+  async countTrackedEvents(
+    projectId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId };
+
+    if (startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(startDate);
+    }
+    if (endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT count() as count
+        FROM tracked_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ count: number }>;
+    return rows[0]?.count || 0;
+  }
+}

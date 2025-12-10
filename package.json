@@ -19,6 +19,8 @@
     "db:generate": "pnpm run -F @bklit/db generate",
     "db:migrate": "pnpm run -F @bklit/db migrate",
     "db:studio": "pnpm run -F @bklit/db studio",
+    "analytics:migrate": "pnpm -F @bklit/analytics migrate",
+    "analytics:migrate-data": "pnpm -F @bklit/analytics migrate-data",
     "dev": "turbo watch dev dev:trigger --continue",
     "deploy:trigger": "pnpm -F @bklit/dashboard deploy:trigger",
     "format-and-lint": "biome check .",

@@ -1,4 +1,6 @@
+import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
+import { randomBytes } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { createOrUpdateSession } from "@/actions/session-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
@@ -166,162 +168,126 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Note: Redis storage removed - all data is now stored in PostgreSQL
-    // Real-time features are handled via session tracking
+    const analytics = new AnalyticsService();
+    const pageViewId = randomBytes(16).toString("hex");
 
-    // Handle session tracking and page view creation in a transaction
     if (payload.sessionId) {
       try {
-        console.log(
-          "🔄 API: Updating session and saving page view in transaction...",
-          {
-            sessionId: payload.sessionId,
-            projectId: payload.projectId,
-            url: payload.url,
-          },
-        );
+        console.log("🔄 API: Updating session and saving page view...", {
+          sessionId: payload.sessionId,
+          projectId: payload.projectId,
+          url: payload.url,
+        });
 
-        if (!payload.sessionId) {
-          throw new Error("sessionId is required for this operation");
-        }
         const sessionId = payload.sessionId;
 
-        await prisma.$transaction(async (tx) => {
-          // Upsert session using the transaction client
-          const session = await createOrUpdateSession(
-            {
-              sessionId: sessionId,
-              projectId: payload.projectId,
-              url: payload.url,
-              userAgent: payload.userAgent,
-              country: locationData?.country,
-              city: locationData?.city,
-            },
-            tx as typeof prisma,
-          );
-
-          console.log("🔗 API: Session upserted successfully", {
-            sessionId: session.sessionId,
-            sessionDbId: session.id,
-            projectId: session.projectId,
-            country: session.country,
-            city: session.city,
-            isNewSession: !session.endedAt,
-          });
-
-          // DEDUPLICATION: Check for recent identical page view event
-          const recentPageView = await tx.pageViewEvent.findFirst({
-            where: {
-              sessionId: session.id,
-              url: payload.url,
-              timestamp: {
-                gte: new Date(Date.now() - 2000), // 2 seconds window
-              },
-            },
-            orderBy: { timestamp: "desc" },
-          });
-
-          if (recentPageView) {
-            console.log("⏭️ Duplicate page view detected, skipping insert:", {
-              sessionId: session.id,
-              url: payload.url,
-            });
-            return;
-          }
-
-          // Create page view event using the session's primary key (id)
-          await tx.pageViewEvent.create({
-            data: {
-              url: payload.url,
-              timestamp: new Date(payload.timestamp),
-              projectId: payload.projectId,
-              userAgent: payload.userAgent,
-              // Location data
-              ip: locationData?.ip,
-              country: locationData?.country,
-              countryCode: locationData?.countryCode,
-              region: locationData?.region,
-              regionName: locationData?.regionName,
-              city: locationData?.city,
-              zip: locationData?.zip,
-              lat: locationData?.lat,
-              lon: locationData?.lon,
-              timezone: locationData?.timezone,
-              isp: locationData?.isp,
-              mobile: isMobileDevice(payload.userAgent),
-              // Link to session using the primary key (id), not the sessionId
-              sessionId: session.id,
-              // Acquisition data
-              referrer: payload.referrer,
-              utmSource: payload.utmSource,
-              utmMedium: payload.utmMedium,
-              utmCampaign: payload.utmCampaign,
-              utmTerm: payload.utmTerm,
-              utmContent: payload.utmContent,
-            },
-          });
-
-          console.log("📄 API: Page view event created successfully", {
-            url: payload.url,
-            sessionDbId: session.id,
-          });
-        });
-        console.log(
-          "✅ API: Session updated and page view saved successfully",
+        const session = await createOrUpdateSession(
           {
-            sessionId: payload.sessionId,
+            sessionId: sessionId,
             projectId: payload.projectId,
+            url: payload.url,
+            userAgent: payload.userAgent,
+            country: locationData?.country,
+            city: locationData?.city,
           },
+          prisma,
         );
-      } catch (sessionError) {
-        console.error(
-          "❌ API: Error updating session or saving page view:",
-          sessionError,
-        );
-        // Continue execution - session tracking failed but page view tracking should still work
+
+        console.log("🔗 API: Session upserted successfully", {
+          sessionId: session.sessionId,
+          sessionDbId: session.id,
+          projectId: session.projectId,
+        });
+
+        await analytics.createPageView({
+          id: pageViewId,
+          url: payload.url,
+          timestamp: new Date(payload.timestamp),
+          projectId: payload.projectId,
+          userAgent: payload.userAgent,
+          ip: locationData?.ip,
+          country: locationData?.country,
+          countryCode: locationData?.countryCode,
+          region: locationData?.region,
+          regionName: locationData?.regionName,
+          city: locationData?.city,
+          zip: locationData?.zip,
+          lat: locationData?.lat,
+          lon: locationData?.lon,
+          timezone: locationData?.timezone,
+          isp: locationData?.isp,
+          mobile: isMobileDevice(payload.userAgent),
+          sessionId: session.sessionId,
+          referrer: payload.referrer,
+          utmSource: payload.utmSource,
+          utmMedium: payload.utmMedium,
+          utmCampaign: payload.utmCampaign,
+          utmTerm: payload.utmTerm,
+          utmContent: payload.utmContent,
+        });
+
+        await analytics.createTrackedSession({
+          id: session.id,
+          sessionId: session.sessionId,
+          startedAt: session.startedAt,
+          endedAt: session.endedAt,
+          duration: session.duration,
+          didBounce: session.didBounce,
+          visitorId: session.visitorId,
+          entryPage: session.entryPage,
+          exitPage: session.exitPage,
+          userAgent: session.userAgent,
+          country: session.country,
+          city: session.city,
+          projectId: session.projectId,
+        });
+
+        console.log("✅ API: Page view and session saved to ClickHouse", {
+          sessionId: payload.sessionId,
+          projectId: payload.projectId,
+        });
+      } catch (error) {
+        console.error("❌ API: Error saving to ClickHouse:", error);
       }
     } else {
-      // Save page view to database for historical persistence (no session)
       try {
-        console.log("💾 API: Saving page view to database (no session)...", {
+        console.log("💾 API: Saving page view to ClickHouse (no session)...", {
           url: payload.url,
           projectId: payload.projectId,
         });
-        await prisma.pageViewEvent.create({
-          data: {
-            url: payload.url,
-            timestamp: new Date(payload.timestamp),
-            projectId: payload.projectId,
-            userAgent: payload.userAgent,
-            // Location data
-            ip: locationData?.ip,
-            country: locationData?.country,
-            countryCode: locationData?.countryCode,
-            region: locationData?.region,
-            regionName: locationData?.regionName,
-            city: locationData?.city,
-            zip: locationData?.zip,
-            lat: locationData?.lat,
-            lon: locationData?.lon,
-            timezone: locationData?.timezone,
-            isp: locationData?.isp,
-            mobile: isMobileDevice(payload.userAgent),
-            // No session link
-            sessionId: null,
-          },
+
+        await analytics.createPageView({
+          id: pageViewId,
+          url: payload.url,
+          timestamp: new Date(payload.timestamp),
+          projectId: payload.projectId,
+          userAgent: payload.userAgent,
+          ip: locationData?.ip,
+          country: locationData?.country,
+          countryCode: locationData?.countryCode,
+          region: locationData?.region,
+          regionName: locationData?.regionName,
+          city: locationData?.city,
+          zip: locationData?.zip,
+          lat: locationData?.lat,
+          lon: locationData?.lon,
+          timezone: locationData?.timezone,
+          isp: locationData?.isp,
+          mobile: isMobileDevice(payload.userAgent),
+          sessionId: null,
+          referrer: payload.referrer,
+          utmSource: payload.utmSource,
+          utmMedium: payload.utmMedium,
+          utmCampaign: payload.utmCampaign,
+          utmTerm: payload.utmTerm,
+          utmContent: payload.utmContent,
         });
-        console.log(
-          "✅ API: Page view saved to database successfully (no session)",
-          {
-            projectId: payload.projectId,
-          },
-        );
-      } catch (dbError) {
-        console.error(
-          "❌ API: Error saving page view to database (no session):",
-          dbError,
-        );
-        // Continue execution - session tracking failed but page view tracking should still work
+
+        console.log("✅ API: Page view saved to ClickHouse successfully", {
+          projectId: payload.projectId,
+        });
+      } catch (error) {
+        console.error("❌ API: Error saving page view to ClickHouse:", error);
       }
     }
 

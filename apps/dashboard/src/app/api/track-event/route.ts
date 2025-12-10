@@ -1,4 +1,6 @@
+import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
+import { randomBytes } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { checkEventLimit } from "@/lib/usage-limits";
@@ -167,42 +169,23 @@ export async function POST(request: NextRequest) {
       eventType: payload.eventType,
     };
 
-    // Look up the internal session ID if a client sessionId was provided
-    let internalSessionId: string | undefined;
-    if (payload.sessionId) {
-      const session = await prisma.trackedSession.findUnique({
-        where: {
-          sessionId: payload.sessionId,
-        },
-        select: {
-          id: true,
-        },
-      });
-      internalSessionId = session?.id;
+    const analytics = new AnalyticsService();
+    const eventId = randomBytes(16).toString("hex");
 
-      if (session) {
-        console.log("🔗 API: Session found for event", {
-          clientSessionId: payload.sessionId,
-          internalSessionId: session.id,
-        });
-      }
-    }
-
-    await prisma.trackedEvent.create({
-      data: {
-        timestamp: new Date(payload.timestamp),
-        metadata,
-        eventDefinitionId: eventDefinition.id,
-        projectId: payload.projectId,
-        sessionId: internalSessionId, // Link to TrackedSession if available
-      },
+    await analytics.createTrackedEvent({
+      id: eventId,
+      timestamp: new Date(payload.timestamp),
+      metadata,
+      eventDefinitionId: eventDefinition.id,
+      projectId: payload.projectId,
+      sessionId: payload.sessionId || null,
     });
 
     console.log("✅ API: Event tracked successfully", {
       trackingId: payload.trackingId,
       eventType: payload.eventType,
       eventDefinitionId: eventDefinition.id,
-      sessionLinked: !!internalSessionId,
+      sessionLinked: !!payload.sessionId,
     });
 
     return createCorsResponse({ message: "Event tracked successfully" }, 200);

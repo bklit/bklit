@@ -100,7 +100,7 @@ export default async function AnalyticsPage({
 
         <div className="grid gap-4 md:grid-cols-12">
           <div className="col-span-8">
-            <VisitorsMap projectId={projectId} />
+            <VisitorsMap key={projectId} projectId={projectId} />
           </div>
           <div className="col-span-4">
             <Suspense fallback={<AnalyticsCardSkeleton />}>

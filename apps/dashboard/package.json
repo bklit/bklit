@@ -13,6 +13,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@bklit/analytics": "workspace:*",
     "@bklit/api": "workspace:*",
     "@bklit/auth": "workspace:*",
     "@bklit/db": "workspace:*",

@@ -269,7 +269,20 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
     async function loadVisitorsData() {
       try {
         const data = await getUniqueVisitorsByCountry({ projectId });
-        setVisitorsData(data);
+        // Map the data to match ResponsiveChoropleth's expected format
+        // The component expects 'id' and 'value' fields
+        const mappedData = data.map((item) => ({
+          id:
+            item.id ||
+            item.alpha3Code ||
+            `country-${item.countryCode || Math.random()}`,
+          value: item.value || item.totalSessions || 0,
+          totalSessions: item.totalSessions,
+          bounceRate: item.bounceRate,
+          mobileSessions: item.mobileSessions,
+          desktopSessions: item.desktopSessions,
+        }));
+        setVisitorsData(mappedData);
       } catch (error) {
         console.error("Error loading visitors data:", error);
         setVisitorsData([]);
@@ -473,6 +486,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
         <div ref={containerRef} className="relative w-full h-full">
           <div className="w-full h-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl [&_svg_path]:cursor-default">
             <ResponsiveChoropleth
+              key={`choropleth-${projectId}-${visitorsData.length}`}
               data={visitorsData}
               features={features}
               margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
@@ -577,8 +591,8 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
               Unique Visitors
             </div>
             <div className="flex flex-col gap-1.5">
-              {legendItems.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
+              {legendItems.map((item) => (
+                <div key={item.label} className="flex items-center gap-2">
                   <div className="size-4 rounded-sm border border-border backdrop-blur-sm bg-background overflow-clip">
                     <div
                       className="size-full bg-background"

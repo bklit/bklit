@@ -1,5 +1,7 @@
 "use server";
 
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
+import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
 import { unstable_cache as cache } from "next/cache";
 import { z } from "zod";
@@ -65,30 +67,19 @@ export async function getTopCountries(
         },
       };
 
-      const topCountries = await prisma.pageViewEvent.groupBy({
-        by: ["country", "countryCode"],
-        where: {
-          projectId,
-          country: { not: null },
-          countryCode: { not: null },
-          ...dateFilter,
-        },
-        _count: {
-          country: true,
-        },
-        orderBy: {
-          _count: {
-            country: "desc",
-          },
-        },
-        take: 5,
+      const analytics = new AnalyticsService();
+      const topCountries = await analytics.getTopCountries({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+        limit: 5,
       });
 
       return topCountries.map(
-        (c: TopCountryResult): TopCountryData => ({
+        (c): TopCountryData => ({
           country: c.country || "",
-          countryCode: c.countryCode || "",
-          views: Number(c._count.country) || 0,
+          countryCode: c.country_code || "",
+          views: c.visits || 0,
         }),
       );
     },
@@ -151,38 +142,23 @@ export async function getAnalyticsStats(
         },
       };
 
-      const [totalViews, recentViews, uniquePages, uniqueVisits] =
-        await Promise.all([
-          prisma.pageViewEvent.count({
-            where: { projectId },
-          }),
-          prisma.pageViewEvent.count({
-            where: {
-              projectId,
-              ...dateFilter,
-            },
-          }),
-          prisma.pageViewEvent.findMany({
-            where: { projectId, ...dateFilter },
-            distinct: ["url"],
-            select: { url: true },
-          }),
-          prisma.pageViewEvent.findMany({
-            where: {
-              projectId,
-              ip: { not: null },
-              ...dateFilter,
-            },
-            distinct: ["ip"],
-            select: { ip: true },
-          }),
-        ]);
+      const analytics = new AnalyticsService();
+      const stats = await analytics.getStats({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+      });
+
+      const totalViews = await analytics.countPageViews(projectId);
+      const recentViews = stats.total_views;
+      const uniquePages = stats.unique_pages;
+      const uniqueVisits = stats.unique_visits;
 
       return {
         totalViews,
         recentViews,
-        uniquePages: uniquePages.length,
-        uniqueVisits: uniqueVisits.length,
+        uniquePages: uniquePages || 0,
+        uniqueVisits: uniqueVisits || 0,
       };
     },
     [
@@ -226,14 +202,10 @@ export async function getRecentPageViews(
         throw new Error("Site not found or access denied");
       }
 
-      const recentViews = await prisma.pageViewEvent.findMany({
-        where: {
-          projectId,
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
-        take: limit,
+      const analytics = new AnalyticsService();
+      const recentViews = await analytics.getPageViews({
+        projectId,
+        limit,
       });
 
       return recentViews;
@@ -275,38 +247,50 @@ export async function getVisitsByCountry(
       }
 
       // Get all countries with visits
-      const countriesWithVisits = await prisma.pageViewEvent.groupBy({
-        by: ["country", "countryCode", "lat", "lon"],
-        where: {
-          projectId,
-          country: { not: null },
-          countryCode: { not: null },
-        },
-        _count: {
-          country: true,
-        },
+      const analytics = new AnalyticsService();
+      const topCountries = await analytics.getTopCountries({
+        projectId,
+        limit: 1000,
+      });
+
+      const pageviews = await analytics.getPageViews({
+        projectId,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const countriesWithVisits = topCountries.map((c) => {
+        const samplePageview = pageviews.find((p) => p.country === c.country);
+        return {
+          country: c.country,
+          countryCode: c.country_code,
+          lat: samplePageview?.lat || null,
+          lon: samplePageview?.lon || null,
+          _count: { country: c.visits },
+        };
       });
 
       // Get city breakdown for each country
       const countriesWithCities = await Promise.all(
         countriesWithVisits.map(
           async (country: CountryWithVisits): Promise<CountryWithCities> => {
-            const cities = await prisma.pageViewEvent.groupBy({
-              by: ["city"],
-              where: {
-                projectId,
-                country: country.country,
-                city: { not: null },
+            const countryPageviews = pageviews.filter(
+              (p) => p.country === country.country && p.city,
+            );
+            const cityCounts = countryPageviews.reduce(
+              (acc, p) => {
+                if (p.city) {
+                  acc[p.city] = (acc[p.city] || 0) + 1;
+                }
+                return acc;
               },
-              _count: {
-                city: true,
-              },
-              orderBy: {
-                _count: {
-                  city: "desc",
-                },
-              },
-            });
+              {} as Record<string, number>,
+            );
+            const cities = Object.entries(cityCounts)
+              .map(([city, count]) => ({
+                city,
+                _count: { city: count },
+              }))
+              .sort((a, b) => b._count.city - a._count.city);
 
             return {
               country: country.country || "",
@@ -366,17 +350,17 @@ export async function getCountryVisitStats(
       }
 
       // Get all countries with visits, grouped by country
-      const countriesWithVisits = await prisma.pageViewEvent.groupBy({
-        by: ["country", "countryCode"],
-        where: {
-          projectId,
-          country: { not: null },
-          countryCode: { not: null },
-        },
-        _count: {
-          country: true,
-        },
+      const analytics = new AnalyticsService();
+      const topCountries = await analytics.getTopCountries({
+        projectId,
+        limit: 1000,
       });
+
+      const countriesWithVisits = topCountries.map((c) => ({
+        country: c.country,
+        countryCode: c.country_code,
+        _count: { country: c.visits },
+      }));
 
       // Get detailed stats for each country
       const countriesWithStats = await Promise.all(
@@ -391,34 +375,23 @@ export async function getCountryVisitStats(
             }
 
             // Get mobile vs desktop breakdown
-            const mobileVisits = await prisma.pageViewEvent.count({
-              where: {
-                projectId,
-                country: country.country,
-                mobile: true,
-              },
+            const countryPageviews = await analytics.getPageViews({
+              projectId,
+              limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
             });
+            const mobileVisits = countryPageviews.filter(
+              (p) => p.country === country.country && p.mobile === true,
+            ).length;
 
-            const desktopVisits = await prisma.pageViewEvent.count({
-              where: {
-                projectId,
-                country: country.country,
-                mobile: false,
-              },
-            });
+            const desktopVisits = countryPageviews.filter(
+              (p) => p.country === country.country && p.mobile === false,
+            ).length;
 
-            // Get unique visits by IP
-            const uniqueVisits = await prisma.pageViewEvent.groupBy({
-              by: ["ip"],
-              where: {
-                projectId,
-                country: country.country,
-                ip: { not: null },
-              },
-              _count: {
-                ip: true,
-              },
-            });
+            const uniqueVisits = new Set(
+              countryPageviews
+                .filter((p) => p.country === country.country && p.ip)
+                .map((p) => p.ip),
+            ).size;
 
             return {
               country: country.country || "",
@@ -426,7 +399,7 @@ export async function getCountryVisitStats(
               totalVisits: Number(country._count.country) || 0,
               mobileVisits: Number(mobileVisits) || 0,
               desktopVisits: Number(desktopVisits) || 0,
-              uniqueVisits: Number(uniqueVisits.length) || 0,
+              uniqueVisits: uniqueVisits || 0,
               coordinates: coordinates
                 ? ([coordinates.longitude, coordinates.latitude] as [
                     number,
@@ -485,36 +458,34 @@ export async function getCountryVisitorStats(
         throw new Error("Site not found or access denied");
       }
 
-      // Get all unique sessions grouped by country
-      const sessionsByCountry = await prisma.trackedSession.groupBy({
-        by: ["country"],
-        where: {
-          projectId,
-          country: { not: null },
-        },
-        _count: {
-          country: true,
-        },
+      const analytics = new AnalyticsService();
+      const sessions = await analytics.getSessions({
+        projectId,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Get country codes by joining with pageViewEvents
+      const pageviews = await analytics.getPageViews({
+        projectId,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const sessionsByCountry = sessions.reduce(
+        (acc, s) => {
+          if (s.country) {
+            acc[s.country] = (acc[s.country] || 0) + 1;
+          }
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
       const countriesWithStats = await Promise.all(
-        sessionsByCountry.map(async (sessionGroup) => {
-          const country = sessionGroup.country || "";
+        Object.entries(sessionsByCountry).map(async ([country, count]) => {
+          const samplePageView = pageviews.find(
+            (p) => p.country === country && p.country_code,
+          );
 
-          // Get countryCode from a related pageViewEvent
-          const samplePageView = await prisma.pageViewEvent.findFirst({
-            where: {
-              projectId,
-              country,
-              countryCode: { not: null },
-            },
-            select: {
-              countryCode: true,
-            },
-          });
-
-          const countryCode = samplePageView?.countryCode;
+          const countryCode = samplePageView?.country_code;
           if (!countryCode) {
             return null;
           }
@@ -524,38 +495,43 @@ export async function getCountryVisitorStats(
             return null;
           }
 
-          // Get mobile vs desktop breakdown from sessions
-          const mobileSessions = await prisma.trackedSession.count({
-            where: {
-              projectId,
-              country,
-              pageViewEvents: {
-                some: {
-                  mobile: true,
-                },
-              },
+          const countrySessions = sessions.filter((s) => s.country === country);
+          const pageviewsBySession = pageviews.reduce(
+            (acc, pv) => {
+              if (pv.session_id) {
+                if (!acc[pv.session_id]) {
+                  acc[pv.session_id] = [];
+                }
+                acc[pv.session_id].push(pv);
+              }
+              return acc;
             },
-          });
+            {} as Record<string, typeof pageviews>,
+          );
 
-          const desktopSessions = await prisma.trackedSession.count({
-            where: {
-              projectId,
-              country,
-              pageViewEvents: {
-                some: {
-                  mobile: false,
-                },
-              },
-            },
-          });
+          const mobileSessions = countrySessions.filter((s) => {
+            const sessionPageviews = pageviewsBySession[s.session_id] || [];
+            return (
+              sessionPageviews.some((p) => p.mobile) ||
+              (s.user_agent && /Mobile|Android|iPhone|iPad/.test(s.user_agent))
+            );
+          }).length;
+
+          const desktopSessions = countrySessions.filter((s) => {
+            const sessionPageviews = pageviewsBySession[s.session_id] || [];
+            return (
+              sessionPageviews.some((p) => p.mobile === false) ||
+              (s.user_agent && !/Mobile|Android|iPhone|iPad/.test(s.user_agent))
+            );
+          }).length;
 
           return {
             country,
             countryCode,
-            totalVisits: Number(sessionGroup._count.country) || 0,
-            mobileVisits: Number(mobileSessions) || 0,
-            desktopVisits: Number(desktopSessions) || 0,
-            uniqueVisits: Number(sessionGroup._count.country) || 0, // Sessions are unique visitors
+            totalVisits: count || 0,
+            mobileVisits: mobileSessions || 0,
+            desktopVisits: desktopSessions || 0,
+            uniqueVisits: count || 0,
             coordinates: coordinates
               ? ([coordinates.longitude, coordinates.latitude] as [
                   number,
@@ -607,18 +583,17 @@ export async function debugCountryCodes(
     throw new Error("Site not found or access denied");
   }
 
-  // Get all unique country codes from the database
-  const uniqueCountryCodes = await prisma.pageViewEvent.groupBy({
-    by: ["country", "countryCode"],
-    where: {
-      projectId,
-      country: { not: null },
-      countryCode: { not: null },
-    },
-    _count: {
-      countryCode: true,
-    },
+  const analytics = new AnalyticsService();
+  const topCountries = await analytics.getTopCountries({
+    projectId,
+    limit: 1000,
   });
+
+  const uniqueCountryCodes = topCountries.map((c) => ({
+    country: c.country,
+    countryCode: c.country_code,
+    _count: { countryCode: c.visits },
+  }));
 
   console.log(
     "Unique country codes in database:",
@@ -659,109 +634,88 @@ export async function getUniqueVisitorsByCountry(
         throw new Error("Site not found or access denied");
       }
 
-      // Get unique sessions grouped by country
-      const sessionsByCountry = await prisma.trackedSession.groupBy({
-        by: ["country"],
-        where: {
-          projectId,
-          country: { not: null },
-        },
-        _count: {
-          country: true,
-        },
+      const analytics = new AnalyticsService();
+      const sessions = await analytics.getSessions({
+        projectId,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Map to alpha-3 codes and get visitor counts with additional stats
+      const pageviews = await analytics.getPageViews({
+        projectId,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const sessionsByCountry = sessions.reduce(
+        (acc, s) => {
+          if (s.country) {
+            acc[s.country] = (acc[s.country] || 0) + 1;
+          }
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
       const visitorsData = await Promise.all(
-        sessionsByCountry.map(async (sessionGroup) => {
-          const country = sessionGroup.country || "";
+        Object.entries(sessionsByCountry).map(async ([country, count]) => {
+          const samplePageView = pageviews.find(
+            (p) => p.country === country && p.country_code,
+          );
 
-          // Get countryCode from a related pageViewEvent
-          const samplePageView = await prisma.pageViewEvent.findFirst({
-            where: {
-              projectId,
-              country,
-              countryCode: { not: null },
-            },
-            select: {
-              countryCode: true,
-            },
-          });
-
-          const countryCode = samplePageView?.countryCode;
+          const countryCode = samplePageView?.country_code;
           if (!countryCode) {
             return null;
           }
 
-          // Get alpha-3 code from coordinates
           const coordinates = findCountryCoordinates(countryCode);
           if (!coordinates || !coordinates.alpha3Code) {
             return null;
           }
 
-          const totalSessions = Number(sessionGroup._count.country) || 0;
-
-          // Get bounce rate for this country
-          const bouncedSessions = await prisma.trackedSession.count({
-            where: {
-              projectId,
-              country,
-              didBounce: true,
-            },
-          });
+          const totalSessions = count;
+          const countrySessions = sessions.filter((s) => s.country === country);
+          const bouncedSessions = countrySessions.filter(
+            (s) => s.did_bounce,
+          ).length;
 
           const bounceRate =
             totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
 
-          // Get mobile vs desktop breakdown
-          const mobileSessions = await prisma.trackedSession.count({
-            where: {
-              projectId,
-              country,
-              pageViewEvents: {
-                some: {
-                  mobile: true,
-                },
-              },
-            },
-          });
+          const mobileSessions = countrySessions.filter((s) => {
+            const sessionPageviews = pageviews.filter(
+              (p) => p.session_id === s.session_id,
+            );
+            return (
+              sessionPageviews.some((p) => p.mobile) ||
+              (s.user_agent && /Mobile|Android|iPhone|iPad/.test(s.user_agent))
+            );
+          }).length;
+          const desktopSessions = totalSessions - mobileSessions;
 
-          const desktopSessions = await prisma.trackedSession.count({
-            where: {
-              projectId,
-              country,
-              pageViewEvents: {
-                some: {
-                  mobile: false,
-                },
-              },
-            },
-          });
+          const pageviewsForCountry = pageviews.filter(
+            (p) => p.country === country,
+          );
+          const uniqueVisitors = new Set(
+            pageviewsForCountry.filter((p) => p.ip).map((p) => p.ip),
+          ).size;
 
           return {
-            id: coordinates.alpha3Code,
-            value: totalSessions,
+            country,
+            countryCode,
+            alpha3Code: coordinates.alpha3Code,
             totalSessions,
             bounceRate: Math.round(bounceRate * 100) / 100,
             mobileSessions,
             desktopSessions,
+            uniqueVisitors,
+            coordinates: [coordinates.longitude, coordinates.latitude] as [
+              number,
+              number,
+            ],
           };
         }),
       );
 
-      // Filter out null values and return
-      return visitorsData.filter(
-        (
-          item,
-        ): item is {
-          id: string;
-          value: number;
-          totalSessions: number;
-          bounceRate: number;
-          mobileSessions: number;
-          desktopSessions: number;
-        } => item !== null,
-      );
+      return visitorsData.filter((v) => v !== null);
     },
     [`${projectId}-unique-visitors-by-country`],
     {
@@ -818,33 +772,29 @@ export async function getMobileDesktopStats(
         },
       };
 
-      const uniqueMobileVisits = await prisma.pageViewEvent.groupBy({
-        by: ["sessionId", "ip"],
-        where: {
-          projectId,
-          mobile: true,
-          ...dateFilter,
-        },
-        _count: {
-          sessionId: true,
-        },
+      const analytics = new AnalyticsService();
+      const pageviews = await analytics.getPageViews({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      const uniqueDesktopVisits = await prisma.pageViewEvent.groupBy({
-        by: ["sessionId", "ip"],
-        where: {
-          projectId,
-          mobile: false,
-          ...dateFilter,
-        },
-        _count: {
-          sessionId: true,
-        },
-      });
+      const uniqueMobileVisits = new Set(
+        pageviews
+          .filter((p) => p.mobile === true && p.ip)
+          .map((p) => `${p.session_id || ""}-${p.ip}`),
+      ).size;
+
+      const uniqueDesktopVisits = new Set(
+        pageviews
+          .filter((p) => p.mobile === false && p.ip)
+          .map((p) => `${p.session_id || ""}-${p.ip}`),
+      ).size;
 
       return {
-        mobile: uniqueMobileVisits.length,
-        desktop: uniqueDesktopVisits.length,
+        mobile: uniqueMobileVisits,
+        desktop: uniqueDesktopVisits,
       };
     },
     [
@@ -906,15 +856,14 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         },
       };
 
-      const events = await prisma.pageViewEvent.findMany({
-        where: {
-          projectId,
-          ...dateFilter,
-        },
-        select: { url: true },
+      const analytics = new AnalyticsService();
+      const events = await analytics.getPageViews({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Count occurrences by pathname
       const pathCounts: Record<string, number> = {};
       for (const event of events) {
         let path = event.url;
@@ -991,43 +940,57 @@ export async function getBrowserStats(
         },
       };
 
-      const pageViews = await prisma.pageViewEvent.findMany({
-        where: {
-          projectId,
-          userAgent: { not: null },
-          ...dateFilter,
-        },
-        select: {
-          userAgent: true,
-        },
+      const analytics = new AnalyticsService();
+      const pageViews = await analytics.getPageViews({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
       // Parse user agents to extract browser information
       const browserStats: Record<string, number> = {};
 
-      pageViews.forEach((view: { userAgent: string | null }) => {
-        const userAgent = view.userAgent || "";
+      pageViews.forEach((view) => {
+        const userAgent = (view.user_agent || "").toLowerCase();
         let browser = "Unknown";
 
-        // Simple browser detection logic
-        if (userAgent.includes("Chrome")) {
-          browser = "Chrome";
-        } else if (userAgent.includes("Firefox")) {
-          browser = "Firefox";
-        } else if (
-          userAgent.includes("Safari") &&
-          !userAgent.includes("Chrome")
-        ) {
-          browser = "Safari";
-        } else if (userAgent.includes("Edge")) {
+        // Improved browser detection logic (order matters - check more specific first)
+        if (userAgent.includes("edg/") || userAgent.includes("edgios/")) {
           browser = "Edge";
-        } else if (userAgent.includes("Opera")) {
+        } else if (userAgent.includes("opr/") || userAgent.includes("opera/")) {
           browser = "Opera";
         } else if (
-          userAgent.includes("MSIE") ||
-          userAgent.includes("Trident")
+          userAgent.includes("chrome/") &&
+          !userAgent.includes("edg/")
+        ) {
+          browser = "Chrome";
+        } else if (
+          userAgent.includes("firefox/") ||
+          userAgent.includes("fxios/")
+        ) {
+          browser = "Firefox";
+        } else if (
+          userAgent.includes("safari/") &&
+          !userAgent.includes("chrome/") &&
+          !userAgent.includes("crios/")
+        ) {
+          browser = "Safari";
+        } else if (
+          userAgent.includes("msie") ||
+          userAgent.includes("trident/")
         ) {
           browser = "Internet Explorer";
+        } else if (userAgent.includes("samsungbrowser/")) {
+          browser = "Samsung Internet";
+        } else if (userAgent.includes("brave/")) {
+          browser = "Brave";
+        } else if (userAgent.length > 0) {
+          // If we have a user agent but couldn't identify it, try to extract a hint
+          const uaMatch = userAgent.match(/([a-z]+)\/(\d+)/);
+          if (uaMatch && uaMatch[1]) {
+            browser = uaMatch[1].charAt(0).toUpperCase() + uaMatch[1].slice(1);
+          }
         }
 
         browserStats[browser] = (browserStats[browser] || 0) + 1;
@@ -1099,42 +1062,73 @@ export async function getSessionAnalytics(
         },
       };
 
-      const sessions = await prisma.trackedSession.findMany({
-        where: {
-          projectId,
-          ...dateFilter,
-        },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "asc" },
-          },
-        },
-        orderBy: {
-          startedAt: "desc",
-        },
+      const analytics = new AnalyticsService();
+      const sessions = await analytics.getSessions({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      const totalSessions = sessions.length;
-      const bouncedSessions = sessions.filter(
-        (s: SessionData) => s.didBounce,
+      const pageviews = await analytics.getPageViews({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({
+              id: pv.id,
+              url: pv.url,
+              timestamp: new Date(pv.timestamp),
+            });
+          }
+          return acc;
+        },
+        {} as Record<
+          string,
+          Array<{ id: string; url: string; timestamp: Date }>
+        >,
+      );
+
+      const sessionsWithPageviews = sessions.map((s) => ({
+        ...s,
+        pageViewEvents: (pageviewsBySession[s.session_id] || []).sort(
+          (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+        ),
+        didBounce: s.did_bounce,
+        duration: s.duration,
+        startedAt: new Date(s.started_at),
+        endedAt: s.ended_at ? new Date(s.ended_at) : null,
+      }));
+
+      const totalSessions = sessionsWithPageviews.length;
+      const bouncedSessions = sessionsWithPageviews.filter(
+        (s) => s.didBounce,
       ).length;
       const bounceRate =
         totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
 
       const avgSessionDuration =
-        sessions.length > 0
-          ? sessions.reduce(
-              (sum: number, s: SessionData) => sum + (s.duration || 0),
+        sessionsWithPageviews.length > 0
+          ? sessionsWithPageviews.reduce(
+              (sum, s) => sum + (s.duration || 0),
               0,
-            ) / sessions.length
+            ) / sessionsWithPageviews.length
           : 0;
 
       const avgPageViews =
-        sessions.length > 0
-          ? sessions.reduce(
-              (sum: number, s: SessionData) => sum + s.pageViewEvents.length,
+        sessionsWithPageviews.length > 0
+          ? sessionsWithPageviews.reduce(
+              (sum, s) => sum + s.pageViewEvents.length,
               0,
-            ) / sessions.length
+            ) / sessionsWithPageviews.length
           : 0;
 
       return {
@@ -1210,20 +1204,17 @@ export async function getConversions(
         },
       };
 
-      const trackedEvents = await prisma.trackedEvent.findMany({
-        where: {
-          eventDefinition: { projectId },
-          ...dateFilter,
-        },
-        select: {
-          sessionId: true,
-        },
+      const analytics = new AnalyticsService();
+      const trackedEvents = await analytics.getTrackedEvents({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
       });
 
       const uniqueSessionIds = new Set<string>();
       for (const event of trackedEvents) {
-        if (event.sessionId) {
-          uniqueSessionIds.add(event.sessionId);
+        if (event.session_id) {
+          uniqueSessionIds.add(event.session_id);
         }
       }
 
@@ -1269,15 +1260,8 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
         thirtyMinutesAgo: thirtyMinutesAgo.toISOString(),
       });
 
-      const liveUsers = await prisma.trackedSession.count({
-        where: {
-          projectId,
-          endedAt: null,
-          startedAt: {
-            gte: thirtyMinutesAgo,
-          },
-        },
-      });
+      const analytics = new AnalyticsService();
+      const liveUsers = await analytics.getLiveUsers(projectId);
 
       console.log("📊 LIVE USERS: Found active sessions", {
         projectId,

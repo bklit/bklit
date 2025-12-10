@@ -1,3 +1,4 @@
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
 import { endOfDay, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -56,55 +57,38 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Get pageviews for grouping
-
-      // Get pageviews grouped by URL
-      const pageviews = await ctx.prisma.pageViewEvent.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          url: true,
-          timestamp: true,
-          userAgent: true,
-          country: true,
-          city: true,
-          mobile: true,
-          ip: true,
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
       });
 
-      // Group by URL and count views
       const pageGroups = pageviews.reduce(
         (acc, pageview) => {
-          // Normalize URL to group by pathname only (ignore query params and fragments)
           const normalizedUrl = extractPath(pageview.url);
           const originalUrl = pageview.url;
+          const timestamp = new Date(pageview.timestamp);
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {
-              url: originalUrl, // Keep original URL for reference
+              url: originalUrl,
               title: extractPageTitle(originalUrl),
               path: normalizedUrl,
               viewCount: 0,
               uniqueUsers: new Set<string>(),
-              lastViewed: pageview.timestamp,
-              firstViewed: pageview.timestamp,
+              lastViewed: timestamp,
+              firstViewed: timestamp,
             };
           }
           acc[normalizedUrl].viewCount += 1;
           if (pageview.ip) {
             acc[normalizedUrl].uniqueUsers.add(pageview.ip);
           }
-          if (pageview.timestamp > acc[normalizedUrl].lastViewed) {
-            acc[normalizedUrl].lastViewed = pageview.timestamp;
+          if (timestamp > acc[normalizedUrl].lastViewed) {
+            acc[normalizedUrl].lastViewed = timestamp;
           }
-          if (pageview.timestamp < acc[normalizedUrl].firstViewed) {
-            acc[normalizedUrl].firstViewed = pageview.timestamp;
+          if (timestamp < acc[normalizedUrl].firstViewed) {
+            acc[normalizedUrl].firstViewed = timestamp;
           }
           return acc;
         },
@@ -218,43 +202,17 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      const [totalViews, uniquePages, mobileViews, desktopViews] =
-        await Promise.all([
-          ctx.prisma.pageViewEvent.count({
-            where: {
-              projectId: input.projectId,
-              ...(dateFilter && dateFilter),
-            },
-          }),
-          ctx.prisma.pageViewEvent.findMany({
-            where: {
-              projectId: input.projectId,
-              ...(dateFilter && dateFilter),
-            },
-            distinct: ["url"],
-            select: { url: true },
-          }),
-          ctx.prisma.pageViewEvent.count({
-            where: {
-              projectId: input.projectId,
-              mobile: true,
-              ...(dateFilter && dateFilter),
-            },
-          }),
-          ctx.prisma.pageViewEvent.count({
-            where: {
-              projectId: input.projectId,
-              mobile: false,
-              ...(dateFilter && dateFilter),
-            },
-          }),
-        ]);
+      const stats = await ctx.analytics.getStats({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+      });
 
       return {
-        totalViews,
-        uniquePages: uniquePages.length,
-        mobileViews,
-        desktopViews,
+        totalViews: stats.total_views,
+        uniquePages: stats.unique_pages,
+        mobileViews: stats.mobile_visits,
+        desktopViews: stats.desktop_visits,
       };
     }),
 
@@ -312,86 +270,92 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Get sessions with their entry pages
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          id: true,
-          entryPage: true,
-          startedAt: true,
-          userAgent: true,
-          country: true,
-          city: true,
-          pageViewEvents: {
-            select: {
-              id: true,
-              url: true,
-              timestamp: true,
-              mobile: true,
-            },
-            orderBy: {
-              timestamp: "asc",
-            },
-          },
-        },
-        orderBy: {
-          startedAt: "desc",
-        },
+      const sessions = await ctx.analytics.getSessions({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Group by entry page URL and count sessions
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({
+              id: pv.id,
+              url: pv.url,
+              timestamp: new Date(pv.timestamp),
+              mobile: pv.mobile,
+            });
+          }
+          return acc;
+        },
+        {} as Record<
+          string,
+          Array<{
+            id: string;
+            url: string;
+            timestamp: Date;
+            mobile: boolean | null;
+          }>
+        >,
+      );
+
       const entryPageGroups = sessions.reduce(
         (acc, session) => {
-          // Normalize the entry page URL to group by pathname only
-          const entryPage = extractPath(session.entryPage);
-          const originalUrl = session.entryPage;
+          const entryPage = extractPath(session.entry_page);
+          const originalUrl = session.entry_page;
+          const startedAt = new Date(session.started_at);
+          const pageViews = pageviewsBySession[session.session_id] || [];
+
           if (!acc[entryPage]) {
             acc[entryPage] = {
-              url: originalUrl, // Store the original URL for display
+              url: originalUrl,
               sessions: 0,
               totalPageviews: 0,
               uniqueSessions: new Set(),
-              lastVisited: session.startedAt,
-              firstVisited: session.startedAt,
+              lastVisited: startedAt,
+              firstVisited: startedAt,
               countries: new Set(),
               cities: new Set(),
               mobileSessions: 0,
               desktopSessions: 0,
             };
           } else {
-            // Update to the most recent original URL for this path
-            if (session.startedAt > acc[entryPage].lastVisited) {
+            if (startedAt > acc[entryPage].lastVisited) {
               acc[entryPage].url = originalUrl;
             }
           }
 
           acc[entryPage].sessions += 1;
-          acc[entryPage].totalPageviews += session.pageViewEvents.length;
-          acc[entryPage].uniqueSessions.add(session.id);
+          acc[entryPage].totalPageviews += pageViews.length;
+          acc[entryPage].uniqueSessions.add(session.session_id);
           acc[entryPage].lastVisited = new Date(
-            Math.max(
-              acc[entryPage].lastVisited.getTime(),
-              session.startedAt.getTime(),
-            ),
+            Math.max(acc[entryPage].lastVisited.getTime(), startedAt.getTime()),
           );
           acc[entryPage].firstVisited = new Date(
             Math.min(
               acc[entryPage].firstVisited.getTime(),
-              session.startedAt.getTime(),
+              startedAt.getTime(),
             ),
           );
 
           if (session.country) acc[entryPage].countries.add(session.country);
           if (session.city) acc[entryPage].cities.add(session.city);
 
-          // Determine if mobile based on userAgent or mobile field from pageViewEvents
           const isMobile =
-            session.pageViewEvents.some((event) => event.mobile) ||
-            (session.userAgent &&
-              /Mobile|Android|iPhone|iPad/.test(session.userAgent));
+            pageViews.some((pv) => pv.mobile) ||
+            (session.user_agent &&
+              /Mobile|Android|iPhone|iPad/.test(session.user_agent));
 
           if (isMobile) {
             acc[entryPage].mobileSessions += 1;
@@ -511,26 +475,18 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Get pageviews for time series analysis
-      const pageviews = await ctx.prisma.pageViewEvent.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          url: true,
-          timestamp: true,
-        },
-        orderBy: {
-          timestamp: "asc",
-        },
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Group by URL and count views per day
       const pageGroups = pageviews.reduce(
         (acc, pageview) => {
           const normalizedUrl = extractPath(pageview.url);
-          const dateKey = pageview.timestamp.toISOString().split("T")[0] ?? "";
+          const dateKey =
+            new Date(pageview.timestamp).toISOString().split("T")[0] ?? "";
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {};
@@ -663,26 +619,18 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Get sessions for time series analysis
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          entryPage: true,
-          startedAt: true,
-        },
-        orderBy: {
-          startedAt: "asc",
-        },
+      const sessions = await ctx.analytics.getSessions({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Group by entry page and count sessions per day
       const entryPageGroups = sessions.reduce(
         (acc, session) => {
-          const normalizedUrl = extractPath(session.entryPage);
-          const dateKey = session.startedAt.toISOString().split("T")[0] ?? "";
+          const normalizedUrl = extractPath(session.entry_page);
+          const dateKey =
+            new Date(session.started_at).toISOString().split("T")[0] ?? "";
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {};
