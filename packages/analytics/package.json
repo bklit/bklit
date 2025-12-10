@@ -12,8 +12,6 @@
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "migrate": "pnpm with-env tsx src/migrations/init-tables.ts",
-    "migrate-data": "pnpm with-env tsx src/migrations/migrate-data.ts",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {

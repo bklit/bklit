@@ -1,4 +1,4 @@
-import { prisma } from "@bklit/db/client";
+import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -13,13 +13,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Count active sessions (sessions that haven't ended)
-    const liveUsers = await prisma.trackedSession.count({
-      where: {
-        projectId: projectId,
-        endedAt: null, // Active sessions only
-      },
-    });
+    // Count active sessions from ClickHouse
+    const analytics = new AnalyticsService();
+    const liveUsers = await analytics.getLiveUsers(projectId);
 
     return NextResponse.json({ liveUsers });
   } catch (error) {

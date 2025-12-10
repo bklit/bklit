@@ -1,3 +1,4 @@
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
 import { randomBytes } from "crypto";
@@ -181,6 +182,13 @@ export async function POST(request: NextRequest) {
 
         const sessionId = payload.sessionId;
 
+        // Check if session exists before creating/updating
+        const existingSession = await prisma.trackedSession.findUnique({
+          where: { sessionId },
+        });
+
+        const isNewSession = !existingSession;
+
         const session = await createOrUpdateSession(
           {
             sessionId: sessionId,
@@ -197,6 +205,7 @@ export async function POST(request: NextRequest) {
           sessionId: session.sessionId,
           sessionDbId: session.id,
           projectId: session.projectId,
+          isNewSession,
         });
 
         await analytics.createPageView({
@@ -226,21 +235,30 @@ export async function POST(request: NextRequest) {
           utmContent: payload.utmContent,
         });
 
-        await analytics.createTrackedSession({
-          id: session.id,
-          sessionId: session.sessionId,
-          startedAt: session.startedAt,
-          endedAt: session.endedAt,
-          duration: session.duration,
-          didBounce: session.didBounce,
-          visitorId: session.visitorId,
-          entryPage: session.entryPage,
-          exitPage: session.exitPage,
-          userAgent: session.userAgent,
-          country: session.country,
-          city: session.city,
-          projectId: session.projectId,
-        });
+        // Only write new sessions to ClickHouse
+        // For existing sessions, we update them in ClickHouse using updateTrackedSession
+        if (isNewSession) {
+          await analytics.createTrackedSession({
+            id: session.id,
+            sessionId: session.sessionId,
+            startedAt: session.startedAt,
+            endedAt: session.endedAt,
+            duration: session.duration,
+            didBounce: session.didBounce,
+            visitorId: session.visitorId,
+            entryPage: session.entryPage,
+            exitPage: session.exitPage,
+            userAgent: session.userAgent,
+            country: session.country,
+            city: session.city,
+            projectId: session.projectId,
+          });
+        } else {
+          // Update existing session in ClickHouse
+          await analytics.updateTrackedSession(session.sessionId, {
+            exitPage: session.exitPage,
+          });
+        }
 
         console.log("✅ API: Page view and session saved to ClickHouse", {
           sessionId: payload.sessionId,
