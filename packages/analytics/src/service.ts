@@ -89,6 +89,7 @@ export class AnalyticsService {
           country: data.country,
           city: data.city,
           project_id: data.projectId,
+          updated_at: new Date(), // Set updated_at to current time
         },
       ],
       format: "JSONEachRow",
@@ -101,12 +102,44 @@ export class AnalyticsService {
       Pick<TrackedSessionData, "endedAt" | "duration" | "exitPage">
     >,
   ): Promise<void> {
+    // Use window function to get the latest state of the session
+    // Much simpler than argMax
     const existingSession = await this.client.query({
       query: `
-        SELECT * FROM tracked_session
-        WHERE session_id = {sessionId:String}
-        ORDER BY started_at DESC
-        LIMIT 1
+        SELECT 
+          id,
+          session_id,
+          started_at,
+          ended_at,
+          duration,
+          did_bounce,
+          visitor_id,
+          entry_page,
+          exit_page,
+          user_agent,
+          country,
+          city,
+          project_id
+        FROM (
+          SELECT 
+            id,
+            session_id,
+            started_at,
+            ended_at,
+            duration,
+            did_bounce,
+            visitor_id,
+            entry_page,
+            exit_page,
+            user_agent,
+            country,
+            city,
+            project_id,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE session_id = {sessionId:String}
+        )
+        WHERE rn = 1
       `,
       query_params: { sessionId },
       format: "JSONEachRow",
@@ -131,6 +164,7 @@ export class AnalyticsService {
     if (sessions.length === 0) return;
 
     const session = sessions[0];
+    if (!session) return;
 
     await this.createTrackedSession({
       id: session.id,
@@ -322,6 +356,8 @@ export class AnalyticsService {
     const limit = query.limit || 100;
     const offset = query.offset || 0;
 
+    // Simple approach: Use window function to get latest row per session_id
+    // This is much simpler than argMax and avoids all the aggregate function issues
     const result = await this.client.query({
       query: `
         SELECT 
@@ -338,8 +374,26 @@ export class AnalyticsService {
           country,
           city,
           project_id
-        FROM tracked_session
-        WHERE ${conditions.join(" AND ")}
+        FROM (
+          SELECT 
+            id,
+            session_id,
+            started_at,
+            ended_at,
+            duration,
+            did_bounce,
+            visitor_id,
+            entry_page,
+            exit_page,
+            user_agent,
+            country,
+            city,
+            project_id,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE ${conditions.join(" AND ")}
+        )
+        WHERE rn = 1
         ORDER BY started_at DESC
         LIMIT {limit:UInt32}
         OFFSET {offset:UInt32}
@@ -446,22 +500,22 @@ export class AnalyticsService {
   async getLiveUsers(projectId: string): Promise<number> {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    // Get the most recent session state for each session_id using argMax
-    // argMax(ended_at, started_at) gets the ended_at from the row with max started_at
+    // Use window function to get the most recent session state for each session_id
     const result = await this.client.query({
       query: `
         SELECT count() as count
         FROM (
           SELECT 
             session_id,
-            argMax(ended_at, started_at) as latest_ended_at,
-            max(started_at) as latest_started_at
+            ended_at,
+            started_at,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
           FROM tracked_session
           WHERE project_id = {projectId:String}
-          GROUP BY session_id
-        ) latest_sessions
-        WHERE latest_ended_at IS NULL
-          AND latest_started_at >= {thirtyMinutesAgo:DateTime}
+        )
+        WHERE rn = 1
+          AND ended_at IS NULL
+          AND started_at >= {thirtyMinutesAgo:DateTime}
       `,
       query_params: {
         projectId,
@@ -637,15 +691,17 @@ export class AnalyticsService {
   async getEventsBySession(
     sessionId: string,
     projectId: string,
-  ): Promise<Array<{
-    id: string;
-    timestamp: string;
-    metadata: Record<string, unknown> | null;
-    created_at: string;
-    event_definition_id: string;
-    project_id: string;
-    session_id: string | null;
-  }>> {
+  ): Promise<
+    Array<{
+      id: string;
+      timestamp: string;
+      metadata: Record<string, unknown> | null;
+      created_at: string;
+      event_definition_id: string;
+      project_id: string;
+      session_id: string | null;
+    }>
+  > {
     const result = await this.client.query({
       query: `
         SELECT 
@@ -681,10 +737,7 @@ export class AnalyticsService {
     }));
   }
 
-  async getEventsByDefinition(
-    eventDefinitionId: string,
-    query: EventQuery,
-  ) {
+  async getEventsByDefinition(eventDefinitionId: string, query: EventQuery) {
     const conditions: string[] = [
       "project_id = {projectId:String}",
       "event_definition_id = {eventDefinitionId:String}",
@@ -784,14 +837,18 @@ export class AnalyticsService {
       limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
     });
 
-    const eventCountsByDay: Record<string, { total: number; views: number; clicks: number }> = {};
-    
+    const eventCountsByDay: Record<
+      string,
+      { total: number; views: number; clicks: number }
+    > = {};
+
     for (const row of rows) {
       eventCountsByDay[row.date] = { total: row.total, views: 0, clicks: 0 };
     }
 
     for (const event of allEvents) {
-      const dateKey = new Date(event.timestamp).toISOString().split("T")[0] ?? "";
+      const dateKey =
+        new Date(event.timestamp).toISOString().split("T")[0] ?? "";
       if (eventCountsByDay[dateKey]) {
         const metadata = event.metadata as { eventType?: string } | null;
         const type = metadata?.eventType || "unknown";
@@ -958,7 +1015,10 @@ export class AnalyticsService {
       (pv) => pv.session_id && sessionIds.includes(pv.session_id),
     );
 
-    const latestPageviewBySession = new Map<string, typeof relevantPageviews[0]>();
+    const latestPageviewBySession = new Map<
+      string,
+      (typeof relevantPageviews)[0]
+    >();
     for (const pv of relevantPageviews) {
       if (pv.session_id && !latestPageviewBySession.has(pv.session_id)) {
         latestPageviewBySession.set(pv.session_id, pv);
@@ -982,11 +1042,9 @@ export class AnalyticsService {
     });
   }
 
-  async getRecentSessions(
-    projectId: string,
-    since: Date,
-    limit: number = 10,
-  ) {
+  async getRecentSessions(projectId: string, since: Date, limit: number = 10) {
+    // Simple approach: Use window function to get latest row per session_id
+    // This is much simpler than argMax and avoids all the aggregate function issues
     const result = await this.client.query({
       query: `
         SELECT 
@@ -997,9 +1055,21 @@ export class AnalyticsService {
           city,
           user_agent,
           entry_page
-        FROM tracked_session
-        WHERE project_id = {projectId:String}
-          AND started_at >= {since:DateTime}
+        FROM (
+          SELECT 
+            id,
+            session_id,
+            started_at,
+            country,
+            city,
+            user_agent,
+            entry_page,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE project_id = {projectId:String}
+            AND started_at >= {since:DateTime}
+        )
+        WHERE rn = 1
         ORDER BY started_at DESC
         LIMIT {limit:UInt32}
       `,
@@ -1011,7 +1081,7 @@ export class AnalyticsService {
       format: "JSONEachRow",
     });
 
-    return (await result.json()) as Array<{
+    const rows = (await result.json()) as Array<{
       id: string;
       session_id: string;
       started_at: string;
@@ -1020,6 +1090,8 @@ export class AnalyticsService {
       user_agent: string | null;
       entry_page: string;
     }>;
+
+    return rows;
   }
 
   async getSessionById(sessionId: string, projectId: string) {
@@ -1225,7 +1297,10 @@ export class AnalyticsService {
       (pv) => pv.session_id && sessionIds.includes(pv.session_id),
     );
 
-    const latestPageviewBySession = new Map<string, typeof relevantPageviews[0]>();
+    const latestPageviewBySession = new Map<
+      string,
+      (typeof relevantPageviews)[0]
+    >();
     for (const pv of relevantPageviews) {
       if (pv.session_id && !latestPageviewBySession.has(pv.session_id)) {
         latestPageviewBySession.set(pv.session_id, pv);
@@ -1233,7 +1308,10 @@ export class AnalyticsService {
     }
 
     // Count countries
-    const countryCounts = new Map<string, { country: string; country_code: string; count: number }>();
+    const countryCounts = new Map<
+      string,
+      { country: string; country_code: string; count: number }
+    >();
     for (const session of sessions) {
       const latestPv = latestPageviewBySession.get(session.session_id);
       if (latestPv?.country && latestPv?.country_code) {
@@ -1311,7 +1389,10 @@ export class AnalyticsService {
       (pv) => pv.session_id && sessionIds.includes(pv.session_id),
     );
 
-    const latestPageviewBySession = new Map<string, typeof relevantPageviews[0]>();
+    const latestPageviewBySession = new Map<
+      string,
+      (typeof relevantPageviews)[0]
+    >();
     for (const pv of relevantPageviews) {
       if (pv.session_id && !latestPageviewBySession.has(pv.session_id)) {
         latestPageviewBySession.set(pv.session_id, pv);
@@ -1499,7 +1580,6 @@ export class AnalyticsService {
     const events = allEvents.filter(
       (ev) => ev.session_id && sessionIds.includes(ev.session_id),
     );
-
 
     const pageviewsBySession = pageviews.reduce(
       (acc, pv) => {

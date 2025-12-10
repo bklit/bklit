@@ -81,7 +81,8 @@ async function initTables() {
         user_agent Nullable(String),
         country Nullable(String),
         city Nullable(String),
-        project_id String
+        project_id String,
+        updated_at DateTime DEFAULT now()
       )
       ENGINE = MergeTree()
       PARTITION BY toYYYYMM(started_at)
@@ -91,6 +92,22 @@ async function initTables() {
   });
 
   console.log("✓ Created tracked_session table");
+
+  // Add updated_at column to existing table if it doesn't exist (for tables created before migration)
+  try {
+    await client.exec({
+      query: `
+        ALTER TABLE tracked_session
+        ADD COLUMN IF NOT EXISTS updated_at DateTime DEFAULT now()
+      `,
+    });
+    console.log("✓ Ensured updated_at column exists in tracked_session table");
+  } catch (error) {
+    // Column might already exist or table might not exist yet, ignore error
+    if (process.env.NODE_ENV === "development") {
+      console.log("Note: updated_at column migration skipped (may already exist)");
+    }
+  }
 
   console.log("All tables created successfully!");
 }
