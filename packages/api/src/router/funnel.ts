@@ -599,7 +599,9 @@ export const funnelRouter = {
               parseClickHouseDate(b.started_at).getTime() -
               parseClickHouseDate(a.started_at).getTime(),
           );
-          lastSessionTimestamp = parseClickHouseDate(matchingSessions[0].started_at);
+          lastSessionTimestamp = parseClickHouseDate(
+            matchingSessions[0].started_at,
+          );
         }
       }
 

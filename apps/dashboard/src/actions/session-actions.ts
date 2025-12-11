@@ -1,12 +1,8 @@
 import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
+import { parseClickHouseDate } from "@/lib/date-utils";
 import type { SessionData } from "@/types/geo";
-
-// Helper to parse ClickHouse DateTime strings as UTC
-function parseClickHouseDate(dateString: string): Date {
-  return new Date(dateString + "Z");
-}
 
 // Generate a simple visitor ID for returning user detection
 function generateVisitorId(userAgent: string): string {
@@ -26,14 +22,20 @@ export async function createOrUpdateSession(
   data: SessionData,
   prismaClient: typeof prisma = prisma,
 ) {
-  console.warn("createOrUpdateSession is deprecated - use ClickHouse directly via AnalyticsService");
-  throw new Error("createOrUpdateSession is deprecated - use ClickHouse directly");
+  console.warn(
+    "createOrUpdateSession is deprecated - use ClickHouse directly via AnalyticsService",
+  );
+  throw new Error(
+    "createOrUpdateSession is deprecated - use ClickHouse directly",
+  );
 }
 
 // DEPRECATED: This function is no longer used - all session operations now go through ClickHouse
 // Kept for backward compatibility but should not be called
 export async function endSession(sessionId: string) {
-  console.warn("endSession is deprecated - use ClickHouse directly via AnalyticsService");
+  console.warn(
+    "endSession is deprecated - use ClickHouse directly via AnalyticsService",
+  );
   throw new Error("endSession is deprecated - use ClickHouse directly");
 }
 
@@ -214,7 +216,7 @@ export async function getSessionById(sessionId: string) {
     // Get project info from PostgreSQL (project metadata is still in Postgres)
     // First, try to find the project by querying all projects and matching session
     const analytics = new AnalyticsService();
-    
+
     // Get all sessions from ClickHouse to find the one with matching id
     // This is inefficient but necessary since we don't have projectId
     // In practice, this function should receive projectId as a parameter
@@ -246,7 +248,9 @@ export async function getSessionById(sessionId: string) {
             id: session.id,
             sessionId: session.session_id,
             startedAt: parseClickHouseDate(session.started_at),
-            endedAt: session.ended_at ? parseClickHouseDate(session.ended_at) : null,
+            endedAt: session.ended_at
+              ? parseClickHouseDate(session.ended_at)
+              : null,
             duration: session.duration,
             didBounce: session.did_bounce,
             visitorId: session.visitor_id,

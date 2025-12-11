@@ -35,7 +35,9 @@ async function clearData() {
       query: `SELECT count() as count FROM page_view_event`,
       format: "JSONEachRow",
     });
-    const pageViewRows = (await pageViewCount.json()) as Array<{ count: number }>;
+    const pageViewRows = (await pageViewCount.json()) as Array<{
+      count: number;
+    }>;
     console.log(`Page Views: ${pageViewRows[0]?.count || 0}`);
 
     const sessionCount = await client.query({
@@ -69,4 +71,3 @@ clearData()
     console.error("Fatal error:", error);
     process.exit(1);
   });
-

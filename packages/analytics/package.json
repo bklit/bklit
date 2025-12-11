@@ -20,7 +20,7 @@
   "dependencies": {
     "@bklit/db": "workspace:*",
     "@bklit/utils": "workspace:*",
-    "@clickhouse/client": "^0.2.10",
+    "@clickhouse/client": "^1.12.1",
     "@t3-oss/env-nextjs": "catalog:",
     "zod": "catalog:"
   },

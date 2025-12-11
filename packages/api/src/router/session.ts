@@ -194,6 +194,43 @@ export const sessionRouter = createTRPCRouter({
         endDate: z.date().optional(),
       }),
     )
+    .output(
+      z.object({
+        sessions: z.array(
+          z.object({
+            id: z.string(),
+            sessionId: z.string(),
+            startedAt: z.date(),
+            updatedAt: z.date(),
+            endedAt: z.date().nullable(),
+            duration: z.number().nullable(),
+            didBounce: z.boolean(),
+            visitorId: z.string().nullable(),
+            entryPage: z.string(),
+            exitPage: z.string().nullable(),
+            userAgent: z.string().nullable(),
+            country: z.string().nullable(),
+            city: z.string().nullable(),
+            projectId: z.string(),
+            pageViewEvents: z.array(
+              z.object({
+                id: z.string(),
+                url: z.string(),
+                timestamp: z.date(),
+              }),
+            ),
+          }),
+        ),
+        totalCount: z.number(),
+        pagination: z.object({
+          page: z.number(),
+          limit: z.number(),
+          totalPages: z.number(),
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+        }),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       // Check if user has access to the project
       const project = await ctx.prisma.project.findFirst({
@@ -254,12 +291,13 @@ export const sessionRouter = createTRPCRouter({
       // Get pageviews for the specific sessions we found
       // This ensures we get all pageviews for these sessions regardless of when they occurred
       const sessionIds = sessions.map((s) => s.session_id);
-      const pageviews = sessionIds.length > 0
-        ? await ctx.analytics.getPageViewsBySessionIds(
-            input.projectId,
-            sessionIds,
-          )
-        : [];
+      const pageviews =
+        sessionIds.length > 0
+          ? await ctx.analytics.getPageViewsBySessionIds(
+              input.projectId,
+              sessionIds,
+            )
+          : [];
 
       // Create a map of session_id -> pageviews
       const pageviewsBySession = pageviews.reduce(
@@ -383,7 +421,9 @@ export const sessionRouter = createTRPCRouter({
         id: session.id,
         sessionId: session.session_id,
         startedAt: parseClickHouseDate(session.started_at),
-        endedAt: session.ended_at ? parseClickHouseDate(session.ended_at) : null,
+        endedAt: session.ended_at
+          ? parseClickHouseDate(session.ended_at)
+          : null,
         duration: session.duration,
         didBounce: session.did_bounce,
         visitorId: session.visitor_id,
@@ -472,8 +512,6 @@ export const sessionRouter = createTRPCRouter({
       }
 
       // Clean up stale sessions in ClickHouse only
-      await ctx.analytics.cleanupStaleSessions(input.projectId);
-
       await ctx.analytics.cleanupStaleSessions(input.projectId);
 
       // Get active sessions with their latest page view location from ClickHouse
@@ -733,7 +771,8 @@ export const sessionRouter = createTRPCRouter({
         exitPage: journey.exit_page,
         pageViewEvents: (pageviewsBySession[journey.session_id] || []).sort(
           (a, b) =>
-            parseClickHouseDate(a.timestamp).getTime() - parseClickHouseDate(b.timestamp).getTime(),
+            parseClickHouseDate(a.timestamp).getTime() -
+            parseClickHouseDate(b.timestamp).getTime(),
         ),
       }));
 

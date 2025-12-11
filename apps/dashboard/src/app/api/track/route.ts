@@ -1,5 +1,5 @@
+import { randomBytes } from "node:crypto";
 import { AnalyticsService } from "@bklit/analytics/service";
-import { randomBytes } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
@@ -181,7 +181,10 @@ export async function POST(request: NextRequest) {
         const sessionId = payload.sessionId;
 
         // Check if session exists in ClickHouse
-        const sessionExists = await analytics.sessionExists(sessionId);
+        const sessionExists = await analytics.sessionExists(
+          sessionId,
+          payload.projectId,
+        );
         const isNewSession = !sessionExists;
 
         // Generate visitor ID from user agent (simple hash)

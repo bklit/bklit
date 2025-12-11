@@ -4,8 +4,12 @@ async function verifyData() {
   const client = getClickHouseClient();
 
   console.log("🔍 Verifying ClickHouse data...\n");
-  console.log(`⏰ Server Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
-  console.log(`⏰ Current Server Time: ${new Date().toLocaleString()} (UTC: ${new Date().toISOString()})\n`);
+  console.log(
+    `⏰ Server Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
+  );
+  console.log(
+    `⏰ Current Server Time: ${new Date().toLocaleString()} (UTC: ${new Date().toISOString()})\n`,
+  );
 
   try {
     // Check table counts
@@ -16,7 +20,9 @@ async function verifyData() {
       query: `SELECT count() as count FROM page_view_event`,
       format: "JSONEachRow",
     });
-    const pageViewRows = (await pageViewCount.json()) as Array<{ count: number }>;
+    const pageViewRows = (await pageViewCount.json()) as Array<{
+      count: number;
+    }>;
     console.log(`Page Views: ${pageViewRows[0]?.count || 0}`);
 
     const sessionCount = await client.query({
@@ -38,7 +44,9 @@ async function verifyData() {
       `,
       format: "JSONEachRow",
     });
-    const uniqueSessionRows = (await uniqueSessionCount.json()) as Array<{ count: number }>;
+    const uniqueSessionRows = (await uniqueSessionCount.json()) as Array<{
+      count: number;
+    }>;
     console.log(`Unique Sessions: ${uniqueSessionRows[0]?.count || 0}`);
 
     const eventCount = await client.query({
@@ -79,7 +87,7 @@ async function verifyData() {
         )
         WHERE rn = 1
         ORDER BY updated_at DESC
-        LIMIT 10
+        LIMIT 5
       `,
       format: "JSONEachRow",
     });
@@ -101,11 +109,17 @@ async function verifyData() {
         const startedAt = new Date(session.started_at);
         const updatedAt = new Date(session.updated_at);
         console.log(`\n${index + 1}. Session: ${session.session_id}`);
-        console.log(`   Started: ${startedAt.toLocaleString()} (UTC: ${startedAt.toISOString()})`);
-        console.log(`   Updated: ${updatedAt.toLocaleString()} (UTC: ${updatedAt.toISOString()})`);
+        console.log(
+          `   Started: ${startedAt.toLocaleString()} (UTC: ${startedAt.toISOString()})`,
+        );
+        console.log(
+          `   Updated: ${updatedAt.toLocaleString()} (UTC: ${updatedAt.toISOString()})`,
+        );
         console.log(`   Entry: ${session.entry_page}`);
         console.log(`   Exit: ${session.exit_page || "N/A"}`);
-        console.log(`   Location: ${session.city || "N/A"}, ${session.country || "N/A"}`);
+        console.log(
+          `   Location: ${session.city || "N/A"}, ${session.country || "N/A"}`,
+        );
         console.log(`   Project: ${session.project_id}`);
       });
     }
@@ -148,7 +162,9 @@ async function verifyData() {
         const timestamp = new Date(pv.timestamp);
         console.log(`\n${index + 1}. Page View: ${pv.id}`);
         console.log(`   URL: ${pv.url}`);
-        console.log(`   Time: ${timestamp.toLocaleString()} (UTC: ${timestamp.toISOString()})`);
+        console.log(
+          `   Time: ${timestamp.toLocaleString()} (UTC: ${timestamp.toISOString()})`,
+        );
         console.log(`   Session: ${pv.session_id || "N/A"}`);
         console.log(`   Location: ${pv.city || "N/A"}, ${pv.country || "N/A"}`);
         console.log(`   Project: ${pv.project_id}`);
@@ -209,4 +225,3 @@ verifyData().catch((error) => {
   console.error("Verification failed:", error);
   process.exit(1);
 });
-

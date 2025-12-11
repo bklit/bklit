@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     // Verify session exists in ClickHouse and end it
     const analytics = new AnalyticsService();
-    const sessionExists = await analytics.sessionExists(sessionId);
+    const sessionExists = await analytics.sessionExists(sessionId, projectId);
 
     if (!sessionExists) {
       return createCorsResponse(

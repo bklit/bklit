@@ -1,7 +1,7 @@
 import { createRequire } from "module";
 import { fileURLToPath } from "url";
-import { AnalyticsService } from "../service";
 import { getClickHouseClient } from "../client";
+import { AnalyticsService } from "../service";
 
 const __filename = fileURLToPath(import.meta.url);
 const require = createRequire(__filename);
@@ -113,7 +113,9 @@ async function migrateData() {
     }
 
     pageViewOffset += batchSize;
-    console.log(`   Progress: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors (${pageViewOffset}/${totalPageViews})`);
+    console.log(
+      `   Progress: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors (${pageViewOffset}/${totalPageViews})`,
+    );
   }
 
   console.log("\n🎯 Migrating TrackedEvent...");
@@ -157,7 +159,9 @@ async function migrateData() {
     }
 
     eventOffset += batchSize;
-    console.log(`   Progress: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors (${eventOffset}/${totalEvents})`);
+    console.log(
+      `   Progress: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors (${eventOffset}/${totalEvents})`,
+    );
   }
 
   console.log("\n👤 Migrating TrackedSession...");
@@ -177,7 +181,9 @@ async function migrateData() {
     for (const session of sessions) {
       try {
         // Check if already exists
-        if (await analytics.sessionExists(session.sessionId)) {
+        if (
+          await analytics.sessionExists(session.sessionId, session.projectId)
+        ) {
           sessionSkipped++;
           continue;
         }
@@ -215,14 +221,22 @@ async function migrateData() {
     }
 
     sessionOffset += batchSize;
-    console.log(`   Progress: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors (${sessionOffset}/${totalSessions})`);
+    console.log(
+      `   Progress: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors (${sessionOffset}/${totalSessions})`,
+    );
   }
 
   console.log("\n✅ Migration completed!\n");
   console.log("📊 Migration Summary:");
-  console.log(`   PageViewEvent: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors`);
-  console.log(`   TrackedEvent: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors`);
-  console.log(`   TrackedSession: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors`);
+  console.log(
+    `   PageViewEvent: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors`,
+  );
+  console.log(
+    `   TrackedEvent: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors`,
+  );
+  console.log(
+    `   TrackedSession: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors`,
+  );
 
   const postgresCounts = {
     pageViews: await prisma.pageViewEvent.count(),
@@ -241,36 +255,47 @@ async function migrateData() {
     query: `SELECT count() as count FROM page_view_event`,
     format: "JSONEachRow",
   });
-  const chPageViewRows = (await chPageViewCount.json()) as Array<{ count: number }>;
-  
+  const chPageViewRows = (await chPageViewCount.json()) as Array<{
+    count: number;
+  }>;
+
   const chEventCount = await client.query({
     query: `SELECT count() as count FROM tracked_event`,
     format: "JSONEachRow",
   });
   const chEventRows = (await chEventCount.json()) as Array<{ count: number }>;
-  
+
   const chSessionCount = await client.query({
     query: `SELECT count() as count FROM tracked_session`,
     format: "JSONEachRow",
   });
-  const chSessionRows = (await chSessionCount.json()) as Array<{ count: number }>;
+  const chSessionRows = (await chSessionCount.json()) as Array<{
+    count: number;
+  }>;
 
   console.log("\n📊 ClickHouse Destination Counts:");
   console.log(`   PageViewEvent: ${chPageViewRows[0]?.count || 0}`);
   console.log(`   TrackedEvent: ${chEventRows[0]?.count || 0}`);
   console.log(`   TrackedSession: ${chSessionRows[0]?.count || 0}`);
 
-  const allMigrated = 
-    (pageViewCount + pageViewSkipped === postgresCounts.pageViews) &&
-    (eventCount + eventSkipped === postgresCounts.events) &&
-    (sessionCount + sessionSkipped === postgresCounts.sessions);
+  const allMigrated =
+    pageViewCount + pageViewSkipped === postgresCounts.pageViews &&
+    eventCount + eventSkipped === postgresCounts.events &&
+    sessionCount + sessionSkipped === postgresCounts.sessions;
 
-  if (allMigrated && pageViewErrors === 0 && eventErrors === 0 && sessionErrors === 0) {
+  if (
+    allMigrated &&
+    pageViewErrors === 0 &&
+    eventErrors === 0 &&
+    sessionErrors === 0
+  ) {
     console.log("\n✅ All data migrated successfully!");
   } else {
     console.log("\n⚠️ Migration completed with some issues:");
     if (pageViewErrors > 0 || eventErrors > 0 || sessionErrors > 0) {
-      console.log(`   Errors: ${pageViewErrors + eventErrors + sessionErrors} total`);
+      console.log(
+        `   Errors: ${pageViewErrors + eventErrors + sessionErrors} total`,
+      );
     }
     if (!allMigrated) {
       console.log("   Count mismatch detected. Please verify data integrity.");

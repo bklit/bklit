@@ -290,7 +290,9 @@ export const acquisitionRouter = createTRPCRouter({
             utmCampaign: pageview.utm_campaign,
           });
           const dateKey =
-            parseClickHouseDate(pageview.timestamp).toISOString().split("T")[0] ?? "";
+            parseClickHouseDate(pageview.timestamp)
+              .toISOString()
+              .split("T")[0] ?? "";
 
           if (!acc[source]) {
             acc[source] = {};

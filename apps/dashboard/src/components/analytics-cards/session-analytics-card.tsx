@@ -120,8 +120,7 @@ export function SessionAnalyticsCard({
                   </div>
                   <div className="gap-2 text-xs text-muted-foreground">
                     {formatDistanceToNow(
-                      (session as { updatedAt?: Date }).updatedAt ||
-                        session.startedAt,
+                      session.updatedAt || session.startedAt,
                       {
                         addSuffix: true,
                       },

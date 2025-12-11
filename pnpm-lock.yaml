@@ -384,8 +384,8 @@ importers:
         specifier: workspace:*
         version: link:../utils
       '@clickhouse/client':
-        specifier: ^0.2.10
-        version: 0.2.10
+        specifier: ^1.12.1
+        version: 1.14.0
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
         version: 0.13.8(typescript@5.9.3)(zod@3.25.76)
@@ -1052,11 +1052,11 @@ packages:
   '@clack/prompts@0.11.0':
     resolution: {integrity: sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw==}
 
-  '@clickhouse/client-common@0.2.10':
-    resolution: {integrity: sha512-BvTY0IXS96y9RUeNCpKL4HUzHmY80L0lDcGN0lmUD6zjOqYMn78+xyHYJ/AIAX7JQsc+/KwFt2soZutQTKxoGQ==}
+  '@clickhouse/client-common@1.14.0':
+    resolution: {integrity: sha512-CyUcv2iCkZ1A++vmOSufYRpHR3aAWVfbrWed7ATzf0yyx/BW/2SEqlL07vBpSRa3BIkQe/DSOHVv8JkWZpUOwQ==}
 
-  '@clickhouse/client@0.2.10':
-    resolution: {integrity: sha512-ZwBgzjEAFN/ogS0ym5KHVbR7Hx/oYCX01qGp2baEyfN2HM73kf/7Vp3GvMHWRy+zUXISONEtFv7UTViOXnmFrg==}
+  '@clickhouse/client@1.14.0':
+    resolution: {integrity: sha512-co2spjR7wZoZ3Ck0H/jv76bpiuO3oJHtOmq9/gxFiod2DcT9NFg01u/hXcG8MJFnEJuMB6e3vGqS6IOnLwHqRw==}
     engines: {node: '>=16'}
 
   '@cloudflare/workers-types@4.20251121.0':
@@ -8559,11 +8559,11 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@clickhouse/client-common@0.2.10': {}
+  '@clickhouse/client-common@1.14.0': {}
 
-  '@clickhouse/client@0.2.10':
+  '@clickhouse/client@1.14.0':
     dependencies:
-      '@clickhouse/client-common': 0.2.10
+      '@clickhouse/client-common': 1.14.0
 
   '@cloudflare/workers-types@4.20251121.0':
     optional: true

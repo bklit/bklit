@@ -87,7 +87,7 @@ export class AnalyticsService {
     });
   }
 
-  async sessionExists(sessionId: string): Promise<boolean> {
+  async sessionExists(sessionId: string, projectId: string): Promise<boolean> {
     const result = await this.client.query({
       query: `
         SELECT count() as count
@@ -95,10 +95,11 @@ export class AnalyticsService {
           SELECT session_id
           FROM tracked_session
           WHERE session_id = {sessionId:String}
+            AND project_id = {projectId:String}
           LIMIT 1
         )
       `,
-      query_params: { sessionId },
+      query_params: { sessionId, projectId },
       format: "JSONEachRow",
     });
 
@@ -1432,14 +1433,22 @@ export class AnalyticsService {
   async getLiveTopCountries(projectId: string) {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    // Get live sessions
+    // Get live sessions using window function to get latest state per session_id
     const sessionsResult = await this.client.query({
       query: `
         SELECT session_id
-        FROM tracked_session
-        WHERE project_id = {projectId:String}
+        FROM (
+          SELECT 
+            session_id,
+            ended_at,
+            updated_at,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE project_id = {projectId:String}
+            AND updated_at >= {thirtyMinutesAgo:DateTime}
+        )
+        WHERE rn = 1
           AND ended_at IS NULL
-          AND started_at >= {thirtyMinutesAgo:DateTime}
       `,
       query_params: {
         projectId,
@@ -1526,14 +1535,22 @@ export class AnalyticsService {
   async getLiveTopPages(projectId: string) {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    // Get live sessions
+    // Get live sessions using window function to get latest state per session_id
     const sessionsResult = await this.client.query({
       query: `
         SELECT session_id
-        FROM tracked_session
-        WHERE project_id = {projectId:String}
+        FROM (
+          SELECT 
+            session_id,
+            ended_at,
+            updated_at,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE project_id = {projectId:String}
+            AND updated_at >= {thirtyMinutesAgo:DateTime}
+        )
+        WHERE rn = 1
           AND ended_at IS NULL
-          AND started_at >= {thirtyMinutesAgo:DateTime}
       `,
       query_params: {
         projectId,
@@ -1609,6 +1626,8 @@ export class AnalyticsService {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const now = new Date();
 
+    // Use mutations_sync=2 to wait for the mutation to complete before proceeding
+    // This ensures the subsequent COUNT query returns accurate results
     await this.client.command({
       query: `
         ALTER TABLE tracked_session
@@ -1619,6 +1638,7 @@ export class AnalyticsService {
         WHERE project_id = {projectId:String}
           AND ended_at IS NULL
           AND started_at < {thirtyMinutesAgo:DateTime}
+        SETTINGS mutations_sync = 2
       `,
       query_params: {
         projectId,

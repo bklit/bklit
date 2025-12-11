@@ -61,6 +61,7 @@ export const pageviewRouter = createTRPCRouter({
         projectId: input.projectId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
       const pageGroups = pageviews.reduce(
@@ -486,7 +487,9 @@ export const pageviewRouter = createTRPCRouter({
         (acc, pageview) => {
           const normalizedUrl = extractPath(pageview.url);
           const dateKey =
-            parseClickHouseDate(pageview.timestamp).toISOString().split("T")[0] ?? "";
+            parseClickHouseDate(pageview.timestamp)
+              .toISOString()
+              .split("T")[0] ?? "";
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {};
@@ -630,7 +633,9 @@ export const pageviewRouter = createTRPCRouter({
         (acc, session) => {
           const normalizedUrl = extractPath(session.entry_page);
           const dateKey =
-            parseClickHouseDate(session.started_at).toISOString().split("T")[0] ?? "";
+            parseClickHouseDate(session.started_at)
+              .toISOString()
+              .split("T")[0] ?? "";
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {};
