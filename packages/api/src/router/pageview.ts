@@ -1,6 +1,6 @@
 import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const pageviewRouter = createTRPCRouter({
@@ -67,7 +67,7 @@ export const pageviewRouter = createTRPCRouter({
         (acc, pageview) => {
           const normalizedUrl = extractPath(pageview.url);
           const originalUrl = pageview.url;
-          const timestamp = new Date(pageview.timestamp);
+          const timestamp = parseClickHouseDate(pageview.timestamp);
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {
@@ -293,7 +293,7 @@ export const pageviewRouter = createTRPCRouter({
             acc[pv.session_id].push({
               id: pv.id,
               url: pv.url,
-              timestamp: new Date(pv.timestamp),
+              timestamp: parseClickHouseDate(pv.timestamp),
               mobile: pv.mobile,
             });
           }
@@ -314,7 +314,7 @@ export const pageviewRouter = createTRPCRouter({
         (acc, session) => {
           const entryPage = extractPath(session.entry_page);
           const originalUrl = session.entry_page;
-          const startedAt = new Date(session.started_at);
+          const startedAt = parseClickHouseDate(session.started_at);
           const pageViews = pageviewsBySession[session.session_id] || [];
 
           if (!acc[entryPage]) {
@@ -486,7 +486,7 @@ export const pageviewRouter = createTRPCRouter({
         (acc, pageview) => {
           const normalizedUrl = extractPath(pageview.url);
           const dateKey =
-            new Date(pageview.timestamp).toISOString().split("T")[0] ?? "";
+            parseClickHouseDate(pageview.timestamp).toISOString().split("T")[0] ?? "";
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {};
@@ -630,7 +630,7 @@ export const pageviewRouter = createTRPCRouter({
         (acc, session) => {
           const normalizedUrl = extractPath(session.entry_page);
           const dateKey =
-            new Date(session.started_at).toISOString().split("T")[0] ?? "";
+            parseClickHouseDate(session.started_at).toISOString().split("T")[0] ?? "";
 
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {};

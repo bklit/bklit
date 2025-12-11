@@ -9,3 +9,10 @@ export function endOfDay(date: Date): Date {
   d.setHours(23, 59, 59, 999);
   return d;
 }
+
+// Helper to parse ClickHouse DateTime strings as UTC
+// ClickHouse returns DateTime as "YYYY-MM-DD HH:MM:SS" without timezone
+// We need to append "Z" to treat it as UTC
+export function parseClickHouseDate(dateString: string): Date {
+  return new Date(dateString + "Z");
+}

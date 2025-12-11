@@ -2,7 +2,7 @@ import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { protectedProcedure } from "../trpc";
 
 export const eventRouter = {
@@ -181,7 +181,7 @@ export const eventRouter = {
             eventTypeCounts,
             recentEvents: trackedEvents.slice(0, 5).map((ev) => ({
               id: ev.id,
-              timestamp: new Date(ev.timestamp),
+              timestamp: parseClickHouseDate(ev.timestamp),
               metadata: ev.metadata,
               sessionId: ev.session_id,
             })),
@@ -336,23 +336,23 @@ export const eventRouter = {
           }
           acc[sessionId].events.push({
             id: event.id,
-            timestamp: new Date(event.timestamp),
+            timestamp: parseClickHouseDate(event.timestamp),
             metadata: event.metadata,
-            createdAt: new Date(event.created_at),
+            createdAt: parseClickHouseDate(event.created_at),
             eventDefinitionId: event.event_definition_id,
             projectId: event.project_id,
             sessionId: event.session_id,
           });
           // Update first and last events based on timestamp
           if (
-            new Date(event.timestamp) <
-            new Date(acc[sessionId].firstEvent.timestamp)
+            parseClickHouseDate(event.timestamp).getTime() <
+            parseClickHouseDate(acc[sessionId].firstEvent.timestamp).getTime()
           ) {
             acc[sessionId].firstEvent = event;
           }
           if (
-            new Date(event.timestamp) >
-            new Date(acc[sessionId].lastEvent.timestamp)
+            parseClickHouseDate(event.timestamp).getTime() >
+            parseClickHouseDate(acc[sessionId].lastEvent.timestamp).getTime()
           ) {
             acc[sessionId].lastEvent = event;
           }
@@ -364,8 +364,8 @@ export const eventRouter = {
       // Convert to array and sort by last event timestamp
       const sessionGroupsArray = Object.values(sessionGroups).sort(
         (a, b) =>
-          new Date(b.lastEvent.timestamp).getTime() -
-          new Date(a.lastEvent.timestamp).getTime(),
+          parseClickHouseDate(b.lastEvent.timestamp).getTime() -
+          parseClickHouseDate(a.lastEvent.timestamp).getTime(),
       );
 
       // Apply pagination
@@ -422,18 +422,18 @@ export const eventRouter = {
           session: group.session,
           firstEvent: {
             id: group.firstEvent.id,
-            timestamp: new Date(group.firstEvent.timestamp),
+            timestamp: parseClickHouseDate(group.firstEvent.timestamp),
             metadata: group.firstEvent.metadata,
-            createdAt: new Date(group.firstEvent.created_at),
+            createdAt: parseClickHouseDate(group.firstEvent.created_at),
             eventDefinitionId: group.firstEvent.event_definition_id,
             projectId: group.firstEvent.project_id,
             sessionId: group.firstEvent.session_id,
           },
           lastEvent: {
             id: group.lastEvent.id,
-            timestamp: new Date(group.lastEvent.timestamp),
+            timestamp: parseClickHouseDate(group.lastEvent.timestamp),
             metadata: group.lastEvent.metadata,
-            createdAt: new Date(group.lastEvent.created_at),
+            createdAt: parseClickHouseDate(group.lastEvent.created_at),
             eventDefinitionId: group.lastEvent.event_definition_id,
             projectId: group.lastEvent.project_id,
             sessionId: group.lastEvent.session_id,
@@ -712,7 +712,7 @@ export const eventRouter = {
         const eventType = metadata?.eventType || "unknown";
         eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
 
-        const dateKey = new Date(trackedEvent.timestamp)
+        const dateKey = parseClickHouseDate(trackedEvent.timestamp)
           .toISOString()
           .split("T")[0];
         if (dateKey) {
@@ -794,9 +794,9 @@ export const eventRouter = {
         eventTypeCounts,
         recentEvents: trackedEvents.map((ev) => ({
           id: ev.id,
-          timestamp: new Date(ev.timestamp),
+          timestamp: parseClickHouseDate(ev.timestamp),
           metadata: ev.metadata,
-          createdAt: new Date(ev.created_at),
+          createdAt: parseClickHouseDate(ev.created_at),
           session: ev.session_id ? sessionMap.get(ev.session_id) || null : null,
         })),
         timeSeriesData: timeSeriesArray,
@@ -864,7 +864,7 @@ export const eventRouter = {
         totalCount: trackedEvents.length,
         eventTypeCounts,
         recentEvents: trackedEvents.slice(0, 10).map((ev) => ({
-          timestamp: new Date(ev.timestamp),
+          timestamp: parseClickHouseDate(ev.timestamp),
           metadata: ev.metadata,
         })),
       };

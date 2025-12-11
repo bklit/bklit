@@ -1,7 +1,7 @@
 import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { matchSessionToFunnel } from "../lib/funnel-utils";
 import { protectedProcedure } from "../trpc";
 
@@ -596,10 +596,10 @@ export const funnelRouter = {
         if (matchingSessions.length > 0) {
           matchingSessions.sort(
             (a, b) =>
-              new Date(b.started_at).getTime() -
-              new Date(a.started_at).getTime(),
+              parseClickHouseDate(b.started_at).getTime() -
+              parseClickHouseDate(a.started_at).getTime(),
           );
-          lastSessionTimestamp = new Date(matchingSessions[0].started_at);
+          lastSessionTimestamp = parseClickHouseDate(matchingSessions[0].started_at);
         }
       }
 

@@ -1,6 +1,6 @@
 import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const sessionRouter = createTRPCRouter({
@@ -251,13 +251,17 @@ export const sessionRouter = createTRPCRouter({
         input.page * input.limit,
       );
 
-      const pageviews = await ctx.analytics.getPageViews({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT, // Get all pageviews for accurate stats
-      });
+      // Get pageviews for the specific sessions we found
+      // This ensures we get all pageviews for these sessions regardless of when they occurred
+      const sessionIds = sessions.map((s) => s.session_id);
+      const pageviews = sessionIds.length > 0
+        ? await ctx.analytics.getPageViewsBySessionIds(
+            input.projectId,
+            sessionIds,
+          )
+        : [];
 
+      // Create a map of session_id -> pageviews
       const pageviewsBySession = pageviews.reduce(
         (acc, pv) => {
           if (pv.session_id) {
@@ -267,7 +271,7 @@ export const sessionRouter = createTRPCRouter({
             acc[pv.session_id].push({
               id: pv.id,
               url: pv.url,
-              timestamp: new Date(pv.timestamp),
+              timestamp: parseClickHouseDate(pv.timestamp),
             });
           }
           return acc;
@@ -278,11 +282,14 @@ export const sessionRouter = createTRPCRouter({
         >,
       );
 
+      // Map sessions with their pageviews
+      // ClickHouse returns DateTime as strings without timezone - treat as UTC
       const sessionsWithPageviews = sessions.map((s) => ({
         id: s.id,
         sessionId: s.session_id,
-        startedAt: new Date(s.started_at),
-        endedAt: s.ended_at ? new Date(s.ended_at) : null,
+        startedAt: parseClickHouseDate(s.started_at),
+        updatedAt: parseClickHouseDate(s.updated_at),
+        endedAt: s.ended_at ? parseClickHouseDate(s.ended_at) : null,
         duration: s.duration,
         didBounce: s.did_bounce,
         visitorId: s.visitor_id,
@@ -375,8 +382,8 @@ export const sessionRouter = createTRPCRouter({
       return {
         id: session.id,
         sessionId: session.session_id,
-        startedAt: new Date(session.started_at),
-        endedAt: session.ended_at ? new Date(session.ended_at) : null,
+        startedAt: parseClickHouseDate(session.started_at),
+        endedAt: session.ended_at ? parseClickHouseDate(session.ended_at) : null,
         duration: session.duration,
         didBounce: session.did_bounce,
         visitorId: session.visitor_id,
@@ -423,23 +430,7 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Clean up stale sessions first (dual-write to both PostgreSQL and ClickHouse)
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      await ctx.prisma.trackedSession.updateMany({
-        where: {
-          projectId: input.projectId,
-          endedAt: null,
-          startedAt: {
-            lt: thirtyMinutesAgo,
-          },
-        },
-        data: {
-          endedAt: new Date(),
-          duration: 1800, // 30 minutes in seconds
-          didBounce: false,
-        },
-      });
-
+      // Clean up stale sessions in ClickHouse only
       await ctx.analytics.cleanupStaleSessions(input.projectId);
 
       // Count active sessions from ClickHouse
@@ -480,22 +471,8 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Clean up stale sessions first (dual-write to both PostgreSQL and ClickHouse)
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      await ctx.prisma.trackedSession.updateMany({
-        where: {
-          projectId: input.projectId,
-          endedAt: null,
-          startedAt: {
-            lt: thirtyMinutesAgo,
-          },
-        },
-        data: {
-          endedAt: new Date(),
-          duration: 1800, // 30 minutes in seconds
-          didBounce: false,
-        },
-      });
+      // Clean up stale sessions in ClickHouse only
+      await ctx.analytics.cleanupStaleSessions(input.projectId);
 
       await ctx.analytics.cleanupStaleSessions(input.projectId);
 
@@ -616,7 +593,7 @@ export const sessionRouter = createTRPCRouter({
             city,
             country,
             countryCode,
-            startedAt: new Date(session.started_at),
+            startedAt: parseClickHouseDate(session.started_at),
             browser,
             deviceType,
           };
@@ -672,7 +649,7 @@ export const sessionRouter = createTRPCRouter({
       return recentSessions.map((s) => ({
         id: s.id,
         sessionId: s.session_id,
-        startedAt: new Date(s.started_at),
+        startedAt: parseClickHouseDate(s.started_at),
         country: s.country,
         city: s.city,
         userAgent: s.user_agent,
@@ -756,7 +733,7 @@ export const sessionRouter = createTRPCRouter({
         exitPage: journey.exit_page,
         pageViewEvents: (pageviewsBySession[journey.session_id] || []).sort(
           (a, b) =>
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+            parseClickHouseDate(a.timestamp).getTime() - parseClickHouseDate(b.timestamp).getTime(),
         ),
       }));
 

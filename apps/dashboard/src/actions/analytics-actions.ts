@@ -7,6 +7,11 @@ import { unstable_cache as cache } from "next/cache";
 import { z } from "zod";
 import { cleanupStaleSessions } from "@/actions/session-actions";
 import { endOfDay, startOfDay } from "@/lib/date-utils";
+
+// Helper to parse ClickHouse DateTime strings as UTC
+function parseClickHouseDate(dateString: string): Date {
+  return new Date(dateString + "Z");
+}
 import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import type { BrowserStats, TopPageData } from "@/types/analytics";
 import type {
@@ -1086,7 +1091,7 @@ export async function getSessionAnalytics(
             acc[pv.session_id].push({
               id: pv.id,
               url: pv.url,
-              timestamp: new Date(pv.timestamp),
+              timestamp: parseClickHouseDate(pv.timestamp),
             });
           }
           return acc;
@@ -1104,8 +1109,8 @@ export async function getSessionAnalytics(
         ),
         didBounce: s.did_bounce,
         duration: s.duration,
-        startedAt: new Date(s.started_at),
-        endedAt: s.ended_at ? new Date(s.ended_at) : null,
+        startedAt: parseClickHouseDate(s.started_at),
+        endedAt: s.ended_at ? parseClickHouseDate(s.ended_at) : null,
       }));
 
       const totalSessions = sessionsWithPageviews.length;

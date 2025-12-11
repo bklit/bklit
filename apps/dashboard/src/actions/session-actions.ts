@@ -3,6 +3,11 @@ import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
 import type { SessionData } from "@/types/geo";
 
+// Helper to parse ClickHouse DateTime strings as UTC
+function parseClickHouseDate(dateString: string): Date {
+  return new Date(dateString + "Z");
+}
+
 // Generate a simple visitor ID for returning user detection
 function generateVisitorId(userAgent: string): string {
   // Simple hash of user agent for anonymous visitor tracking
@@ -15,81 +20,21 @@ function generateVisitorId(userAgent: string): string {
   return Math.abs(hash).toString(36);
 }
 
-// Create or update a session (accepts a Prisma client for transaction support)
+// DEPRECATED: This function is no longer used - all session operations now go through ClickHouse
+// Kept for backward compatibility but should not be called
 export async function createOrUpdateSession(
   data: SessionData,
   prismaClient: typeof prisma = prisma,
 ) {
-  const { sessionId, projectId, url, userAgent, country, city } = data;
-
-  try {
-    // Check if session exists
-    const existingSession = await prismaClient.trackedSession.findUnique({
-      where: { sessionId },
-    });
-
-    if (existingSession) {
-      // Update existing session
-      return await prismaClient.trackedSession.update({
-        where: { sessionId },
-        data: {
-          exitPage: url,
-        },
-      });
-    } else {
-      // Upsert session (create if not exists, update if exists)
-      const visitorId = userAgent ? generateVisitorId(userAgent) : null;
-      return await prismaClient.trackedSession.upsert({
-        where: { sessionId },
-        update: {
-          exitPage: url,
-        },
-        create: {
-          sessionId,
-          projectId,
-          entryPage: url,
-          exitPage: url,
-          userAgent,
-          country,
-          city,
-          visitorId,
-        },
-      });
-    }
-  } catch (error) {
-    console.error("Error creating/updating session:", error);
-    throw error;
-  }
+  console.warn("createOrUpdateSession is deprecated - use ClickHouse directly via AnalyticsService");
+  throw new Error("createOrUpdateSession is deprecated - use ClickHouse directly");
 }
 
+// DEPRECATED: This function is no longer used - all session operations now go through ClickHouse
+// Kept for backward compatibility but should not be called
 export async function endSession(sessionId: string) {
-  try {
-    const session = await prisma.trackedSession.findUnique({
-      where: { sessionId },
-    });
-
-    if (!session) {
-      throw new Error("Session not found");
-    }
-
-    const duration = Math.floor(
-      (Date.now() - session.startedAt.getTime()) / 1000,
-    );
-
-    const didBounce = duration < 10;
-
-    return await prisma.trackedSession.update({
-      where: { sessionId },
-      data: {
-        endedAt: new Date(),
-        duration,
-        didBounce,
-      },
-    });
-  } catch (error) {
-    console.error("Error ending session:", error);
-    throw error;
-  }
+  console.warn("endSession is deprecated - use ClickHouse directly via AnalyticsService");
+  throw new Error("endSession is deprecated - use ClickHouse directly");
 }
 
 // Get session analytics for a site
@@ -126,7 +71,7 @@ export async function getSessionAnalytics(
           acc[pv.session_id].push({
             id: pv.id,
             url: pv.url,
-            timestamp: new Date(pv.timestamp),
+            timestamp: parseClickHouseDate(pv.timestamp),
           });
         }
         return acc;
@@ -137,8 +82,8 @@ export async function getSessionAnalytics(
     const sessionsWithPageviews = sessions.map((s) => ({
       id: s.id,
       sessionId: s.session_id,
-      startedAt: new Date(s.started_at),
-      endedAt: s.ended_at ? new Date(s.ended_at) : null,
+      startedAt: parseClickHouseDate(s.started_at),
+      endedAt: s.ended_at ? parseClickHouseDate(s.ended_at) : null,
       duration: s.duration,
       didBounce: s.did_bounce,
       visitorId: s.visitor_id,
@@ -213,7 +158,7 @@ export async function getRecentSessions(projectId: string, limit: number = 10) {
           acc[pv.session_id].push({
             id: pv.id,
             url: pv.url,
-            timestamp: new Date(pv.timestamp),
+            timestamp: parseClickHouseDate(pv.timestamp),
           });
         }
         return acc;
@@ -224,7 +169,7 @@ export async function getRecentSessions(projectId: string, limit: number = 10) {
     return sessions.map((s) => ({
       id: s.id,
       sessionId: s.session_id,
-      startedAt: new Date(s.started_at),
+      startedAt: parseClickHouseDate(s.started_at),
       endedAt: null,
       duration: null,
       didBounce: false,
@@ -250,29 +195,13 @@ export async function cleanupStaleSessions(projectId?: string) {
   try {
     const analytics = new AnalyticsService();
 
-    // Clean up in PostgreSQL
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-    const result = await prisma.trackedSession.updateMany({
-      where: {
-        ...(projectId && { projectId }),
-        endedAt: null, // Sessions that haven't ended
-        startedAt: {
-          lt: thirtyMinutesAgo, // Started more than 30 minutes ago
-        },
-      },
-      data: {
-        endedAt: new Date(),
-        duration: 1800, // 30 minutes in seconds
-        didBounce: false,
-      },
-    });
-
-    // Clean up in ClickHouse (if projectId provided, otherwise skip)
+    // Clean up in ClickHouse only (if projectId provided, otherwise skip)
     if (projectId) {
       await analytics.cleanupStaleSessions(projectId);
+      return 1; // Return success count
     }
 
-    return result.count;
+    return 0;
   } catch (error) {
     console.error("Error cleaning up stale sessions:", error);
     return 0;
@@ -282,63 +211,62 @@ export async function cleanupStaleSessions(projectId?: string) {
 // Get a single session by ID with all related data
 export async function getSessionById(sessionId: string) {
   try {
-    // First get session from PostgreSQL to get project info
-    const sessionFromDb = await prisma.trackedSession.findUnique({
-      where: { id: sessionId },
+    // Get project info from PostgreSQL (project metadata is still in Postgres)
+    // First, try to find the project by querying all projects and matching session
+    const analytics = new AnalyticsService();
+    
+    // Get all sessions from ClickHouse to find the one with matching id
+    // This is inefficient but necessary since we don't have projectId
+    // In practice, this function should receive projectId as a parameter
+    const allProjects = await prisma.project.findMany({
       select: {
-        projectId: true,
-        project: {
-          select: {
-            name: true,
-            domain: true,
-          },
-        },
+        id: true,
+        name: true,
+        domain: true,
       },
     });
 
-    if (!sessionFromDb) {
-      throw new Error("Session not found");
+    // Try each project until we find the session
+    for (const project of allProjects) {
+      const sessions = await analytics.getSessions({
+        projectId: project.id,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const sessionData = sessions.find((s) => s.id === sessionId);
+
+      if (sessionData) {
+        const session = await analytics.getSessionById(
+          sessionData.session_id,
+          project.id,
+        );
+
+        if (session) {
+          return {
+            id: session.id,
+            sessionId: session.session_id,
+            startedAt: parseClickHouseDate(session.started_at),
+            endedAt: session.ended_at ? parseClickHouseDate(session.ended_at) : null,
+            duration: session.duration,
+            didBounce: session.did_bounce,
+            visitorId: session.visitor_id,
+            entryPage: session.entry_page,
+            exitPage: session.exit_page,
+            userAgent: session.user_agent,
+            country: session.country,
+            city: session.city,
+            projectId: session.project_id,
+            pageViewEvents: session.pageViewEvents,
+            project: {
+              name: project.name,
+              domain: project.domain,
+            },
+          };
+        }
+      }
     }
 
-    // Get full session data from ClickHouse
-    const analytics = new AnalyticsService();
-    const sessions = await analytics.getSessions({
-      projectId: sessionFromDb.projectId,
-      limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-    });
-
-    const sessionData = sessions.find((s) => s.id === sessionId);
-
-    if (!sessionData) {
-      throw new Error("Session not found");
-    }
-
-    const session = await analytics.getSessionById(
-      sessionData.session_id,
-      sessionFromDb.projectId,
-    );
-
-    if (!session) {
-      throw new Error("Session not found");
-    }
-
-    return {
-      id: session.id,
-      sessionId: session.session_id,
-      startedAt: new Date(session.started_at),
-      endedAt: session.ended_at ? new Date(session.ended_at) : null,
-      duration: session.duration,
-      didBounce: session.did_bounce,
-      visitorId: session.visitor_id,
-      entryPage: session.entry_page,
-      exitPage: session.exit_page,
-      userAgent: session.user_agent,
-      country: session.country,
-      city: session.city,
-      projectId: session.project_id,
-      pageViewEvents: session.pageViewEvents,
-      project: sessionFromDb.project,
-    };
+    throw new Error("Session not found");
   } catch (error) {
     console.error("Error getting session by ID:", error);
     throw error;

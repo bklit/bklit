@@ -31,27 +31,15 @@ export function SessionAnalyticsCard({
   projectId,
   organizationId,
 }: SessionAnalyticsCardProps) {
-  const [dateParams] = useQueryStates(
-    {
-      startDate: parseAsIsoDateTime,
-      endDate: parseAsIsoDateTime,
-    },
-    {
-      history: "push",
-    },
-  );
-
-  const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date;
-  }, [dateParams.startDate, dateParams.endDate]);
-
-  const endDate = dateParams.endDate ?? undefined;
-
   const trpc = useTRPC();
+
+  // For "Recent Sessions" card, always show the most recent sessions regardless of date filters
+  // Only show sessions from the last 7 days to keep it relevant
+  const startDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date;
+  }, []);
 
   const { data: sessionsData, isLoading } = useQuery(
     trpc.session.getRecent.queryOptions({
@@ -59,7 +47,7 @@ export function SessionAnalyticsCard({
       organizationId,
       limit: 10,
       startDate,
-      endDate,
+      endDate: undefined, // No end date - show all recent sessions
     }),
   );
 
@@ -131,9 +119,13 @@ export function SessionAnalyticsCard({
                     </div>
                   </div>
                   <div className="gap-2 text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(session.startedAt), {
-                      addSuffix: true,
-                    })}
+                    {formatDistanceToNow(
+                      (session as { updatedAt?: Date }).updatedAt ||
+                        session.startedAt,
+                      {
+                        addSuffix: true,
+                      },
+                    )}
                   </div>
                 </Link>
               );

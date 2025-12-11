@@ -10,6 +10,11 @@ import type {
   TrackedSessionData,
 } from "./types";
 
+// Helper to parse ClickHouse DateTime strings as UTC
+function parseClickHouseDate(dateString: string): Date {
+  return new Date(dateString + "Z");
+}
+
 function formatDateForClickHouse(date: Date): string {
   return date.toISOString().replace("T", " ").replace("Z", "").slice(0, 19);
 }
@@ -18,39 +23,50 @@ export class AnalyticsService {
   private client = getClickHouseClient();
 
   async createPageView(data: PageViewData): Promise<void> {
-    await this.client.insert({
-      table: "page_view_event",
-      values: [
-        {
-          id: data.id,
-          url: data.url,
-          timestamp: data.timestamp,
-          created_at: data.createdAt || new Date(),
-          city: data.city,
-          country: data.country,
-          country_code: data.countryCode,
-          ip: data.ip,
-          isp: data.isp,
-          lat: data.lat,
-          lon: data.lon,
-          mobile: data.mobile,
-          region: data.region,
-          region_name: data.regionName,
-          timezone: data.timezone,
-          zip: data.zip,
-          user_agent: data.userAgent,
-          session_id: data.sessionId,
-          project_id: data.projectId,
-          referrer: data.referrer,
-          utm_campaign: data.utmCampaign,
-          utm_content: data.utmContent,
-          utm_medium: data.utmMedium,
-          utm_source: data.utmSource,
-          utm_term: data.utmTerm,
-        },
-      ],
-      format: "JSONEachRow",
-    });
+    try {
+      await this.client.insert({
+        table: "page_view_event",
+        values: [
+          {
+            id: data.id,
+            url: data.url,
+            timestamp: data.timestamp,
+            created_at: data.createdAt || new Date(),
+            city: data.city,
+            country: data.country,
+            country_code: data.countryCode,
+            ip: data.ip,
+            isp: data.isp,
+            lat: data.lat,
+            lon: data.lon,
+            mobile: data.mobile,
+            region: data.region,
+            region_name: data.regionName,
+            timezone: data.timezone,
+            zip: data.zip,
+            user_agent: data.userAgent,
+            session_id: data.sessionId,
+            project_id: data.projectId,
+            referrer: data.referrer,
+            utm_campaign: data.utmCampaign,
+            utm_content: data.utmContent,
+            utm_medium: data.utmMedium,
+            utm_source: data.utmSource,
+            utm_term: data.utmTerm,
+          },
+        ],
+        format: "JSONEachRow",
+      });
+    } catch (error) {
+      console.error("❌ ClickHouse: Error inserting page view:", error);
+      console.error("Page view data:", {
+        id: data.id,
+        url: data.url,
+        projectId: data.projectId,
+        sessionId: data.sessionId,
+      });
+      throw error;
+    }
   }
 
   async createTrackedEvent(data: TrackedEventData): Promise<void> {
@@ -71,28 +87,147 @@ export class AnalyticsService {
     });
   }
 
-  async createTrackedSession(data: TrackedSessionData): Promise<void> {
-    await this.client.insert({
-      table: "tracked_session",
-      values: [
-        {
-          id: data.id,
-          session_id: data.sessionId,
-          started_at: data.startedAt,
-          ended_at: data.endedAt,
-          duration: data.duration,
-          did_bounce: data.didBounce ?? false,
-          visitor_id: data.visitorId,
-          entry_page: data.entryPage,
-          exit_page: data.exitPage,
-          user_agent: data.userAgent,
-          country: data.country,
-          city: data.city,
-          project_id: data.projectId,
-          updated_at: new Date(), // Set updated_at to current time
-        },
-      ],
+  async sessionExists(sessionId: string): Promise<boolean> {
+    const result = await this.client.query({
+      query: `
+        SELECT count() as count
+        FROM (
+          SELECT session_id
+          FROM tracked_session
+          WHERE session_id = {sessionId:String}
+          LIMIT 1
+        )
+      `,
+      query_params: { sessionId },
       format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ count: number }>;
+    return (rows[0]?.count || 0) > 0;
+  }
+
+  async createTrackedSession(data: TrackedSessionData): Promise<void> {
+    try {
+      await this.client.insert({
+        table: "tracked_session",
+        values: [
+          {
+            id: data.id,
+            session_id: data.sessionId,
+            started_at: data.startedAt,
+            ended_at: data.endedAt,
+            duration: data.duration,
+            did_bounce: data.didBounce ?? false,
+            visitor_id: data.visitorId,
+            entry_page: data.entryPage,
+            exit_page: data.exitPage,
+            user_agent: data.userAgent,
+            country: data.country,
+            city: data.city,
+            project_id: data.projectId,
+            updated_at: new Date(), // Set updated_at to current time
+          },
+        ],
+        format: "JSONEachRow",
+      });
+    } catch (error) {
+      console.error("❌ ClickHouse: Error inserting session:", error);
+      console.error("Session data:", {
+        id: data.id,
+        sessionId: data.sessionId,
+        projectId: data.projectId,
+      });
+      throw error;
+    }
+  }
+
+  async endSession(sessionId: string, projectId: string): Promise<void> {
+    // Get the latest session state
+    const existingSession = await this.client.query({
+      query: `
+        SELECT 
+          id,
+          session_id,
+          started_at,
+          ended_at,
+          duration,
+          did_bounce,
+          visitor_id,
+          entry_page,
+          exit_page,
+          user_agent,
+          country,
+          city,
+          project_id
+        FROM (
+          SELECT 
+            id,
+            session_id,
+            started_at,
+            ended_at,
+            duration,
+            did_bounce,
+            visitor_id,
+            entry_page,
+            exit_page,
+            user_agent,
+            country,
+            city,
+            project_id,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE session_id = {sessionId:String}
+            AND project_id = {projectId:String}
+        )
+        WHERE rn = 1
+      `,
+      query_params: { sessionId, projectId },
+      format: "JSONEachRow",
+    });
+
+    const sessions = (await existingSession.json()) as Array<{
+      id: string;
+      session_id: string;
+      started_at: string;
+      ended_at: string | null;
+      duration: number | null;
+      did_bounce: boolean;
+      visitor_id: string | null;
+      entry_page: string;
+      exit_page: string | null;
+      user_agent: string | null;
+      country: string | null;
+      city: string | null;
+      project_id: string;
+    }>;
+
+    if (sessions.length === 0) return;
+
+    const session = sessions[0];
+    if (!session || session.ended_at) return; // Already ended
+
+    // Calculate duration
+    const startedAt = new Date(session.started_at);
+    const endedAt = new Date();
+    const duration = Math.floor(
+      (endedAt.getTime() - startedAt.getTime()) / 1000,
+    );
+
+    // Create new row with ended session
+    await this.createTrackedSession({
+      id: session.id,
+      sessionId: session.session_id,
+      startedAt: startedAt,
+      endedAt: endedAt,
+      duration: duration,
+      didBounce: session.did_bounce,
+      visitorId: session.visitor_id,
+      entryPage: session.entry_page,
+      exitPage: session.exit_page,
+      userAgent: session.user_agent,
+      country: session.country,
+      city: session.city,
+      projectId: session.project_id,
     });
   }
 
@@ -250,6 +385,68 @@ export class AnalyticsService {
     }>;
   }
 
+  async getPageViewsBySessionIds(
+    projectId: string,
+    sessionIds: string[],
+  ): Promise<
+    Array<{
+      id: string;
+      url: string;
+      timestamp: string;
+      session_id: string | null;
+      country?: string | null;
+      country_code?: string | null;
+      lat?: number | null;
+      lon?: number | null;
+      city?: string | null;
+    }>
+  > {
+    if (sessionIds.length === 0) return [];
+
+    // ClickHouse doesn't support array parameters directly, so we query all pageviews
+    // for the project and filter by session_id in code (more reliable)
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          id,
+          url,
+          timestamp,
+          session_id,
+          country,
+          country_code,
+          lat,
+          lon,
+          city
+        FROM page_view_event
+        WHERE project_id = {projectId:String}
+          AND session_id != ''
+        ORDER BY timestamp ASC
+      `,
+      query_params: {
+        projectId,
+      },
+      format: "JSONEachRow",
+    });
+
+    const allPageviews = (await result.json()) as Array<{
+      id: string;
+      url: string;
+      timestamp: string;
+      session_id: string | null;
+      country?: string | null;
+      country_code?: string | null;
+      lat?: number | null;
+      lon?: number | null;
+      city?: string | null;
+    }>;
+
+    // Filter to only the session IDs we need
+    const sessionIdSet = new Set(sessionIds);
+    return allPageviews.filter(
+      (pv) => pv.session_id && sessionIdSet.has(pv.session_id),
+    );
+  }
+
   async getStats(query: StatsQuery) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };
@@ -344,12 +541,14 @@ export class AnalyticsService {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };
 
+    // Filter by updated_at for date ranges to show recently active sessions
+    // This ensures we get sessions that were active in the date range, not just started then
     if (query.startDate) {
-      conditions.push("started_at >= {startDate:DateTime}");
+      conditions.push("updated_at >= {startDate:DateTime}");
       params.startDate = formatDateForClickHouse(query.startDate);
     }
     if (query.endDate) {
-      conditions.push("started_at <= {endDate:DateTime}");
+      conditions.push("updated_at <= {endDate:DateTime}");
       params.endDate = formatDateForClickHouse(query.endDate);
     }
 
@@ -364,6 +563,7 @@ export class AnalyticsService {
           id,
           session_id,
           started_at,
+          updated_at,
           ended_at,
           duration,
           did_bounce,
@@ -379,6 +579,7 @@ export class AnalyticsService {
             id,
             session_id,
             started_at,
+            updated_at,
             ended_at,
             duration,
             did_bounce,
@@ -394,7 +595,7 @@ export class AnalyticsService {
           WHERE ${conditions.join(" AND ")}
         )
         WHERE rn = 1
-        ORDER BY started_at DESC
+        ORDER BY updated_at DESC
         LIMIT {limit:UInt32}
         OFFSET {offset:UInt32}
       `,
@@ -406,6 +607,7 @@ export class AnalyticsService {
       id: string;
       session_id: string;
       started_at: string;
+      updated_at: string;
       ended_at: string | null;
       duration: number | null;
       did_bounce: boolean;
@@ -508,14 +710,14 @@ export class AnalyticsService {
           SELECT 
             session_id,
             ended_at,
-            started_at,
+            updated_at,
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
           FROM tracked_session
           WHERE project_id = {projectId:String}
+            AND updated_at >= {thirtyMinutesAgo:DateTime}
         )
         WHERE rn = 1
           AND ended_at IS NULL
-          AND started_at >= {thirtyMinutesAgo:DateTime}
       `,
       query_params: {
         projectId,
@@ -941,21 +1143,35 @@ export class AnalyticsService {
   async getLiveUserLocations(projectId: string) {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    // Get live sessions
+    // Get live sessions using window function to get latest state per session_id
     const sessionsResult = await this.client.query({
       query: `
         SELECT 
           id,
           session_id,
           started_at,
+          updated_at,
           user_agent,
           country,
           city
-        FROM tracked_session
-        WHERE project_id = {projectId:String}
+        FROM (
+          SELECT 
+            id,
+            session_id,
+            started_at,
+            updated_at,
+            ended_at,
+            user_agent,
+            country,
+            city,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE project_id = {projectId:String}
+            AND updated_at >= {thirtyMinutesAgo:DateTime}
+        )
+        WHERE rn = 1
           AND ended_at IS NULL
-          AND started_at >= {thirtyMinutesAgo:DateTime}
-        ORDER BY started_at DESC
+        ORDER BY updated_at DESC
       `,
       query_params: {
         projectId,
@@ -968,6 +1184,7 @@ export class AnalyticsService {
       id: string;
       session_id: string;
       started_at: string;
+      updated_at: string;
       user_agent: string | null;
       country: string | null;
       city: string | null;
@@ -977,51 +1194,23 @@ export class AnalyticsService {
 
     const sessionIds = sessions.map((s) => s.session_id);
 
-    // Get latest pageview for each session
-    // Query all pageviews and filter in code (more reliable than Array parameter)
-    const pageviewsResult = await this.client.query({
-      query: `
-        SELECT 
-          session_id,
-          country,
-          country_code,
-          lat,
-          lon,
-          city,
-          timestamp
-        FROM page_view_event
-        WHERE project_id = {projectId:String}
-          AND session_id != ''
-        ORDER BY timestamp DESC
-      `,
-      query_params: {
-        projectId,
-      },
-      format: "JSONEachRow",
-    });
-
-    const allPageviews = (await pageviewsResult.json()) as Array<{
-      session_id: string | null;
-      country: string | null;
-      country_code: string | null;
-      lat: number | null;
-      lon: number | null;
-      city: string | null;
-      timestamp: string;
-    }>;
-
-    // Filter to only relevant sessions and get latest per session
-    const relevantPageviews = allPageviews.filter(
-      (pv) => pv.session_id && sessionIds.includes(pv.session_id),
+    // Get pageviews for these sessions using the efficient method
+    const pageviews = await this.getPageViewsBySessionIds(
+      projectId,
+      sessionIds,
     );
 
-    const latestPageviewBySession = new Map<
-      string,
-      (typeof relevantPageviews)[0]
-    >();
-    for (const pv of relevantPageviews) {
-      if (pv.session_id && !latestPageviewBySession.has(pv.session_id)) {
-        latestPageviewBySession.set(pv.session_id, pv);
+    // Get latest pageview per session
+    const latestPageviewBySession = new Map<string, (typeof pageviews)[0]>();
+    for (const pv of pageviews) {
+      if (pv.session_id) {
+        const existing = latestPageviewBySession.get(pv.session_id);
+        if (
+          !existing ||
+          new Date(pv.timestamp) > new Date(existing.timestamp)
+        ) {
+          latestPageviewBySession.set(pv.session_id, pv);
+        }
       }
     }
 
@@ -1044,7 +1233,8 @@ export class AnalyticsService {
 
   async getRecentSessions(projectId: string, since: Date, limit: number = 10) {
     // Simple approach: Use window function to get latest row per session_id
-    // This is much simpler than argMax and avoids all the aggregate function issues
+    // Filter by updated_at to get sessions that were recently active
+    // Order by updated_at DESC to show most recently active sessions first
     const result = await this.client.query({
       query: `
         SELECT 
@@ -1060,6 +1250,7 @@ export class AnalyticsService {
             id,
             session_id,
             started_at,
+            updated_at,
             country,
             city,
             user_agent,
@@ -1067,10 +1258,10 @@ export class AnalyticsService {
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
           FROM tracked_session
           WHERE project_id = {projectId:String}
-            AND started_at >= {since:DateTime}
+            AND updated_at >= {since:DateTime}
         )
         WHERE rn = 1
-        ORDER BY started_at DESC
+        ORDER BY updated_at DESC
         LIMIT {limit:UInt32}
       `,
       query_params: {
@@ -1590,7 +1781,7 @@ export class AnalyticsService {
           acc[pv.session_id].push({
             id: pv.id,
             url: pv.url,
-            timestamp: new Date(pv.timestamp),
+            timestamp: parseClickHouseDate(pv.timestamp),
           });
         }
         return acc;
@@ -1606,7 +1797,7 @@ export class AnalyticsService {
           }
           acc[ev.session_id].push({
             id: ev.id,
-            timestamp: new Date(ev.timestamp),
+            timestamp: parseClickHouseDate(ev.timestamp),
             metadata: ev.metadata ? JSON.parse(ev.metadata) : null,
             eventDefinitionId: ev.event_definition_id,
           });
@@ -1627,8 +1818,8 @@ export class AnalyticsService {
     return sessions.map((session) => ({
       id: session.id,
       sessionId: session.session_id,
-      startedAt: new Date(session.started_at),
-      endedAt: session.ended_at ? new Date(session.ended_at) : null,
+      startedAt: parseClickHouseDate(session.started_at),
+      endedAt: session.ended_at ? parseClickHouseDate(session.ended_at) : null,
       duration: session.duration,
       didBounce: session.did_bounce,
       visitorId: session.visitor_id,

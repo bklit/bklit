@@ -1,6 +1,6 @@
 import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const acquisitionRouter = createTRPCRouter({
@@ -61,7 +61,7 @@ export const acquisitionRouter = createTRPCRouter({
             utmMedium: pageview.utm_medium,
             utmCampaign: pageview.utm_campaign,
           });
-          const timestamp = new Date(pageview.timestamp);
+          const timestamp = parseClickHouseDate(pageview.timestamp);
 
           if (!acc[source]) {
             acc[source] = {
@@ -290,7 +290,7 @@ export const acquisitionRouter = createTRPCRouter({
             utmCampaign: pageview.utm_campaign,
           });
           const dateKey =
-            new Date(pageview.timestamp).toISOString().split("T")[0] ?? "";
+            parseClickHouseDate(pageview.timestamp).toISOString().split("T")[0] ?? "";
 
           if (!acc[source]) {
             acc[source] = {};

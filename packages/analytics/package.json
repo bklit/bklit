@@ -12,7 +12,10 @@
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "with-env": "dotenv -e ../../.env --"
+    "with-env": "dotenv -e ../../.env --",
+    "verify": "dotenv -e ../../.env -- tsx src/migrations/verify-data.ts",
+    "clear-data": "dotenv -e ../../.env -- tsx src/migrations/clear-data.ts",
+    "migrate": "dotenv -e ../../.env -- tsx src/migrations/migrate-data.ts"
   },
   "dependencies": {
     "@bklit/db": "workspace:*",
