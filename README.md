@@ -416,7 +416,7 @@ bklit/
 ### Key Technologies
 
 - **Framework:** Next.js 15 (App Router), React 19
-- **Database:** PostgreSQL with Prisma ORM
+- **Database:** PostgreSQL with Prisma ORM & Clickhouse for Analytics
 - **Auth:** Better Auth with GitHub/Google OAuth
 - **Billing:** Polar.sh
 - **Email:** Resend with React Email
