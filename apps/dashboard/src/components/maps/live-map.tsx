@@ -291,9 +291,23 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
 
     return () => {
       if (map.current) {
-        map.current.remove();
-        map.current = null;
+        try {
+          // Stop all animations and interactions
+          map.current.stop();
+          // Remove all event listeners
+          map.current.off();
+          // Remove the map
+          map.current.remove();
+        } catch (error) {
+          // Ignore errors during cleanup (map might already be removed)
+          console.warn("Error cleaning up map:", error);
+        } finally {
+          map.current = null;
+        }
       }
+      // Clear the spin function reference
+      spinGlobeRef.current = null;
+      pulsingDotRef.current = null;
     };
   }, []);
 

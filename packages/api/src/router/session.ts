@@ -1,5 +1,6 @@
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const sessionRouter = createTRPCRouter({
@@ -47,30 +48,19 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          startedAt: true,
-          didBounce: true,
-        },
-        orderBy: { startedAt: "asc" },
+      const timeSeries = await ctx.analytics.getTimeSeries({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
       });
 
-      const sessionCountsByDay = sessions.reduce(
-        (acc, s) => {
-          const dateKey = s.startedAt.toISOString().split("T")[0] ?? "";
-          if (!acc[dateKey]) {
-            acc[dateKey] = { total: 0, engaged: 0, bounced: 0 };
-          }
-          acc[dateKey].total += 1;
-          if (s.didBounce) {
-            acc[dateKey].bounced += 1;
-          } else {
-            acc[dateKey].engaged += 1;
-          }
+      const sessionCountsByDay = timeSeries.reduce(
+        (acc, item) => {
+          acc[item.date] = {
+            total: item.total,
+            engaged: item.engaged,
+            bounced: item.bounced,
+          };
           return acc;
         },
         {} as Record<
@@ -149,28 +139,43 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: { projectId: input.projectId, ...(dateFilter && dateFilter) },
-        select: {
-          id: true,
-          startedAt: true,
-          userAgent: true,
-          pageViewEvents: {
-            select: { mobile: true },
-            orderBy: { timestamp: "asc" },
-          },
-        },
+      const sessions = await ctx.analytics.getSessions({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
+
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({ mobile: pv.mobile });
+          }
+          return acc;
+        },
+        {} as Record<string, Array<{ mobile: boolean | null }>>,
+      );
 
       const totalSessions = sessions.length;
       let mobileSessions = 0;
       let desktopSessions = 0;
 
       for (const s of sessions) {
+        const sessionPageviews = pageviewsBySession[s.session_id] || [];
         const isMobile =
-          s.pageViewEvents.some((e) => e.mobile) ||
-          (s.userAgent
-            ? /Mobile|Android|iPhone|iPad/.test(s.userAgent)
+          sessionPageviews.some((pv) => pv.mobile) ||
+          (s.user_agent
+            ? /Mobile|Android|iPhone|iPad/.test(s.user_agent)
             : false);
         if (isMobile) mobileSessions += 1;
         else desktopSessions += 1;
@@ -187,6 +192,43 @@ export const sessionRouter = createTRPCRouter({
         limit: z.number().min(1).max(1000).default(10),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
+      }),
+    )
+    .output(
+      z.object({
+        sessions: z.array(
+          z.object({
+            id: z.string(),
+            sessionId: z.string(),
+            startedAt: z.date(),
+            updatedAt: z.date(),
+            endedAt: z.date().nullable(),
+            duration: z.number().nullable(),
+            didBounce: z.boolean(),
+            visitorId: z.string().nullable(),
+            entryPage: z.string(),
+            exitPage: z.string().nullable(),
+            userAgent: z.string().nullable(),
+            country: z.string().nullable(),
+            city: z.string().nullable(),
+            projectId: z.string(),
+            pageViewEvents: z.array(
+              z.object({
+                id: z.string(),
+                url: z.string(),
+                timestamp: z.date(),
+              }),
+            ),
+          }),
+        ),
+        totalCount: z.number(),
+        pagination: z.object({
+          page: z.number(),
+          limit: z.number(),
+          totalPages: z.number(),
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+        }),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -232,34 +274,76 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Get total count for pagination
-      const totalCount = await ctx.prisma.trackedSession.count({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
+      const allSessions = await ctx.analytics.getSessions({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT, // Get all sessions for accurate totalCount
       });
 
-      // Get paginated sessions
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
+      const totalCount = allSessions.length;
+
+      const sessions = allSessions.slice(
+        (input.page - 1) * input.limit,
+        input.page * input.limit,
+      );
+
+      // Get pageviews for the specific sessions we found
+      // This ensures we get all pageviews for these sessions regardless of when they occurred
+      const sessionIds = sessions.map((s) => s.session_id);
+      const pageviews =
+        sessionIds.length > 0
+          ? await ctx.analytics.getPageViewsBySessionIds(
+              input.projectId,
+              sessionIds,
+            )
+          : [];
+
+      // Create a map of session_id -> pageviews
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({
+              id: pv.id,
+              url: pv.url,
+              timestamp: parseClickHouseDate(pv.timestamp),
+            });
+          }
+          return acc;
         },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "asc" },
-          },
-        },
-        orderBy: {
-          startedAt: "desc",
-        },
-        skip: (input.page - 1) * input.limit,
-        take: input.limit,
-      });
+        {} as Record<
+          string,
+          Array<{ id: string; url: string; timestamp: Date }>
+        >,
+      );
+
+      // Map sessions with their pageviews
+      // ClickHouse returns DateTime as strings without timezone - treat as UTC
+      const sessionsWithPageviews = sessions.map((s) => ({
+        id: s.id,
+        sessionId: s.session_id,
+        startedAt: parseClickHouseDate(s.started_at),
+        updatedAt: parseClickHouseDate(s.updated_at),
+        endedAt: s.ended_at ? parseClickHouseDate(s.ended_at) : null,
+        duration: s.duration,
+        didBounce: s.did_bounce,
+        visitorId: s.visitor_id,
+        entryPage: s.entry_page,
+        exitPage: s.exit_page,
+        userAgent: s.user_agent,
+        country: s.country,
+        city: s.city,
+        projectId: s.project_id,
+        pageViewEvents: (pageviewsBySession[s.session_id] || []).sort(
+          (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+        ),
+      }));
 
       return {
-        sessions,
+        sessions: sessionsWithPageviews,
         totalCount,
         pagination: {
           page: input.page,
@@ -304,30 +388,54 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Get session by ID
-      const session = await ctx.prisma.trackedSession.findFirst({
-        where: {
-          id: input.sessionId,
-          projectId: input.projectId,
-        },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "asc" },
-          },
-          project: {
-            select: {
-              name: true,
-              domain: true,
-            },
-          },
-        },
+      // Extract project info from the already-fetched project
+      const projectInfo = {
+        name: project.name,
+        domain: project.domain,
+      };
+
+      // Get session from ClickHouse - need to find by id first
+      // Since ClickHouse uses session_id, we need to query sessions and find by id
+      const sessions = await ctx.analytics.getSessions({
+        projectId: input.projectId,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
+
+      const sessionData = sessions.find((s) => s.id === input.sessionId);
+
+      if (!sessionData) {
+        throw new Error("Session not found");
+      }
+
+      // Get full session with pageviews and events
+      const session = await ctx.analytics.getSessionById(
+        sessionData.session_id,
+        input.projectId,
+      );
 
       if (!session) {
         throw new Error("Session not found");
       }
 
-      return session;
+      return {
+        id: session.id,
+        sessionId: session.session_id,
+        startedAt: parseClickHouseDate(session.started_at),
+        endedAt: session.ended_at
+          ? parseClickHouseDate(session.ended_at)
+          : null,
+        duration: session.duration,
+        didBounce: session.did_bounce,
+        visitorId: session.visitor_id,
+        entryPage: session.entry_page,
+        exitPage: session.exit_page,
+        userAgent: session.user_agent,
+        country: session.country,
+        city: session.city,
+        projectId: session.project_id,
+        pageViewEvents: session.pageViewEvents,
+        project: projectInfo,
+      };
     }),
   liveUsers: protectedProcedure
     .input(
@@ -362,33 +470,11 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Clean up stale sessions first
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      await ctx.prisma.trackedSession.updateMany({
-        where: {
-          projectId: input.projectId,
-          endedAt: null,
-          startedAt: {
-            lt: thirtyMinutesAgo,
-          },
-        },
-        data: {
-          endedAt: new Date(),
-          duration: 1800, // 30 minutes in seconds
-          didBounce: false,
-        },
-      });
+      // Clean up stale sessions in ClickHouse only
+      await ctx.analytics.cleanupStaleSessions(input.projectId);
 
-      // Count active sessions
-      const liveUsers = await ctx.prisma.trackedSession.count({
-        where: {
-          projectId: input.projectId,
-          endedAt: null, // Active sessions only
-          startedAt: {
-            gte: thirtyMinutesAgo, // Only count sessions started in last 30 minutes
-          },
-        },
-      });
+      // Count active sessions from ClickHouse
+      const liveUsers = await ctx.analytics.getLiveUsers(input.projectId);
 
       return liveUsers;
     }),
@@ -425,39 +511,13 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Clean up stale sessions first
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      await ctx.prisma.trackedSession.updateMany({
-        where: {
-          projectId: input.projectId,
-          endedAt: null,
-          startedAt: {
-            lt: thirtyMinutesAgo,
-          },
-        },
-        data: {
-          endedAt: new Date(),
-          duration: 1800, // 30 minutes in seconds
-          didBounce: false,
-        },
-      });
+      // Clean up stale sessions in ClickHouse only
+      await ctx.analytics.cleanupStaleSessions(input.projectId);
 
-      // Get active sessions with their latest page view location
-      const liveSessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          endedAt: null, // Active sessions only
-          startedAt: {
-            gte: thirtyMinutesAgo, // Only count sessions started in last 30 minutes
-          },
-        },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "desc" },
-            take: 10, // Get recent page views to find one with valid location
-          },
-        },
-      });
+      // Get active sessions with their latest page view location from ClickHouse
+      const liveSessionsData = await ctx.analytics.getLiveUserLocations(
+        input.projectId,
+      );
 
       // Helper function to validate coordinates
       const isValidCoordinate = (
@@ -522,46 +582,38 @@ export const sessionRouter = createTRPCRouter({
       };
 
       // Filter to only sessions with valid location data and format as GeoJSON features
-      return liveSessions
+      return liveSessionsData
         .map((session) => {
-          // Find the most recent page view with valid coordinates
-          const pageViewWithLocation = session.pageViewEvents.find((pve) =>
-            isValidCoordinate(pve.lat, pve.lon),
-          );
-
           let coordinates: [number, number] | null = null;
           let city: string | null = null;
           let country: string | null = null;
           let countryCode: string | null = null;
 
-          if (pageViewWithLocation) {
-            // Use exact coordinates if available
-            coordinates = [
-              pageViewWithLocation.lon!,
-              pageViewWithLocation.lat!,
-            ] as [number, number];
-            city = pageViewWithLocation.city;
-            country = pageViewWithLocation.country;
-            countryCode = pageViewWithLocation.countryCode;
-          } else {
-            // Fallback to country center coordinates if we have country code
-            const mostRecentPageView = session.pageViewEvents[0];
-            if (mostRecentPageView?.countryCode) {
-              const countryCodeUpper =
-                mostRecentPageView.countryCode.toUpperCase();
-              const centerCoords = countryCenterCoords[countryCodeUpper];
+          // Use pageview coordinates if available and valid
+          if (
+            session.lat !== null &&
+            session.lon !== null &&
+            isValidCoordinate(session.lat, session.lon)
+          ) {
+            coordinates = [session.lon, session.lat] as [number, number];
+            city = session.city;
+            country = session.pageview_country || session.country;
+            countryCode = session.pageview_country_code;
+          } else if (session.pageview_country_code) {
+            // Fallback to country center coordinates
+            const countryCodeUpper =
+              session.pageview_country_code.toUpperCase();
+            const centerCoords = countryCenterCoords[countryCodeUpper];
 
-              if (centerCoords) {
-                coordinates = centerCoords;
-                city = mostRecentPageView.city;
-                country = mostRecentPageView.country;
-                countryCode = mostRecentPageView.countryCode;
-              } else {
-                // Log when country code exists but we don't have center coordinates
-                console.log(
-                  `No center coordinates for country code: ${countryCodeUpper}`,
-                );
-              }
+            if (centerCoords) {
+              coordinates = centerCoords;
+              city = session.city;
+              country = session.pageview_country || session.country;
+              countryCode = session.pageview_country_code;
+            } else {
+              console.log(
+                `No center coordinates for country code: ${countryCodeUpper}`,
+              );
             }
           }
 
@@ -569,7 +621,7 @@ export const sessionRouter = createTRPCRouter({
             return null;
           }
 
-          const userAgent = session.userAgent;
+          const userAgent = session.user_agent;
           const browser = getBrowserFromUserAgent(userAgent);
           const deviceType = getDeviceTypeFromUserAgent(userAgent);
 
@@ -579,7 +631,7 @@ export const sessionRouter = createTRPCRouter({
             city,
             country,
             countryCode,
-            startedAt: session.startedAt,
+            startedAt: parseClickHouseDate(session.started_at),
             browser,
             deviceType,
           };
@@ -626,29 +678,21 @@ export const sessionRouter = createTRPCRouter({
       // Get recent sessions (last 30 seconds by default)
       const since = input.since || new Date(Date.now() - 30 * 1000);
 
-      const recentSessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          startedAt: {
-            gte: since,
-          },
-        },
-        select: {
-          id: true,
-          sessionId: true,
-          startedAt: true,
-          country: true,
-          city: true,
-          userAgent: true,
-          entryPage: true,
-        },
-        orderBy: {
-          startedAt: "desc",
-        },
-        take: 10,
-      });
+      const recentSessions = await ctx.analytics.getRecentSessions(
+        input.projectId,
+        since,
+        10,
+      );
 
-      return recentSessions;
+      return recentSessions.map((s) => ({
+        id: s.id,
+        sessionId: s.session_id,
+        startedAt: parseClickHouseDate(s.started_at),
+        country: s.country,
+        city: s.city,
+        userAgent: s.user_agent,
+        entryPage: s.entry_page,
+      }));
     }),
   getJourneys: protectedProcedure
     .input(
@@ -694,20 +738,43 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "asc" },
-            select: {
-              url: true,
-            },
-          },
-        },
+      const journeys = await ctx.analytics.getSessionJourneys(
+        input.projectId,
+        normalizedStartDate,
+        normalizedEndDate,
+      );
+
+      // Get pageviews for all sessions to build transitions
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
+
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({ url: pv.url, timestamp: pv.timestamp });
+          }
+          return acc;
+        },
+        {} as Record<string, Array<{ url: string; timestamp: string }>>,
+      );
+
+      const sessions = journeys.map((journey) => ({
+        sessionId: journey.session_id,
+        entryPage: journey.entry_page,
+        exitPage: journey.exit_page,
+        pageViewEvents: (pageviewsBySession[journey.session_id] || []).sort(
+          (a, b) =>
+            parseClickHouseDate(a.timestamp).getTime() -
+            parseClickHouseDate(b.timestamp).getTime(),
+        ),
+      }));
 
       function extractPath(url: string): string {
         try {
@@ -818,49 +885,25 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-
-      const liveSessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          endedAt: null,
-          startedAt: {
-            gte: thirtyMinutesAgo,
-          },
-        },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "desc" },
-            take: 1,
-            select: {
-              country: true,
-              countryCode: true,
-            },
-          },
-        },
-      });
+      const liveTopCountries = await ctx.analytics.getLiveTopCountries(
+        input.projectId,
+      );
 
       const countryCounts: Record<
         string,
         { country: string; countryCode: string; count: number }
       > = {};
 
-      for (const session of liveSessions) {
-        const latestPageView = session.pageViewEvents[0];
-        if (!latestPageView?.country || !latestPageView?.countryCode) {
-          continue;
-        }
-
-        const key =
-          latestPageView.countryCode || latestPageView.country || "unknown";
+      for (const item of liveTopCountries) {
+        const key = item.country_code || item.country || "unknown";
         if (!countryCounts[key]) {
           countryCounts[key] = {
-            country: latestPageView.country || "Unknown",
-            countryCode: latestPageView.countryCode || "",
+            country: item.country || "Unknown",
+            countryCode: item.country_code || "",
             count: 0,
           };
         }
-        countryCounts[key].count += 1;
+        countryCounts[key].count += item.count;
       }
 
       return Object.values(countryCounts)
@@ -905,37 +948,18 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-
-      const liveSessions = await ctx.prisma.trackedSession.findMany({
-        where: {
-          projectId: input.projectId,
-          endedAt: null,
-          startedAt: {
-            gte: thirtyMinutesAgo,
-          },
-        },
-        include: {
-          pageViewEvents: {
-            orderBy: { timestamp: "desc" },
-            take: 1,
-          },
-        },
-      });
+      const liveTopPages = await ctx.analytics.getLiveTopPages(input.projectId);
 
       const pathCounts: Record<string, number> = {};
 
-      for (const session of liveSessions) {
-        const latestPageView = session.pageViewEvents[0];
-        if (latestPageView?.url) {
-          let path = latestPageView.url;
-          try {
-            path = new URL(latestPageView.url).pathname;
-          } catch {
-            // Keep original path if URL parsing fails
-          }
-          pathCounts[path] = (pathCounts[path] || 0) + 1;
+      for (const item of liveTopPages) {
+        let path = item.url;
+        try {
+          path = new URL(item.url).pathname;
+        } catch {
+          // Keep original path if URL parsing fails
         }
+        pathCounts[path] = (pathCounts[path] || 0) + item.count;
       }
 
       return Object.entries(pathCounts)

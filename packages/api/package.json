@@ -13,6 +13,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules"
   },
   "dependencies": {
+    "@bklit/analytics": "workspace:*",
     "@bklit/auth": "workspace:*",
     "@bklit/db": "workspace:*",
     "@bklit/email": "workspace:*",

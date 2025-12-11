@@ -1,7 +1,8 @@
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { protectedProcedure } from "../trpc";
 
 export const eventRouter = {
@@ -139,38 +140,32 @@ export const eventRouter = {
         where: {
           projectId: input.projectId,
         },
-        include: {
-          trackedEvents: {
-            ...(dateFilter && { where: dateFilter }),
-            select: {
-              id: true,
-              timestamp: true,
-              metadata: true,
-              sessionId: true,
-            },
-            orderBy: {
-              timestamp: "desc",
-            },
-          },
-        },
         orderBy: {
           createdAt: "desc",
         },
       });
 
-      return events
-        .map((event) => {
+      const eventsWithData = await Promise.all(
+        events.map(async (event) => {
+          const trackedEvents = await ctx.analytics.getTrackedEvents({
+            projectId: input.projectId,
+            eventDefinitionId: event.id,
+            startDate: normalizedStartDate,
+            endDate: normalizedEndDate,
+            limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+          });
+
           const eventTypeCounts: Record<string, number> = {};
           const sessionIds = new Set<string>();
 
-          for (const trackedEvent of event.trackedEvents) {
+          for (const trackedEvent of trackedEvents) {
             const metadata = trackedEvent.metadata as {
               eventType?: string;
             } | null;
             const eventType = metadata?.eventType || "unknown";
             eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
-            if (trackedEvent.sessionId) {
-              sessionIds.add(trackedEvent.sessionId);
+            if (trackedEvent.session_id) {
+              sessionIds.add(trackedEvent.session_id);
             }
           }
 
@@ -181,20 +176,27 @@ export const eventRouter = {
             trackingId: event.trackingId,
             createdAt: event.createdAt,
             updatedAt: event.updatedAt,
-            totalCount: event.trackedEvents.length,
+            totalCount: trackedEvents.length,
             uniqueSessionsCount: sessionIds.size,
             eventTypeCounts,
-            recentEvents: event.trackedEvents.slice(0, 5),
+            recentEvents: trackedEvents.slice(0, 5).map((ev) => ({
+              id: ev.id,
+              timestamp: parseClickHouseDate(ev.timestamp),
+              metadata: ev.metadata,
+              sessionId: ev.session_id,
+            })),
           };
-        })
-        .filter((event) => {
-          // When date filters are applied, only show events with tracked events in that range
-          if (input.startDate || input.endDate) {
-            return event.totalCount > 0;
-          }
-          // When no date filters, show all event definitions
-          return true;
-        });
+        }),
+      );
+
+      return eventsWithData.filter((event) => {
+        // When date filters are applied, only show events with tracked events in that range
+        if (input.startDate || input.endDate) {
+          return event.totalCount > 0;
+        }
+        // When no date filters, show all event definitions
+        return true;
+      });
     }),
 
   listBySession: protectedProcedure
@@ -263,61 +265,107 @@ export const eventRouter = {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      // Get events grouped by session
-      const sessionEvents = await ctx.prisma.trackedEvent.findMany({
-        where: {
-          eventDefinitionId: eventDefinition.id,
+      // Get events from ClickHouse
+      const trackedEvents = await ctx.analytics.getEventsByDefinition(
+        eventDefinition.id,
+        {
           projectId: input.projectId,
-          ...(dateFilter && dateFilter),
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
         },
-        include: {
-          session: true,
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
-      });
+      );
+
+      // Get unique session IDs
+      const sessionIds = new Set<string>();
+      for (const event of trackedEvents) {
+        if (event.session_id) {
+          sessionIds.add(event.session_id);
+        }
+      }
+
+      // Get sessions from ClickHouse
+      const sessions = await Promise.all(
+        Array.from(sessionIds).map(async (sessionId) => {
+          const session = await ctx.analytics.getSessionById(
+            sessionId,
+            input.projectId,
+          );
+          return session ? { sessionId, session } : null;
+        }),
+      );
+
+      const sessionMap = new Map(
+        sessions
+          .filter((s): s is NonNullable<typeof s> => s !== null)
+          .map((s) => [s.sessionId, s.session]),
+      );
 
       // Group events by session
-      const sessionGroups = sessionEvents.reduce(
+      type SessionGroup = {
+        sessionId: string;
+        session: Awaited<
+          ReturnType<typeof ctx.analytics.getSessionById>
+        > | null;
+        events: Array<{
+          id: string;
+          timestamp: Date;
+          metadata: Record<string, unknown> | null;
+          createdAt: Date;
+          eventDefinitionId: string;
+          projectId: string;
+          sessionId: string | null;
+        }>;
+        firstEvent: (typeof trackedEvents)[0];
+        lastEvent: (typeof trackedEvents)[0];
+      };
+
+      const sessionGroups = trackedEvents.reduce(
         (acc, event) => {
-          const sessionId = event.sessionId || "no-session";
+          const sessionId = event.session_id || "no-session";
+          const session = sessionMap.get(sessionId) || null;
+
           if (!acc[sessionId]) {
             acc[sessionId] = {
               sessionId,
-              session: event.session,
+              session,
               events: [],
               firstEvent: event,
               lastEvent: event,
             };
           }
-          acc[sessionId].events.push(event);
+          acc[sessionId].events.push({
+            id: event.id,
+            timestamp: parseClickHouseDate(event.timestamp),
+            metadata: event.metadata,
+            createdAt: parseClickHouseDate(event.created_at),
+            eventDefinitionId: event.event_definition_id,
+            projectId: event.project_id,
+            sessionId: event.session_id,
+          });
           // Update first and last events based on timestamp
-          if (event.timestamp < acc[sessionId].firstEvent.timestamp) {
+          if (
+            parseClickHouseDate(event.timestamp).getTime() <
+            parseClickHouseDate(acc[sessionId].firstEvent.timestamp).getTime()
+          ) {
             acc[sessionId].firstEvent = event;
           }
-          if (event.timestamp > acc[sessionId].lastEvent.timestamp) {
+          if (
+            parseClickHouseDate(event.timestamp).getTime() >
+            parseClickHouseDate(acc[sessionId].lastEvent.timestamp).getTime()
+          ) {
             acc[sessionId].lastEvent = event;
           }
           return acc;
         },
-        {} as Record<
-          string,
-          {
-            sessionId: string;
-            session: (typeof sessionEvents)[0]["session"];
-            events: typeof sessionEvents;
-            firstEvent: (typeof sessionEvents)[0];
-            lastEvent: (typeof sessionEvents)[0];
-          }
-        >,
+        {} as Record<string, SessionGroup>,
       );
 
       // Convert to array and sort by last event timestamp
       const sessionGroupsArray = Object.values(sessionGroups).sort(
         (a, b) =>
-          new Date(b.lastEvent.timestamp).getTime() -
-          new Date(a.lastEvent.timestamp).getTime(),
+          parseClickHouseDate(b.lastEvent.timestamp).getTime() -
+          parseClickHouseDate(a.lastEvent.timestamp).getTime(),
       );
 
       // Apply pagination
@@ -372,8 +420,24 @@ export const eventRouter = {
         return {
           sessionId: group.sessionId,
           session: group.session,
-          firstEvent: group.firstEvent,
-          lastEvent: group.lastEvent,
+          firstEvent: {
+            id: group.firstEvent.id,
+            timestamp: parseClickHouseDate(group.firstEvent.timestamp),
+            metadata: group.firstEvent.metadata,
+            createdAt: parseClickHouseDate(group.firstEvent.created_at),
+            eventDefinitionId: group.firstEvent.event_definition_id,
+            projectId: group.firstEvent.project_id,
+            sessionId: group.firstEvent.session_id,
+          },
+          lastEvent: {
+            id: group.lastEvent.id,
+            timestamp: parseClickHouseDate(group.lastEvent.timestamp),
+            metadata: group.lastEvent.metadata,
+            createdAt: parseClickHouseDate(group.lastEvent.created_at),
+            eventDefinitionId: group.lastEvent.event_definition_id,
+            projectId: group.lastEvent.project_id,
+            sessionId: group.lastEvent.session_id,
+          },
           hasClick,
           hasView,
           hasHover,
@@ -586,43 +650,48 @@ export const eventRouter = {
             }
           : undefined;
 
-      // Get total count for pagination
-      const totalCount = await ctx.prisma.trackedEvent.count({
-        where: {
-          eventDefinitionId: event.id,
-          ...(dateFilter && dateFilter),
+      // Get all events from ClickHouse
+      const allTrackedEvents = await ctx.analytics.getEventsByDefinition(
+        event.id,
+        {
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
         },
-      });
+      );
 
-      // Get paginated events
-      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
-        where: {
-          eventDefinitionId: event.id,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          id: true,
-          timestamp: true,
-          metadata: true,
-          createdAt: true,
-          session: {
-            select: {
-              id: true,
-              sessionId: true,
-              userAgent: true,
-              country: true,
-              city: true,
-              startedAt: true,
-              entryPage: true,
-            },
-          },
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
-        skip: (input.page - 1) * input.limit,
-        take: input.limit,
-      });
+      const totalCount = allTrackedEvents.length;
+
+      // Apply pagination
+      const trackedEvents = allTrackedEvents.slice(
+        (input.page - 1) * input.limit,
+        input.page * input.limit,
+      );
+
+      // Get sessions for these events
+      const sessionIds = new Set<string>();
+      for (const ev of trackedEvents) {
+        if (ev.session_id) {
+          sessionIds.add(ev.session_id);
+        }
+      }
+
+      const sessions = await Promise.all(
+        Array.from(sessionIds).map(async (sessionId) => {
+          const session = await ctx.analytics.getSessionById(
+            sessionId,
+            input.projectId,
+          );
+          return session ? { sessionId, session } : null;
+        }),
+      );
+
+      const sessionMap = new Map(
+        sessions
+          .filter((s): s is NonNullable<typeof s> => s !== null)
+          .map((s) => [s.sessionId, s.session]),
+      );
 
       const eventTypeCounts: Record<string, number> = {};
       const timeSeriesData: Record<string, { views: number; clicks: number }> =
@@ -633,7 +702,6 @@ export const eventRouter = {
       > = {};
 
       // Build time series and type series (data-attr, id, programmatic)
-
       for (const trackedEvent of trackedEvents) {
         const metadata = trackedEvent.metadata as {
           eventType?: string;
@@ -644,7 +712,9 @@ export const eventRouter = {
         const eventType = metadata?.eventType || "unknown";
         eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
 
-        const dateKey = trackedEvent.timestamp.toISOString().split("T")[0];
+        const dateKey = parseClickHouseDate(trackedEvent.timestamp)
+          .toISOString()
+          .split("T")[0];
         if (dateKey) {
           if (!timeSeriesData[dateKey]) {
             timeSeriesData[dateKey] = { views: 0, clicks: 0 };
@@ -682,37 +752,22 @@ export const eventRouter = {
         }
       }
 
-      const totalSessions = await ctx.prisma.trackedSession.count({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && {
-            startedAt: dateFilter.timestamp,
-          }),
-        },
+      // Get total sessions count
+      const sessionStats = await ctx.analytics.getSessionStats({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
       });
+      const totalSessions = sessionStats.total_sessions;
 
       // Count ALL unique sessions that triggered this event (not just paginated results)
-      const allTrackedEvents = await ctx.prisma.trackedEvent.findMany({
-        where: {
-          eventDefinitionId: event.id,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          session: {
-            select: {
-              id: true,
-            },
-          },
-        },
-      });
-
-      const sessionIds = new Set<string>();
+      const allSessionIds = new Set<string>();
       for (const trackedEvent of allTrackedEvents) {
-        if (trackedEvent.session?.id) {
-          sessionIds.add(trackedEvent.session.id);
+        if (trackedEvent.session_id) {
+          allSessionIds.add(trackedEvent.session_id);
         }
       }
-      const sessionsWithEvent = sessionIds.size;
+      const sessionsWithEvent = allSessionIds.size;
 
       const conversionRate =
         totalSessions > 0 ? (sessionsWithEvent / totalSessions) * 100 : 0;
@@ -737,7 +792,13 @@ export const eventRouter = {
         updatedAt: event.updatedAt,
         totalCount: totalCount,
         eventTypeCounts,
-        recentEvents: trackedEvents,
+        recentEvents: trackedEvents.map((ev) => ({
+          id: ev.id,
+          timestamp: parseClickHouseDate(ev.timestamp),
+          metadata: ev.metadata,
+          createdAt: parseClickHouseDate(ev.created_at),
+          session: ev.session_id ? sessionMap.get(ev.session_id) || null : null,
+        })),
         timeSeriesData: timeSeriesArray,
         conversionRate: Number(conversionRate.toFixed(2)),
         totalSessions,
@@ -774,15 +835,6 @@ export const eventRouter = {
               },
             },
           },
-          trackedEvents: {
-            select: {
-              timestamp: true,
-              metadata: true,
-            },
-            orderBy: {
-              timestamp: "desc",
-            },
-          },
         },
       });
 
@@ -794,18 +846,27 @@ export const eventRouter = {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
+      const trackedEvents = await ctx.analytics.getTrackedEvents({
+        projectId: event.projectId,
+        eventDefinitionId: input.eventId,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
       const eventTypeCounts: Record<string, number> = {};
 
-      for (const trackedEvent of event.trackedEvents) {
+      for (const trackedEvent of trackedEvents) {
         const metadata = trackedEvent.metadata as { eventType?: string } | null;
         const eventType = metadata?.eventType || "unknown";
         eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
       }
 
       return {
-        totalCount: event.trackedEvents.length,
+        totalCount: trackedEvents.length,
         eventTypeCounts,
-        recentEvents: event.trackedEvents.slice(0, 10),
+        recentEvents: trackedEvents.slice(0, 10).map((ev) => ({
+          timestamp: parseClickHouseDate(ev.timestamp),
+          metadata: ev.metadata,
+        })),
       };
     }),
 
@@ -853,31 +914,19 @@ export const eventRouter = {
             }
           : undefined;
 
-      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
-        where: {
-          eventDefinition: { projectId: input.projectId },
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          timestamp: true,
-          metadata: true,
-        },
-        orderBy: { timestamp: "asc" },
+      const rawTimeSeriesData = await ctx.analytics.getEventsTimeSeries({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
       });
 
-      const eventCountsByDay = trackedEvents.reduce(
-        (acc, event) => {
-          const dateKey = event.timestamp.toISOString().split("T")[0] ?? "";
-          if (!acc[dateKey]) {
-            acc[dateKey] = { total: 0, views: 0, clicks: 0 };
-          }
-          acc[dateKey].total += 1;
-
-          const metadata = event.metadata as { eventType?: string } | null;
-          const type = metadata?.eventType || "unknown";
-          if (type === "view") acc[dateKey].views += 1;
-          if (type === "click") acc[dateKey].clicks += 1;
-
+      const eventCountsByDay = rawTimeSeriesData.reduce(
+        (acc, row) => {
+          acc[row.date] = {
+            total: row.total,
+            views: row.views,
+            clicks: row.clicks,
+          };
           return acc;
         },
         {} as Record<string, { total: number; views: number; clicks: number }>,
@@ -953,23 +1002,11 @@ export const eventRouter = {
             }
           : undefined;
 
-      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
-        where: {
-          eventDefinition: { projectId: input.projectId },
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          metadata: true,
-          session: {
-            select: {
-              userAgent: true,
-              pageViewEvents: {
-                select: { mobile: true },
-                orderBy: { timestamp: "asc" },
-              },
-            },
-          },
-        },
+      const trackedEvents = await ctx.analytics.getTrackedEvents({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
       const totalEvents = trackedEvents.length;
@@ -977,6 +1014,48 @@ export const eventRouter = {
       let manualEvents = 0;
       let mobileEvents = 0;
       let desktopEvents = 0;
+
+      // Get unique session IDs
+      const sessionIds = new Set<string>();
+      for (const event of trackedEvents) {
+        if (event.session_id) {
+          sessionIds.add(event.session_id);
+        }
+      }
+
+      // Get sessions to check mobile/desktop
+      const sessions = await Promise.all(
+        Array.from(sessionIds).map(async (sessionId) => {
+          return await ctx.analytics.getSessionById(sessionId, input.projectId);
+        }),
+      );
+
+      const sessionMap = new Map(
+        sessions
+          .filter((s): s is NonNullable<typeof s> => s !== null)
+          .map((s) => [s.session_id, s]),
+      );
+
+      // Get pageviews for mobile detection
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const pageviewsBySession = pageviews.reduce(
+        (acc, pv) => {
+          if (pv.session_id) {
+            if (!acc[pv.session_id]) {
+              acc[pv.session_id] = [];
+            }
+            acc[pv.session_id].push({ mobile: pv.mobile });
+          }
+          return acc;
+        },
+        {} as Record<string, Array<{ mobile: boolean | null }>>,
+      );
 
       for (const event of trackedEvents) {
         const metadata = event.metadata as { triggerMethod?: string } | null;
@@ -986,10 +1065,16 @@ export const eventRouter = {
           automaticEvents += 1;
         }
 
+        const session = event.session_id
+          ? sessionMap.get(event.session_id)
+          : null;
+        const sessionPageviews = event.session_id
+          ? pageviewsBySession[event.session_id] || []
+          : [];
         const isMobile =
-          event.session?.pageViewEvents.some((e) => e.mobile) ||
-          (event.session?.userAgent
-            ? /Mobile|Android|iPhone|iPad/.test(event.session.userAgent)
+          sessionPageviews.some((pv) => pv.mobile) ||
+          (session?.user_agent
+            ? /Mobile|Android|iPhone|iPad/.test(session.user_agent)
             : false);
         if (isMobile) mobileEvents += 1;
         else desktopEvents += 1;
@@ -1048,20 +1133,17 @@ export const eventRouter = {
             }
           : undefined;
 
-      const trackedEvents = await ctx.prisma.trackedEvent.findMany({
-        where: {
-          eventDefinition: { projectId: input.projectId },
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          sessionId: true,
-        },
+      const trackedEvents = await ctx.analytics.getTrackedEvents({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
       const uniqueSessionIds = new Set<string>();
       for (const event of trackedEvents) {
-        if (event.sessionId) {
-          uniqueSessionIds.add(event.sessionId);
+        if (event.session_id) {
+          uniqueSessionIds.add(event.session_id);
         }
       }
 

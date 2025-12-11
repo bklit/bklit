@@ -1,6 +1,6 @@
-import { prisma } from "@bklit/db/client";
+import { randomBytes } from "node:crypto";
+import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
-import { createOrUpdateSession } from "@/actions/session-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
 import { checkEventLimit } from "@/lib/usage-limits";
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
       timestamp: payload.timestamp,
       userAgent: payload.userAgent,
     });
+    console.log("🔍 API: Starting processing...");
 
     if (!payload.projectId) {
       return createCorsResponse({ message: "projectId is required" }, 400);
@@ -166,162 +167,158 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Note: Redis storage removed - all data is now stored in PostgreSQL
-    // Real-time features are handled via session tracking
+    const analytics = new AnalyticsService();
+    const pageViewId = randomBytes(16).toString("hex");
 
-    // Handle session tracking and page view creation in a transaction
     if (payload.sessionId) {
       try {
-        console.log(
-          "🔄 API: Updating session and saving page view in transaction...",
-          {
-            sessionId: payload.sessionId,
-            projectId: payload.projectId,
-            url: payload.url,
-          },
-        );
+        console.log("🔄 API: Processing session and saving page view...", {
+          sessionId: payload.sessionId,
+          projectId: payload.projectId,
+          url: payload.url,
+        });
 
-        if (!payload.sessionId) {
-          throw new Error("sessionId is required for this operation");
-        }
         const sessionId = payload.sessionId;
 
-        await prisma.$transaction(async (tx) => {
-          // Upsert session using the transaction client
-          const session = await createOrUpdateSession(
-            {
-              sessionId: sessionId,
-              projectId: payload.projectId,
-              url: payload.url,
-              userAgent: payload.userAgent,
-              country: locationData?.country,
-              city: locationData?.city,
-            },
-            tx as typeof prisma,
-          );
+        // Check if session exists in ClickHouse
+        const sessionExists = await analytics.sessionExists(
+          sessionId,
+          payload.projectId,
+        );
+        const isNewSession = !sessionExists;
 
-          console.log("🔗 API: Session upserted successfully", {
-            sessionId: session.sessionId,
-            sessionDbId: session.id,
-            projectId: session.projectId,
-            country: session.country,
-            city: session.city,
-            isNewSession: !session.endedAt,
-          });
-
-          // DEDUPLICATION: Check for recent identical page view event
-          const recentPageView = await tx.pageViewEvent.findFirst({
-            where: {
-              sessionId: session.id,
-              url: payload.url,
-              timestamp: {
-                gte: new Date(Date.now() - 2000), // 2 seconds window
-              },
-            },
-            orderBy: { timestamp: "desc" },
-          });
-
-          if (recentPageView) {
-            console.log("⏭️ Duplicate page view detected, skipping insert:", {
-              sessionId: session.id,
-              url: payload.url,
-            });
-            return;
+        // Generate visitor ID from user agent (simple hash)
+        const generateVisitorId = (userAgent: string): string => {
+          let hash = 0;
+          for (let i = 0; i < userAgent.length; i++) {
+            const char = userAgent.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash = hash & hash;
           }
+          return Math.abs(hash).toString(36);
+        };
 
-          // Create page view event using the session's primary key (id)
-          await tx.pageViewEvent.create({
-            data: {
-              url: payload.url,
-              timestamp: new Date(payload.timestamp),
-              projectId: payload.projectId,
-              userAgent: payload.userAgent,
-              // Location data
-              ip: locationData?.ip,
-              country: locationData?.country,
-              countryCode: locationData?.countryCode,
-              region: locationData?.region,
-              regionName: locationData?.regionName,
-              city: locationData?.city,
-              zip: locationData?.zip,
-              lat: locationData?.lat,
-              lon: locationData?.lon,
-              timezone: locationData?.timezone,
-              isp: locationData?.isp,
-              mobile: isMobileDevice(payload.userAgent),
-              // Link to session using the primary key (id), not the sessionId
-              sessionId: session.id,
-              // Acquisition data
-              referrer: payload.referrer,
-              utmSource: payload.utmSource,
-              utmMedium: payload.utmMedium,
-              utmCampaign: payload.utmCampaign,
-              utmTerm: payload.utmTerm,
-              utmContent: payload.utmContent,
-            },
-          });
-
-          console.log("📄 API: Page view event created successfully", {
-            url: payload.url,
-            sessionDbId: session.id,
-          });
+        // Save page view first
+        console.log("💾 API: About to save page view to ClickHouse...");
+        await analytics.createPageView({
+          id: pageViewId,
+          url: payload.url,
+          timestamp: new Date(payload.timestamp),
+          projectId: payload.projectId,
+          userAgent: payload.userAgent,
+          ip: locationData?.ip,
+          country: locationData?.country,
+          countryCode: locationData?.countryCode,
+          region: locationData?.region,
+          regionName: locationData?.regionName,
+          city: locationData?.city,
+          zip: locationData?.zip,
+          lat: locationData?.lat,
+          lon: locationData?.lon,
+          timezone: locationData?.timezone,
+          isp: locationData?.isp,
+          mobile: isMobileDevice(payload.userAgent),
+          sessionId: sessionId,
+          referrer: payload.referrer,
+          utmSource: payload.utmSource,
+          utmMedium: payload.utmMedium,
+          utmCampaign: payload.utmCampaign,
+          utmTerm: payload.utmTerm,
+          utmContent: payload.utmContent,
         });
-        console.log(
-          "✅ API: Session updated and page view saved successfully",
-          {
-            sessionId: payload.sessionId,
+
+        // Create or update session in ClickHouse
+        if (isNewSession) {
+          console.log("🆕 API: Creating new session in ClickHouse...");
+          // Generate a unique ID for the session
+          const sessionDbId = randomBytes(16).toString("hex");
+          const visitorId = payload.userAgent
+            ? generateVisitorId(payload.userAgent)
+            : null;
+
+          await analytics.createTrackedSession({
+            id: sessionDbId,
+            sessionId: sessionId,
+            startedAt: new Date(payload.timestamp),
+            endedAt: null,
+            duration: null,
+            didBounce: true, // Will be updated if they visit more pages
+            visitorId: visitorId,
+            entryPage: payload.url,
+            exitPage: payload.url,
+            userAgent: payload.userAgent,
+            country: locationData?.country,
+            city: locationData?.city,
             projectId: payload.projectId,
-          },
-        );
-      } catch (sessionError) {
-        console.error(
-          "❌ API: Error updating session or saving page view:",
-          sessionError,
-        );
-        // Continue execution - session tracking failed but page view tracking should still work
+          });
+
+          console.log("✅ API: New session created in ClickHouse", {
+            sessionId: sessionId,
+            projectId: payload.projectId,
+          });
+        } else {
+          console.log("🔄 API: Updating existing session in ClickHouse...");
+          // Update existing session in ClickHouse
+          await analytics.updateTrackedSession(sessionId, {
+            exitPage: payload.url,
+          });
+
+          console.log("✅ API: Session updated in ClickHouse", {
+            sessionId: sessionId,
+            projectId: payload.projectId,
+          });
+        }
+
+        console.log("✅ API: Page view and session saved to ClickHouse", {
+          sessionId: payload.sessionId,
+          projectId: payload.projectId,
+        });
+      } catch (error) {
+        console.error("❌ API: Error saving to ClickHouse:", error);
+        // Re-throw to return error response
+        throw error;
       }
     } else {
-      // Save page view to database for historical persistence (no session)
       try {
-        console.log("💾 API: Saving page view to database (no session)...", {
+        console.log("💾 API: Saving page view to ClickHouse (no session)...", {
           url: payload.url,
           projectId: payload.projectId,
         });
-        await prisma.pageViewEvent.create({
-          data: {
-            url: payload.url,
-            timestamp: new Date(payload.timestamp),
-            projectId: payload.projectId,
-            userAgent: payload.userAgent,
-            // Location data
-            ip: locationData?.ip,
-            country: locationData?.country,
-            countryCode: locationData?.countryCode,
-            region: locationData?.region,
-            regionName: locationData?.regionName,
-            city: locationData?.city,
-            zip: locationData?.zip,
-            lat: locationData?.lat,
-            lon: locationData?.lon,
-            timezone: locationData?.timezone,
-            isp: locationData?.isp,
-            mobile: isMobileDevice(payload.userAgent),
-            // No session link
-            sessionId: null,
-          },
+
+        await analytics.createPageView({
+          id: pageViewId,
+          url: payload.url,
+          timestamp: new Date(payload.timestamp),
+          projectId: payload.projectId,
+          userAgent: payload.userAgent,
+          ip: locationData?.ip,
+          country: locationData?.country,
+          countryCode: locationData?.countryCode,
+          region: locationData?.region,
+          regionName: locationData?.regionName,
+          city: locationData?.city,
+          zip: locationData?.zip,
+          lat: locationData?.lat,
+          lon: locationData?.lon,
+          timezone: locationData?.timezone,
+          isp: locationData?.isp,
+          mobile: isMobileDevice(payload.userAgent),
+          sessionId: null,
+          referrer: payload.referrer,
+          utmSource: payload.utmSource,
+          utmMedium: payload.utmMedium,
+          utmCampaign: payload.utmCampaign,
+          utmTerm: payload.utmTerm,
+          utmContent: payload.utmContent,
         });
-        console.log(
-          "✅ API: Page view saved to database successfully (no session)",
-          {
-            projectId: payload.projectId,
-          },
-        );
-      } catch (dbError) {
-        console.error(
-          "❌ API: Error saving page view to database (no session):",
-          dbError,
-        );
-        // Continue execution - session tracking failed but page view tracking should still work
+
+        console.log("✅ API: Page view saved to ClickHouse successfully", {
+          projectId: payload.projectId,
+        });
+      } catch (error) {
+        console.error("❌ API: Error saving page view to ClickHouse:", error);
+        // Re-throw to return error response
+        throw error;
       }
     }
 
@@ -332,14 +329,18 @@ export async function POST(request: NextRequest) {
 
     return createCorsResponse({ message: "Data received and stored" }, 200);
   } catch (error) {
-    console.error("Error processing tracking data:", error);
-    // Check if the error is from JSON parsing etc.
-    let errorMessage = "Error processing request";
+    console.error("❌ API: Error processing tracking data:", error);
+    // Log full error details for debugging
     if (error instanceof Error) {
-      errorMessage = error.message;
+      console.error("Error stack:", error.stack);
+      console.error("Error message:", error.message);
     }
+    // Return error response
     return createCorsResponse(
-      { message: "Error processing request", error: errorMessage },
+      {
+        message: "Error processing request",
+        error: error instanceof Error ? error.message : String(error),
+      },
       500,
     );
   }

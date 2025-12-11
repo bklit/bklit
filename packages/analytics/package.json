@@ -1,0 +1,35 @@
+{
+  "name": "@bklit/analytics",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./service": "./src/service.ts",
+    "./types": "./src/types.ts",
+    "./env": "./env.ts",
+    "./constants": "./src/constants.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "with-env": "dotenv -e ../../.env --",
+    "verify": "dotenv -e ../../.env -- tsx src/migrations/verify-data.ts",
+    "clear-data": "dotenv -e ../../.env -- tsx src/migrations/clear-data.ts",
+    "migrate": "dotenv -e ../../.env -- tsx src/migrations/migrate-data.ts"
+  },
+  "dependencies": {
+    "@bklit/db": "workspace:*",
+    "@bklit/utils": "workspace:*",
+    "@clickhouse/client": "^1.12.1",
+    "@t3-oss/env-nextjs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@bklit/tsconfig": "workspace:*",
+    "@prisma/client": "catalog:prisma",
+    "@prisma/extension-accelerate": "catalog:prisma",
+    "dotenv-cli": "^10.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "catalog:"
+  }
+}

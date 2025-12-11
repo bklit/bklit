@@ -1,6 +1,5 @@
-import { prisma } from "@bklit/db/client";
+import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
-import { endSession } from "@/actions/session-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 
 // Helper function to create a response with CORS headers
@@ -109,30 +108,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Verify session belongs to project
-    const session = await prisma.trackedSession.findFirst({
-      where: {
-        sessionId,
-        projectId,
-      },
-    });
+    // Verify session exists in ClickHouse and end it
+    const analytics = new AnalyticsService();
+    const sessionExists = await analytics.sessionExists(sessionId, projectId);
 
-    if (!session) {
+    if (!sessionExists) {
       return createCorsResponse(
         { message: "Session not found for this project" },
         404,
       );
     }
 
-    // Use the shared endSession logic
-    const updatedSession = await endSession(sessionId);
+    // End the session in ClickHouse
+    await analytics.endSession(sessionId, projectId);
 
     return createCorsResponse(
       {
         message: "Session ended",
-        endedAt: updatedSession.endedAt,
-        duration: updatedSession.duration,
-        didBounce: updatedSession.didBounce,
       },
       200,
     );

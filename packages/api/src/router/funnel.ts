@@ -1,6 +1,7 @@
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { matchSessionToFunnel } from "../lib/funnel-utils";
 import { protectedProcedure } from "../trpc";
 
@@ -461,53 +462,42 @@ export const funnelRouter = {
           : funnel.endDate
         : normalizedEndDate;
 
-      // Query sessions with pageviews and events
-      const sessions = await ctx.prisma.trackedSession.findMany({
+      // Query sessions with pageviews and events from ClickHouse
+      const sessionsData = await ctx.analytics.getSessionsForFunnel(
+        input.projectId,
+        normalizedStartDate || new Date(0),
+        effectiveEndDate || new Date(),
+      );
+
+      // Get event definitions for tracking IDs
+      const eventDefinitions = await ctx.prisma.eventDefinition.findMany({
         where: {
           projectId: input.projectId,
-          startedAt: {
-            ...(normalizedStartDate && { gte: normalizedStartDate }),
-            ...(effectiveEndDate && { lte: effectiveEndDate }),
-          },
         },
         select: {
           id: true,
-          pageViewEvents: {
-            where: {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(effectiveEndDate && { lte: effectiveEndDate }),
-              },
-            },
-            select: {
-              url: true,
-              timestamp: true,
-            },
-            orderBy: {
-              timestamp: "asc",
-            },
-          },
-          trackedEvents: {
-            where: {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(effectiveEndDate && { lte: effectiveEndDate }),
-              },
-            },
-            select: {
-              timestamp: true,
-              eventDefinition: {
-                select: {
-                  trackingId: true,
-                },
-              },
-            },
-            orderBy: {
-              timestamp: "asc",
-            },
-          },
+          trackingId: true,
         },
       });
+
+      const trackingIdMap = new Map(
+        eventDefinitions.map((ed) => [ed.id, ed.trackingId]),
+      );
+
+      // Transform to match expected format
+      const sessions = sessionsData.map((session) => ({
+        id: session.id,
+        pageViewEvents: session.pageViewEvents.map((pv) => ({
+          url: pv.url,
+          timestamp: pv.timestamp,
+        })),
+        trackedEvents: session.trackedEvents.map((ev) => ({
+          timestamp: ev.timestamp,
+          eventDefinition: {
+            trackingId: trackingIdMap.get(ev.eventDefinitionId) || "",
+          },
+        })),
+      }));
 
       // Track step completions per session
       const stepCompletionsBySession = new Map<
@@ -591,18 +581,28 @@ export const funnelRouter = {
       let lastSessionTimestamp: Date | null = null;
       if (stepCompletionsBySession.size > 0) {
         const sessionIds = Array.from(stepCompletionsBySession.keys());
-        const lastSession = await ctx.prisma.trackedSession.findFirst({
-          where: {
-            id: { in: sessionIds },
-          },
-          select: {
-            startedAt: true,
-          },
-          orderBy: {
-            startedAt: "desc",
-          },
+        // Get sessions from ClickHouse
+        const allSessions = await ctx.analytics.getSessions({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: effectiveEndDate,
+          limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
         });
-        lastSessionTimestamp = lastSession?.startedAt ?? null;
+
+        const matchingSessions = allSessions.filter((s) =>
+          sessionIds.includes(s.id),
+        );
+
+        if (matchingSessions.length > 0) {
+          matchingSessions.sort(
+            (a, b) =>
+              parseClickHouseDate(b.started_at).getTime() -
+              parseClickHouseDate(a.started_at).getTime(),
+          );
+          lastSessionTimestamp = parseClickHouseDate(
+            matchingSessions[0].started_at,
+          );
+        }
       }
 
       return {
@@ -697,53 +697,43 @@ export const funnelRouter = {
       }
 
       // Query sessions with pageviews and events
-      const sessions = await ctx.prisma.trackedSession.findMany({
+      // Get sessions from ClickHouse
+      const sessionsData = await ctx.analytics.getSessionsForFunnel(
+        input.projectId,
+        normalizedStartDate || new Date(0),
+        normalizedEndDate || new Date(),
+      );
+
+      // Get event definitions for tracking IDs
+      const eventDefinitions = await ctx.prisma.eventDefinition.findMany({
         where: {
           projectId: input.projectId,
-          startedAt: {
-            ...(normalizedStartDate && { gte: normalizedStartDate }),
-            ...(normalizedEndDate && { lte: normalizedEndDate }),
-          },
         },
         select: {
           id: true,
-          startedAt: true,
-          pageViewEvents: {
-            where: {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(normalizedEndDate && { lte: normalizedEndDate }),
-              },
-            },
-            select: {
-              url: true,
-              timestamp: true,
-            },
-            orderBy: {
-              timestamp: "asc",
-            },
-          },
-          trackedEvents: {
-            where: {
-              timestamp: {
-                ...(normalizedStartDate && { gte: normalizedStartDate }),
-                ...(normalizedEndDate && { lte: normalizedEndDate }),
-              },
-            },
-            select: {
-              timestamp: true,
-              eventDefinition: {
-                select: {
-                  trackingId: true,
-                },
-              },
-            },
-            orderBy: {
-              timestamp: "asc",
-            },
-          },
+          trackingId: true,
         },
       });
+
+      const trackingIdMap = new Map(
+        eventDefinitions.map((ed) => [ed.id, ed.trackingId]),
+      );
+
+      // Transform to match expected format
+      const sessions = sessionsData.map((session) => ({
+        id: session.id,
+        startedAt: session.startedAt,
+        pageViewEvents: session.pageViewEvents.map((pv) => ({
+          url: pv.url,
+          timestamp: pv.timestamp,
+        })),
+        trackedEvents: session.trackedEvents.map((ev) => ({
+          timestamp: ev.timestamp,
+          eventDefinition: {
+            trackingId: trackingIdMap.get(ev.eventDefinitionId) || "",
+          },
+        })),
+      }));
 
       // Track funnel sessions and conversions by date
       const funnelDataByDay = new Map<

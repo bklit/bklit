@@ -1,5 +1,6 @@
+import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
-import { endOfDay, startOfDay } from "../lib/date-utils";
+import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const acquisitionRouter = createTRPCRouter({
@@ -45,54 +46,45 @@ export const acquisitionRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Get pageviews for grouping by acquisition source
-      const pageviews = await ctx.prisma.pageViewEvent.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          url: true,
-          timestamp: true,
-          userAgent: true,
-          country: true,
-          city: true,
-          mobile: true,
-          ip: true,
-          referrer: true,
-          utmSource: true,
-          utmMedium: true,
-          utmCampaign: true,
-        },
-        orderBy: {
-          timestamp: "desc",
-        },
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Group by acquisition source
       const acquisitionGroups = pageviews.reduce(
         (acc, pageview) => {
-          const source = getAcquisitionSource(pageview);
+          const source = getAcquisitionSource({
+            referrer: pageview.referrer,
+            utmSource: pageview.utm_source,
+            utmMedium: pageview.utm_medium,
+            utmCampaign: pageview.utm_campaign,
+          });
+          const timestamp = parseClickHouseDate(pageview.timestamp);
 
           if (!acc[source]) {
             acc[source] = {
               source,
-              sourceType: getSourceType(pageview),
+              sourceType: getSourceType({
+                referrer: pageview.referrer,
+                utmSource: pageview.utm_source,
+              }),
               viewCount: 0,
               uniqueUsers: new Set<string>(),
-              lastViewed: pageview.timestamp,
-              firstViewed: pageview.timestamp,
+              lastViewed: timestamp,
+              firstViewed: timestamp,
             };
           }
           acc[source].viewCount += 1;
           if (pageview.ip) {
             acc[source].uniqueUsers.add(pageview.ip);
           }
-          if (pageview.timestamp > acc[source].lastViewed) {
-            acc[source].lastViewed = pageview.timestamp;
+          if (timestamp > acc[source].lastViewed) {
+            acc[source].lastViewed = timestamp;
           }
-          if (pageview.timestamp < acc[source].firstViewed) {
-            acc[source].firstViewed = pageview.timestamp;
+          if (timestamp < acc[source].firstViewed) {
+            acc[source].firstViewed = timestamp;
           }
           return acc;
         },
@@ -195,73 +187,39 @@ export const acquisitionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const [
-        totalViews,
-        directTraffic,
-        organicTraffic,
-        socialTraffic,
-        paidTraffic,
-        mobileViews,
-        desktopViews,
-      ] = await Promise.all([
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: input.projectId,
-            ...(dateFilter && dateFilter),
-          },
-        }),
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: input.projectId,
-            ...(dateFilter && dateFilter),
-            referrer: null,
-          },
-        }),
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: input.projectId,
-            ...(dateFilter && dateFilter),
-            OR: [
-              { referrer: { contains: "google.com" } },
-              { referrer: { contains: "bing.com" } },
-              { referrer: { contains: "yahoo.com" } },
-            ],
-          },
-        }),
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: input.projectId,
-            ...(dateFilter && dateFilter),
-            OR: [
-              { referrer: { contains: "facebook.com" } },
-              { referrer: { contains: "twitter.com" } },
-              { referrer: { contains: "linkedin.com" } },
-              { referrer: { contains: "instagram.com" } },
-            ],
-          },
-        }),
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: input.projectId,
-            ...(dateFilter && dateFilter),
-            utmSource: { not: null },
-          },
-        }),
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: input.projectId,
-            mobile: true,
-            ...(dateFilter && dateFilter),
-          },
-        }),
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: input.projectId,
-            mobile: false,
-            ...(dateFilter && dateFilter),
-          },
-        }),
-      ]);
+      const stats = await ctx.analytics.getStats({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+      });
+
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const totalViews = stats.total_views;
+      const directTraffic = pageviews.filter((p) => !p.referrer).length;
+      const organicTraffic = pageviews.filter(
+        (p) =>
+          p.referrer &&
+          (p.referrer.includes("google.com") ||
+            p.referrer.includes("bing.com") ||
+            p.referrer.includes("yahoo.com")),
+      ).length;
+      const socialTraffic = pageviews.filter(
+        (p) =>
+          p.referrer &&
+          (p.referrer.includes("facebook.com") ||
+            p.referrer.includes("twitter.com") ||
+            p.referrer.includes("linkedin.com") ||
+            p.referrer.includes("instagram.com")),
+      ).length;
+      const paidTraffic = pageviews.filter((p) => p.utm_source).length;
+      const mobileViews = stats.mobile_visits;
+      const desktopViews = stats.desktop_visits;
 
       return {
         totalViews,
@@ -316,29 +274,25 @@ export const acquisitionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const pageviews = await ctx.prisma.pageViewEvent.findMany({
-        where: {
-          projectId: input.projectId,
-          ...(dateFilter && dateFilter),
-        },
-        select: {
-          url: true,
-          timestamp: true,
-          referrer: true,
-          utmSource: true,
-          utmMedium: true,
-          utmCampaign: true,
-        },
-        orderBy: {
-          timestamp: "asc",
-        },
+      const pageviews = await ctx.analytics.getPageViews({
+        projectId: input.projectId,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      // Group by acquisition source and date
       const acquisitionGroups = pageviews.reduce(
         (acc, pageview) => {
-          const source = getAcquisitionSource(pageview);
-          const dateKey = pageview.timestamp.toISOString().split("T")[0] ?? "";
+          const source = getAcquisitionSource({
+            referrer: pageview.referrer,
+            utmSource: pageview.utm_source,
+            utmMedium: pageview.utm_medium,
+            utmCampaign: pageview.utm_campaign,
+          });
+          const dateKey =
+            parseClickHouseDate(pageview.timestamp)
+              .toISOString()
+              .split("T")[0] ?? "";
 
           if (!acc[source]) {
             acc[source] = {};
@@ -353,9 +307,21 @@ export const acquisitionRouter = createTRPCRouter({
         {} as Record<string, Record<string, number>>,
       );
 
-      // Get top acquisition sources by total views
       const topSources = Object.entries(acquisitionGroups)
         .map(([source, dailyViews]) => {
+          const samplePageview = pageviews.find(
+            (p) =>
+              getAcquisitionSource({
+                referrer: p.referrer,
+                utmSource: p.utm_source,
+                utmMedium: p.utm_medium,
+                utmCampaign: p.utm_campaign,
+              }) === source,
+          );
+          const sourceType = getSourceType({
+            referrer: samplePageview?.referrer || null,
+            utmSource: samplePageview?.utm_source || null,
+          });
           return {
             source,
             sourceType: getSourceType({
