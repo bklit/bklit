@@ -16,7 +16,7 @@ function LoginPage() {
     <div className="flex flex-col gap-6">
       <div className="text-center">
         <h1 className="text-2xl font-normal">
-          Log in to <span className="font-bold">Bklit</span>
+          Sign up to <span className="font-bold">Bklit</span>
         </h1>
       </div>
       <div className="flex flex-col gap-3">
@@ -49,14 +49,35 @@ function LoginPage() {
           Continue with Google
         </Button>
       </div>
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <p className="text-sm font-normal text-muted-foreground">
-          Don't have an account?{" "}
+          By signing up, you agree to our{" "}
+          <a
+            href="https://bklit.com/terms"
+            className="text-card-foreground hover:text-primary transition-all"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://bklit.com/privacy"
+            className="text-card-foreground hover:text-primary transition-all"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Privacy Policy
+          </a>
+          .
+        </p>
+        <p className="text-sm font-normal text-muted-foreground">
+          Already have an account?{" "}
           <Link
-            href="/signup"
+            href="/signin"
             className="text-card-foreground hover:text-primary transition-all"
           >
-            Sign up
+            Log in
           </Link>
         </p>
       </div>
