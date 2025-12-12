@@ -14,6 +14,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@bklit/ui/components/dropdown-menu";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@bklit/ui/components/item";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTrigger,
+} from "@bklit/ui/components/sheet";
+import { useMediaQuery } from "@bklit/ui/hooks/use-media-query";
 import { CreditCard, LayoutDashboard, LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,71 +62,140 @@ export function NavUser({
     router.push("/signin");
   };
 
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  if (isDesktop) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <Avatar className="size-9">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback className="rounded-lg">
+              {user.name?.[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+          side="bottom"
+          align="end"
+          sideOffset={4}
+        >
+          <DropdownMenuLabel className="p-0 font-normal">
+            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm ">
+              <Avatar className="size-9 border border-input">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback className="rounded-lg">
+                  {user.name?.[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </span>
+              </div>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex justify-center">
+              <ThemeToggle />
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild>
+              <Link href={dashboardHref}>
+                <LayoutDashboard className="mr-2 size-3" />
+                Overview
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/user/${user.id || "profile"}`}>
+                <User className="mr-2 size-3" />
+                My Workspaces
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={billingHref}>
+                <CreditCard className="mr-2 size-3" />
+                Billing for {activeOrganization?.name}
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut}>
+            <LogOut className="mr-2 size-3" />
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
+    <Sheet>
+      <SheetTrigger asChild>
         <Avatar className="size-9">
           <AvatarImage src={user.avatar} alt={user.name} />
           <AvatarFallback className="rounded-lg">
             {user.name?.[0]?.toUpperCase()}
           </AvatarFallback>
         </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-        side="bottom"
-        align="end"
-        sideOffset={4}
-      >
-        <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm ">
-            <Avatar className="size-9 border border-input">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">
-                {user.name?.[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs text-muted-foreground">
-                {user.email}
-              </span>
-            </div>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel className="flex justify-center">
-            <ThemeToggle />
-          </DropdownMenuLabel>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-[calc(100vw-2rem)]">
+        <SheetHeader>
+          <Item>
+            <ItemContent>
+              <ItemTitle>{user.name}</ItemTitle>
+              <ItemDescription>{user.email}</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+              <Avatar className="size-4">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback className="rounded-lg">
+                  {user.name?.[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </ItemActions>
+          </Item>
+        </SheetHeader>
+        <div className="flex flex-col gap-2 p-4">
+          <Item asChild>
             <Link href={dashboardHref}>
-              <LayoutDashboard className="mr-2 size-3" />
-              Overview
+              <ItemContent>Overview</ItemContent>
+              <ItemActions>
+                <LayoutDashboard className="mr-2 size-3" />
+              </ItemActions>
             </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          </Item>
+          <Item asChild>
             <Link href={`/user/${user.id || "profile"}`}>
-              <User className="mr-2 size-3" />
-              My Workspaces
+              <ItemContent>My Workspaces</ItemContent>
+              <ItemActions>
+                <User className="mr-2 size-3" />
+              </ItemActions>
             </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          </Item>
+          <Item asChild>
             <Link href={billingHref}>
-              <CreditCard className="mr-2 size-3" />
-              Billing for {activeOrganization?.name}
+              <ItemContent>Billing for {activeOrganization?.name}</ItemContent>
+              <ItemActions>
+                <CreditCard className="mr-2 size-3" />
+              </ItemActions>
             </Link>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="mr-2 size-3" />
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </Item>
+          <Item>
+            <ItemContent>Theme</ItemContent>
+            <ItemActions>
+              <ThemeToggle />
+            </ItemActions>
+          </Item>
+          <Item onClick={handleSignOut}>
+            <ItemContent>Log out</ItemContent>
+          </Item>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

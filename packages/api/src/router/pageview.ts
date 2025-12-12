@@ -217,6 +217,71 @@ export const pageviewRouter = createTRPCRouter({
       };
     }),
 
+  getAnalyticsStats: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !project ||
+        !project.organization ||
+        project.organization.members.length === 0
+      ) {
+        throw new Error("Forbidden");
+      }
+
+      const defaultStartDate = input.startDate
+        ? startOfDay(input.startDate)
+        : (() => {
+            const date = startOfDay(new Date());
+            date.setDate(date.getDate() - 30);
+            return date;
+          })();
+
+      const normalizedEndDate = input.endDate
+        ? endOfDay(input.endDate)
+        : endOfDay(new Date());
+
+      const stats = await ctx.analytics.getStats({
+        projectId: input.projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+      });
+
+      const totalViews = await ctx.analytics.countPageViews(input.projectId);
+      const recentViews = stats.total_views;
+      const uniquePages = stats.unique_pages;
+      const uniqueVisits = stats.unique_visits;
+
+      return {
+        totalViews,
+        recentViews,
+        uniquePages: uniquePages || 0,
+        uniqueVisits: uniqueVisits || 0,
+      };
+    }),
+
   getEntryPoints: protectedProcedure
     .input(
       z.object({

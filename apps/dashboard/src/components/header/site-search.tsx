@@ -50,7 +50,7 @@ export function SiteSearch() {
   return (
     <SearchDialog open={open} onOpenChange={setOpen}>
       <SearchDialogTrigger>
-        <div className="group flex items-center justify-between w-48 gap-2 dark:bg-input/30 border-input hover:border-bklit-500 h-9 rounded-md border bg-transparent pl-3 pr-1.5 py-1 text-base shadow-xs transition-[color,box-shadow,border] outline-none md:text-sm">
+        <div className="group hidden sm:flex items-center justify-between w-48 gap-2 dark:bg-input/30 border-input hover:border-bklit-500 h-9 rounded-md border bg-transparent pl-3 pr-1.5 py-1 text-base shadow-xs transition-[color,box-shadow,border] outline-none md:text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <SearchIcon
               size={16}

@@ -11,19 +11,23 @@ import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
-import {
-  getAnalyticsStats,
-  getSessionAnalytics,
-} from "@/actions/analytics-actions";
+import { getSessionAnalytics } from "@/actions/analytics-actions";
 import { endOfDay, startOfDay } from "@/lib/date-utils";
 import { useTRPC } from "@/trpc/react";
 import type { SessionAnalyticsSummary } from "@/types/analytics-cards";
+
+interface AnalyticsStats {
+  totalViews: number;
+  recentViews: number;
+  uniquePages: number;
+  uniqueVisits: number;
+}
 
 interface QuickStatsCardProps {
   projectId: string;
   organizationId: string;
   userId: string;
-  initialStats: Awaited<ReturnType<typeof getAnalyticsStats>>;
+  initialStats: AnalyticsStats;
   initialSessionData: Awaited<ReturnType<typeof getSessionAnalytics>>;
   initialConversions: number;
 }
@@ -62,14 +66,12 @@ export function QuickStatsCard({
   const trpc = useTRPC();
 
   const { data: stats } = useQuery({
-    queryKey: ["analytics-stats", projectId, startDate, endDate],
-    queryFn: () =>
-      getAnalyticsStats({
-        projectId,
-        userId,
-        startDate,
-        endDate,
-      }),
+    ...trpc.pageview.getAnalyticsStats.queryOptions({
+      projectId,
+      organizationId,
+      startDate,
+      endDate,
+    }),
     initialData: initialStats,
   });
 
