@@ -16,7 +16,9 @@ export const PageHeader = ({
         <p className="text-muted-foreground">{description}</p>
       </div>
       {children && (
-        <div className="flex items-center gap-2 justify-end">{children}</div>
+        <div className="flex items-center gap-2 justify-end w-full sm:w-auto">
+          {children}
+        </div>
       )}
     </div>
   );

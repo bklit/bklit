@@ -7,8 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@bklit/ui/components/select";
+import { useMediaQuery } from "@bklit/ui/hooks/use-media-query";
+import { cn } from "@bklit/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, Globe, Monitor, Smartphone } from "lucide-react";
+import { Eye, Globe, ListFilter, Monitor, Smartphone } from "lucide-react";
 import { parseAsIsoDateTime, parseAsString, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { DateRangePicker } from "@/components/date-range-picker";
@@ -27,7 +29,7 @@ type ViewMode = "all" | "entry-points";
 
 export function Pageviews({ organizationId, projectId }: PageviewsProps) {
   const trpc = useTRPC();
-
+  const isDesktop = useMediaQuery("(min-width: 640px)");
   // Date range and view mode state using nuqs
   const [dateParams, setDateParams] = useQueryStates(
     {
@@ -88,20 +90,27 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
               : `${statsData?.totalViews || 0} total pageviews`
         }
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-row items-center gap-2 w-full justify-end">
+          <DateRangePicker />
           <Select
             value={viewMode}
             onValueChange={(value) => setDateParams({ viewMode: value })}
           >
-            <SelectTrigger size="sm" className="w-[180px]">
-              <SelectValue placeholder="Select view mode" />
+            <SelectTrigger
+              size="sm"
+              className={cn("w-auto", isDesktop && "w-full sm:w-[180px]")}
+            >
+              {isDesktop ? (
+                <SelectValue placeholder="Select view mode" />
+              ) : (
+                <ListFilter size={16} />
+              )}
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Pageviews</SelectItem>
               <SelectItem value="entry-points">Entry Points</SelectItem>
             </SelectContent>
           </Select>
-          <DateRangePicker />
         </div>
       </PageHeader>
       <div className="container mx-auto flex flex-col gap-4">
