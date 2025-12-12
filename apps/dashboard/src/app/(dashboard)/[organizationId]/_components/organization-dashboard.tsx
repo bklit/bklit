@@ -64,8 +64,8 @@ export const OrganizationDashboard = ({
           </Button>
         )}
       </PageHeader>
-      <div className="container mx-auto flex gap-4">
-        <div className="w-1/5 flex flex-col gap-4">
+      <div className="container mx-auto flex flex-col sm:flex-row gap-4">
+        <div className="w-full sm:w-1/5 flex flex-col gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Team</CardTitle>
@@ -117,7 +117,7 @@ export const OrganizationDashboard = ({
           </Card>
         </div>
 
-        <div className="w-4/5">
+        <div className="w-full sm:w-4/5">
           {/* Projects Section */}
           <div className="space-y-4">
             {organization.projects.length === 0 ? (

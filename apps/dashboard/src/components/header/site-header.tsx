@@ -38,7 +38,10 @@ export function SiteHeader() {
     <header className="fixed top-0 left-0 right-0 z-50 flex flex-col w-full">
       <div className="flex relative w-full items-center justify-between px-4 lg:px-6 py-4">
         <div className="flex items-center gap-6">
-          <BklitLogo size={32} className="dark:text-white text-black" />
+          <BklitLogo
+            size={32}
+            className="dark:text-white text-black hidden sm:inline-flex"
+          />
           {user && <NavWorkspace user={user} />}
 
           <AnimatePresence mode="wait">
@@ -54,7 +57,7 @@ export function SiteHeader() {
                 animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, scale: 0.8, y: -10, filter: "blur(4px)" }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="flex items-center gap-2 text-xs text-muted-foreground font-medium"
+                className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-medium"
               >
                 <div className="size-3 relative">
                   <div className="absolute top-0 left-0 size-3 rounded-full bg-red-400 animate-ping" />

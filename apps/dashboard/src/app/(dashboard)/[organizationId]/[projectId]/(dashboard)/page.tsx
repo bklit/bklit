@@ -98,11 +98,11 @@ export default async function AnalyticsPage({
           </Suspense>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-12">
-          <div className="col-span-8">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-12">
+          <div className="col-span-1 md:col-span-8">
             <VisitorsMap key={projectId} projectId={projectId} />
           </div>
-          <div className="col-span-4">
+          <div className="col-span-1 md:col-span-4">
             <Suspense fallback={<AnalyticsCardSkeleton />}>
               <SessionAnalyticsCard
                 projectId={projectId}

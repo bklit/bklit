@@ -10,7 +10,7 @@ export const PageHeader = ({
   children,
 }: PageHeaderProps) => {
   return (
-    <div className="flex justify-between items-center w-full container mx-auto mb-6">
+    <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center w-full container mx-auto mb-6 gap-4">
       <div>
         <h1 className="text-xl font-bold">{title}</h1>
         <p className="text-muted-foreground">{description}</p>
