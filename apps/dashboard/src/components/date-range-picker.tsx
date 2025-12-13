@@ -143,17 +143,19 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
             size="lg"
             className="justify-start text-left font-normal"
           >
-            <CalendarIcon className="mr-2 size-4" />
-            {startDate && endDate ? (
-              <>
-                {format(startDate, "MMM dd, yyyy")} -{" "}
-                {format(endDate, "MMM dd, yyyy")}
-              </>
-            ) : startDate ? (
-              <>{format(startDate, "MMM dd, yyyy")} - Now</>
-            ) : (
-              "All time"
-            )}
+            <CalendarIcon className="size-4" />
+            <span className="hidden sm:inline text-sm">
+              {startDate && endDate ? (
+                <>
+                  {format(startDate, "MMM dd, yyyy")} -{" "}
+                  {format(endDate, "MMM dd, yyyy")}
+                </>
+              ) : startDate ? (
+                <>{format(startDate, "MMM dd, yyyy")} - Now</>
+              ) : (
+                "All time"
+              )}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">
