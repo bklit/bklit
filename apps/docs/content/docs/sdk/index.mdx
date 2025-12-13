@@ -3,6 +3,8 @@ title: SDK Overview
 description: Bklit Analytics SDK - Track page views, sessions, and user behavior
 ---
 
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
 # SDK Overview
 
 The Bklit Analytics SDK is a lightweight JavaScript library for tracking analytics in your web applications.
@@ -18,13 +20,22 @@ The Bklit Analytics SDK is a lightweight JavaScript library for tracking analyti
 
 ## Installation
 
+<Tabs items={['npm', 'pnpm']}>
+<Tab value="npm">
+
 ```bash
 npm install @bklit/sdk
-# or
-pnpm add @bklit/sdk
-# or
-yarn add @bklit/sdk
 ```
+
+</Tab>
+<Tab value="pnpm">
+
+```bash
+pnpm add @bklit/sdk
+```
+
+</Tab>
+</Tabs>
 
 ## Quick Start
 
@@ -61,11 +72,11 @@ export default function RootLayout({ children }) {
 
 ## Related Documentation
 
-- [Installation](/docs/sdk/installation) - Detailed installation guide
-- [Vanilla JS](/docs/sdk/vanilla-js) - Using with vanilla JavaScript
-- [Next.js](/docs/sdk/nextjs) - Next.js integration
-- [Configuration](/docs/sdk/configuration) - Configuration options
-- [Debug Mode](/docs/sdk/debug-mode) - Debugging and logging
-- [Event Tracking](/docs/sdk/event-tracking) - Tracking custom events
-- [API Reference](/docs/sdk/api-reference) - Complete API documentation
+- [Installation](/sdk/installation) - Detailed installation guide
+- [Vanilla JS](/sdk/vanilla-js) - Using with vanilla JavaScript
+- [Next.js](/sdk/nextjs) - Next.js integration
+- [Configuration](/sdk/configuration) - Configuration options
+- [Debug Mode](/sdk/debug-mode) - Debugging and logging
+- [Event Tracking](/sdk/event-tracking) - Tracking custom events
+- [API Reference](/sdk/api-reference) - Complete API documentation
 

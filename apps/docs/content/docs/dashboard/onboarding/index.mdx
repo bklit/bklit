@@ -3,6 +3,8 @@ title: Onboarding Flow
 description: Guide users through the Bklit setup process
 ---
 
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
 # Onboarding Flow
 
 The Bklit onboarding flow helps new users get started with analytics tracking in four simple steps.
@@ -18,7 +20,10 @@ The onboarding process consists of:
 
 ## Step-by-Step Guide
 
-### Step 1: Create Workspace
+<Steps>
+<Step>
+
+### Create Workspace
 
 Create an organization (workspace) to group your projects.
 
@@ -31,7 +36,11 @@ Create an organization (workspace) to group your projects.
 - You're added as owner
 - Redirected to project creation
 
-### Step 2: Create Project
+</Step>
+
+<Step>
+
+### Create Project
 
 Create your first analytics project.
 
@@ -44,7 +53,11 @@ Create your first analytics project.
 - Project ID is generated
 - Ready for SDK integration
 
-### Step 3: Install SDK
+</Step>
+
+<Step>
+
+### Install SDK
 
 Get your API token and integrate the Bklit SDK.
 
@@ -58,7 +71,11 @@ Get your API token and integrate the Bklit SDK.
 - SDK installation instructions
 - Code examples for your framework
 
-### Step 4: Test Connection
+</Step>
+
+<Step>
+
+### Test Connection
 
 Verify that tracking is working correctly.
 
@@ -67,10 +84,13 @@ Verify that tracking is working correctly.
 - Connection status is checked
 - You can view results in dashboard
 
+</Step>
+</Steps>
+
 ## Related Documentation
 
-- [Workspace Setup](/docs/onboarding/workspace-setup) - Creating organizations
-- [Project Setup](/docs/onboarding/project-setup) - Creating projects
-- [SDK Integration](/docs/onboarding/sdk-integration) - Installing the SDK
-- [Testing Connection](/docs/onboarding/testing-connection) - Verifying tracking
+- [Workspace Setup](/dashboard/onboarding/workspace-setup) - Creating organizations
+- [Project Setup](/dashboard/onboarding/project-setup) - Creating projects
+- [SDK Integration](/dashboard/onboarding/sdk-integration) - Installing the SDK
+- [Testing Connection](/dashboard/onboarding/testing-connection) - Verifying tracking
 

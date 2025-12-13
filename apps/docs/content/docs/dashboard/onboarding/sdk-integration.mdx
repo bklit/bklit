@@ -3,6 +3,8 @@ title: SDK Integration
 description: Install and configure the Bklit SDK during onboarding
 ---
 
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
 # SDK Integration
 
 This guide covers integrating the Bklit SDK during the onboarding process.
@@ -23,23 +25,22 @@ After creating your project, you'll see:
 
 ## Step 2: Install the SDK
 
-### npm
+<Tabs items={['npm', 'pnpm']}>
+<Tab value="npm">
 
 ```bash
 npm install @bklit/sdk
 ```
 
-### pnpm
+</Tab>
+<Tab value="pnpm">
 
 ```bash
 pnpm add @bklit/sdk
 ```
 
-### yarn
-
-```bash
-yarn add @bklit/sdk
-```
+</Tab>
+</Tabs>
 
 ## Step 3: Initialize the SDK
 
@@ -148,9 +149,9 @@ You'll see logs like:
 
 After integrating the SDK:
 
-1. **[Test Connection](/docs/onboarding/testing-connection)** - Verify tracking works
-2. **[SDK Documentation](/docs/sdk)** - Learn about SDK features
-3. **[Event Tracking](/docs/sdk/event-tracking)** - Track custom events
+1. **[Test Connection](/dashboard/onboarding/testing-connection)** - Verify tracking works
+2. **[SDK Documentation](/sdk)** - Learn about SDK features
+3. **[Event Tracking](/sdk/event-tracking)** - Track custom events
 
 ## Troubleshooting
 
@@ -175,7 +176,7 @@ After integrating the SDK:
 
 ## Related Documentation
 
-- [Testing Connection](/docs/onboarding/testing-connection) - Verify tracking
-- [SDK Documentation](/docs/sdk) - Complete SDK guide
-- [API Tokens](/docs/tokens) - Token management
+- [Testing Connection](/dashboard/onboarding/testing-connection) - Verify tracking
+- [SDK Documentation](/sdk) - Complete SDK guide
+- [API Tokens](/dashboard/tokens) - Token management
 

@@ -3,10 +3,10 @@ import {
   DocsDescription,
   DocsPage,
   DocsTitle,
-} from "fumadocs-ui/layouts/docs/page";
+} from "fumadocs-ui/layouts/notebook/page";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getMDXComponents } from "@/lib/mdx-components";
 import { source } from "@/lib/source";
 
@@ -14,6 +14,12 @@ export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
   const params = await props.params;
+
+  // Redirect root to dashboard
+  if (!params.slug || params.slug.length === 0) {
+    redirect("/dashboard");
+  }
+
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
