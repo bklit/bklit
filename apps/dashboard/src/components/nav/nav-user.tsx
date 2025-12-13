@@ -160,8 +160,8 @@ export function NavUser({
             </ItemActions>
           </Item>
         </SheetHeader>
-        <div className="flex flex-col gap-2 p-4">
-          <Item asChild>
+        <div className="flex flex-col gap-1 p-4">
+          <Item asChild size="sm">
             <Link href={dashboardHref}>
               <ItemContent>Overview</ItemContent>
               <ItemActions>
@@ -169,7 +169,7 @@ export function NavUser({
               </ItemActions>
             </Link>
           </Item>
-          <Item asChild>
+          <Item asChild size="sm">
             <Link href={`/user/${user.id || "profile"}`}>
               <ItemContent>My Workspaces</ItemContent>
               <ItemActions>
@@ -177,7 +177,7 @@ export function NavUser({
               </ItemActions>
             </Link>
           </Item>
-          <Item asChild>
+          <Item asChild size="sm">
             <Link href={billingHref}>
               <ItemContent>Billing for {activeOrganization?.name}</ItemContent>
               <ItemActions>
@@ -185,7 +185,7 @@ export function NavUser({
               </ItemActions>
             </Link>
           </Item>
-          <Item>
+          <Item size="sm">
             <ItemContent>Theme</ItemContent>
             <ItemActions>
               <ThemeToggle />
