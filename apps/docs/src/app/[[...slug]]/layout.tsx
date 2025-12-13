@@ -46,17 +46,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           },
         ],
       }}
-      links={[
-        {
-          type: "custom",
-          children: (
-            <>
-              <GithubInfo owner="bklit" repo="bklit" className="lg:-mx-2" />
-              <h1>Hello</h1>
-            </>
-          ),
-        },
-      ]}
+      links={[]}
     >
       {children}
     </DocsLayout>

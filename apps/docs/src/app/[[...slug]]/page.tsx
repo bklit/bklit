@@ -4,7 +4,6 @@ import {
   DocsPage,
   DocsTitle,
 } from "fumadocs-ui/layouts/notebook/page";
-import { createRelativeLink } from "fumadocs-ui/mdx";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getMDXComponents } from "@/lib/mdx-components";
@@ -15,7 +14,6 @@ export default async function Page(props: {
 }) {
   const params = await props.params;
 
-  // Redirect root to getting-started
   if (!params.slug || params.slug.length === 0) {
     redirect("/getting-started");
   }
@@ -28,13 +26,11 @@ export default async function Page(props: {
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
       <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      {page.data.description && (
+        <DocsDescription>{page.data.description}</DocsDescription>
+      )}
       <DocsBody>
-        <MDX
-          components={getMDXComponents({
-            a: createRelativeLink(source, page),
-          })}
-        />
+        <MDX components={getMDXComponents()} />
       </DocsBody>
     </DocsPage>
   );
