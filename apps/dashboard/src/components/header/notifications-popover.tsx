@@ -2,8 +2,14 @@
 
 import { Button } from "@bklit/ui/components/button";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@bklit/ui/components/drawer";
+import {
   Empty,
-  EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
@@ -21,6 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@bklit/ui/components/popover";
+import { useMediaQuery } from "@bklit/ui/hooks/use-media-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -31,6 +38,8 @@ export function NotificationsPopover() {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const { data: invitations = [] } = useQuery(
     trpc.invitation.list.queryOptions(),
@@ -73,24 +82,111 @@ export function NotificationsPopover() {
 
   const hasNotifications = invitations.length > 0;
 
+  if (isDesktop) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            size="icon"
+            variant="outline"
+            className="relative cursor-pointer"
+          >
+            <Bell size={14} />
+            {hasNotifications && (
+              <span
+                data-count={invitations.length}
+                className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-brand-500 text-white rounded-full "
+              />
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-96 p-0">
+          {hasNotifications && (
+            <div className="border-b px-4 py-3">
+              <h3 className="font-semibold text-sm">Notifications</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                You have {invitations.length} pending invitation
+                {invitations.length > 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
+
+          {invitations.length === 0 ? (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia>
+                  <Bell size={16} />
+                </EmptyMedia>
+                <EmptyTitle className="text-sm text-muted-foreground">
+                  No new notifications
+                </EmptyTitle>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <ItemGroup className="max-h-[400px] overflow-y-auto">
+              {invitations.map((invitation) => (
+                <Item key={invitation.id} variant="outline" size="sm">
+                  <ItemContent>
+                    <ItemTitle>
+                      Invitation to {invitation.organization.name}
+                    </ItemTitle>
+                    <ItemDescription>
+                      You were invited to join as {invitation.role || "member"}
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        declineInvite.mutate({
+                          invitationId: invitation.id,
+                        })
+                      }
+                      disabled={
+                        declineInvite.isPending || acceptInvite.isPending
+                      }
+                    >
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        acceptInvite.mutate({
+                          invitationId: invitation.id,
+                        })
+                      }
+                      disabled={
+                        acceptInvite.isPending || declineInvite.isPending
+                      }
+                    >
+                      Accept
+                    </Button>
+                  </ItemActions>
+                </Item>
+              ))}
+            </ItemGroup>
+          )}
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Drawer>
+      <DrawerTrigger asChild>
         <Button
           size="icon"
           variant="outline"
           className="relative cursor-pointer"
         >
           <Bell size={14} />
-          {hasNotifications && (
-            <span
-              data-count={invitations.length}
-              className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-brand-500 text-white rounded-full "
-            />
-          )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-96 p-0">
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Notifications</DrawerTitle>
+        </DrawerHeader>
         {hasNotifications && (
           <div className="border-b px-4 py-3">
             <h3 className="font-semibold text-sm">Notifications</h3>
@@ -100,7 +196,6 @@ export function NotificationsPopover() {
             </p>
           </div>
         )}
-
         {invitations.length === 0 ? (
           <Empty>
             <EmptyHeader>
@@ -153,7 +248,7 @@ export function NotificationsPopover() {
             ))}
           </ItemGroup>
         )}
-      </PopoverContent>
-    </Popover>
+      </DrawerContent>
+    </Drawer>
   );
 }
