@@ -175,11 +175,7 @@ export function NotificationsPopover() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button
-          size="icon"
-          variant="outline"
-          className="relative cursor-pointer"
-        >
+        <Button size="icon" variant="ghost" className="relative cursor-pointer">
           <Bell size={14} />
         </Button>
       </DrawerTrigger>

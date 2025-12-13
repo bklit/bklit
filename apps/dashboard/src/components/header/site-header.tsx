@@ -1,7 +1,11 @@
 "use client";
 
+import { Button } from "@bklit/ui/components/button";
+import { useSidebar } from "@bklit/ui/components/sidebar";
+import { useMediaQuery } from "@bklit/ui/hooks/use-media-query";
 import { BklitLogo } from "@bklit/ui/icons/bklit";
 import NumberFlow from "@number-flow/react";
+import { PanelLeftIcon, PanelRightIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -9,6 +13,7 @@ import { authClient } from "@/auth/client";
 import { NavUser } from "@/components/nav/nav-user";
 import { NavWorkspace } from "@/components/nav/nav-workspace";
 import { useLiveUsers } from "@/hooks/use-live-users";
+import { cn } from "@/lib/utils";
 import { NotificationsPopover } from "./notifications-popover";
 import { SiteSearch } from "./site-search";
 
@@ -17,6 +22,7 @@ export function SiteHeader() {
   const params = useParams();
   const organizationId = params?.organizationId as string | undefined;
   const projectId = params?.projectId as string | undefined;
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const { liveUsers } = useLiveUsers({
     projectId: projectId ?? "",
@@ -77,7 +83,7 @@ export function SiteHeader() {
             )}
           </AnimatePresence>
         </div>
-        <div className="flex items-center gap-3">
+        <div className={cn("flex items-center gap-3", !isDesktop && "gap-2")}>
           <SiteSearch />
           {user && (
             <>
@@ -85,8 +91,24 @@ export function SiteHeader() {
               <NavUser user={user} />
             </>
           )}
+          {!isDesktop && <SidebarToggle />}
         </div>
       </div>
     </header>
+  );
+}
+
+function SidebarToggle() {
+  const { state, toggleSidebar } = useSidebar();
+
+  return (
+    <Button
+      size="icon"
+      variant="ghost"
+      className="relative cursor-pointer"
+      onClick={toggleSidebar}
+    >
+      {state === "expanded" ? <PanelLeftIcon /> : <PanelRightIcon />}
+    </Button>
   );
 }

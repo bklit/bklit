@@ -143,7 +143,7 @@ export function NavUser({
           </AvatarFallback>
         </Avatar>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[calc(100vw-2rem)]">
+      <SheetContent side="right" className="w-[calc(80vw-2rem)]">
         <SheetHeader>
           <Item>
             <ItemContent>
