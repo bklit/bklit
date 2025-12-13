@@ -1,0 +1,193 @@
+---
+title: Configuration
+description: Complete guide to Bklit SDK configuration options
+---
+
+# Configuration
+
+This guide covers all configuration options for the Bklit SDK.
+
+## Required Options
+
+### projectId
+
+Your unique project identifier from the Bklit dashboard.
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  // ...
+});
+```
+
+**Type:** `string`  
+**Required:** Yes  
+**Example:** `'cmic3a5ap0003zxfjshgs688w'`
+
+### apiKey
+
+Your API authentication token from the Bklit dashboard.
+
+```javascript
+initBklit({
+  apiKey: 'bk_live_your-token-here',
+  // ...
+});
+```
+
+**Type:** `string`  
+**Required:** Yes  
+**Format:** `bk_live_<64 hex characters>`
+
+## Optional Options
+
+### apiHost
+
+API endpoint URL. Defaults to production URL.
+
+```javascript
+initBklit({
+  apiHost: 'https://app.bklit.com/api/track',
+  // ...
+});
+```
+
+**Type:** `string`  
+**Default:** `'https://app.bklit.com/api/track'`  
+**Use cases:**
+- Custom API endpoint
+- Development with local server
+- Testing with staging environment
+
+### environment
+
+Environment mode for the SDK.
+
+```javascript
+initBklit({
+  environment: 'production', // or 'development'
+  // ...
+});
+```
+
+**Type:** `'development' | 'production'`  
+**Default:** `'production'`  
+**Effects:**
+- Development: Debug mode enabled by default
+- Production: Optimized for performance
+
+### debug
+
+Enable detailed console logging.
+
+```javascript
+initBklit({
+  debug: true,
+  // ...
+});
+```
+
+**Type:** `boolean`  
+**Default:** `false` (or `true` if `environment === 'development'`)  
+**Output:**
+- SDK initialization logs
+- Session creation logs
+- Event tracking logs
+- API request logs
+- Error messages
+
+## Complete Example
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+initBklit({
+  // Required
+  projectId: 'your-project-id',
+  apiKey: 'bk_live_your-token-here',
+  
+  // Optional
+  apiHost: 'https://app.bklit.com/api/track',
+  environment: 'production',
+  debug: false,
+});
+```
+
+## Environment-Based Configuration
+
+### Development
+
+```javascript
+initBklit({
+  projectId: process.env.BKLIT_PROJECT_ID,
+  apiKey: process.env.BKLIT_API_KEY,
+  environment: 'development',
+  debug: true,
+});
+```
+
+### Production
+
+```javascript
+initBklit({
+  projectId: process.env.BKLIT_PROJECT_ID,
+  apiKey: process.env.BKLIT_API_KEY,
+  environment: 'production',
+  debug: false,
+});
+```
+
+## Configuration Validation
+
+The SDK validates configuration on initialization:
+
+- **Missing projectId:** Error logged, SDK not initialized
+- **Missing apiKey:** Error logged, SDK not initialized
+- **Invalid apiHost:** Warning logged, uses default
+- **Invalid environment:** Warning logged, uses default
+
+## Default Behavior
+
+If options are not provided:
+
+- **apiHost:** Uses production URL
+- **environment:** Defaults to `'production'`
+- **debug:** Defaults to `false` (or `true` if development)
+
+## Best Practices
+
+### Use Environment Variables
+
+```javascript
+initBklit({
+  projectId: process.env.NEXT_PUBLIC_BKLIT_PROJECT_ID,
+  apiKey: process.env.NEXT_PUBLIC_BKLIT_API_KEY,
+});
+```
+
+### Enable Debug in Development
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  debug: process.env.NODE_ENV === 'development',
+});
+```
+
+### Set Environment Explicitly
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  environment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+});
+```
+
+## Related Documentation
+
+- [Installation](/docs/sdk/installation) - Installing the SDK
+- [Debug Mode](/docs/sdk/debug-mode) - Using debug mode
+- [API Reference](/docs/sdk/api-reference) - Complete API docs
+

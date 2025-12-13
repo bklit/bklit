@@ -1,0 +1,178 @@
+---
+title: Vanilla JavaScript / React
+description: Using Bklit SDK with vanilla JavaScript or React
+---
+
+# Vanilla JavaScript / React
+
+This guide covers using the Bklit SDK with vanilla JavaScript or React applications.
+
+## Installation
+
+```bash
+npm install @bklit/sdk
+```
+
+## Basic Setup
+
+### Import the SDK
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+```
+
+### Initialize
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+});
+```
+
+## Complete Example
+
+### HTML
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My App</title>
+</head>
+<body>
+  <h1>Welcome</h1>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
+```
+
+### JavaScript (app.js)
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+// Initialize SDK
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  debug: true, // Enable debug logging
+});
+```
+
+## React Example
+
+### Functional Component
+
+```jsx
+import { useEffect } from 'react';
+import { initBklit } from '@bklit/sdk';
+
+function App() {
+  useEffect(() => {
+    initBklit({
+      projectId: 'your-project-id',
+      apiKey: 'your-api-key',
+    });
+  }, []);
+
+  return <div>My App</div>;
+}
+```
+
+### With Environment Variables
+
+```jsx
+import { useEffect } from 'react';
+import { initBklit } from '@bklit/sdk';
+
+function App() {
+  useEffect(() => {
+    initBklit({
+      projectId: process.env.REACT_APP_BKLIT_PROJECT_ID,
+      apiKey: process.env.REACT_APP_BKLIT_API_KEY,
+    });
+  }, []);
+
+  return <div>My App</div>;
+}
+```
+
+## Configuration Options
+
+### Basic
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+});
+```
+
+### Advanced
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  apiHost: 'https://app.bklit.com/api/track', // Optional
+  environment: 'production', // 'development' or 'production'
+  debug: false, // Enable debug logging
+});
+```
+
+## Environment Variables
+
+Store credentials securely:
+
+```bash
+# .env
+REACT_APP_BKLIT_PROJECT_ID=your-project-id
+REACT_APP_BKLIT_API_KEY=bk_live_your-token-here
+```
+
+```javascript
+initBklit({
+  projectId: process.env.REACT_APP_BKLIT_PROJECT_ID,
+  apiKey: process.env.REACT_APP_BKLIT_API_KEY,
+});
+```
+
+## Manual Tracking
+
+### Track Page View
+
+```javascript
+window.trackPageView();
+```
+
+### Track Custom Event
+
+```javascript
+window.trackEvent(
+  'button-click',
+  'click',
+  {
+    buttonName: 'Sign Up',
+    location: 'header'
+  }
+);
+```
+
+## SPA Support
+
+The SDK automatically detects route changes in single-page applications:
+
+- React Router
+- Vue Router
+- Next.js (with manual tracking)
+- Any SPA framework
+
+No additional configuration needed!
+
+## Related Documentation
+
+- [Configuration](/docs/sdk/configuration) - All configuration options
+- [Event Tracking](/docs/sdk/event-tracking) - Tracking custom events
+- [Debug Mode](/docs/sdk/debug-mode) - Debugging and logging
+

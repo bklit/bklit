@@ -1,0 +1,183 @@
+---
+title: API Reference
+description: Complete API reference for the Bklit SDK
+---
+
+# API Reference
+
+Complete reference for all Bklit SDK functions and methods.
+
+## initBklit(options)
+
+Initialize the Bklit SDK.
+
+### Parameters
+
+```typescript
+interface BklitOptions {
+  projectId: string;        // Required: Your project ID
+  apiKey: string;           // Required: Your API token
+  apiHost?: string;         // Optional: API endpoint URL
+  environment?: string;     // Optional: 'development' | 'production'
+  debug?: boolean;          // Optional: Enable debug logging
+}
+```
+
+### Example
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+});
+```
+
+### Returns
+
+`void`
+
+## window.trackPageView()
+
+Manually trigger a page view tracking event.
+
+### Example
+
+```javascript
+window.trackPageView();
+```
+
+### Use Cases
+
+- Custom routing
+- Manual page tracking
+- SPA route changes
+- Dynamic content loading
+
+### Returns
+
+`void`
+
+## window.trackEvent(trackingId, eventType, metadata?, triggerMethod?)
+
+Manually trigger a custom event.
+
+### Parameters
+
+- **trackingId** (`string`, required) - Unique identifier for the event
+- **eventType** (`string`, required) - Type of event ('click', 'view', 'hover', or custom)
+- **metadata** (`object`, optional) - Additional data to attach
+- **triggerMethod** (`string`, optional) - 'automatic' or 'manual' (default: 'manual')
+
+### Example
+
+```javascript
+window.trackEvent(
+  'button-click',
+  'click',
+  {
+    buttonName: 'Sign Up',
+    location: 'header'
+  },
+  'manual'
+);
+```
+
+### Returns
+
+`void`
+
+## window.clearBklitSession()
+
+Clear the current session (useful for testing).
+
+### Example
+
+```javascript
+window.clearBklitSession();
+```
+
+### Use Cases
+
+- Testing
+- Debugging
+- Session management
+- User logout
+
+### Returns
+
+`void`
+
+## Global Configuration
+
+After initialization, configuration is available on `window`:
+
+```javascript
+window.bklitprojectId    // Your project ID
+window.bklitApiHost      // API host URL
+window.bklitEnvironment  // Environment mode
+window.bklitDebug        // Debug mode status
+window.bklitApiKey       // API key (if set)
+```
+
+## Error Handling
+
+### Initialization Errors
+
+```javascript
+// Missing projectId
+❌ Bklit SDK: projectId is required for initialization.
+
+// Missing apiKey
+❌ Bklit SDK: apiKey is required for initialization.
+```
+
+### Tracking Errors
+
+```javascript
+// Invalid event
+❌ Bklit SDK: Error tracking event: Invalid parameters
+
+// API error
+❌ Bklit SDK: API request failed: 401 Unauthorized
+```
+
+## TypeScript Types
+
+### BklitOptions
+
+```typescript
+interface BklitOptions {
+  projectId: string;
+  apiKey: string;
+  apiHost?: string;
+  environment?: 'development' | 'production';
+  debug?: boolean;
+}
+```
+
+### Event Metadata
+
+```typescript
+interface EventMetadata {
+  [key: string]: string | number | boolean | null;
+}
+```
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+- Mobile browsers
+
+Requires ES6+ support.
+
+## Related Documentation
+
+- [Installation](/docs/sdk/installation) - Installing the SDK
+- [Configuration](/docs/sdk/configuration) - Configuration options
+- [Event Tracking](/docs/sdk/event-tracking) - Tracking events
+

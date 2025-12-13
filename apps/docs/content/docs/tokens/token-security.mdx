@@ -1,0 +1,247 @@
+---
+title: Token Security
+description: Security best practices for API tokens
+---
+
+# Token Security
+
+This guide covers security best practices for API tokens in Bklit.
+
+## Security Overview
+
+API tokens are sensitive credentials that grant access to your analytics data. Follow these practices to keep them secure.
+
+## Best Practices
+
+### 1. Never Commit Tokens to Version Control
+
+**❌ Bad:**
+```javascript
+// config.js
+const API_TOKEN = 'bk_live_a1b2c3d4...';
+```
+
+**✅ Good:**
+```javascript
+// config.js
+const API_TOKEN = process.env.BKLIT_API_TOKEN;
+```
+
+```bash
+# .env
+BKLIT_API_TOKEN=bk_live_a1b2c3d4...
+```
+
+**Add to `.gitignore`:**
+```
+.env
+.env.local
+.env.*.local
+```
+
+### 2. Use Environment Variables
+
+Store tokens in environment variables:
+
+**Development:**
+```bash
+# .env.local
+BKLIT_API_TOKEN=bk_live_your-token-here
+```
+
+**Production:**
+- Use your hosting platform's environment variable settings
+- Vercel: Project Settings → Environment Variables
+- Never hardcode in production code
+
+### 3. Rotate Tokens Regularly
+
+**Recommended Rotation Schedule:**
+- Production tokens: Every 90 days
+- Development tokens: Every 30 days
+- Testing tokens: Every 7 days
+
+**Rotation Process:**
+1. Create new token
+2. Update applications with new token
+3. Verify new token works
+4. Delete old token
+
+### 4. Set Expiration Dates
+
+When creating tokens, set expiration dates:
+
+- **Production:** 90-180 days
+- **Development:** 30 days
+- **Testing:** 7 days
+
+This ensures tokens automatically expire if forgotten.
+
+### 5. Use Domain Restrictions
+
+Always set domain restrictions on tokens:
+
+```
+Production: example.com, www.example.com
+Development: localhost, 127.0.0.1
+Staging: staging.example.com
+```
+
+This prevents token misuse from unauthorized domains.
+
+### 6. Scope to Specific Projects
+
+Only grant access to projects the token needs:
+
+- **Production token:** Only production project
+- **Development token:** Only development projects
+- Avoid giving access to all projects
+
+### 7. Use Separate Tokens
+
+**Different tokens for:**
+- Production vs Development
+- Different applications
+- Different environments
+
+This limits damage if a token is compromised.
+
+### 8. Monitor Token Usage
+
+Regularly check:
+- Last used date
+- Which projects are receiving data
+- Unusual activity patterns
+
+Delete unused tokens promptly.
+
+## Token Storage
+
+### Client-Side Applications
+
+**⚠️ Never expose tokens in client-side code**
+
+If you must use tokens client-side:
+- Use domain restrictions
+- Set short expiration
+- Monitor usage closely
+- Consider using a proxy API
+
+### Server-Side Applications
+
+**✅ Always use server-side tokens**
+
+- Store in environment variables
+- Never expose in API responses
+- Use secure storage (secrets manager)
+
+### Environment Variables
+
+**Development:**
+```bash
+# .env.local (not committed)
+BKLIT_API_TOKEN=bk_live_...
+```
+
+**Production:**
+- Use platform secrets management
+- Vercel: Environment Variables
+- AWS: Secrets Manager
+- Never in code or logs
+
+## Token Compromise
+
+### If a Token is Compromised
+
+1. **Immediately delete the token**
+   - Go to API Tokens settings
+   - Delete the compromised token
+
+2. **Create a new token**
+   - Generate replacement token
+   - Update all applications
+
+3. **Review access logs**
+   - Check for unauthorized usage
+   - Verify no data was accessed
+
+4. **Update all integrations**
+   - Update SDK configurations
+   - Update API clients
+   - Verify new token works
+
+### Prevention
+
+- Regular token rotation
+- Monitor usage patterns
+- Use domain restrictions
+- Set expiration dates
+- Limit project access
+
+## Security Checklist
+
+Before deploying:
+
+- [ ] Tokens stored in environment variables
+- [ ] `.env` files in `.gitignore`
+- [ ] No tokens in code
+- [ ] Domain restrictions set
+- [ ] Project scoping configured
+- [ ] Expiration dates set
+- [ ] Separate tokens per environment
+- [ ] Production tokens rotated recently
+
+## Common Mistakes
+
+### ❌ Committing Tokens
+
+```javascript
+// DON'T DO THIS
+const token = 'bk_live_...';
+```
+
+### ❌ Exposing in Logs
+
+```javascript
+// DON'T DO THIS
+console.log('Token:', token);
+```
+
+### ❌ Hardcoding in Production
+
+```javascript
+// DON'T DO THIS
+const token = process.env.NODE_ENV === 'production' 
+  ? 'hardcoded-production-token' 
+  : process.env.TOKEN;
+```
+
+### ❌ Sharing Tokens
+
+- Never share tokens via email, Slack, etc.
+- Use secure sharing methods if needed
+- Rotate after sharing
+
+## Token Validation
+
+Bklit validates tokens on every request:
+
+1. **Token exists** - Token must be in database
+2. **Token not expired** - Check expiration date
+3. **Project access** - Token must have project access
+4. **Domain allowed** - Origin must match restrictions
+
+Failed validation returns:
+```json
+{
+  "error": "Invalid API token",
+  "code": "UNAUTHORIZED"
+}
+```
+
+## Related Documentation
+
+- [Creating Tokens](/docs/tokens/creating-tokens) - How to create tokens
+- [Token Scopes](/docs/tokens/token-scopes) - Project and domain scoping
+- [SDK Integration](/docs/sdk) - Using tokens securely
+

@@ -1,0 +1,147 @@
+---
+title: Cloudflare Setup
+description: Configure Cloudflare for geolocation features
+---
+
+# Cloudflare Setup
+
+Cloudflare is required for geolocation data collection in production.
+
+## Overview
+
+Cloudflare provides geolocation headers automatically when requests pass through their network. This enables Bklit to collect location data without external API calls.
+
+## Why Cloudflare?
+
+- Automatic geolocation headers
+- No external API calls needed
+- Better performance
+- Free tier available
+
+## Setup Steps
+
+### Step 1: Add Domain to Cloudflare
+
+1. Sign up/Login to [Cloudflare](https://cloudflare.com)
+2. Click "Add a Site"
+3. Enter your domain (e.g., `app.bklit.com`)
+4. Select free plan
+
+### Step 2: Update Nameservers
+
+1. Cloudflare provides nameservers
+2. Go to your domain registrar
+3. Update nameservers to Cloudflare's
+4. Wait for DNS propagation (up to 24 hours)
+
+### Step 3: Configure DNS Records
+
+1. Go to DNS → Records in Cloudflare
+2. Add CNAME or A record:
+   - **Type:** CNAME (recommended)
+   - **Name:** `app` (or `@` for root)
+   - **Target:** Your Vercel domain
+   - **Proxy status:** Proxied (orange cloud) ⚠️ **Required!**
+
+### Step 4: Enable IP Geolocation
+
+1. Go to Network tab
+2. Find "IP Geolocation"
+3. Toggle to "On"
+4. This enables basic geolocation headers
+
+### Step 5: Enable Managed Transforms
+
+1. Go to Rules → Transform Rules
+2. Navigate to Managed Transforms
+3. Enable "Add visitor location headers"
+4. This adds comprehensive geolocation data
+
+**Headers added:**
+- `CF-Region`
+- `CF-City`
+- `CF-Latitude`
+- `CF-Longitude`
+- `CF-TimeZone`
+- `CF-PostalCode`
+- `CF-IPCountry`
+
+### Step 6: Configure SSL/TLS
+
+1. Go to SSL/TLS tab
+2. Set mode to "Full" or "Full (strict)"
+3. Ensures secure connection to Vercel
+
+### Step 7: Update Vercel
+
+1. Add custom domain in Vercel
+2. Vercel configures SSL automatically
+3. Verify connection works
+
+## How It Works
+
+### Request Flow
+
+```
+Client → Cloudflare (adds headers) → Vercel → Your App
+```
+
+### Geolocation Headers
+
+Bklit reads geolocation from Cloudflare headers:
+- `CF-IPCountry` - Country code
+- `CF-City` - City name
+- `CF-Region` - Region/state
+- `CF-Latitude` / `CF-Longitude` - Coordinates
+
+### Fallback
+
+If Cloudflare headers aren't present:
+- Local development uses ip-api.com
+- Production should always have headers
+- Automatic fallback handling
+
+## Local Development
+
+Cloudflare headers won't be present locally:
+- App automatically falls back to ip-api.com
+- No additional configuration needed
+- Works seamlessly for development
+
+## Verification
+
+### Test Headers
+
+1. Visit your site through Cloudflare
+2. Check request headers
+3. Verify `CF-IPCountry` is present
+4. Check dashboard for location data
+
+### Check Dashboard
+
+1. Visit your site
+2. Go to Bklit dashboard
+3. Check session/event data
+4. Verify location is recorded
+
+## Troubleshooting
+
+### Headers Not Present
+
+- Verify proxy is enabled (orange cloud)
+- Check Managed Transforms are enabled
+- Verify request goes through Cloudflare
+- Check DNS propagation
+
+### Wrong Location
+
+- Verify IP Geolocation is enabled
+- Check Managed Transforms are enabled
+- Verify correct headers are used
+- Check Cloudflare settings
+
+## Related Documentation
+
+- [Deployment](/docs/deployment) - Production deployment
+- [Getting Started](/docs/getting-started) - Setup guide
+

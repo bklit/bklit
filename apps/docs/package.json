@@ -1,0 +1,31 @@
+{
+  "name": "@bklit/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo .next dist node_modules",
+    "dev": "next dev --port 3002 --turbopack",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@bklit/tsconfig": "workspace:*",
+    "@bklit/ui": "workspace:*",
+    "fumadocs-core": "^16.2.5",
+    "fumadocs-mdx": "^16.2.5",
+    "fumadocs-ui": "^16.2.5",
+    "next": "catalog:",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/mdx": "^2.0.0",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "tailwindcss": "^4.1.16",
+    "typescript": "catalog:"
+  }
+}

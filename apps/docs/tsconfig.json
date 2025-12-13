@@ -1,0 +1,16 @@
+{
+  "extends": "@bklit/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "fumadocs-mdx:collections/*": ["./.source/*"]
+    },
+    "plugins": [{ "name": "next" }],
+    "module": "esnext"
+  },
+  "include": [".", ".next/types/**/*.ts", ".source/**/*.ts"],
+  "exclude": ["node_modules"]
+}
