@@ -1,0 +1,148 @@
+---
+title: Creating API Tokens
+description: How to create and manage API tokens in Bklit
+---
+
+# Creating API Tokens
+
+This guide shows you how to create API tokens in the Bklit dashboard.
+
+## Prerequisites
+
+- You must be an **admin** or **owner** of the organization
+- You must have at least one project in the organization
+
+## Creating a Token
+
+### Step 1: Navigate to API Tokens
+
+1. Go to your organization settings
+2. Click on **"API Tokens"** in the sidebar
+3. Click the **"Create Token"** button
+
+### Step 2: Fill in Token Details
+
+**Name** (required)
+- A descriptive name for the token
+- Example: "Production Website Token"
+- Maximum 100 characters
+
+**Description** (optional)
+- Additional information about the token
+- Example: "Token for tracking production website events"
+- Maximum 500 characters
+
+**Projects** (required)
+- Select one or more projects this token can access
+- The token will only be able to send data to selected projects
+- You can select multiple projects
+
+**Allowed Domains** (optional)
+- Restrict token usage to specific domains
+- Add domains one at a time
+- Example: `example.com`, `www.example.com`
+- If empty, token can be used from any domain
+
+### Step 3: Create Token
+
+Click **"Create Token"** to generate the token.
+
+## Important: Save Your Token
+
+**⚠️ The full token is only displayed once when created.**
+
+After creation, you'll see:
+- Token prefix: `bk_live_...`
+- Full token (shown only once)
+
+**Copy the full token immediately** and store it securely. You won't be able to see it again.
+
+## Token Management
+
+### Viewing Tokens
+
+In the API Tokens page, you can see:
+- Token name and description
+- Token prefix
+- Associated projects
+- Allowed domains
+- Creation date
+- Last used date
+- Expiration date (if set)
+
+### Deleting Tokens
+
+1. Find the token in the list
+2. Click the delete button (trash icon)
+3. Confirm deletion
+
+**Warning:** Deleting a token will immediately revoke access. Any applications using this token will stop working.
+
+### Token Expiration
+
+You can set an expiration date when creating a token. After expiration:
+- The token will no longer work
+- You'll need to create a new token
+- Applications using the expired token will fail
+
+## Using Tokens
+
+Once you have a token, use it in your application:
+
+### In the SDK
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'bk_live_your-token-here',
+});
+```
+
+### In API Requests
+
+```javascript
+fetch('https://app.bklit.com/api/track', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer bk_live_your-token-here',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    projectId: 'your-project-id',
+    // ... event data
+  }),
+});
+```
+
+## Best Practices
+
+1. **Use descriptive names** - Make it easy to identify token purpose
+2. **Scope to specific projects** - Only grant access to needed projects
+3. **Set domain restrictions** - Limit token usage to your domains
+4. **Set expiration dates** - Rotate tokens regularly
+5. **Store securely** - Never commit tokens to version control
+6. **Use environment variables** - Store tokens in `.env` files
+
+## Troubleshooting
+
+### Token Not Working
+
+- Verify the token is correct (no extra spaces)
+- Check token hasn't expired
+- Verify token has access to the project
+- Check domain restrictions match your domain
+
+### Token Not Found
+
+- Ensure you're looking in the correct organization
+- Check you have admin/owner permissions
+- Verify token wasn't deleted
+
+## Related Documentation
+
+- [Token Scopes](/dashboard/tokens/token-scopes) - Understanding project scoping
+- [Token Security](/dashboard/tokens/token-security) - Security best practices
+- [SDK Integration](/sdk) - Using tokens with the SDK
+

@@ -1,0 +1,188 @@
+---
+title: Usage Tracking
+description: How Bklit tracks and enforces usage limits
+---
+
+# Usage Tracking
+
+Bklit tracks usage to enforce plan limits and provide usage insights.
+
+## What is Tracked
+
+### Events
+
+Every analytics event counts toward your monthly limit:
+
+- **Page views** - Each page view is 1 event
+- **Custom events** - Each custom event is 1 event
+- **Session starts** - Each new session is 1 event
+- **All tracked interactions** - Any event sent to Bklit
+
+### Monthly Reset
+
+Usage resets at the start of each calendar month:
+- Count starts at 0 on the 1st
+- Previous month's usage is archived
+- New month begins fresh count
+
+## How Limits Are Enforced
+
+### Event Limit Check
+
+On each event tracking request:
+
+1. **Check current usage** - Count events this month
+2. **Check plan limit** - Get limit for current plan
+3. **Verify access** - Check if super admin (bypass)
+4. **Allow or reject** - Based on limit
+
+### Limit Enforcement
+
+**Free Plan (4,000 events/month):**
+- Events tracked until limit reached
+- Additional events rejected with error
+- Dashboard shows limit warning
+
+**Pro Plan (10,000 events/month):**
+- Events tracked until limit reached
+- Additional events rejected with error
+- Upgrade prompt shown
+
+**Super Admin:**
+- All limits bypassed
+- Unlimited events
+- No enforcement checks
+
+## Usage Calculation
+
+### Counting Events
+
+Events are counted per organization:
+- All projects in organization count together
+- Events across all projects are summed
+- Monthly total is tracked
+
+### Example
+
+Organization with 2 projects:
+- Project A: 2,000 events
+- Project B: 1,500 events
+- **Total: 3,500 events** (counted together)
+
+## Development Mode
+
+### Bypass in Development
+
+When `NODE_ENV=development`:
+- Limits are bypassed
+- All events are allowed
+- No enforcement checks
+- Useful for testing
+
+### Production Enforcement
+
+In production:
+- Limits are strictly enforced
+- No bypasses (except super admin)
+- Real-time limit checking
+
+## Usage Monitoring
+
+### Dashboard Indicators
+
+View usage in dashboard:
+- Current month's events
+- Remaining event quota
+- Percentage of limit used
+- Days until reset
+
+### Usage Warnings
+
+Warnings appear when:
+- **80% of limit** - Yellow warning
+- **90% of limit** - Orange warning
+- **100% of limit** - Red warning, events rejected
+
+### Usage Alerts
+
+Email alerts (if configured):
+- Near limit warnings
+- Limit reached notifications
+- Monthly usage summaries
+
+## Limit Exceeded
+
+### What Happens
+
+When limit is exceeded:
+- New events are rejected
+- API returns error: `429 Too Many Requests`
+- Dashboard shows limit exceeded message
+- Upgrade prompt displayed
+
+### Error Response
+
+```json
+{
+  "error": "Event limit exceeded",
+  "code": "LIMIT_EXCEEDED",
+  "limit": 4000,
+  "current": 4001,
+  "resetDate": "2024-02-01T00:00:00Z"
+}
+```
+
+### Resolving
+
+**Options:**
+1. **Upgrade to Pro** - Higher limits
+2. **Wait for reset** - New month starts
+3. **Reduce events** - Optimize tracking
+4. **Contact support** - For assistance
+
+## Best Practices
+
+### Monitor Usage
+
+- Check usage regularly
+- Set up usage alerts
+- Plan for traffic spikes
+- Monitor trends
+
+### Optimize Events
+
+- Only track necessary events
+- Use event sampling if needed
+- Filter out bot traffic
+- Remove duplicate tracking
+
+### Plan Ahead
+
+- Monitor usage trends
+- Upgrade before hitting limits
+- Consider traffic growth
+- Plan for seasonal spikes
+
+## Usage Analytics
+
+### Viewing Usage
+
+1. Go to workspace dashboard
+2. Check usage indicators
+3. View detailed usage charts
+4. Export usage data
+
+### Usage Reports
+
+Available reports:
+- Monthly usage summary
+- Event breakdown by project
+- Usage trends over time
+- Projection for next month
+
+## Related Documentation
+
+- [Plans and Limits](/dashboard/billing/plans-and-limits) - Plan details
+- [Updating Billing](/dashboard/billing/updating-billing) - Change plans
+- [Admin Features](/dashboard/admin) - Super admin access
+

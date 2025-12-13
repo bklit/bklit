@@ -1,0 +1,35 @@
+---
+title: API Tokens
+description: Manage API tokens for Bklit Analytics
+---
+
+# API Tokens
+
+API tokens are used to authenticate requests to the Bklit Analytics API. Each token is scoped to specific projects and can have domain restrictions for security.
+
+## Overview
+
+API tokens allow you to:
+- Track events from your applications
+- Send analytics data to Bklit
+- Authenticate API requests securely
+
+## Token Format
+
+Tokens follow the format: `bk_live_<64 hex characters>`
+
+Example: `bk_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6`
+
+## Token Security
+
+- Tokens are hashed using scrypt before storage
+- Only the token prefix (`bk_live_`) is displayed after creation
+- Full tokens are only shown once when created
+- Store tokens securely and never commit them to version control
+
+## Related Documentation
+
+- [Creating Tokens](/dashboard/tokens/creating-tokens) - How to create API tokens
+- [Token Scopes](/dashboard/tokens/token-scopes) - Project scoping and domain restrictions
+- [Token Security](/dashboard/tokens/token-security) - Best practices and security
+

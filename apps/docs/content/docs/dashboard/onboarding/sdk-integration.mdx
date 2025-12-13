@@ -1,0 +1,182 @@
+---
+title: SDK Integration
+description: Install and configure the Bklit SDK during onboarding
+---
+
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+# SDK Integration
+
+This guide covers integrating the Bklit SDK during the onboarding process.
+
+## Overview
+
+During onboarding, an API token is automatically generated for your project. You'll then integrate the Bklit SDK to start tracking analytics.
+
+## Step 1: Get Your API Token
+
+After creating your project, you'll see:
+
+- **API Token** - Your unique token (save it!)
+- **Project ID** - Your project identifier
+- **API Host** - Your API endpoint URL
+
+**⚠️ Important:** The full token is only shown once. Copy it immediately!
+
+## Step 2: Install the SDK
+
+<Tabs items={['npm', 'pnpm']}>
+<Tab value="npm">
+
+```bash
+npm install @bklit/sdk
+```
+
+</Tab>
+<Tab value="pnpm">
+
+```bash
+pnpm add @bklit/sdk
+```
+
+</Tab>
+</Tabs>
+
+## Step 3: Initialize the SDK
+
+### Vanilla JavaScript / React
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'bk_live_your-token-here',
+});
+```
+
+### Next.js
+
+```tsx
+import { BklitComponent } from '@bklit/sdk/nextjs';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <BklitComponent
+          projectId="your-project-id"
+          apiKey="bk_live_your-token-here"
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+## Step 4: Verify Integration
+
+After integrating the SDK:
+
+1. Visit your website/application
+2. Check browser console for SDK logs
+3. Go to Bklit dashboard
+4. Verify events are being tracked
+
+## Configuration Options
+
+### Basic Configuration
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-token',
+});
+```
+
+### Advanced Configuration
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-token',
+  apiHost: 'https://app.bklit.com/api/track', // Optional
+  environment: 'production', // 'development' or 'production'
+  debug: false, // Enable debug logging
+});
+```
+
+## Environment Variables
+
+Store your token securely:
+
+```bash
+# .env.local
+NEXT_PUBLIC_BKLIT_PROJECT_ID=your-project-id
+NEXT_PUBLIC_BKLIT_API_KEY=bk_live_your-token-here
+```
+
+```javascript
+// Use in code
+initBklit({
+  projectId: process.env.NEXT_PUBLIC_BKLIT_PROJECT_ID,
+  apiKey: process.env.NEXT_PUBLIC_BKLIT_API_KEY,
+});
+```
+
+## Debug Mode
+
+Enable debug mode to see SDK logs:
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-token',
+  debug: true, // Enable debug logging
+});
+```
+
+You'll see logs like:
+```
+🎯 Bklit SDK: Initializing with configuration
+🆔 Bklit SDK: New session created
+🚀 Bklit SDK: Tracking page view...
+✅ Bklit SDK: Page view tracked successfully!
+```
+
+## Next Steps
+
+After integrating the SDK:
+
+1. **[Test Connection](/dashboard/onboarding/testing-connection)** - Verify tracking works
+2. **[SDK Documentation](/sdk)** - Learn about SDK features
+3. **[Event Tracking](/sdk/event-tracking)** - Track custom events
+
+## Troubleshooting
+
+### SDK Not Loading
+
+- Check SDK is installed correctly
+- Verify import path is correct
+- Check browser console for errors
+
+### No Events Tracking
+
+- Verify project ID is correct
+- Check API token is valid
+- Verify token has project access
+- Enable debug mode to see logs
+
+### Token Errors
+
+- Verify token format is correct
+- Check token hasn't expired
+- Ensure token has project access
+
+## Related Documentation
+
+- [Testing Connection](/dashboard/onboarding/testing-connection) - Verify tracking
+- [SDK Documentation](/sdk) - Complete SDK guide
+- [API Tokens](/dashboard/tokens) - Token management
+

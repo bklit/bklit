@@ -1,0 +1,121 @@
+---
+title: Account Management
+description: Managing user accounts, roles, and permissions
+---
+
+# Account Management
+
+This guide covers managing user accounts, roles, and permissions in Bklit.
+
+## User Roles
+
+### Owner
+
+- Full access to workspace
+- Can delete workspace
+- Manage billing
+- Invite/remove members
+- Create/delete projects
+- Manage all settings
+
+### Admin
+
+- Manage projects
+- Invite members (not owners)
+- Manage API tokens
+- Cannot delete workspace
+- Cannot manage billing
+
+### Member
+
+- View projects
+- View analytics
+- Cannot manage settings
+- Cannot invite members
+
+### Super Admin
+
+- Unlimited access
+- Bypass all limits
+- All features available
+- Set via database only
+
+## Managing Members
+
+### Inviting Members
+
+1. Go to workspace settings
+2. Click "Members"
+3. Click "Invite Member"
+4. Enter email and role
+5. Send invitation
+
+### Removing Members
+
+1. Go to workspace settings
+2. Click "Members"
+3. Find member to remove
+4. Click remove button
+5. Confirm removal
+
+### Changing Roles
+
+1. Go to workspace settings
+2. Click "Members"
+3. Find member
+4. Change role
+5. Save changes
+
+## Account Settings
+
+### User Profile
+
+Users can manage:
+- Email address
+- Display name
+- Profile picture
+- Password (if using email auth)
+
+### Organization Settings
+
+Owners/admins can manage:
+- Organization name
+- Logo
+- Billing
+- API tokens
+- Projects
+
+## Permissions Matrix
+
+| Action | Owner | Admin | Member |
+|--------|-------|-------|--------|
+| View Analytics | ✅ | ✅ | ✅ |
+| Create Project | ✅ | ✅ | ❌ |
+| Delete Project | ✅ | ✅ | ❌ |
+| Manage API Tokens | ✅ | ✅ | ❌ |
+| Invite Members | ✅ | ✅ | ❌ |
+| Remove Members | ✅ | ❌ | ❌ |
+| Manage Billing | ✅ | ❌ | ❌ |
+| Delete Workspace | ✅ | ❌ | ❌ |
+
+## Best Practices
+
+### Role Assignment
+
+- Assign minimum necessary permissions
+- Use member role for view-only access
+- Use admin role for project management
+- Reserve owner role for workspace management
+
+### Security
+
+- Regularly review member access
+- Remove inactive members
+- Monitor role changes
+- Audit permissions regularly
+
+## Related Documentation
+
+- [Super Admin](/dashboard/admin/super-admin) - Super admin role
+- [Whitelisting](/dashboard/admin/whitelisting) - Whitelisting accounts
+

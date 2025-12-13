@@ -1,0 +1,105 @@
+---
+title: Whitelisting
+description: Whitelist accounts to bypass limits
+---
+
+# Whitelisting
+
+Whitelisting allows specific accounts to bypass usage limits without being super admin.
+
+## What is Whitelisting?
+
+Whitelisting grants special access to:
+- Bypass event limits
+- Access all features
+- No plan restrictions
+- Similar to super admin but organization-specific
+
+## How It Works
+
+### Organization-Level
+
+Whitelisting is checked at the organization level:
+- If any organization owner is super admin
+- Organization gets unlimited access
+- All limits are bypassed
+
+### Usage Limit Check
+
+```typescript
+// Check if organization has super admin owner
+const hasSuperAdmin = organization.members.some(
+  (member) => 
+    member.role === 'owner' && 
+    member.user.role === 'super_admin'
+);
+
+if (hasSuperAdmin) {
+  return { allowed: true, limit: Infinity };
+}
+```
+
+## Whitelisting Methods
+
+### Method 1: Super Admin Owner
+
+Make organization owner a super admin:
+
+```sql
+-- Set user as super admin
+UPDATE "user" 
+SET role = 'super_admin' 
+WHERE email = 'user@example.com';
+```
+
+### Method 2: Database Flag
+
+Add whitelist flag to organization (if implemented):
+
+```sql
+UPDATE "organization" 
+SET whitelisted = true 
+WHERE id = 'org-id';
+```
+
+## Use Cases
+
+### Beta Testing
+
+- Grant early access
+- Test with unlimited usage
+- Gather feedback freely
+
+### Enterprise Customers
+
+- Special access for enterprise
+- Custom limits
+- Priority features
+
+### Partners
+
+- Partner program access
+- Extended limits
+- Special features
+
+## Best Practices
+
+### Documentation
+
+- Document whitelisted accounts
+- Track whitelist reasons
+- Regular review of whitelist
+- Clear criteria for whitelisting
+
+### Monitoring
+
+- Monitor whitelisted usage
+- Track whitelist effectiveness
+- Review regularly
+- Remove when no longer needed
+
+## Related Documentation
+
+- [Super Admin](/dashboard/admin/super-admin) - Super admin role
+- [Account Management](/dashboard/admin/account-management) - Managing accounts
+

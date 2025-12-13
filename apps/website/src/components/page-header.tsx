@@ -31,7 +31,7 @@ export const PageHeader = () => {
               <li>
                 <Button variant="ghost" asChild>
                   <a
-                    href="https://github.com/bklit/bklit/"
+                    href="https://docs.bklit.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

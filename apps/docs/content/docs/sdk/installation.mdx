@@ -3,34 +3,35 @@ title: SDK Installation
 description: Install the Bklit Analytics SDK
 ---
 
+import { Tabs, Tab } from "fumadocs-ui/components/tabs";
+
 # SDK Installation
 
 This guide covers installing the Bklit Analytics SDK in your project.
 
 ## Package Managers
 
-### npm
+<Tabs items={['npm', 'pnpm']} defaultIndex={1}>
+<Tab value="npm">
 
 ```bash
 npm install @bklit/sdk
 ```
 
-### pnpm
+</Tab>
+<Tab value="pnpm">
 
 ```bash
 pnpm add @bklit/sdk
 ```
 
-### yarn
-
-```bash
-yarn add @bklit/sdk
-```
+</Tab>
+</Tabs>
 
 ## Framework-Specific Guides
 
-- [Vanilla JavaScript / React](/docs/sdk/vanilla-js) - Standard JavaScript setup
-- [Next.js](/docs/sdk/nextjs) - Next.js App Router integration
+- [Vanilla JavaScript / React](/sdk/vanilla-js) - Standard JavaScript setup
+- [Next.js](/sdk/nextjs) - Next.js App Router integration
 
 ## Requirements
 
@@ -51,12 +52,11 @@ yarn add @bklit/sdk
 
 After installation:
 
-1. [Configure the SDK](/docs/sdk/configuration) - Set up initialization
-2. [Test Integration](/docs/onboarding/testing-connection) - Verify it works
-3. [Track Events](/docs/sdk/event-tracking) - Start tracking custom events
+1. [Configure the SDK](/sdk/configuration) - Set up initialization
+2. [Test Integration](/dashboard/onboarding/testing-connection) - Verify it works
+3. [Track Events](/sdk/event-tracking) - Start tracking custom events
 
 ## Related Documentation
 
-- [Configuration](/docs/sdk/configuration) - SDK configuration options
-- [API Tokens](/docs/tokens) - Managing API tokens
-
+- [Configuration](/sdk/configuration) - SDK configuration options
+- [API Tokens](/dashboard/tokens) - Managing API tokens
