@@ -1,0 +1,153 @@
+---
+title: Playground Setup
+description: Set up the Bklit playground application
+---
+
+# Playground Setup
+
+This guide covers setting up the Bklit playground for testing SDK integration.
+
+## Prerequisites
+
+- Bklit dashboard account
+- Project created in dashboard
+- API token generated
+
+## Step 1: Get Your Credentials
+
+### Create Project
+
+1. Go to your Bklit dashboard
+2. Create a new organization (if needed)
+3. Create a new project
+4. Note your Project ID
+
+### Generate API Token
+
+1. Go to organization settings
+2. Navigate to "API Tokens"
+3. Create a new token
+4. Copy the token (save it!)
+
+## Step 2: Configure Playground
+
+### Create Environment File
+
+Create `.env` file in `apps/playground/`:
+
+```bash
+VITE_BKLIT_PROJECT_ID="your-project-id"
+VITE_BKLIT_API_KEY="bk_live_your-token-here"
+```
+
+### Optional: Set API Host
+
+For local development:
+
+```bash
+# Leave blank to use localhost:3000
+# Or set to your dashboard URL
+VITE_NGROK_URL="http://localhost:3000"
+```
+
+For cloudflared tunnel:
+
+```bash
+VITE_NGROK_URL="https://abc123.trycloudflare.com"
+```
+
+## Step 3: Install Dependencies
+
+From the root directory:
+
+```bash
+pnpm install
+```
+
+Or from playground directory:
+
+```bash
+cd apps/playground
+pnpm install
+```
+
+## Step 4: Start Playground
+
+### From Root
+
+```bash
+pnpm -F @bklit/playground dev
+```
+
+### From Playground Directory
+
+```bash
+cd apps/playground
+pnpm dev
+```
+
+The playground will start at `http://localhost:5173`
+
+## Step 5: Verify Setup
+
+1. Open playground in browser
+2. Check browser console for SDK logs
+3. Navigate around the app
+4. Check Bklit dashboard for events
+
+## Configuration Options
+
+### Environment Variables
+
+**Required:**
+- `VITE_BKLIT_PROJECT_ID` - Your project ID
+- `VITE_BKLIT_API_KEY` - Your API token
+
+**Optional:**
+- `VITE_NGROK_URL` - API host override
+
+### SDK Configuration
+
+The playground uses these SDK settings:
+
+```javascript
+{
+  projectId: import.meta.env.VITE_BKLIT_PROJECT_ID,
+  apiKey: import.meta.env.VITE_BKLIT_API_KEY,
+  apiHost: import.meta.env.VITE_NGROK_URL 
+    ? `${import.meta.env.VITE_NGROK_URL}/api/track`
+    : undefined,
+  environment: 'development',
+  debug: true
+}
+```
+
+## Troubleshooting
+
+### Events Not Appearing
+
+- Verify project ID is correct
+- Check API token is valid
+- Ensure token has project access
+- Check browser console for errors
+
+### Connection Errors
+
+- Verify dashboard is running (if using localhost)
+- Check API host URL is correct
+- Verify CORS is configured
+- Check network tab for failed requests
+
+### SDK Not Loading
+
+- Check environment variables are set
+- Verify file is `.env` not `.env.example`
+- Restart development server
+- Check browser console for errors
+
+## Related Documentation
+
+- [Testing](/docs/playground/testing) - Using the playground
+- [Environment](/docs/playground/environment) - Environment configuration
+- [SDK Integration](/docs/sdk) - SDK documentation
+

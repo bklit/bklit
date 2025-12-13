@@ -1,0 +1,216 @@
+---
+title: API Endpoints
+description: Complete API endpoint reference for Bklit
+---
+
+# API Endpoints
+
+Complete reference for all Bklit API endpoints.
+
+## Public Endpoints
+
+### Track Page View
+
+**Endpoint:** `POST /api/track`
+
+Track a page view event.
+
+**Headers:**
+```
+Authorization: Bearer <api-token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "url": "https://example.com/page",
+  "timestamp": "2024-01-01T00:00:00Z",
+  "projectId": "your-project-id",
+  "userAgent": "Mozilla/5.0...",
+  "sessionId": "session-id",
+  "referrer": "https://google.com",
+  "utmSource": "google",
+  "utmMedium": "cpc",
+  "utmCampaign": "summer-sale",
+  "utmTerm": "analytics",
+  "utmContent": "ad-1"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Page view tracked successfully"
+}
+```
+
+**Status Codes:**
+- `200` - Success
+- `400` - Bad request
+- `401` - Unauthorized
+- `403` - Forbidden (domain restriction)
+- `429` - Too many requests (limit exceeded)
+
+### Track Custom Event
+
+**Endpoint:** `POST /api/track-event`
+
+Track a custom event.
+
+**Headers:**
+```
+Authorization: Bearer <api-token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "trackingId": "button-click",
+  "eventType": "click",
+  "timestamp": "2024-01-01T00:00:00Z",
+  "projectId": "your-project-id",
+  "sessionId": "session-id",
+  "metadata": {
+    "buttonName": "Sign Up",
+    "location": "header"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Event tracked successfully"
+}
+```
+
+**Status Codes:**
+- `200` - Success
+- `400` - Bad request
+- `401` - Unauthorized
+- `404` - Event definition not found
+- `429` - Too many requests (limit exceeded)
+
+### Search (Documentation)
+
+**Endpoint:** `GET /api/search`
+
+Search documentation (Fumadocs).
+
+**Query Parameters:**
+- `q` - Search query
+
+**Response:**
+```json
+{
+  "results": [...]
+}
+```
+
+## Webhook Endpoints
+
+### Polar Webhook
+
+**Endpoint:** `POST /api/webhooks/polar`
+
+Receive Polar subscription webhooks.
+
+**Headers:**
+```
+X-Polar-Signature: <signature>
+Content-Type: application/json
+```
+
+**Request Body:**
+Polar webhook payload (see [Polar Documentation](https://docs.polar.sh))
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Webhook processed"
+}
+```
+
+## Internal Endpoints
+
+### Health Check
+
+**Endpoint:** `POST /api/trigger-health-check`
+
+Trigger health check (requires authentication).
+
+**Headers:**
+```
+Authorization: Bearer <health-check-secret>
+# or
+X-Health-Check-Secret: <health-check-secret>
+```
+
+## Authentication
+
+### API Token Authentication
+
+All tracking endpoints require API token authentication:
+
+```
+Authorization: Bearer <api-token>
+```
+
+### Token Validation
+
+Tokens are validated for:
+- Token exists and is valid
+- Token has access to project
+- Token domain restrictions (if set)
+- Token expiration (if set)
+
+## Error Responses
+
+### 401 Unauthorized
+
+```json
+{
+  "message": "Invalid API token"
+}
+```
+
+### 403 Forbidden
+
+```json
+{
+  "message": "Domain not allowed for this token"
+}
+```
+
+### 429 Too Many Requests
+
+```json
+{
+  "message": "Usage limit exceeded",
+  "currentUsage": 4001,
+  "limit": 4000
+}
+```
+
+## CORS
+
+All public endpoints support CORS:
+- `Access-Control-Allow-Origin: *`
+- `Access-Control-Allow-Methods: POST, OPTIONS`
+- `Access-Control-Allow-Headers: Content-Type, Authorization`
+
+## Rate Limiting
+
+Rate limiting is enforced based on:
+- Plan limits (Free: 4,000/month, Pro: 10,000/month)
+- Super admin bypasses limits
+
+## Related Documentation
+
+- [API Tokens](/docs/tokens) - Managing API tokens
+- [SDK Documentation](/docs/sdk) - Using the SDK
+- [Usage Tracking](/docs/billing/usage-tracking) - Usage limits
+

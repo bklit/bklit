@@ -1,0 +1,71 @@
+---
+title: SDK Overview
+description: Bklit Analytics SDK - Track page views, sessions, and user behavior
+---
+
+# SDK Overview
+
+The Bklit Analytics SDK is a lightweight JavaScript library for tracking analytics in your web applications.
+
+## Features
+
+- **Automatic Tracking** - Page views and sessions tracked automatically
+- **Custom Events** - Track user interactions and conversions
+- **SPA Support** - Works with single-page applications
+- **Privacy-First** - No cookies, GDPR compliant
+- **Lightweight** - Minimal performance impact
+- **TypeScript** - Full TypeScript support
+
+## Installation
+
+```bash
+npm install @bklit/sdk
+# or
+pnpm add @bklit/sdk
+# or
+yarn add @bklit/sdk
+```
+
+## Quick Start
+
+### Vanilla JavaScript / React
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+});
+```
+
+### Next.js
+
+```tsx
+import { BklitComponent } from '@bklit/sdk/nextjs';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <BklitComponent
+          projectId="your-project-id"
+          apiKey="your-api-key"
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+## Related Documentation
+
+- [Installation](/docs/sdk/installation) - Detailed installation guide
+- [Vanilla JS](/docs/sdk/vanilla-js) - Using with vanilla JavaScript
+- [Next.js](/docs/sdk/nextjs) - Next.js integration
+- [Configuration](/docs/sdk/configuration) - Configuration options
+- [Debug Mode](/docs/sdk/debug-mode) - Debugging and logging
+- [Event Tracking](/docs/sdk/event-tracking) - Tracking custom events
+- [API Reference](/docs/sdk/api-reference) - Complete API documentation
+

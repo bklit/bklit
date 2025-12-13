@@ -1,0 +1,217 @@
+---
+title: Next.js Integration
+description: Using Bklit SDK with Next.js
+---
+
+# Next.js Integration
+
+This guide covers integrating the Bklit SDK with Next.js applications.
+
+## Installation
+
+```bash
+npm install @bklit/sdk
+```
+
+## App Router Setup
+
+### Root Layout
+
+Add the `BklitComponent` to your root layout:
+
+```tsx
+// app/layout.tsx
+import { BklitComponent } from '@bklit/sdk/nextjs';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html>
+      <body>
+        <BklitComponent
+          projectId="your-project-id"
+          apiKey="your-api-key"
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+### With Environment Variables
+
+```tsx
+// app/layout.tsx
+import { BklitComponent } from '@bklit/sdk/nextjs';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html>
+      <body>
+        <BklitComponent
+          projectId={process.env.NEXT_PUBLIC_BKLIT_PROJECT_ID!}
+          apiKey={process.env.NEXT_PUBLIC_BKLIT_API_KEY!}
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+## Pages Router Setup
+
+### _app.tsx
+
+```tsx
+// pages/_app.tsx
+import { useEffect } from 'react';
+import { initBklit } from '@bklit/sdk';
+
+function MyApp({ Component, pageProps }) {
+  useEffect(() => {
+    initBklit({
+      projectId: process.env.NEXT_PUBLIC_BKLIT_PROJECT_ID!,
+      apiKey: process.env.NEXT_PUBLIC_BKLIT_API_KEY!,
+    });
+  }, []);
+
+  return <Component {...pageProps} />;
+}
+
+export default MyApp;
+```
+
+## Configuration Options
+
+### Basic
+
+```tsx
+<BklitComponent
+  projectId="your-project-id"
+  apiKey="your-api-key"
+/>
+```
+
+### Advanced
+
+```tsx
+<BklitComponent
+  projectId="your-project-id"
+  apiKey="your-api-key"
+  apiHost="https://app.bklit.com/api/track"
+  environment={process.env.NODE_ENV === 'production' ? 'production' : 'development'}
+  debug={process.env.NODE_ENV === 'development'}
+/>
+```
+
+## Environment Variables
+
+Create `.env.local`:
+
+```bash
+NEXT_PUBLIC_BKLIT_PROJECT_ID=your-project-id
+NEXT_PUBLIC_BKLIT_API_KEY=bk_live_your-token-here
+```
+
+**Note:** Use `NEXT_PUBLIC_` prefix for client-side variables.
+
+## Manual Tracking
+
+### Track Page View
+
+```tsx
+'use client';
+
+import { useEffect } from 'react';
+
+export default function Page() {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.trackPageView();
+    }
+  }, []);
+
+  return <div>My Page</div>;
+}
+```
+
+### Track Custom Event
+
+```tsx
+'use client';
+
+export default function Button() {
+  const handleClick = () => {
+    if (typeof window !== 'undefined') {
+      window.trackEvent('button-click', 'click', {
+        buttonName: 'Sign Up',
+      });
+    }
+  };
+
+  return <button onClick={handleClick}>Sign Up</button>;
+}
+```
+
+## Server Components
+
+The SDK works with Next.js Server Components:
+
+- `BklitComponent` is a client component
+- Place in root layout (client boundary)
+- Works with all page types
+
+## Development vs Production
+
+### Development
+
+```tsx
+<BklitComponent
+  projectId={process.env.NEXT_PUBLIC_BKLIT_PROJECT_ID!}
+  apiKey={process.env.NEXT_PUBLIC_BKLIT_API_KEY!}
+  environment="development"
+  debug={true}
+/>
+```
+
+### Production
+
+```tsx
+<BklitComponent
+  projectId={process.env.NEXT_PUBLIC_BKLIT_PROJECT_ID!}
+  apiKey={process.env.NEXT_PUBLIC_BKLIT_API_KEY!}
+  environment="production"
+  debug={false}
+/>
+```
+
+## TypeScript Support
+
+The SDK includes full TypeScript definitions:
+
+```tsx
+import { BklitComponent } from '@bklit/sdk/nextjs';
+
+// Types are automatically inferred
+<BklitComponent
+  projectId="..." // string
+  apiKey="..." // string
+  debug={true} // boolean
+/>
+```
+
+## Related Documentation
+
+- [Configuration](/docs/sdk/configuration) - All configuration options
+- [Event Tracking](/docs/sdk/event-tracking) - Tracking custom events
+- [Next.js Documentation](https://nextjs.org/docs) - Official Next.js docs
+

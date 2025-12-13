@@ -1,0 +1,141 @@
+---
+title: Testing with Playground
+description: Use the playground to test SDK integration
+---
+
+# Testing with Playground
+
+The playground provides a controlled environment for testing Bklit SDK integration.
+
+## What to Test
+
+### Automatic Tracking
+
+The playground automatically tracks:
+- Page views on navigation
+- Product views
+- Button clicks
+- Form interactions
+
+### Manual Tracking
+
+Test manual event tracking:
+- Custom events
+- Event metadata
+- Different event types
+
+### SDK Features
+
+Test SDK functionality:
+- Session management
+- Debug mode
+- API requests
+- Error handling
+
+## Testing Workflow
+
+### 1. Start Playground
+
+```bash
+pnpm -F @bklit/playground dev
+```
+
+### 2. Open Browser
+
+Navigate to `http://localhost:5173`
+
+### 3. Enable Debug Mode
+
+Debug mode is enabled by default in playground. Check console for logs.
+
+### 4. Interact with App
+
+- Browse products
+- Click buttons
+- Navigate pages
+- Submit forms
+
+### 5. Check Dashboard
+
+Go to your Bklit dashboard:
+- View live sessions
+- Check page views
+- See custom events
+- Monitor real-time data
+
+## Testing Scenarios
+
+### Page View Tracking
+
+1. Navigate to different pages
+2. Check console for page view logs
+3. Verify events in dashboard
+4. Check page URLs are correct
+
+### Session Management
+
+1. Visit playground
+2. Wait 30+ minutes
+3. Visit again
+4. Check for new session created
+
+### Custom Events
+
+1. Click buttons with `data-bklit-event`
+2. Check console for event logs
+3. Verify events in dashboard
+4. Check event metadata
+
+### Error Handling
+
+1. Use invalid project ID
+2. Use invalid API token
+3. Check error messages
+4. Verify error handling
+
+## Debug Mode
+
+Debug mode shows detailed logs:
+
+```
+🎯 Bklit SDK: Initializing with configuration
+🆔 Bklit SDK: New session created
+🚀 Bklit SDK: Tracking page view...
+✅ Bklit SDK: Page view tracked successfully!
+```
+
+Use these logs to:
+- Verify SDK is working
+- Debug integration issues
+- Monitor API requests
+- Check event tracking
+
+## Best Practices
+
+### Test Before Production
+
+- Use playground to verify setup
+- Test all event types
+- Verify dashboard integration
+- Check error handling
+
+### Use Real Project
+
+- Create test project in dashboard
+- Use real API token
+- Test with actual data
+- Verify end-to-end flow
+
+### Monitor Dashboard
+
+- Keep dashboard open while testing
+- Watch events appear in real-time
+- Verify data accuracy
+- Check for errors
+
+## Related Documentation
+
+- [Setup](/docs/playground/setup) - Setting up playground
+- [Environment](/docs/playground/environment) - Environment config
+- [SDK Documentation](/docs/sdk) - Complete SDK guide
+

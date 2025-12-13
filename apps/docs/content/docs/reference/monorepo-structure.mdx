@@ -1,0 +1,189 @@
+---
+title: Monorepo Structure
+description: Understanding the Bklit monorepo architecture
+---
+
+# Monorepo Structure
+
+Bklit is organized as a monorepo using Turborepo and pnpm workspaces.
+
+## Overview
+
+```
+bklit/
+├── apps/                    # Applications
+│   ├── dashboard/          # Main analytics dashboard
+│   ├── website/            # Marketing website
+│   ├── playground/         # SDK demo app
+│   └── docs/               # Documentation site
+│
+└── packages/               # Shared packages
+    ├── api/                # tRPC API routes
+    ├── auth/               # Authentication (Better Auth + Polar)
+    ├── db/                 # Database layer (Prisma)
+    ├── analytics/          # Analytics service (ClickHouse)
+    ├── email/              # Email templates (React Email)
+    ├── sdk/                # Analytics SDK
+    ├── ui/                 # Shared UI components
+    ├── utils/              # Common utilities
+    └── validators/         # Zod schemas
+```
+
+## Apps
+
+### Dashboard (`apps/dashboard`)
+
+Main analytics dashboard application.
+
+- **Framework:** Next.js 15 (App Router)
+- **Port:** 3000
+- **Tech:** React 19, TypeScript, tRPC
+
+### Website (`apps/website`)
+
+Marketing website.
+
+- **Framework:** Next.js 15
+- **Port:** 3001
+- **Tech:** React 19, TypeScript
+
+### Playground (`apps/playground`)
+
+SDK demo and testing application.
+
+- **Framework:** Vite + React
+- **Port:** 5173
+- **Tech:** React, TypeScript, React Router
+
+### Docs (`apps/docs`)
+
+Documentation site.
+
+- **Framework:** Next.js 15 + Fumadocs
+- **Port:** 3002
+- **Tech:** MDX, Fumadocs
+
+## Packages
+
+### API (`packages/api`)
+
+tRPC API routes and procedures.
+
+- **Tech:** tRPC, Zod
+- **Exports:** API router, procedures
+
+### Auth (`packages/auth`)
+
+Authentication and billing integration.
+
+- **Tech:** Better Auth, Polar.sh
+- **Exports:** Auth initialization, pricing plans
+
+### DB (`packages/db`)
+
+Database layer with Prisma.
+
+- **Tech:** Prisma, PostgreSQL
+- **Exports:** Prisma client, migrations
+
+### Analytics (`packages/analytics`)
+
+Analytics service for ClickHouse.
+
+- **Tech:** ClickHouse
+- **Exports:** Analytics service, queries
+
+### Email (`packages/email`)
+
+Email templates using React Email.
+
+- **Tech:** React Email, Resend
+- **Exports:** Email templates, client
+
+### SDK (`packages/sdk`)
+
+Analytics SDK for tracking.
+
+- **Tech:** TypeScript, ESM
+- **Exports:** SDK functions, Next.js component
+
+### UI (`packages/ui`)
+
+Shared UI components (shadcn/ui).
+
+- **Tech:** shadcn/ui, Tailwind CSS v4
+- **Exports:** React components, styles
+
+### Utils (`packages/utils`)
+
+Common utilities.
+
+- **Exports:** Helper functions, utilities
+
+### Validators (`packages/validators`)
+
+Zod validation schemas.
+
+- **Tech:** Zod
+- **Exports:** Validation schemas
+
+## Workspace Configuration
+
+### pnpm Workspace
+
+Defined in `pnpm-workspace.yaml`:
+
+```yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+### Turborepo
+
+Build system configuration in `turbo.json`:
+
+- Task pipelines
+- Caching
+- Parallel execution
+
+## Development Workflow
+
+### Running Apps
+
+```bash
+# All apps
+pnpm dev
+
+# Specific app
+pnpm -F @bklit/dashboard dev
+```
+
+### Building Packages
+
+```bash
+# All packages
+pnpm build
+
+# Specific package
+pnpm -F @bklit/sdk build
+```
+
+### Package Dependencies
+
+Packages reference each other via workspace protocol:
+
+```json
+{
+  "dependencies": {
+    "@bklit/db": "workspace:*",
+    "@bklit/ui": "workspace:*"
+  }
+}
+```
+
+## Related Documentation
+
+- [Getting Started](/docs/getting-started/installation) - Setup guide
+- [Development](/docs/getting-started/development) - Development workflow
+

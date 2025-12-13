@@ -1,0 +1,214 @@
+---
+title: Webhooks
+description: Configure Polar webhooks for subscription management
+---
+
+# Webhooks
+
+Bklit uses Polar webhooks to keep subscription status in sync with your database.
+
+## Overview
+
+Webhooks allow Polar to notify Bklit when subscription events occur:
+- Subscription created
+- Subscription updated
+- Subscription canceled
+- Subscription revoked
+
+## Webhook Endpoint
+
+### Endpoint URL
+
+Your webhook endpoint:
+```
+https://your-domain.com/api/webhooks/polar
+```
+
+### Configuration
+
+Set in your `.env`:
+```bash
+POLAR_WEBHOOK_SECRET="your-webhook-secret"
+```
+
+## Setting Up Webhooks
+
+### Step 1: Configure in Polar
+
+1. Go to Polar dashboard
+2. Navigate to Settings → Webhooks
+3. Add webhook endpoint:
+   - **URL:** `https://your-domain.com/api/webhooks/polar`
+   - **Secret:** Generate a secret (save it!)
+   - **Events:** Subscribe to subscription events
+
+### Step 2: Set Environment Variable
+
+Add to your `.env`:
+```bash
+POLAR_WEBHOOK_SECRET="your-webhook-secret-from-polar"
+```
+
+### Step 3: Deploy
+
+Deploy your application so the webhook endpoint is accessible.
+
+### Step 4: Test
+
+Test the webhook:
+1. Create a test subscription in Polar
+2. Check webhook logs in Polar dashboard
+3. Verify database updated in Bklit
+
+## Webhook Events
+
+### Subscription Created
+
+Triggered when:
+- User subscribes to Pro plan
+- Subscription is activated
+
+**Action:**
+- Organization plan updated to "pro"
+- Pro features enabled
+
+### Subscription Updated
+
+Triggered when:
+- Subscription details change
+- Billing period changes
+- Payment method updated
+
+**Action:**
+- Organization plan status updated
+- Features adjusted if needed
+
+### Subscription Canceled
+
+Triggered when:
+- User cancels subscription
+- Subscription ends
+
+**Action:**
+- Organization plan updated to "free"
+- Pro features disabled at period end
+
+### Subscription Revoked
+
+Triggered when:
+- Subscription is revoked
+- Payment fails repeatedly
+
+**Action:**
+- Organization plan updated to "free"
+- Pro features immediately disabled
+
+## Webhook Security
+
+### Secret Verification
+
+Webhooks are verified using the secret:
+1. Polar signs webhook with secret
+2. Bklit verifies signature
+3. Rejects if signature invalid
+
+### Secret Management
+
+**Best practices:**
+- Use strong, random secrets
+- Store in environment variables
+- Never commit to version control
+- Rotate secrets regularly
+
+### Generating Secrets
+
+```bash
+# Generate a secure secret
+openssl rand -base64 32
+```
+
+## Webhook Processing
+
+### Request Flow
+
+1. **Polar sends webhook** - POST to `/api/webhooks/polar`
+2. **Bklit verifies signature** - Using webhook secret
+3. **Process event** - Update organization plan
+4. **Return response** - Success or error
+
+### Error Handling
+
+If webhook processing fails:
+- Error logged
+- Response sent to Polar
+- Polar may retry
+- Check logs for issues
+
+## Testing Webhooks
+
+### Sandbox Mode
+
+Test in sandbox:
+1. Set `POLAR_SERVER_MODE="sandbox"`
+2. Create test subscription
+3. Verify webhook received
+4. Check database updated
+
+### Production Testing
+
+Test in production:
+1. Use Polar test mode
+2. Create test subscription
+3. Monitor webhook logs
+4. Verify updates
+
+## Troubleshooting
+
+### Webhook Not Received
+
+**Check:**
+- Webhook URL is correct
+- Endpoint is publicly accessible
+- No firewall blocking requests
+- Check Polar webhook logs
+
+### Webhook Failing
+
+**Check:**
+- Webhook secret matches
+- Signature verification passing
+- Database connection working
+- No errors in logs
+
+### Subscription Not Updating
+
+**Check:**
+- Webhook received successfully
+- Event type is handled
+- Database update succeeded
+- Organization ID matches
+
+## Webhook Logs
+
+### Viewing Logs
+
+1. Go to Polar dashboard
+2. Navigate to Webhooks
+3. View webhook delivery logs
+4. Check status and responses
+
+### Log Information
+
+Logs show:
+- Event type
+- Delivery status
+- Response code
+- Error messages
+- Retry attempts
+
+## Related Documentation
+
+- [Polar Setup](/docs/billing/polar-setup) - Initial Polar configuration
+- [Updating Billing](/docs/billing/updating-billing) - Managing subscriptions
+- [Polar Documentation](https://docs.polar.sh) - Official Polar docs
+

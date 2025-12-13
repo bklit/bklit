@@ -1,0 +1,180 @@
+---
+title: Event Tracking
+description: Track custom events and user interactions
+---
+
+# Event Tracking
+
+The Bklit SDK automatically tracks page views and sessions, and allows you to track custom events.
+
+## Automatic Tracking
+
+### Page Views
+
+Page views are tracked automatically:
+- On page load
+- On route changes (SPA)
+- On manual trigger
+
+### Sessions
+
+Sessions are managed automatically:
+- Created on first visit
+- Extended on activity
+- Ended after 30 minutes of inactivity
+
+## Custom Events
+
+### Automatic Event Tracking
+
+Track events automatically using data attributes:
+
+```html
+<!-- Using data attribute -->
+<button data-bklit-event="cta-signup">Sign Up</button>
+
+<!-- Using ID -->
+<button id="bklit-event-cta-login">Login</button>
+```
+
+The SDK automatically tracks:
+- **Click events** - When users click the element
+- **View events** - When element becomes visible (50% threshold)
+- **Hover events** - When users hover for 500ms
+
+### Manual Event Tracking
+
+Track events programmatically:
+
+```javascript
+window.trackEvent(
+  'button-click',      // trackingId
+  'click',             // eventType
+  {                    // metadata (optional)
+    buttonName: 'Sign Up',
+    location: 'header'
+  },
+  'manual'             // triggerMethod (optional)
+);
+```
+
+## Event Types
+
+### Predefined Types
+
+- **`click`** - User clicked an element
+- **`view`** - Element became visible
+- **`hover`** - User hovered over element
+
+### Custom Types
+
+You can use any string as an event type:
+
+```javascript
+window.trackEvent('purchase', 'completed', {
+  product: 'Pro Plan',
+  price: 29.99
+});
+```
+
+## Event Metadata
+
+Add additional data to events:
+
+```javascript
+window.trackEvent('button-click', 'click', {
+  buttonName: 'Sign Up',
+  location: 'header',
+  page: '/pricing',
+  userId: 'user-123'
+});
+```
+
+**Best practices:**
+- Keep metadata simple
+- Use consistent keys
+- Avoid sensitive data
+- Limit metadata size
+
+## Examples
+
+### E-commerce Purchase
+
+```javascript
+window.trackEvent('purchase', 'completed', {
+  productId: 'prod-123',
+  productName: 'Pro Plan',
+  price: 29.99,
+  currency: 'USD',
+  quantity: 1
+});
+```
+
+### Form Submission
+
+```javascript
+window.trackEvent('form-submit', 'submit', {
+  formName: 'contact',
+  formId: 'contact-form',
+  fields: 5
+});
+```
+
+### Video Play
+
+```javascript
+window.trackEvent('video-play', 'play', {
+  videoId: 'video-123',
+  videoTitle: 'Product Demo',
+  duration: 120
+});
+```
+
+## UTM Parameter Tracking
+
+The SDK automatically captures UTM parameters:
+
+- `utm_source`
+- `utm_medium`
+- `utm_campaign`
+- `utm_term`
+- `utm_content`
+
+These are included with every page view event.
+
+## Event Validation
+
+Events are validated before sending:
+
+- **trackingId** - Required, must be string
+- **eventType** - Required, must be string
+- **metadata** - Optional, must be object
+- **triggerMethod** - Optional, 'automatic' or 'manual'
+
+## Best Practices
+
+### Naming Conventions
+
+- Use kebab-case: `button-click`, `form-submit`
+- Be descriptive: `cta-signup` not `click1`
+- Be consistent: Use same names across app
+
+### Event Frequency
+
+- Don't track too frequently
+- Batch similar events if needed
+- Avoid tracking on every keystroke
+
+### Metadata
+
+- Keep it simple
+- Use consistent structure
+- Avoid sensitive information
+- Limit to essential data
+
+## Related Documentation
+
+- [API Reference](/docs/sdk/api-reference) - Complete API docs
+- [Configuration](/docs/sdk/configuration) - SDK configuration
+- [Debug Mode](/docs/sdk/debug-mode) - Debugging events
+

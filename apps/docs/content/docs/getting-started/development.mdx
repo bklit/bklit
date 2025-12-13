@@ -1,0 +1,302 @@
+---
+title: Development
+description: Development workflow and tips for Bklit
+---
+
+# Development
+
+This guide covers the development workflow for Bklit Analytics.
+
+## Running the Development Server
+
+### Start All Apps
+
+From the root directory:
+
+```bash
+pnpm dev
+```
+
+This starts:
+- Dashboard at `http://localhost:3000`
+- Website at `http://localhost:3001`
+- Docs at `http://localhost:3002`
+
+### Start Individual Apps
+
+```bash
+# Dashboard only
+pnpm -F @bklit/dashboard dev
+
+# Website only
+pnpm -F @bklit/website dev
+
+# Docs only
+pnpm -F @bklit/docs dev
+
+# Playground only
+pnpm -F @bklit/playground dev
+```
+
+## Development Workflow
+
+### 1. Make Changes
+
+Edit files in your preferred editor. Changes are hot-reloaded automatically.
+
+### 2. Type Checking
+
+Run TypeScript type checking:
+
+```bash
+pnpm typecheck
+```
+
+### 3. Linting and Formatting
+
+Check code formatting:
+
+```bash
+pnpm format-and-lint
+```
+
+Fix formatting issues:
+
+```bash
+pnpm format-and-lint:fix
+```
+
+### 4. Testing
+
+Run tests (if available):
+
+```bash
+pnpm test
+```
+
+## Using Cloudflared for Development Tunnels
+
+For remote testing or sharing your local instance, use Cloudflared:
+
+### 1. Start Development Server
+
+```bash
+pnpm dev
+```
+
+### 2. Start Cloudflared Tunnel
+
+In another terminal:
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+### 3. Update Environment Variables
+
+Copy the `https://` URL from cloudflared and update:
+
+```bash
+AUTH_URL="https://abc123.trycloudflare.com"
+NEXT_PUBLIC_APP_URL="https://abc123.trycloudflare.com"
+```
+
+### 4. Restart Development Server
+
+Restart to apply the new URLs.
+
+**Note:** For local development between `localhost:5173` (playground) and `localhost:3000` (dashboard), a tunnel is **not required** thanks to CORS configuration.
+
+## Monorepo Structure
+
+### Apps
+
+- **`apps/dashboard`** - Main analytics dashboard
+- **`apps/website`** - Marketing website
+- **`apps/playground`** - SDK demo app
+- **`apps/docs`** - Documentation site
+
+### Packages
+
+- **`packages/api`** - tRPC API routes
+- **`packages/auth`** - Authentication (Better Auth + Polar)
+- **`packages/db`** - Database layer (Prisma)
+- **`packages/email`** - Email templates
+- **`packages/sdk`** - Analytics SDK
+- **`packages/ui`** - Shared UI components
+- **`packages/utils`** - Common utilities
+- **`packages/validators`** - Zod schemas
+
+### Working with Packages
+
+Packages are linked via pnpm workspaces. Changes to packages are automatically available to apps.
+
+**Rebuild packages:**
+```bash
+pnpm build
+```
+
+**Watch mode (Turborepo):**
+```bash
+pnpm dev
+```
+
+## Code Organization
+
+### Best Practices
+
+1. **Use TypeScript** - All code should be typed
+2. **Follow conventions** - Use existing patterns
+3. **Server Components First** - Prefer server components over client
+4. **Reusable Components** - Create shared components in `packages/ui`
+5. **Hooks and Utils** - Organize in `hooks/` and `lib/` directories
+
+### File Structure
+
+```
+apps/dashboard/src/
+├── app/              # Next.js app router pages
+├── components/       # React components
+├── lib/              # Utility functions
+├── hooks/            # React hooks
+├── actions/          # Server actions
+└── trpc/             # tRPC client setup
+```
+
+## Debugging
+
+### Console Logging
+
+Use console logging for debugging:
+
+```typescript
+console.log('Debug info:', data);
+console.error('Error:', error);
+```
+
+### React DevTools
+
+Install [React DevTools](https://react.dev/learn/react-developer-tools) for component debugging.
+
+### Network Tab
+
+Use browser DevTools Network tab to inspect API requests.
+
+### Database Queries
+
+View database queries in Prisma Studio:
+
+```bash
+pnpm db:studio
+```
+
+## Common Tasks
+
+### Adding a New Package
+
+1. Create directory in `packages/`
+2. Add `package.json` with `@bklit/package-name`
+3. Update root `package.json` if needed
+4. Install dependencies: `pnpm install`
+
+### Adding a New App
+
+1. Create directory in `apps/`
+2. Set up Next.js or Vite
+3. Add to Turborepo config
+4. Update root `package.json`
+
+### Database Changes
+
+1. Update Prisma schema: `packages/db/prisma/schema.prisma`
+2. Create migration: `pnpm -F @bklit/db migrate dev --name migration_name`
+3. Generate client: `pnpm db:generate`
+
+### Adding Environment Variables
+
+1. Add to appropriate `env.ts` file
+2. Update `.env.example`
+3. Document in [Environment Variables](/docs/getting-started/environment-variables)
+
+## Build Commands
+
+### Development Build
+
+```bash
+pnpm dev
+```
+
+### Production Build
+
+```bash
+pnpm build
+```
+
+### Clean Build
+
+```bash
+pnpm clean
+```
+
+## Troubleshooting
+
+### Port Already in Use
+
+If a port is already in use:
+
+```bash
+# Find process using port
+lsof -i :3000
+
+# Kill process
+kill -9 <PID>
+```
+
+Or change the port in `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev --port 3001"
+  }
+}
+```
+
+### Module Not Found
+
+If you see "module not found" errors:
+
+1. Reinstall dependencies: `pnpm install`
+2. Clear cache: `pnpm clean`
+3. Rebuild: `pnpm build`
+
+### Type Errors
+
+If TypeScript errors persist:
+
+1. Restart TypeScript server in your editor
+2. Run: `pnpm typecheck`
+3. Check `tsconfig.json` paths
+
+### Database Connection Issues
+
+1. Verify database is running
+2. Check `DATABASE_URL` in `.env`
+3. Test connection: `psql $DATABASE_URL`
+
+## Additional Scripts
+
+- `pnpm typecheck` - Run TypeScript type checking
+- `pnpm format-and-lint` - Check code formatting
+- `pnpm format-and-lint:fix` - Fix formatting issues
+- `pnpm build` - Build all packages
+- `pnpm db:generate` - Generate Prisma client
+- `pnpm db:migrate` - Run database migrations
+- `pnpm db:studio` - Open Prisma Studio
+
+## Related Documentation
+
+- [Installation](/docs/getting-started/installation) - Initial setup
+- [Environment Variables](/docs/getting-started/environment-variables) - Configuration
+- [Database Setup](/docs/getting-started/database-setup) - Database configuration
+

@@ -1,0 +1,118 @@
+---
+title: Playground Environment
+description: Environment variables and configuration for the playground
+---
+
+# Playground Environment
+
+This guide covers environment variables and configuration for the Bklit playground.
+
+## Environment Variables
+
+### Required Variables
+
+**VITE_BKLIT_PROJECT_ID**
+- Your Bklit project ID
+- Get from dashboard → Project Settings
+- Format: CUID string
+
+**VITE_BKLIT_API_KEY**
+- Your API token
+- Get from dashboard → API Tokens
+- Format: `bk_live_<64 hex characters>`
+
+### Optional Variables
+
+**VITE_NGROK_URL**
+- API host override
+- Leave blank for localhost:3000
+- Set for cloudflared tunnel or custom host
+- Example: `https://abc123.trycloudflare.com`
+
+## Environment File
+
+Create `.env` in `apps/playground/`:
+
+```bash
+# Required
+VITE_BKLIT_PROJECT_ID="your-project-id"
+VITE_BKLIT_API_KEY="bk_live_your-token-here"
+
+# Optional
+# VITE_NGROK_URL="http://localhost:3000"
+```
+
+## Configuration
+
+### Default Configuration
+
+The playground uses these defaults:
+
+- **Environment:** `development`
+- **Debug:** `true`
+- **API Host:** `http://localhost:3000/api/track` (if not set)
+
+### Custom Configuration
+
+Modify `apps/playground/src/main.tsx` to change SDK configuration.
+
+## Development vs Production
+
+### Development
+
+```bash
+VITE_BKLIT_PROJECT_ID="dev-project-id"
+VITE_BKLIT_API_KEY="dev-token"
+VITE_NGROK_URL="http://localhost:3000"
+```
+
+### Testing with Production
+
+```bash
+VITE_BKLIT_PROJECT_ID="prod-project-id"
+VITE_BKLIT_API_KEY="prod-token"
+# Leave VITE_NGROK_URL blank for production API
+```
+
+## Using Cloudflared Tunnel
+
+For remote testing:
+
+1. Start dashboard: `pnpm -F @bklit/dashboard dev`
+2. Start cloudflared: `cloudflared tunnel --url http://localhost:3000`
+3. Copy tunnel URL
+4. Set in `.env`:
+
+```bash
+VITE_NGROK_URL="https://abc123.trycloudflare.com"
+```
+
+## Security Notes
+
+- Never commit `.env` file
+- Use test project for playground
+- Rotate tokens regularly
+- Don't share tokens publicly
+
+## Troubleshooting
+
+### Variables Not Loading
+
+- Check file is `.env` not `.env.example`
+- Verify variable names start with `VITE_`
+- Restart development server
+- Check for typos
+
+### Wrong API Host
+
+- Verify `VITE_NGROK_URL` is correct
+- Check dashboard is running
+- Verify CORS configuration
+- Test API endpoint directly
+
+## Related Documentation
+
+- [Setup](/docs/playground/setup) - Setting up playground
+- [Testing](/docs/playground/testing) - Using playground
+- [Environment Variables](/docs/getting-started/environment-variables) - General env var guide
+

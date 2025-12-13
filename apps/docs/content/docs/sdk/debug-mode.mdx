@@ -1,0 +1,223 @@
+---
+title: Debug Mode
+description: Enable and use debug mode in the Bklit SDK
+---
+
+# Debug Mode
+
+Debug mode provides detailed console logging to help you monitor and troubleshoot SDK behavior.
+
+## Enabling Debug Mode
+
+### Option 1: Configuration
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  debug: true, // Enable debug mode
+});
+```
+
+### Option 2: Environment-Based
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  debug: process.env.NODE_ENV === 'development',
+});
+```
+
+### Option 3: Development Environment
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  environment: 'development', // Automatically enables debug
+});
+```
+
+## Debug Output
+
+When debug mode is enabled, you'll see logs like:
+
+### Initialization
+
+```
+🎯 Bklit SDK: Initializing with configuration {
+  projectId: "your-project-id",
+  apiHost: "https://app.bklit.com/api/track",
+  environment: "production",
+  debug: true,
+  hasApiKey: true,
+  userAgent: "Mozilla/5.0..."
+}
+```
+
+### Session Creation
+
+```
+🆔 Bklit SDK: New session created {
+  sessionId: "1703123456789-abc123def456"
+}
+```
+
+### Page View Tracking
+
+```
+🚀 Bklit SDK: Tracking page view... {
+  url: "https://yoursite.com/page",
+  sessionId: "1703123456789-abc123def456",
+  projectId: "your-project-id"
+}
+
+✅ Bklit SDK: Page view tracked successfully!
+```
+
+### Event Tracking
+
+```
+🎯 Bklit SDK: Tracking event... {
+  trackingId: "button-click",
+  eventType: "click",
+  metadata: { buttonName: "Sign Up" }
+}
+
+✅ Bklit SDK: Event tracked successfully!
+```
+
+### Errors
+
+```
+❌ Bklit SDK: Error tracking event {
+  error: "Invalid API token",
+  details: "..."
+}
+```
+
+## What Gets Logged
+
+### Always Logged (Even Without Debug)
+
+- **Errors** - Using `console.error`
+- **Warnings** - Using `console.warn`
+- **Critical failures** - SDK initialization failures
+
+### Debug Mode Only
+
+- **Initialization** - SDK configuration
+- **Session management** - Session creation/updates
+- **Event tracking** - All tracking attempts
+- **API requests** - Request details
+- **Success confirmations** - Successful operations
+
+## Use Cases
+
+### Development
+
+Enable debug mode during development to:
+- Verify SDK is working
+- See what events are being tracked
+- Debug integration issues
+- Monitor API requests
+
+### Troubleshooting
+
+Enable debug mode when:
+- Events aren't appearing in dashboard
+- SDK seems not to be working
+- Need to verify configuration
+- Debugging integration issues
+
+### Production
+
+**⚠️ Disable debug mode in production:**
+- Reduces console noise
+- Improves performance slightly
+- Prevents exposing sensitive data
+
+## Best Practices
+
+### Development
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  debug: true, // Always on in development
+});
+```
+
+### Production
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  debug: false, // Always off in production
+});
+```
+
+### Conditional
+
+```javascript
+initBklit({
+  projectId: 'your-project-id',
+  apiKey: 'your-api-key',
+  debug: process.env.NODE_ENV === 'development',
+});
+```
+
+## Filtering Logs
+
+### Browser DevTools
+
+Use console filters:
+- Filter by "Bklit" to see only SDK logs
+- Filter by log level (info, warn, error)
+- Save filtered logs for debugging
+
+### Log Levels
+
+- **Info** (🎯, 🆔, 🚀) - Normal operations
+- **Success** (✅) - Successful operations
+- **Warning** (⚠️) - Warnings
+- **Error** (❌) - Errors
+
+## Troubleshooting with Debug Mode
+
+### SDK Not Initializing
+
+Check for:
+```
+❌ Bklit SDK: projectId is required for initialization.
+```
+
+**Solution:** Verify projectId is provided.
+
+### Events Not Tracking
+
+Check for:
+```
+❌ Bklit SDK: Error tracking event
+```
+
+**Solution:** Review error details, check API token.
+
+### API Errors
+
+Check for:
+```
+❌ Bklit SDK: API request failed
+```
+
+**Solution:** Verify API endpoint, check network.
+
+## Related Documentation
+
+- [Configuration](/docs/sdk/configuration) - SDK configuration
+- [Event Tracking](/docs/sdk/event-tracking) - Tracking events
+- [API Reference](/docs/sdk/api-reference) - Complete API docs
+

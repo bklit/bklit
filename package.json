@@ -20,6 +20,7 @@
     "db:migrate": "pnpm run -F @bklit/db migrate",
     "db:studio": "pnpm run -F @bklit/db studio",
     "dev": "turbo watch dev dev:trigger --continue",
+    "dev:docs": "pnpm -F @bklit/docs dev",
     "deploy:trigger": "pnpm -F @bklit/dashboard deploy:trigger",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
