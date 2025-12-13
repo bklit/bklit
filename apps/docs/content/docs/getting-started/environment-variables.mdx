@@ -12,6 +12,7 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Database
 
 **`DATABASE_URL`**
+
 - Your PostgreSQL database connection string
 - Format: `postgresql://user:password@host:port/database`
 - Required for: All apps
@@ -19,12 +20,14 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Application URLs
 
 **`AUTH_URL`**
+
 - Your dashboard URL
 - Local: `http://localhost:3000`
 - Production: `https://app.bklit.com`
 - Used for: Better Auth callbacks and session management
 
 **`NEXT_PUBLIC_APP_URL`**
+
 - Same as `AUTH_URL` (used by client-side code)
 - Must match `AUTH_URL` value
 - Used for: Client-side API calls and redirects
@@ -32,29 +35,34 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Authentication
 
 **`AUTH_SECRET`**
+
 - Random secret for session encryption
 - Generate with: `openssl rand -base64 32`
 - Required for: All apps using authentication
-- Documentation: [Better Auth](https://www.better-auth.com/installation)
+- Documentation: [Better Auth](https://www.better-auth.com/docs/installation)
 
 **`AUTH_GITHUB_ID`**
+
 - GitHub OAuth App Client ID
 - Create at: [GitHub OAuth Apps](https://github.com/settings/developers)
 - Callback URL: `{AUTH_URL}/api/auth/callback/github`
 - Required for: Dashboard, Website
 
 **`AUTH_GITHUB_SECRET`**
+
 - GitHub OAuth App Client Secret
 - Get from: Your GitHub OAuth App settings
 - Required for: Dashboard, Website
 
 **`AUTH_GOOGLE_ID`** (Optional)
+
 - Google OAuth Client ID
 - Create at: [Google Cloud Console](https://console.cloud.google.com/apis/dashboard)
 - Callback URL: `{AUTH_URL}/api/auth/callback/google`
-- Documentation: [Better Auth Google Guide](https://www.better-auth.com/authentication/google)
+- Documentation: [Better Auth Google Guide](https://www.better-auth.com/docs/authentication/google)
 
 **`AUTH_GOOGLE_SECRET`** (Optional)
+
 - Google OAuth Client Secret
 - Get from: Google Cloud Console
 - Required if: Using Google OAuth
@@ -62,36 +70,43 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Polar (Billing)
 
 **`POLAR_ACCESS_TOKEN`**
+
 - Your Polar API access token
 - Get from: [Polar Dashboard](https://polar.sh/dashboard)
 - Required for: Billing and subscriptions
 
 **`POLAR_SERVER_MODE`**
+
 - Either `sandbox` or `production`
 - Use `sandbox` for development/testing
 - Use `production` for live billing
 
 **`POLAR_WEBHOOK_SECRET`**
+
 - Secret for verifying Polar webhooks
 - Get from: Polar webhook settings
 - Required for: Webhook processing
 
 **`POLAR_ORGANIZATION_ID`**
+
 - Your Polar organization ID
 - Get from: Polar dashboard
 - Required for: Organization context
 
 **`POLAR_PRO_PRODUCT_ID`**
+
 - Your Polar Pro product ID (server-side)
 - Get from: Polar products page
 - Required for: Pro plan subscriptions
 
 **`NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID`**
+
 - Your Polar Pro product ID (client-side)
 - Same value as `POLAR_PRO_PRODUCT_ID`
 - Required for: Pricing page display
 
 **`POLAR_FREE_PRODUCT_ID`** (Optional)
+
 - Your Polar Free product ID
 - Only needed if you have a free plan in Polar
 - Optional for: Free plan configuration
@@ -99,34 +114,40 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Analytics
 
 **`CLICKHOUSE_HOST`**
+
 - ClickHouse database host URL
 - Format: `http://host:port` or `https://host:port`
 - Required for: Analytics data storage
 
 **`CLICKHOUSE_USERNAME`**
+
 - ClickHouse database username
 - Required for: ClickHouse authentication
 
 **`CLICKHOUSE_PASSWORD`**
+
 - ClickHouse database password
 - Required for: ClickHouse authentication
 
 ### Email
 
 **`RESEND_API_KEY`**
+
 - Your Resend API key
 - Get from: [Resend Dashboard](https://resend.com/api-keys)
 - Required for: Sending emails (welcome, invitations, etc.)
-- Documentation: [Resend Docs](https://resend.com/introduction)
+- Documentation: [Resend Docs](https://resend.com/docs)
 
 ### API Health Monitoring
 
 **`ALERT_EMAIL`**
+
 - Email address to receive health check alerts
 - Required for: Health check email notifications
 - Note: Also set in Trigger.dev dashboard for cloud execution
 
 **`HEALTH_CHECK_SECRET`**
+
 - Secret key for health check endpoint authentication
 - Generate with: `openssl rand -base64 32`
 - Send in: `Authorization: Bearer <secret>` or `X-Health-Check-Secret: <secret>` header
@@ -135,16 +156,19 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Trigger.dev (Optional)
 
 **`TRIGGER_SECRET_KEY`**
+
 - Optional, for Trigger.dev cloud execution
 - Get from: Trigger.dev dashboard
 - Only needed if: Using Trigger.dev cloud
 
 **`TRIGGER_API_KEY`**
+
 - Optional, for Trigger.dev API access
 - Get from: Trigger.dev dashboard
 - Only needed if: Using Trigger.dev cloud
 
 **`TRIGGER_API_URL`**
+
 - Optional, for Trigger.dev API endpoint
 - Default: Trigger.dev cloud URL
 - Only needed if: Using Trigger.dev cloud
@@ -152,11 +176,13 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Website App
 
 **`NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN`**
+
 - API token for website tracking
 - Get from: Dashboard → API Tokens
 - Required for: Website app tracking
 
 **`NEXT_PUBLIC_BKLIT_API_HOST`** (Optional)
+
 - Override API host URL
 - Useful for: Development with cloudflared tunnel
 - Leave blank: To use default production API host
@@ -165,6 +191,7 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Dashboard App
 
 **`NEXT_PUBLIC_MAPBOX_TOKEN`**
+
 - Mapbox API token for live map component
 - Get from: [Mapbox](https://account.mapbox.com/access-tokens/)
 - Required for: Live visitor map feature
@@ -172,16 +199,19 @@ This guide covers all environment variables required for Bklit Analytics.
 ### Optional Variables
 
 **`BKLIT_WEBSITE_URL`**
+
 - Your marketing website URL
 - Used for: Email template images
 - Example: `https://bklit.com`
 
 **`BKLIT_DEFAULT_PROJECT`**
+
 - Auto-invite new users to this project's organization
 - Format: Project ID (cuid)
 - Optional: For auto-inviting new signups
 
 **`NODE_ENV`**
+
 - Node environment
 - Values: `development`, `production`, `test`
 - Usually set automatically
@@ -279,4 +309,3 @@ If you see errors about missing environment variables:
 - [Database Setup](/getting-started/database-setup) - Database configuration
 - [Development](/getting-started/development) - Development workflow
 - [Reference: Environment Variables](/reference/environment-variables) - Complete reference
-
