@@ -65,6 +65,18 @@ export const Footer = () => {
                   </Link>
                 </li>
                 <li>
+                  <a
+                    href="https://docs.bklit.com"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                      ◑
+                    </span>
+                  </a>
+                </li>
+                <li>
                   <Link
                     href="/"
                     className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
