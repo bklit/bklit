@@ -41,7 +41,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col w-full">
+    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col w-full bg-background">
       <div className="flex relative w-full items-center justify-between px-4 lg:px-6 py-4">
         <div className="flex items-center gap-6">
           <BklitLogo

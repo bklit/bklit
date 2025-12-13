@@ -248,7 +248,7 @@ export function FunnelDetails({
         </div>
       </PageHeader>
       <div className="space-y-6">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="flex flex-col sm:grid sm:grid-cols-4 gap-4">
           {/* Funnel Overview Card */}
           <div className="col-span-1">
             <Card>

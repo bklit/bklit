@@ -476,7 +476,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
 
   return (
     <Card className="p-0 relative h-full overflow-visible z-30">
-      <CardHeader className="absolute top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl">
+      <CardHeader className="absolute hidden sm:grid top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl">
         <CardTitle>Visitors by Country</CardTitle>
         <CardDescription>
           A map of the world with the number of unique visitors per country.

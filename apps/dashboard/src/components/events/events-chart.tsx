@@ -132,7 +132,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <div className="grid grid-cols-4">
+        <div className="flex flex-col sm:grid sm:grid-cols-4 gap-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
               mobile={statsData?.mobileEvents || 0}
