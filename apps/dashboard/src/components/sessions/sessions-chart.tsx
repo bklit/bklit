@@ -135,7 +135,7 @@ export function SessionsChart({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-4">
+        <div className="flex flex-col sm:grid sm:grid-cols-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
               mobile={statsData?.mobileSessions || 0}

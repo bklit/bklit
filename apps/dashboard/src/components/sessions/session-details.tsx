@@ -160,165 +160,168 @@ export function SessionDetails({
         </div>
       </PageHeader>
       <div className="container mx-auto flex gap-4">
-        <div className="w-3/12 flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Session overview</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Started</span>
-                <span className="text-sm font-medium">
-                  {format(new Date(sessionData.startedAt), "PPp")}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Duration</span>
-                <span className="text-sm font-medium">
-                  {formatDuration(sessionData.duration)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Pages Viewed
-                </span>
-                <span className="text-sm font-medium">
-                  {sessionData.pageViewEvents.length}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Status</span>
-                <Badge
-                  variant={sessionData.didBounce ? "destructive" : "default"}
-                >
-                  {sessionData.didBounce ? "Bounced" : "Engaged"}
-                </Badge>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Browser</span>
-                <span className="text-sm font-medium flex items-center gap-2">
-                  {getBrowserIcon(browser)}
-                  {browser}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Device</span>
-                <span className="text-sm font-medium flex items-center gap-2">
-                  {getDeviceIcon(deviceType)}
-                  {deviceType}
-                </span>
-              </div>
-              {sessionData.visitorId && (
+        <div className="flex flex-col sm:grid grid-cols-4 gap-4 w-full">
+          <div className="flex flex-col gap-4 col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Session overview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Started</span>
+                  <span className="text-sm font-medium">
+                    {format(new Date(sessionData.startedAt), "PPp")}
+                  </span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">
-                    Visitor ID
+                    Duration
                   </span>
-                  <Kbd>
-                    <code>{sessionData.visitorId}</code>
-                  </Kbd>
+                  <span className="text-sm font-medium">
+                    {formatDuration(sessionData.duration)}
+                  </span>
                 </div>
-              )}
-              <Separator />
-              {sessionData.country ? (
-                <>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Pages Viewed
+                  </span>
+                  <span className="text-sm font-medium">
+                    {sessionData.pageViewEvents.length}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Status</span>
+                  <Badge
+                    variant={sessionData.didBounce ? "destructive" : "default"}
+                  >
+                    {sessionData.didBounce ? "Bounced" : "Engaged"}
+                  </Badge>
+                </div>
+                <Separator />
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Browser</span>
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    {getBrowserIcon(browser)}
+                    {browser}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Device</span>
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    {getDeviceIcon(deviceType)}
+                    {deviceType}
+                  </span>
+                </div>
+                {sessionData.visitorId && (
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">
-                      Country
+                      Visitor ID
                     </span>
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <CircleFlag
-                        countryCode={
-                          getCountryCodeForFlag(sessionData.country) || "us"
-                        }
-                        className="size-4"
-                      />
-                      {sessionData.country}
-                    </span>
+                    <Kbd>
+                      <code>{sessionData.visitorId}</code>
+                    </Kbd>
                   </div>
-                  {sessionData.city && (
+                )}
+                <Separator />
+                {sessionData.country ? (
+                  <>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">
-                        City
+                        Country
                       </span>
-                      <span className="text-sm font-medium">
-                        {sessionData.city}
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <CircleFlag
+                          countryCode={
+                            getCountryCodeForFlag(sessionData.country) || "us"
+                          }
+                          className="size-4"
+                        />
+                        {sessionData.country}
                       </span>
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  Location data not available
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Page Flow */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Page flow</CardTitle>
-            </CardHeader>
-            <CardContent className="">
-              {sessionData.pageViewEvents.map(
-                (
-                  pageView: {
-                    id: string;
-                    url: string;
-                    timestamp: Date;
-                    country: string | null;
-                    city: string | null;
-                  },
-                  index: number,
-                ) => {
-                  const cleanURL = cleanUrl(
-                    pageView.url,
-                    sessionData.project.domain,
-                  );
-                  return (
-                    <Fragment key={pageView.id}>
-                      <div className="flex items-center space-x-4 group/row">
-                        <div className="shrink-0 size-8 rounded-full text-bklit-100 flex items-center justify-center text-sm font-semibold bg-bklit-600 group-first/row:bg-teal-900 group-first/row:text-teal-500">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-mono text-bklit-200 truncate">
-                            {cleanURL}
-                          </div>
-                        </div>
-                        {index === 0 && (
-                          <Badge variant="success" size="lg">
-                            Entry
-                          </Badge>
-                        )}
-                        {index === sessionData.pageViewEvents.length - 1 && (
-                          <Badge variant="destructive" size="lg">
-                            Exit
-                          </Badge>
-                        )}
+                    {sessionData.city && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          City
+                        </span>
+                        <span className="text-sm font-medium">
+                          {sessionData.city}
+                        </span>
                       </div>
-                      {index !== sessionData.pageViewEvents.length - 1 && (
-                        <div className="block w-0.5 h-2 bg-bklit-500 ml-3.5" />
-                      )}
-                    </Fragment>
-                  );
-                },
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Location data not available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        <div className="w-9/12">
-          <UserSession
-            session={{
-              ...sessionData,
-              site: {
-                name: sessionData.project.name,
-                domain: sessionData.project.domain,
-              },
-            }}
-          />
+            <Card>
+              <CardHeader>
+                <CardTitle>Page flow</CardTitle>
+              </CardHeader>
+              <CardContent className="">
+                {sessionData.pageViewEvents.map(
+                  (
+                    pageView: {
+                      id: string;
+                      url: string;
+                      timestamp: Date;
+                      country: string | null;
+                      city: string | null;
+                    },
+                    index: number,
+                  ) => {
+                    const cleanURL = cleanUrl(
+                      pageView.url,
+                      sessionData.project.domain,
+                    );
+                    return (
+                      <Fragment key={pageView.id}>
+                        <div className="flex items-center space-x-4 group/row">
+                          <div className="shrink-0 size-8 rounded-full text-bklit-100 flex items-center justify-center text-sm font-semibold bg-bklit-600 group-first/row:bg-teal-900 group-first/row:text-teal-500">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-mono text-bklit-200 truncate">
+                              {cleanURL}
+                            </div>
+                          </div>
+                          {index === 0 && (
+                            <Badge variant="success" size="lg">
+                              Entry
+                            </Badge>
+                          )}
+                          {index === sessionData.pageViewEvents.length - 1 && (
+                            <Badge variant="destructive" size="lg">
+                              Exit
+                            </Badge>
+                          )}
+                        </div>
+                        {index !== sessionData.pageViewEvents.length - 1 && (
+                          <div className="block w-0.5 h-2 bg-bklit-500 ml-3.5" />
+                        )}
+                      </Fragment>
+                    );
+                  },
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="col-span-9 col-start-2">
+            <UserSession
+              session={{
+                ...sessionData,
+                site: {
+                  name: sessionData.project.name,
+                  domain: sessionData.project.domain,
+                },
+              }}
+            />
+          </div>
         </div>
       </div>
     </>

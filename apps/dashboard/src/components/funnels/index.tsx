@@ -125,7 +125,7 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
       </PageHeader>
 
       <div className="container mx-auto flex flex-col gap-4">
-        <div className="grid grid-cols-12 gap-4">
+        <div className="flex flex-col sm:grid sm:grid-cols-12 gap-4">
           <div className="col-span-3 flex flex-col gap-6">
             <Card>
               <CardHeader>

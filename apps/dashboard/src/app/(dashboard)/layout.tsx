@@ -23,7 +23,7 @@ export default async function DashboardLayout({
           <AppSidebar />
 
           <SidebarInset>
-            <main className="flex flex-col bg-background dark:sm:bg-bklit-800 sm:bg-zinc-50 sm:border border-border rounded-xl sm:overflow-auto h-0 min-h-full relative sm:p-8">
+            <main className="flex flex-col bg-background dark:sm:bg-bklit-800 sm:bg-zinc-50 sm:border border-border rounded-xl sm:overflow-auto sm:h-0 sm:min-h-full relative pb-4 sm:p-8">
               {children}
             </main>
             {modal}
