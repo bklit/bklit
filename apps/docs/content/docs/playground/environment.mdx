@@ -11,19 +11,22 @@ This guide covers environment variables and configuration for the Bklit playgrou
 
 ### Required Variables
 
-**VITE_BKLIT_PROJECT_ID**
+**`VITE_BKLIT_PROJECT_ID`**
+
 - Your Bklit project ID
 - Get from dashboard → Project Settings
 - Format: CUID string
 
-**VITE_BKLIT_API_KEY**
+**`VITE_BKLIT_API_KEY`**
+
 - Your API token
 - Get from dashboard → API Tokens
 - Format: `bk_live_<64 hex characters>`
 
 ### Optional Variables
 
-**VITE_NGROK_URL**
+**`VITE_NGROK_URL`**
+
 - API host override
 - Leave blank for localhost:3000
 - Set for cloudflared tunnel or custom host
@@ -115,4 +118,3 @@ VITE_NGROK_URL="https://abc123.trycloudflare.com"
 - [Setup](/playground/setup) - Setting up playground
 - [Testing](/playground/testing) - Using playground
 - [Environment Variables](/getting-started/environment-variables) - General env var guide
-
