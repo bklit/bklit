@@ -8,12 +8,14 @@ interface IconProps {
   className?: string;
   size?: number;
   variant?: "mono" | "color";
+  theme?: "light" | "dark" | "system";
 }
 
 export function BklitLogo({
   className,
   size = 16,
   variant = "mono",
+  theme = "system",
 }: IconProps) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -22,7 +24,7 @@ export function BklitLogo({
     setMounted(true);
   }, []);
 
-  const isDark = mounted && resolvedTheme === "dark";
+  const isDark = mounted && (resolvedTheme === "dark" || theme === "dark");
 
   return (
     <div

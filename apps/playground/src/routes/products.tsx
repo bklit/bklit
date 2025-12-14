@@ -39,7 +39,7 @@ export default function Products() {
               <div className="flex gap-2">
                 <Button
                   disabled
-                  variant="default"
+                  variant="secondary"
                   size="lg"
                   className="cursor-pointer"
                 >
@@ -47,7 +47,7 @@ export default function Products() {
                 </Button>
                 <Button
                   disabled
-                  variant="default"
+                  variant="secondary"
                   size="lg"
                   className="cursor-pointer"
                 >
