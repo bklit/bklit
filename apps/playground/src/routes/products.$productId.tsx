@@ -100,13 +100,22 @@ export default function ProductDetails() {
                   <Separator orientation="horizontal" />
                   <Button
                     data-bklit-event="add-to-cart"
-                    variant="default"
+                    variant="mono"
                     size="lg"
                     className="cursor-pointer"
                     onClick={handleAddToCart}
                   >
                     Add to Cart
                   </Button>
+                  <div className="container mx-auto max-w-6xl px-4 flex flex-col space-y-3 items-center justify-center bg-blue-600/90 backdrop-blur-sm p-4 rounded-xl text-white">
+                    <p className="text-base font-normal m-0">
+                      Clicking &quot;Add to Cart&quot; will track an{" "}
+                      <code className="text-sm text-blue-300 px-2 py-1 bg-background/30 rounded-md">
+                        add-to-cart
+                      </code>{" "}
+                      event in the Bklit Playground dashboard.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
