@@ -1,0 +1,16 @@
+{
+  "title": "Framework",
+  "description": "The docs framework",
+  "icon": "Building",
+  "root": true,
+  "pages": [
+    "index",
+    "getting-started/quick-start",
+    "--- ---",
+    "dashboard",
+    "sdk",
+    "playground",
+    "--- ---",
+    "reference"
+  ]
+}
