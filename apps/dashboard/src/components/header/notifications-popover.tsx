@@ -31,7 +31,10 @@ import { useMediaQuery } from "@bklit/ui/hooks/use-media-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { parseAsBoolean, useQueryState } from "nuqs";
+import { useState } from "react";
 import { toast } from "sonner";
+import { InvitationAcceptedModal } from "@/components/modals/invitation-accepted-modal";
 import { useTRPC } from "@/trpc/react";
 
 export function NotificationsPopover() {
@@ -41,23 +44,61 @@ export function NotificationsPopover() {
 
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
+  // Query param for invitation accepted
+  const [, setInvitedParam] = useQueryState("invited", parseAsBoolean);
+
+  // Controlled open state
+  const [isOpen, setIsOpen] = useState(false);
+
+  // State for accepted organization ID
+  const [acceptedOrgId, setAcceptedOrgId] = useState<string | null>(null);
+
   const { data: invitations = [] } = useQuery(
     trpc.invitation.list.queryOptions(),
   );
 
   const acceptInvite = useMutation(
     trpc.invitation.accept.mutationOptions({
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success(data.message);
-        queryClient.invalidateQueries({
-          queryKey: ["invitation", "list"],
+
+        // Invalidate and refetch to get updated data immediately
+        await queryClient.invalidateQueries({
+          queryKey: [["invitation", "list"]],
+          type: "all",
+          refetchType: "all",
         });
-        queryClient.invalidateQueries({
-          queryKey: ["organization", "list"],
+        await queryClient.invalidateQueries({
+          queryKey: [["organization", "list"]],
+          type: "all",
+          refetchType: "all",
         });
-        // Navigate to the organization
-        if (data.organizationId) {
-          router.push(`/${data.organizationId}`);
+
+        // Wait a brief moment for UI to update
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Close the notifications popover after data is refreshed
+        setIsOpen(false);
+
+        // Handle demo project differently from regular invitations
+        if (data.isDemoProject && data.organizationId) {
+          // For demo project, fetch the organization to get project info
+          const orgQueryResult = await queryClient.fetchQuery(
+            trpc.organization.fetch.queryOptions({ id: data.organizationId }),
+          );
+
+          const demoProject = orgQueryResult?.projects[0];
+
+          if (demoProject) {
+            router.push(`/${data.organizationId}/${demoProject.id}?demo=true`);
+          } else {
+            // Fallback to organization dashboard
+            router.push(`/${data.organizationId}?demo=true`);
+          }
+        } else {
+          // Regular invitation - show congratulations modal
+          setInvitedParam(true);
+          setAcceptedOrgId(data.organizationId || null);
         }
       },
       onError: (error) => {
@@ -68,11 +109,21 @@ export function NotificationsPopover() {
 
   const declineInvite = useMutation(
     trpc.invitation.decline.mutationOptions({
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success(data.message);
-        queryClient.invalidateQueries({
-          queryKey: ["invitation", "list"],
+
+        // Invalidate and refetch to update invitation list
+        await queryClient.invalidateQueries({
+          queryKey: [["invitation", "list"]],
+          type: "all",
+          refetchType: "all",
         });
+
+        // Wait a brief moment for UI to update
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Close popover after data is refreshed
+        setIsOpen(false);
       },
       onError: (error) => {
         toast.error(`Failed to decline invitation: ${error.message}`);
@@ -84,23 +135,114 @@ export function NotificationsPopover() {
 
   if (isDesktop) {
     return (
-      <Popover>
-        <PopoverTrigger asChild>
+      <>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              size="icon"
+              variant="outline"
+              className="relative cursor-pointer"
+            >
+              <Bell size={14} />
+              {hasNotifications && (
+                <span
+                  data-count={invitations.length}
+                  className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-primary text-white rounded-full "
+                />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-96 p-0">
+            {hasNotifications && (
+              <div className="border-b px-4 py-3">
+                <h3 className="font-semibold text-sm">Notifications</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  You have {invitations.length} pending invitation
+                  {invitations.length > 1 ? "s" : ""}
+                </p>
+              </div>
+            )}
+
+            {invitations.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia>
+                    <Bell size={16} />
+                  </EmptyMedia>
+                  <EmptyTitle className="text-sm text-muted-foreground">
+                    No new notifications
+                  </EmptyTitle>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <ItemGroup className="max-h-[400px] overflow-y-auto">
+                {invitations.map((invitation) => (
+                  <Item key={invitation.id} variant="outline" size="sm">
+                    <ItemContent>
+                      <ItemTitle>
+                        Invitation to {invitation.organization.name}
+                      </ItemTitle>
+                      <ItemDescription>
+                        You were invited to join as{" "}
+                        {invitation.role || "member"}
+                      </ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          declineInvite.mutate({
+                            invitationId: invitation.id,
+                          })
+                        }
+                        disabled={
+                          declineInvite.isPending || acceptInvite.isPending
+                        }
+                      >
+                        Decline
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          acceptInvite.mutate({
+                            invitationId: invitation.id,
+                          })
+                        }
+                        disabled={
+                          acceptInvite.isPending || declineInvite.isPending
+                        }
+                      >
+                        Accept
+                      </Button>
+                    </ItemActions>
+                  </Item>
+                ))}
+              </ItemGroup>
+            )}
+          </PopoverContent>
+        </Popover>
+        <InvitationAcceptedModal organizationId={acceptedOrgId} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild>
           <Button
             size="icon"
-            variant="outline"
+            variant="ghost"
             className="relative cursor-pointer"
           >
             <Bell size={14} />
-            {hasNotifications && (
-              <span
-                data-count={invitations.length}
-                className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-brand-500 text-white rounded-full "
-              />
-            )}
           </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-96 p-0">
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Notifications</DrawerTitle>
+          </DrawerHeader>
           {hasNotifications && (
             <div className="border-b px-4 py-3">
               <h3 className="font-semibold text-sm">Notifications</h3>
@@ -110,7 +252,6 @@ export function NotificationsPopover() {
               </p>
             </div>
           )}
-
           {invitations.length === 0 ? (
             <Empty>
               <EmptyHeader>
@@ -167,84 +308,9 @@ export function NotificationsPopover() {
               ))}
             </ItemGroup>
           )}
-        </PopoverContent>
-      </Popover>
-    );
-  }
-
-  return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <Button size="icon" variant="ghost" className="relative cursor-pointer">
-          <Bell size={14} />
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Notifications</DrawerTitle>
-        </DrawerHeader>
-        {hasNotifications && (
-          <div className="border-b px-4 py-3">
-            <h3 className="font-semibold text-sm">Notifications</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              You have {invitations.length} pending invitation
-              {invitations.length > 1 ? "s" : ""}
-            </p>
-          </div>
-        )}
-        {invitations.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia>
-                <Bell size={16} />
-              </EmptyMedia>
-              <EmptyTitle className="text-sm text-muted-foreground">
-                No new notifications
-              </EmptyTitle>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <ItemGroup className="max-h-[400px] overflow-y-auto">
-            {invitations.map((invitation) => (
-              <Item key={invitation.id} variant="outline" size="sm">
-                <ItemContent>
-                  <ItemTitle>
-                    Invitation to {invitation.organization.name}
-                  </ItemTitle>
-                  <ItemDescription>
-                    You were invited to join as {invitation.role || "member"}
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      declineInvite.mutate({
-                        invitationId: invitation.id,
-                      })
-                    }
-                    disabled={declineInvite.isPending || acceptInvite.isPending}
-                  >
-                    Decline
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      acceptInvite.mutate({
-                        invitationId: invitation.id,
-                      })
-                    }
-                    disabled={acceptInvite.isPending || declineInvite.isPending}
-                  >
-                    Accept
-                  </Button>
-                </ItemActions>
-              </Item>
-            ))}
-          </ItemGroup>
-        )}
-      </DrawerContent>
-    </Drawer>
+        </DrawerContent>
+      </Drawer>
+      <InvitationAcceptedModal organizationId={acceptedOrgId} />
+    </>
   );
 }

@@ -225,10 +225,24 @@ export const invitationRouter = {
           data: { status: "accepted" },
         });
 
+        // Check if this is the demo project's organization
+        const demoProjectId = process.env.BKLIT_DEFAULT_PROJECT || process.env.DEV_BKLIT_DEFAULT_PROJECT;
+        let isDemoProject = false;
+        
+        if (demoProjectId) {
+          const demoProject = await ctx.prisma.project.findUnique({
+            where: { id: demoProjectId },
+            select: { organizationId: true },
+          });
+          
+          isDemoProject = demoProject?.organizationId === invitation.organizationId;
+        }
+
         return {
           success: true,
           message: "You are already a member of this organization",
           organizationId: invitation.organizationId,
+          isDemoProject,
         };
       }
 
@@ -249,10 +263,24 @@ export const invitationRouter = {
         }),
       ]);
 
+      // Check if this is the demo project's organization
+      const demoProjectId = process.env.BKLIT_DEFAULT_PROJECT || process.env.DEV_BKLIT_DEFAULT_PROJECT;
+      let isDemoProject = false;
+      
+      if (demoProjectId) {
+        const demoProject = await ctx.prisma.project.findUnique({
+          where: { id: demoProjectId },
+          select: { organizationId: true },
+        });
+        
+        isDemoProject = demoProject?.organizationId === invitation.organizationId;
+      }
+
       return {
         success: true,
         message: `You've joined ${invitation.organization.name}!`,
         organizationId: invitation.organizationId,
+        isDemoProject,
       };
     }),
 

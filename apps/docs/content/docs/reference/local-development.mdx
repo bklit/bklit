@@ -1,0 +1,381 @@
+---
+title: Local Development
+description: Setting up local databases and development environment for Bklit Analytics
+---
+
+# Local Development
+
+This guide will help you set up a complete local development environment with local databases, so you can develop safely without touching production data.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- Node.js >= 22.14.0
+- pnpm >= 9.6.0
+- Docker (for ClickHouse)
+
+## Overview
+
+Bklit uses two databases:
+
+- **PostgreSQL** - User data, projects, organizations (via Prisma Dev)
+- **ClickHouse** - Analytics events and session data (via Docker)
+
+In development, you'll use local instances of both databases that are completely isolated from production.
+
+## Environment Variables
+
+We use environment variable prefixes to separate local development from production:
+
+- `DEV_*` prefixed variables are automatically used when `NODE_ENV=development`
+- Regular variables (without prefix) are used in production
+
+This design makes it impossible to accidentally connect to production databases during development.
+
+### Setting Up Your .env File
+
+Create or update your `.env` file in the project root with the following structure:
+
+```bash
+# ===================
+# Node Environment
+# ===================
+NODE_ENV="development"
+
+# ===================
+# LOCAL DEVELOPMENT Databases
+# ===================
+DEV_DATABASE_URL="prisma+postgres://localhost:51213/?api_key=__API_KEY__"
+DEV_CLICKHOUSE_HOST="http://localhost:8123"
+DEV_CLICKHOUSE_USERNAME="default"
+DEV_CLICKHOUSE_PASSWORD="local_dev_password"
+
+# ===================
+# PRODUCTION Databases
+# ===================
+# Keep these for production deploys
+DATABASE_URL="your-production-postgres-url"
+CLICKHOUSE_HOST="your-production-clickhouse-url"
+CLICKHOUSE_USERNAME="your-production-username"
+CLICKHOUSE_PASSWORD="your-production-password"
+
+# ===================
+# Auth (BetterAuth)
+# ===================
+AUTH_SECRET="your-auth-secret"
+AUTH_GITHUB_ID="your-github-oauth-id"
+AUTH_GITHUB_SECRET="your-github-oauth-secret"
+AUTH_GOOGLE_ID="your-google-oauth-id"
+AUTH_GOOGLE_SECRET="your-google-oauth-secret"
+
+# ===================
+# Polar (Payments)
+# ===================
+POLAR_SERVER_MODE="sandbox"
+POLAR_ACCESS_TOKEN="your-polar-token"
+POLAR_WEBHOOK_SECRET="your-polar-webhook-secret"
+
+# ===================
+# Trigger.dev
+# ===================
+TRIGGER_SECRET_KEY="your-trigger-secret"
+TRIGGER_API_KEY="your-trigger-api-key"
+TRIGGER_API_URL="https://api.trigger.dev"
+
+# ===================
+# Email & Alerts
+# ===================
+ALERT_EMAIL="your-alert-email@example.com"
+HEALTH_CHECK_SECRET="your-health-check-secret"
+
+# ===================
+# External Services
+# ===================
+NEXT_PUBLIC_MAPBOX_TOKEN="your-mapbox-token"
+```
+
+## Initial Setup
+
+Follow these steps once to set up your local development environment.
+
+### 1. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 2. Start ClickHouse
+
+Start Docker Desktop, then start ClickHouse:
+
+```bash
+pnpm dev:services
+```
+
+Or let it start automatically when you run `pnpm dev` (recommended).
+
+### 3. Start Prisma Dev
+
+In a **separate terminal**, start the local Prisma Postgres server:
+
+```bash
+cd apps/dashboard
+npx prisma dev
+```
+
+When the server starts, press `h` to view the HTTP connection URL. You should see output like:
+
+```
+prisma+postgres://localhost:51213/?api_key=eyJkYXRhYmFzZVVybCI6...
+```
+
+Copy this URL and update the `DEV_DATABASE_URL` in your `.env` file.
+
+**Important:** Keep this terminal running! Prisma Dev needs to stay active.
+
+### 4. Run Database Migrations
+
+With Prisma Dev running, open another terminal and run:
+
+```bash
+# Migrate Postgres (creates all tables)
+pnpm db:migrate
+```
+
+You should see output confirming the connection to `localhost:51213`:
+
+```
+Datasource "db": PostgreSQL database "postgres" at "localhost:51213"
+```
+
+Then migrate ClickHouse:
+
+```bash
+cd packages/analytics
+pnpm run migrate
+```
+
+### 5. Clean and Generate
+
+Clear Next.js cache and regenerate Prisma client:
+
+```bash
+cd apps/dashboard
+rm -rf .next
+cd ../..
+pnpm db:generate
+```
+
+### 6. Start Development Servers
+
+```bash
+# Start dashboard and playground (default)
+pnpm dev
+
+# Or start everything including website and trigger.dev
+pnpm dev:full
+```
+
+Your local environment is now ready! Visit `http://localhost:3000` to see the dashboard.
+
+## Daily Workflow
+
+Once set up, your daily development workflow is simple:
+
+### Terminal 1: Start Prisma Postgres
+
+```bash
+cd apps/dashboard
+npx prisma dev
+```
+
+Keep this running throughout your development session.
+
+### Terminal 2: Start Your App
+
+```bash
+pnpm dev
+```
+
+This automatically starts ClickHouse and runs the dashboard and playground apps.
+
+## Verifying Your Setup
+
+To confirm you're connected to local databases and not production:
+
+### Check Database Connections
+
+When you start `pnpm dev`, watch the terminal output. You should **NOT** see any references to:
+- `accelerate.prisma-data.net`
+- Your production ClickHouse host
+
+### Check Your Data
+
+- You should **not** be automatically logged in
+- You'll need to create a new account locally
+- No production projects or data should be visible
+
+### Use Prisma Studio
+
+Open Prisma Studio to inspect your local database:
+
+```bash
+cd packages/db
+pnpm studio
+```
+
+This opens at `http://localhost:5555` and should show your local database with empty tables.
+
+## Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start dashboard and playground (ClickHouse starts automatically) |
+| `pnpm dev:full` | Start all apps including website and trigger.dev |
+| `pnpm dev:services` | Manually start ClickHouse only |
+| `pnpm dev:services:stop` | Stop ClickHouse |
+| `pnpm db:migrate` | Run Postgres migrations on local DB |
+| `pnpm db:studio` | Open Prisma Studio (local DB) |
+| `pnpm db:generate` | Regenerate Prisma Client |
+| `pnpm dev:docs` | Start documentation site |
+
+## How It Works
+
+### Automatic Environment Switching
+
+The codebase automatically uses `DEV_*` variables when `NODE_ENV=development`:
+
+**In Application Code:**
+
+Before database clients initialize, `packages/db/src/client.ts` and `packages/analytics/src/client.ts` override `process.env` with `DEV_*` values in development mode. This ensures Prisma and ClickHouse clients always connect to local databases.
+
+```typescript
+// In packages/db/src/client.ts
+if (process.env.NODE_ENV === "development" && process.env.DEV_DATABASE_URL) {
+  process.env.DATABASE_URL = process.env.DEV_DATABASE_URL;
+}
+```
+
+**In CLI Scripts:**
+
+Database migration and management commands use a `with-env-dev` wrapper that substitutes `DEV_*` variables:
+
+- `pnpm db:migrate` → Uses `DEV_DATABASE_URL`
+- `pnpm db:studio` → Connects to local database
+- `pnpm run migrate` (in analytics package) → Uses `DEV_CLICKHOUSE_*` variables
+
+This means you can safely run any command without accidentally touching production data.
+
+### Docker Compose
+
+The `docker-compose.yml` at the project root defines the ClickHouse service:
+
+- Image: `clickhouse/clickhouse-server:latest`
+- Ports: `8123` (HTTP), `9000` (Native)
+- Data persistence via Docker volumes
+- Health checks to ensure service is ready
+
+## Troubleshooting
+
+### ClickHouse Won't Start
+
+**Error:** `Cannot connect to the Docker daemon`
+
+**Solution:**
+1. Open Docker Desktop
+2. Wait for it to fully start
+3. Run `pnpm dev:services` or `pnpm dev`
+
+**Error:** Port conflicts or service issues
+
+**Solution:**
+```bash
+# Stop and remove all data
+docker-compose down -v
+
+# Start fresh
+pnpm dev:services
+```
+
+### Prisma Postgres Issues
+
+**Error:** Migrations fail or connection errors
+
+**Solution:**
+```bash
+# Stop Prisma Dev (Ctrl+C)
+# Remove all local instances
+npx prisma dev rm '*'
+
+# Start fresh
+npx prisma dev
+
+# Update DEV_DATABASE_URL in .env with new connection string
+# Run migrations again
+pnpm db:migrate
+```
+
+### Still Seeing Production Data
+
+If you're seeing production data or `accelerate.prisma-data.net` in logs:
+
+1. Verify `NODE_ENV=development` is at the top of your `.env`
+2. Clear all caches:
+   ```bash
+   cd apps/dashboard
+   rm -rf .next
+   rm -rf node_modules/.cache
+   ```
+3. Regenerate Prisma client:
+   ```bash
+   pnpm db:generate
+   ```
+4. Restart dev server
+
+### Reset Local Databases
+
+**Reset Postgres:**
+```bash
+cd packages/db
+pnpm with-env-dev prisma migrate reset
+```
+
+**Reset ClickHouse:**
+```bash
+cd packages/analytics
+pnpm run clear-data
+pnpm run migrate
+```
+
+## Architecture
+
+### Applications
+
+- **Dashboard** - Main SaaS application (Next.js)
+- **Playground** - SDK testing environment (Vite + React)
+- **Docs** - Documentation site (Next.js)
+- **Website** - Marketing site (Next.js)
+
+### Local Databases
+
+- **Postgres** - User data, projects, organizations, sessions (Prisma Dev)
+- **ClickHouse** - Page views, events, analytics sessions (Docker)
+
+### Development Flow
+
+1. User creates account locally (stored in Postgres)
+2. Creates projects and organizations (stored in Postgres)
+3. Integrates SDK in playground or test app
+4. SDK sends events to local API
+5. Events stored in ClickHouse
+6. Dashboard queries ClickHouse and displays analytics
+
+All of this happens entirely on your machine with no connection to production services.
+
+## Related Documentation
+
+- [Architecture Overview](/reference/architecture) - System architecture
+- [Contributing](/reference/contributing) - Contribution guidelines
+- [Getting Started](/getting-started/quick-start) - Quick start guide
+

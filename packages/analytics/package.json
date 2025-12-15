@@ -13,9 +13,11 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "with-env": "dotenv -e ../../.env --",
-    "verify": "dotenv -e ../../.env -- tsx src/migrations/verify-data.ts",
-    "clear-data": "dotenv -e ../../.env -- tsx src/migrations/clear-data.ts",
-    "migrate": "dotenv -e ../../.env -- tsx src/migrations/migrate-data.ts"
+    "with-env-dev": "dotenv -e ../../.env -- sh -c 'CLICKHOUSE_HOST=\"${DEV_CLICKHOUSE_HOST:-$CLICKHOUSE_HOST}\" CLICKHOUSE_USERNAME=\"${DEV_CLICKHOUSE_USERNAME:-$CLICKHOUSE_USERNAME}\" CLICKHOUSE_PASSWORD=\"${DEV_CLICKHOUSE_PASSWORD:-$CLICKHOUSE_PASSWORD}\" \"$@\"' --",
+    "verify": "pnpm with-env-dev tsx src/migrations/verify-data.ts",
+    "clear-data": "pnpm with-env-dev tsx src/migrations/clear-data.ts",
+    "migrate": "pnpm with-env-dev tsx src/migrations/init-tables.ts",
+    "migrate-data": "pnpm with-env-dev tsx src/migrations/migrate-data.ts"
   },
   "dependencies": {
     "@bklit/db": "workspace:*",
