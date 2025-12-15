@@ -31,6 +31,52 @@ Set in your `.env`:
 POLAR_WEBHOOK_SECRET="your-webhook-secret"
 ```
 
+## Local Development with Tunnels
+
+### Quick Setup
+
+Webhooks can't reach `localhost` - use a tunnel for local testing:
+
+**1. Start your app:**
+```bash
+pnpm dev
+```
+
+**2. Start ngrok (separate terminal):**
+```bash
+ngrok http 3000
+```
+
+**3. Configure in Polar:**
+- Webhook URL: `https://your-ngrok-url.ngrok.io/api/webhooks/polar`
+- Secret: Your `POLAR_WEBHOOK_SECRET` from `.env`
+
+### ngrok vs Cloudflare Tunnel
+
+**ngrok:**
+- Most popular
+- Easy setup
+- Free tier available
+- URLs change on restart
+
+**Cloudflare Tunnel:**
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+- No account needed (free tier)
+- URLs also change on restart
+
+### Local Development Tips
+
+- Use `POLAR_SERVER_MODE="sandbox"` in `.env`
+- Update webhook URL in Polar when restarting tunnel
+- Webhooks are optional for basic development
+- Test in staging for production webhook validation
+
+See [Local Development](/reference/local-development) for complete setup.
+
+---
+
 ## Setting Up Webhooks
 
 ### Step 1: Configure in Polar

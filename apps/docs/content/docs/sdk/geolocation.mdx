@@ -1,0 +1,188 @@
+---
+title: Geolocation
+description: How Bklit collects geolocation data and Cloudflare proxy setup
+---
+
+# Geolocation
+
+Bklit automatically collects geolocation data (country, city, region) from your users to provide geographic analytics insights.
+
+## How It Works
+
+### Cloudflare Proxy (Production)
+
+In production, Bklit reads geolocation from **Cloudflare headers** when your domain uses Cloudflare as a proxy:
+
+- **CF-IPCountry** - Country code
+- **CF-Region** - State/region
+- **CF-City** - City name
+- **CF-Latitude** / **CF-Longitude** - Coordinates
+- **CF-Timezone** - User timezone
+- **CF-PostalCode** - ZIP/postal code
+
+**Advantages:**
+- ✅ Fast (no external API calls)
+- ✅ Accurate
+- ✅ Free
+- ✅ Privacy-friendly
+
+### Fallback (Development)
+
+In development (localhost), Bklit falls back to ip-api.com for geolocation since Cloudflare headers aren't available.
+
+## Setting Up Cloudflare Proxy
+
+### Prerequisites
+
+- Domain name
+- Cloudflare account (free tier works)
+
+### Step 1: Add Site to Cloudflare
+
+1. Go to https://dash.cloudflare.com
+2. Click "Add a Site"
+3. Enter your domain name
+4. Select free plan
+5. Click "Continue"
+
+### Step 2: Update Nameservers
+
+1. Cloudflare will provide 2 nameservers
+2. Go to your domain registrar (GoDaddy, Namecheap, etc.)
+3. Update DNS nameservers to Cloudflare's nameservers
+4. Wait for DNS propagation (up to 24 hours, usually minutes)
+
+### Step 3: Enable IP Geolocation
+
+1. In Cloudflare dashboard, select your domain
+2. Go to **Network** tab
+3. Scroll to **IP Geolocation**
+4. Toggle **ON**
+
+This adds geolocation headers to all requests.
+
+### Step 4: Configure DNS
+
+1. Go to **DNS** tab in Cloudflare
+2. Add A record pointing to your server IP:
+   - **Type:** A
+   - **Name:** @ (for root domain) or www
+   - **IPv4 address:** Your server IP
+   - **Proxy status:** ✅ Proxied (orange cloud)
+
+**Important:** The orange cloud must be ON (Proxied) for headers to be added.
+
+### Step 5: Enable Managed Transforms (Optional)
+
+For additional headers:
+
+1. Go to **Transform Rules** → **Managed Transforms**
+2. Enable **Add visitor location headers**
+3. This adds additional CF-* headers with more detail
+
+### Step 6: Verify Setup
+
+Deploy your app and check if geolocation works:
+
+1. Visit your site
+2. Trigger a pageview
+3. Check dashboard analytics
+4. Location data (country, city) should appear
+
+## Geolocation Data Collected
+
+When using Cloudflare proxy, Bklit collects:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| Country | Full country name | "United States" |
+| Country Code | ISO 2-letter code | "US" |
+| Region | State/province code | "CA" |
+| Region Name | State/province name | "California" |
+| City | City name | "San Francisco" |
+| Latitude | GPS coordinate | 37.7749 |
+| Longitude | GPS coordinate | -122.4194 |
+| Timezone | IANA timezone | "America/Los_Angeles" |
+| ZIP | Postal code | "94102" |
+| ISP | Internet provider | "Cloudflare" |
+
+## Testing Geolocation
+
+### In Development (Localhost)
+
+Geolocation uses ip-api.com fallback:
+- Works automatically
+- Detects your real location
+- Free tier (no setup needed)
+
+### In Production
+
+Geolocation uses Cloudflare headers:
+- No external API calls
+- Faster and more reliable
+- Requires Cloudflare proxy setup
+
+### Verifying Cloudflare Headers
+
+Check if Cloudflare headers are present:
+
+```javascript
+// In your browser console (on your deployed site)
+fetch('/api/test-headers')
+  .then(r => r.json())
+  .then(console.log);
+```
+
+Create test endpoint in your app to return headers:
+
+```typescript
+// app/api/test-headers/route.ts
+export async function GET(request: Request) {
+  const headers = Object.fromEntries(request.headers.entries());
+  const cfHeaders = Object.entries(headers)
+    .filter(([key]) => key.startsWith('cf-'))
+    .reduce((acc, [key, val]) => ({ ...acc, [key]: val }), {});
+  
+  return Response.json({ cfHeaders });
+}
+```
+
+## Troubleshooting
+
+### No Location Data in Dashboard
+
+**Check:**
+- Cloudflare proxy is enabled (orange cloud in DNS)
+- IP Geolocation is turned ON in Cloudflare → Network
+- Request is going through Cloudflare (check for CF-* headers)
+- Not using localhost (use deployed domain)
+
+### Showing Wrong Location
+
+**Possible causes:**
+- VPN usage by visitor
+- Cloudflare's IP database (generally accurate)
+- ISP routing through different location
+
+### Privacy Considerations
+
+- Bklit doesn't store precise IP addresses permanently
+- Only stores geolocation data (city-level)
+- GDPR compliant
+- No personal identification
+
+## Without Cloudflare
+
+If you don't use Cloudflare:
+
+- Geolocation will not work in production
+- Consider adding Cloudflare as a proxy (free)
+- Or implement custom geolocation service
+- Analytics will still work (just without location data)
+
+## Related Documentation
+
+- [Local Development](/reference/local-development) - Local setup guide
+- [Configuration](/sdk/configuration) - SDK configuration options
+- [Token Security](/dashboard/tokens/token-security) - API security
+

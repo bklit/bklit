@@ -373,6 +373,73 @@ pnpm run migrate
 
 All of this happens entirely on your machine with no connection to production services.
 
+## Testing Webhooks Locally
+
+### Why Tunnels Are Needed
+
+Polar and Resend webhooks can't reach `localhost`. Use a tunnel to expose your local server for webhook testing.
+
+### Setup with ngrok (Recommended)
+
+**1. Install ngrok:**
+- Visit https://ngrok.com/download
+- Follow installation instructions
+
+**2. Start services:**
+```bash
+# Terminal 1: Prisma Dev
+cd apps/dashboard
+npx prisma dev
+
+# Terminal 2: Your app
+pnpm dev
+
+# Terminal 3: ngrok
+ngrok http 3000
+```
+
+**3. Copy ngrok URL:**
+
+From ngrok output, copy the HTTPS forwarding URL:
+```
+Forwarding   https://abc123.ngrok.io -> http://localhost:3000
+```
+
+**4. Configure webhooks:**
+
+**Polar:**
+- Dashboard → Settings → Webhooks
+- URL: `https://abc123.ngrok.io/api/webhooks/polar`
+- Secret: Your `POLAR_WEBHOOK_SECRET`
+
+**5. Test:**
+- Create test subscription in Polar sandbox
+- Check Polar webhook logs
+- Verify your organization plan updates
+
+### Alternative: Cloudflare Tunnel
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+Use tunnel URL: `https://abc123.trycloudflare.com/api/webhooks/polar`
+
+### Important Notes
+
+- **Free tunnel URLs change on restart** - Update webhook URLs accordingly
+- **Use sandbox mode:** `POLAR_SERVER_MODE="sandbox"` in `.env`
+- **Optional for basic dev** - Webhooks only needed for testing subscriptions
+- **Production uses your domain** - No tunnels in production
+
+### Skip Webhooks
+
+For basic development without webhook testing:
+1. Keep `POLAR_SERVER_MODE="sandbox"`
+2. Webhooks will fail gracefully (expected)
+3. Manage subscriptions in Polar UI
+4. Test webhooks in staging/production
+
 ## Related Documentation
 
 - [Architecture Overview](/reference/architecture) - System architecture
