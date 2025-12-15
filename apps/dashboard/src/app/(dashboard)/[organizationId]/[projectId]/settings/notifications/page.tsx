@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
-import { ProjectNotifications } from "../../../_components/project-notifications";
+import { ProjectNotifications } from "@/components/project/notifications";
 
 interface NotificationSettingsPageProps {
   params: Promise<{ organizationId: string; projectId: string }>;

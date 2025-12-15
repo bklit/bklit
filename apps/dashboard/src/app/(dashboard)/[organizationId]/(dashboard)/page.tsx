@@ -1,6 +1,6 @@
+import { Organization } from "@/components/organization/";
 import { authenticated } from "@/lib/auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
-import { OrganizationDashboard } from "../_components/organization-dashboard";
 
 export default async function OrganizationDashboardPage({
   params,
@@ -14,7 +14,7 @@ export default async function OrganizationDashboardPage({
 
   return (
     <HydrateClient>
-      <OrganizationDashboard organizationId={organizationId} />
+      <Organization organizationId={organizationId} />
     </HydrateClient>
   );
 }
