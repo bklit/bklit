@@ -16,7 +16,7 @@
   </p>
 </p>
 
-## **Key Features:**
+### **Key Features:**
 
 - Fast, real-time analytics powered by ClickHouse
 - Privacy-first analytics
@@ -25,9 +25,7 @@
 - Multi-project and team management
 - Built-in billing & subscriptions via Polar.sh
 
-## Quick Start
-
-### Prerequisites
+#### Prerequisites
 
 - **Node.js 22.18.0+**
 - **pnpm** (package manager)
@@ -37,7 +35,7 @@
 > [!TIP]
 > 📚 For detailed setup instructions, environment variables, and deployment guides, visit [docs.bklit.com](https://docs.bklit.com)
 
-## Project Structure
+### Project Structure
 
 This monorepo is managed with [Turborepo](https://turbo.build/repo) and [pnpm workspaces](https://pnpm.io/workspaces).
 
@@ -61,7 +59,7 @@ bklit/
     └── validators/         # Zod schemas for validation
 ```
 
-## Technologies
+### Stack
 
 - **Frontend:** Next.js 15 (App Router), React 19, Tailwind CSS v4
 - **Database:** PostgreSQL (Prisma ORM) + ClickHouse (analytics events)
@@ -75,9 +73,9 @@ bklit/
 - **Monorepo:** Turborepo + pnpm workspaces
 - **Documentation:** Fumadocs (Next.js-based docs framework)
 
-## Documentation
+### Docs
 
-Comprehensive guides and references are available at **[docs.bklit.com](https://docs.bklit.com)**:
+Guides and references are available at **[docs.bklit.com](https://docs.bklit.com)**:
 
 - [Quick Start Guide](https://docs.bklit.com/getting-started/quick-start) - Get up and running in minutes
 - [SDK Documentation](https://docs.bklit.com/sdk) - Integrate Bklit into your app
@@ -87,10 +85,10 @@ Comprehensive guides and references are available at **[docs.bklit.com](https://
 
 ![Alt](https://repobeats.axiom.co/api/embed/967f6b8d93c20cd08f66a7c82048a635bcfa8733.svg "Repobeats analytics image")
 
-## Contributing
+### Contributing
 
 We welcome contributions! Please see our [Contributing Guide](https://docs.bklit.com/reference/contributing) for details.
 
-## License
+### License
 
 MIT
