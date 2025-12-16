@@ -124,9 +124,6 @@ export function NotificationsPopover() {
           refetchType: "all",
         });
 
-        // Wait a brief moment for UI to update
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
         // Close popover after data is refreshed
         setIsOpen(false);
       },
