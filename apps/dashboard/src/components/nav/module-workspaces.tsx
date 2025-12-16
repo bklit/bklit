@@ -15,8 +15,8 @@ import {
   CommandItem,
   CommandList,
 } from "@bklit/ui/components/command";
-import type { inferRouterOutputs } from "@trpc/server";
 import { useQuery } from "@tanstack/react-query";
+import type { inferRouterOutputs } from "@trpc/server";
 import { CirclePlus } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";

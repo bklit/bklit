@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 
 export function analyticsEnv() {
   const isDev = process.env.NODE_ENV === "development";
-  
+
   return createEnv({
     server: {
       CLICKHOUSE_HOST: z.string().url(),
@@ -14,15 +14,18 @@ export function analyticsEnv() {
       DEV_CLICKHOUSE_PASSWORD: z.string().min(1).optional(),
     },
     experimental__runtimeEnv: {
-      CLICKHOUSE_HOST: isDev && process.env.DEV_CLICKHOUSE_HOST
-        ? process.env.DEV_CLICKHOUSE_HOST
-        : process.env.CLICKHOUSE_HOST,
-      CLICKHOUSE_USERNAME: isDev && process.env.DEV_CLICKHOUSE_USERNAME
-        ? process.env.DEV_CLICKHOUSE_USERNAME
-        : process.env.CLICKHOUSE_USERNAME,
-      CLICKHOUSE_PASSWORD: isDev && process.env.DEV_CLICKHOUSE_PASSWORD
-        ? process.env.DEV_CLICKHOUSE_PASSWORD
-        : process.env.CLICKHOUSE_PASSWORD,
+      CLICKHOUSE_HOST:
+        isDev && process.env.DEV_CLICKHOUSE_HOST
+          ? process.env.DEV_CLICKHOUSE_HOST
+          : process.env.CLICKHOUSE_HOST,
+      CLICKHOUSE_USERNAME:
+        isDev && process.env.DEV_CLICKHOUSE_USERNAME
+          ? process.env.DEV_CLICKHOUSE_USERNAME
+          : process.env.CLICKHOUSE_USERNAME,
+      CLICKHOUSE_PASSWORD:
+        isDev && process.env.DEV_CLICKHOUSE_PASSWORD
+          ? process.env.DEV_CLICKHOUSE_PASSWORD
+          : process.env.CLICKHOUSE_PASSWORD,
     },
     skipValidation:
       !!process.env.CI || process.env.npm_lifecycle_event === "lint",

@@ -231,14 +231,15 @@ export const invitationRouter = {
         // Check if this is the demo project's organization
         const demoProjectId = env.BKLIT_DEFAULT_PROJECT;
         let isDemoProject = false;
-        
+
         if (demoProjectId) {
           const demoProject = await ctx.prisma.project.findUnique({
             where: { id: demoProjectId },
             select: { organizationId: true },
           });
-          
-          isDemoProject = demoProject?.organizationId === invitation.organizationId;
+
+          isDemoProject =
+            demoProject?.organizationId === invitation.organizationId;
         }
 
         return {
@@ -269,14 +270,15 @@ export const invitationRouter = {
       // Check if this is the demo project's organization
       const demoProjectId = env.BKLIT_DEFAULT_PROJECT;
       let isDemoProject = false;
-      
+
       if (demoProjectId) {
         const demoProject = await ctx.prisma.project.findUnique({
           where: { id: demoProjectId },
           select: { organizationId: true },
         });
-        
-        isDemoProject = demoProject?.organizationId === invitation.organizationId;
+
+        isDemoProject =
+          demoProject?.organizationId === invitation.organizationId;
       }
 
       return {
