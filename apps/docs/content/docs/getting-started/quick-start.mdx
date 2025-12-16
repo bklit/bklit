@@ -4,12 +4,18 @@ description: Get up and running with Bklit Analytics
 icon: Zap
 ---
 
+import { Terminal, Box, ChartNoAxesColumnIncreasing, SquareDashedMousePointer } from 'lucide-react';
+
 Get Bklit Analytics running locally in minutes. This guide will help you set up the dashboard, SDK, and playground for development.
 
 <Callout type="info">
   **Quick Setup:** To get started quickly, you only need the SDK, dashboard, and
   playground running. The website and Trigger.dev are optional for basic
   development.
+</Callout>
+
+<Callout type="success">
+  **Local Development:** For isolated local databases with Docker and Prisma Dev, see [Local Development](/reference/local-development).
 </Callout>
 
 ## Prerequisites
@@ -46,57 +52,80 @@ npm install
 
 ## Environment Setup
 
-Create a `.env` file in the root directory with the following minimum configuration:
+### Local Development (Recommended for Start)
+
+For local development with isolated databases, use DEV_* prefixed variables. Create a `.env` file in the root directory:
 
 ```bash
-# Database
+NODE_ENV="development"
+
+# Local Databases
+DEV_DATABASE_URL="prisma+postgres://localhost:51213/?api_key=__API_KEY__"
+DEV_CLICKHOUSE_HOST="http://localhost:8123"
+DEV_CLICKHOUSE_USERNAME="default"
+DEV_CLICKHOUSE_PASSWORD="local_dev_password"
+DEV_BKLIT_DEFAULT_PROJECT="your-local-demo-project-id"
+
+# Production Databases (for deployment later)
 DATABASE_URL="postgresql://..."
+CLICKHOUSE_HOST="https://..."
+CLICKHOUSE_USERNAME="default"
+CLICKHOUSE_PASSWORD="..."
+BKLIT_DEFAULT_PROJECT="your-prod-project-id"
 
-# ClickHouse Analytics
-CLICKHOUSE_HOST=
-CLICKHOUSE_USERNAME=
-CLICKHOUSE_PASSWORD=
+# Auth (works for both local and prod)
+AUTH_SECRET="your-secret"
+AUTH_GITHUB_ID="your-github-id"
+AUTH_GITHUB_SECRET="your-github-secret"
 
-# Authentication (BetterAuth)
-AUTH_SECRET=
-AUTH_GITHUB_ID=
-AUTH_GITHUB_SECRET=
-
-# Polar (Payments) - Development Mode
+# Polar - use sandbox for local dev
 POLAR_SERVER_MODE="sandbox"
-POLAR_ACCESS_TOKEN=
-POLAR_WEBHOOK_SECRET=
+POLAR_ACCESS_TOKEN="..."
+POLAR_WEBHOOK_SECRET="..."
 
-# Monitoring
-ALERT_EMAIL=
-HEALTH_CHECK_SECRET=
-
-# Mapbox (for location visualizations)
-NEXT_PUBLIC_MAPBOX_TOKEN=
+# Other required variables
+ALERT_EMAIL="your-email@example.com"
+HEALTH_CHECK_SECRET="your-secret"
+NEXT_PUBLIC_MAPBOX_TOKEN="your-token"
 ```
+
+See [Local Development](/reference/local-development) for complete setup guide.
 
 ## Database Setup
 
-Setup your postgres database, you can get one for free with <a href="https://console.prisma.io/sign-up" target="_blank">Prisma Postgres</a>. Generate Prisma client and run migrations:
+### Local Development with Prisma Dev
 
-<Tabs items={["pnpm", "npm"]}>
-  <Tab value="pnpm">
+1. **Start Prisma Postgres locally:**
+   ```bash
+   cd apps/dashboard
+   npx prisma dev
+   ```
+   
+2. **Press `h`** to get the connection URL
+
+3. **Add to `.env`** as `DEV_DATABASE_URL`
+
+4. **Start ClickHouse** (automatically via docker-compose):
+   ```bash
+   pnpm dev:services
+   ```
+
+5. **Run migrations:**
+   ```bash
+   pnpm db:migrate
+   cd packages/analytics && pnpm run migrate
+   ```
+
+See [Local Development](/reference/local-development) for detailed instructions.
+
+### Production Setup
+
+For production deployment with Prisma Postgres or your PostgreSQL provider:
 
 ```bash
 pnpm db:generate
 pnpm db:migrate
 ```
-
-  </Tab>
-  <Tab value="npm">
-
-```bash
-npm run db:generate
-npm run db:migrate
-```
-
-  </Tab>
-</Tabs>
 
 ## Start Development
 
@@ -124,6 +153,12 @@ The dashboard will be available at `http://localhost:3000`
 ## Next Steps
 
 <Cards>
+  <Card
+    icon={<Terminal className="size-8 text-primary" />}
+    title="Local Development"
+    description="Set up local databases and isolated development environment"
+    href="/reference/local-development"
+  />
   <Card
     icon={<Box className="size-8 text-primary" />}
     title="SDK Guide"

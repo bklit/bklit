@@ -27,10 +27,13 @@ This guide covers environment variables and configuration for the Bklit playgrou
 
 **`VITE_NGROK_URL`**
 
-- API host override
-- Leave blank for localhost:3000
-- Set for cloudflared tunnel or custom host
-- Example: `https://abc123.trycloudflare.com`
+- API host override for remote testing
+- Leave blank to use localhost:3000
+- Set when using tunnels or custom hosts
+- Examples:
+  - ngrok: `https://abc123.ngrok.io`
+  - cloudflared: `https://abc123.trycloudflare.com`
+  - production: Leave blank
 
 ## Environment File
 
@@ -77,17 +80,55 @@ VITE_BKLIT_API_KEY="prod-token"
 # Leave VITE_NGROK_URL blank for production API
 ```
 
-## Using Cloudflared Tunnel
+## Using Tunnels for Remote Testing
 
-For remote testing:
+### When You Need Tunnels
 
-1. Start dashboard: `pnpm -F @bklit/dashboard dev`
-2. Start cloudflared: `cloudflared tunnel --url http://localhost:3000`
-3. Copy tunnel URL
-4. Set in `.env`:
+- Testing from mobile devices
+- Webhook testing (Polar, Resend)
+- Sharing with team members
+- Testing OAuth callbacks
+
+### Option 1: ngrok (Recommended)
+
+**1. Install and start:**
+```bash
+# Terminal 1: Dashboard
+pnpm -F @bklit/dashboard dev
+
+# Terminal 2: ngrok
+ngrok http 3000
+```
+
+**2. Copy HTTPS URL:** `https://abc123.ngrok.io`
+
+**3. Update playground `.env`:**
+```bash
+VITE_NGROK_URL="https://abc123.ngrok.io"
+```
+
+**4. Restart playground** to use new URL
+
+### Option 2: Cloudflare Tunnel
 
 ```bash
+# Start tunnel
+cloudflared tunnel --url http://localhost:3000
+```
+
+Set in `.env`:
+```bash
 VITE_NGROK_URL="https://abc123.trycloudflare.com"
+```
+
+### Production Testing
+
+For production API testing, leave `VITE_NGROK_URL` blank:
+```bash
+# .env - production testing
+VITE_BKLIT_PROJECT_ID="prod-project-id"
+VITE_BKLIT_API_KEY="prod-token"
+# VITE_NGROK_URL - leave blank or remove
 ```
 
 ## Security Notes

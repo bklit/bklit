@@ -63,7 +63,7 @@ export function TestConnectionStepForm({
           clearTimeout(redirectTimeoutRef.current);
         }
         redirectTimeoutRef.current = setTimeout(() => {
-          router.push(`/${organizationId}/${projectId}`);
+          router.push(`/${organizationId}/${projectId}?onboarding=new`);
         }, 5000);
       }
     }, 3000);
@@ -130,7 +130,9 @@ export function TestConnectionStepForm({
           <ExternalLink size={16} /> Open your website
         </Button>
         <Button variant="ghost" size="lg" asChild>
-          <Link href="/">Skip</Link>
+          <Link href={`/${organizationId}/${projectId}?onboarding=new`}>
+            Skip
+          </Link>
         </Button>
       </div>
 

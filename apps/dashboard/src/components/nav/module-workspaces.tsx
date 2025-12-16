@@ -15,18 +15,31 @@ import {
   CommandItem,
   CommandList,
 } from "@bklit/ui/components/command";
+import { useQuery } from "@tanstack/react-query";
 import type { inferRouterOutputs } from "@trpc/server";
 import { CirclePlus } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useWorkspace } from "@/contexts/workspace-provider";
 import { cn } from "@/lib/utils";
 import { getThemeGradient } from "@/lib/utils/get-organization-theme";
+import { useTRPC } from "@/trpc/react";
 
 type Organization = inferRouterOutputs<AppRouter>["organization"]["list"][0];
 
 export const ModuleWorkspaces = () => {
-  const { organizations, activeOrganization, onChangeOrganization } =
-    useWorkspace();
+  const trpc = useTRPC();
+  const { organizationId } = useParams();
+  const { onChangeOrganization } = useWorkspace();
+
+  // Fetch organizations client-side
+  const { data: organizations = [] } = useQuery(
+    trpc.organization.list.queryOptions(),
+  );
+
+  const activeOrganization = organizations.find(
+    (org) => org.id === organizationId,
+  );
 
   return (
     <Command>

@@ -27,17 +27,33 @@ import {
 } from "@bklit/ui/components/popover";
 import { useMediaQuery } from "@bklit/ui/hooks/use-media-query";
 import { cn } from "@bklit/ui/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
-import { useWorkspace } from "@/contexts/workspace-provider";
+import { useParams } from "next/navigation";
 import { getThemeGradient } from "@/lib/utils/get-organization-theme";
+import { useTRPC } from "@/trpc/react";
 import type { User } from "@/types/user";
 import { ModuleProjects } from "./module-projects";
 import { ModuleWorkspaces } from "./module-workspaces";
 
 export function NavWorkspace({ user }: { user: User }) {
-  const { activeOrganization, activeProject } = useWorkspace();
+  const trpc = useTRPC();
+  const { organizationId, projectId } = useParams();
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  // Fetch organizations client-side
+  const { data: organizations = [] } = useQuery(
+    trpc.organization.list.queryOptions(),
+  );
+
+  const activeOrganization = organizations.find(
+    (org) => org.id === organizationId,
+  );
+
+  const activeProject = activeOrganization?.projects.find(
+    (project) => project.id === projectId,
+  );
 
   // Use organization plan from database
   const isPro = activeOrganization?.plan === "pro";

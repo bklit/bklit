@@ -103,6 +103,55 @@ Subscribe to these events:
 - `subscription.canceled`
 - `subscription.revoked`
 
+## Local Development with Webhooks
+
+### Why You Need a Tunnel
+
+Polar webhooks can't reach `localhost`. To test webhooks locally, expose your server with a tunnel.
+
+### Using ngrok (Recommended)
+
+**1. Install ngrok:**
+- Visit https://ngrok.com/download
+- Follow installation instructions
+
+**2. Start services:**
+```bash
+# Terminal 1: Your app
+pnpm dev
+
+# Terminal 2: ngrok
+ngrok http 3000
+```
+
+**3. Configure webhook in Polar:**
+- Copy ngrok HTTPS URL: `https://abc123.ngrok.io`
+- In Polar dashboard → Settings → Webhooks
+- Webhook URL: `https://abc123.ngrok.io/api/webhooks/polar`
+- Secret: Your `POLAR_WEBHOOK_SECRET` from `.env`
+
+**4. Test subscription:**
+- Create test subscription in Polar sandbox
+- Check webhook delivery in Polar logs
+- Verify organization plan updates in your dashboard
+
+### Alternative: Cloudflare Tunnel
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+Use: `https://abc123.trycloudflare.com/api/webhooks/polar`
+
+### Important Notes
+
+- **Free ngrok URLs change on restart** - Update Polar webhook URL when restarting
+- **Use sandbox mode:** `POLAR_SERVER_MODE="sandbox"` for local dev
+- **Optional for basic dev** - Webhooks only needed for subscription testing
+- **Production uses your domain** - No tunnels needed in production
+
+For complete local development setup: [Local Development](/reference/local-development)
+
 ## Step 6: Test Webhooks
 
 ### Sandbox Mode
