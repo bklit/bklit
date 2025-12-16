@@ -1,0 +1,471 @@
+---
+title: First-Time User Flow
+description: Complete walkthrough of the new user experience from signup to demo exploration
+---
+
+# First-Time User Flow
+
+This guide walks through the complete experience for a new user signing up for Bklit, from initial account creation through exploring the demo project with real data. Understanding this flow helps developers, QA testers, and product teams ensure a smooth onboarding experience.
+
+## Flow Diagram
+
+```mermaid
+flowchart TD
+    SignUp[Sign Up / Sign In<br/>/signup or /signin] --> Root[Landing Page<br/>/]
+    Root --> CheckOrgs{Has Organizations?}
+    CheckOrgs -->|No| Onboarding[Onboarding Flow<br/>/onboarding?step=1]
+    CheckOrgs -->|Yes| Dashboard[Organization Dashboard]
+    
+    Onboarding --> Step1[Step 1: Create Workspace<br/>?step=1]
+    Step1 --> Step2[Step 2: Create Project<br/>?step=2]
+    Step2 --> Step3[Step 3: Install SDK<br/>?step=3]
+    Step3 --> Step4[Step 4: Test Connection<br/>?step=4]
+    Step4 -->|Connection Detected| OwnProject[Own Project Dashboard<br/>/{orgId}/{projectId}?onboarding=new]
+    
+    OwnProject --> WelcomeModal[Welcome Modal Shows<br/>onboarding=new]
+    WelcomeModal -->|User Clicks Got it!| RemoveParam1[Remove ?onboarding=new]
+    RemoveParam1 --> UserChecksNotif[User Clicks Bell Icon]
+    
+    UserChecksNotif --> SeeInvite[Sees Demo Project Invitation]
+    SeeInvite --> AcceptInvite[Clicks Accept]
+    AcceptInvite --> BackendCheck{Backend: Is Demo Project?}
+    
+    BackendCheck -->|Yes| DirectNav[Direct Navigation<br/>No Modal Shown]
+    BackendCheck -->|No| InviteModal[Invitation Accepted Modal<br/>?invited=true]
+    InviteModal --> NavToOrg[Navigate to Organization]
+    
+    DirectNav --> DemoProject[Demo Project Dashboard<br/>/{demoOrgId}/{demoProjectId}?demo=true]
+    DemoProject --> DemoModal[Demo Project Modal Shows<br/>demo=true]
+    DemoModal -->|Start Exploring| RemoveParam2[Remove ?demo=true]
+    RemoveParam2 --> Explore[User Explores Demo Analytics]
+```
+
+## Stage-by-Stage Walkthrough
+
+### Stage 1: Sign Up / Sign In
+
+**URL:** `/signup` or `/signin`
+
+**What Happens:**
+
+1. User creates a new account or signs in with existing credentials
+2. **Backend automatically** (in `packages/auth/src/index.ts`):
+   - Sends welcome email to user
+   - Checks for `DEV_BKLIT_DEFAULT_PROJECT` (development) or `BKLIT_DEFAULT_PROJECT` (production)
+   - If configured, creates a **pending invitation** to the demo project organization
+   - Sends invitation email (though user will see it in-app notifications)
+
+**Technical Details:**
+
+- Auth middleware in `packages/auth/src/index.ts` handles post-signup logic
+- Demo invitation is created automatically for all new users
+- Invitation expires in 30 days
+- User becomes a "member" role in the demo organization
+
+---
+
+### Stage 2: Landing → Redirect to Onboarding
+
+**URL:** `/` → redirects to `/onboarding`
+
+**What Happens:**
+
+1. Root page (`apps/dashboard/src/app/page.tsx`) checks user's session
+2. Queries all organizations the user belongs to
+3. If `organizations.length === 0`, redirects to `/onboarding`
+
+**Why This Happens:**
+
+New users don't have any organizations yet (the demo invitation is pending, not accepted), so they need to complete onboarding first.
+
+---
+
+### Stage 3: Onboarding Flow (4 Steps)
+
+**Base URL:** `/onboarding?step=X`
+
+The onboarding flow consists of 4 steps tracked via the `step` URL parameter:
+
+#### Step 1: Create Workspace
+
+**URL:** `/onboarding?step=1`
+
+**User Actions:**
+- Enter organization name
+- Click "Create" or "Next"
+
+**What Happens:**
+- Organization is created in database
+- User is added as "owner"
+- Progress to step 2
+
+#### Step 2: Create Project
+
+**URL:** `/onboarding?step=2`
+
+**User Actions:**
+- Enter project name
+- Optionally enter project domain
+- Click "Create" or "Next"
+
+**What Happens:**
+- Project is created and linked to organization
+- Project ID (CUID) is generated
+- Progress to step 3
+
+#### Step 3: Install SDK
+
+**URL:** `/onboarding?step=3`
+
+**User Actions:**
+- View installation instructions
+- Copy API token (auto-generated)
+- Copy SDK integration code
+
+**What Happens:**
+- API token is automatically created for the project
+- Token is scoped to the specific project
+- User sees framework-specific code examples
+- Progress to step 4
+
+#### Step 4: Test Connection
+
+**URL:** `/onboarding?step=4`
+
+**User Actions:**
+- Integrate SDK in their application
+- Visit their site to generate pageviews
+
+**What Happens:**
+- Dashboard polls for pageviews every 3 seconds
+- When first pageview is detected:
+  - Success toast appears
+  - 5-second countdown begins
+  - Automatic redirect to `/{organizationId}/{projectId}?onboarding=new`
+
+**Testing Parameters:**
+
+For development/testing, you can inject state via URL:
+- `?organizationId=xxx` - Skip workspace creation
+- `?projectId=xxx` - Skip project creation  
+- `?projectName=xxx` - Inject project name
+- `?projectDomain=xxx` - Inject project domain
+
+---
+
+### Stage 4: First Dashboard View → Welcome Modal
+
+**URL:** `/{organizationId}/{projectId}?onboarding=new`
+
+**What Happens:**
+
+1. User lands on their newly created project dashboard
+2. **Welcome Modal** automatically appears (triggered by `?onboarding=new`)
+3. Modal content:
+   - Bklit logo
+   - "Welcome to **Bklit**"
+   - "We've invited you to our demo project so you can explore Bklit's features with real data."
+   - Instructions to click bell icon with red notification dot
+   - "Got it!" button
+
+**User Action:**
+- Clicks "Got it!"
+- Modal closes and removes `?onboarding=new` from URL
+
+**Component:** `apps/dashboard/src/components/modals/welcome-modal.tsx`
+
+---
+
+### Stage 5: User Accepts Demo Invitation
+
+**URL:** `/{organizationId}/{projectId}` (their own project)
+
+**What Happens:**
+
+1. User clicks the **bell icon** in the header (shows red notification dot)
+2. Notifications popover opens
+3. User sees pending invitation to demo project organization
+4. User clicks **"Accept"** button
+
+**Backend Processing** (`packages/api/src/router/invitation.ts`):
+
+1. Validates invitation exists and is pending
+2. Creates membership record (user → demo organization)
+3. Updates invitation status to "accepted"
+4. **Checks if organization matches demo project:**
+   ```typescript
+   const demoProjectId = env.BKLIT_DEFAULT_PROJECT;
+   const demoProject = await prisma.project.findUnique({
+     where: { id: demoProjectId },
+     select: { organizationId: true },
+   });
+   isDemoProject = demoProject?.organizationId === invitation.organizationId;
+   ```
+5. Returns `{ isDemoProject: true/false, organizationId }`
+
+**Frontend Routing** (`apps/dashboard/src/components/header/notifications-popover.tsx`):
+
+```typescript
+if (data.isDemoProject && data.organizationId) {
+  // Fetch organization to get project info
+  const org = await queryClient.fetchQuery(
+    trpc.organization.fetch.queryOptions({ id: data.organizationId })
+  );
+  const demoProject = org?.projects[0];
+  
+  // Navigate directly to demo project (no modal)
+  router.push(`/${data.organizationId}/${demoProject.id}?demo=true`);
+} else {
+  // Regular invitation - show modal
+  setInvitedParam(true);
+  setAcceptedOrgId(data.organizationId);
+}
+```
+
+**Important:** Demo invitations skip the "Invitation Accepted Modal" and navigate directly!
+
+---
+
+### Stage 6: Demo Project Dashboard
+
+**URL:** `/{demoOrgId}/{demoProjectId}?demo=true`
+
+**What Happens:**
+
+1. User lands on demo project dashboard
+2. Sees real analytics data from `playground.bklit.com`
+3. **Demo Project Modal** automatically appears (triggered by `?demo=true`)
+
+**Modal Content:**
+- Bklit logo with playground background image
+- "Bklit Demo" title
+- "All the data you see here is collected from our live playground at playground.bklit.com"
+- Two buttons:
+  - "Playground" (external link to playground.bklit.com)
+  - "Start Exploring" (closes modal)
+
+**User Action:**
+- Clicks "Start Exploring"
+- Modal closes and removes `?demo=true` from URL
+
+**Component:** `apps/dashboard/src/components/modals/demo-project-modal.tsx`
+
+---
+
+### Stage 7: User Explores Demo Project
+
+**URL:** `/{demoOrgId}/{demoProjectId}`
+
+**What the User Can Do:**
+
+- View real analytics data from the playground
+- Explore different sections:
+  - Analytics dashboard (pageviews, sessions, events)
+  - Custom events
+  - Conversion funnels
+  - Project settings
+- Switch between their own project and demo project via sidebar
+- Invite team members to their organization
+- Upgrade to Pro plan
+
+---
+
+## URL Parameters Reference
+
+| Parameter | Type | Values | Purpose | Stage |
+|-----------|------|--------|---------|-------|
+| `step` | Integer | `1`, `2`, `3`, `4` | Tracks current onboarding step | Onboarding |
+| `onboarding` | String | `"new"` | Triggers welcome modal on first dashboard visit | After onboarding |
+| `demo` | Boolean | `true` | Triggers demo project modal | Demo project |
+| `invited` | Boolean | `true` | Triggers invitation accepted modal (non-demo only) | Regular team invites |
+| `organizationId` | String | CUID | **Testing only:** Inject organization ID | Onboarding |
+| `projectId` | String | CUID | **Testing only:** Inject project ID | Onboarding |
+| `projectName` | String | Any | **Testing only:** Inject project name | Onboarding |
+| `projectDomain` | String | Domain | **Testing only:** Inject project domain | Onboarding |
+
+---
+
+## Modals Reference
+
+### 1. Welcome Modal
+
+**File:** `apps/dashboard/src/components/modals/welcome-modal.tsx`
+
+**Trigger:** URL parameter `?onboarding=new`
+
+**When Shown:** Immediately after completing onboarding and landing on user's own project dashboard
+
+**Purpose:** 
+- Celebrate successful onboarding
+- Inform user about demo project invitation
+- Direct user to notifications to accept invitation
+
+**Content:**
+- Bklit logo
+- Welcome message
+- Explanation of demo project
+- Bell icon visual with red notification dot
+- Call-to-action to accept invitation
+
+**Actions:**
+- "Got it!" - Closes modal and removes URL parameter
+
+---
+
+### 2. Demo Project Modal
+
+**File:** `apps/dashboard/src/components/modals/demo-project-modal.tsx`
+
+**Trigger:** URL parameter `?demo=true`
+
+**When Shown:** When user lands on demo project dashboard after accepting invitation
+
+**Purpose:**
+- Explain that data comes from live playground
+- Provide link to playground for testing
+- Encourage exploration of features
+
+**Content:**
+- Visual header with playground screenshot
+- Bklit logo + "Bklit Demo" title
+- Explanation of data source
+- Link to playground.bklit.com
+
+**Actions:**
+- "Playground" - Opens playground in new tab
+- "Start Exploring" - Closes modal and removes URL parameter
+
+---
+
+### 3. Invitation Accepted Modal
+
+**File:** `apps/dashboard/src/components/modals/invitation-accepted-modal.tsx`
+
+**Trigger:** URL parameter `?invited=true`
+
+**When Shown:** When accepting **regular team invitations** (NOT demo project invitations)
+
+**Important:** This modal is **NOT shown** for demo project invitations. Demo invitations navigate directly to the project with the Demo Project Modal instead.
+
+**Purpose:**
+- Celebrate joining a new team/organization
+- Provide navigation to the new workspace
+
+**Content:**
+- Green checkmark icon
+- "Welcome to {organizationName}!"
+- Encouragement message about collaboration
+
+**Actions:**
+- "Stay Here" - Closes modal, stays on current page
+- "Go to Workspace" - Navigates to organization's first project
+
+---
+
+## Developer Notes
+
+### Environment Configuration
+
+The demo project is configured via environment variables:
+
+**Development:**
+```bash
+DEV_BKLIT_DEFAULT_PROJECT="your-demo-project-id"
+```
+
+**Production:**
+```bash
+BKLIT_DEFAULT_PROJECT="your-demo-project-id"
+```
+
+The `authEnv()` function in `packages/auth/env.ts` automatically uses the appropriate variable based on `NODE_ENV`.
+
+### Testing the Flow
+
+**Quick Test:**
+
+1. Create a new user account
+2. Complete onboarding with any workspace/project name
+3. Click "Got it!" on welcome modal
+4. Click bell icon → Accept invitation
+5. Verify redirect to `?demo=true`
+6. Click "Start Exploring"
+
+**Manual State Injection:**
+
+You can test specific stages by manipulating URL parameters:
+
+```bash
+# Skip to step 3 of onboarding
+/onboarding?step=3&organizationId=xxx&projectId=xxx
+
+# Trigger welcome modal
+/{orgId}/{projectId}?onboarding=new
+
+# Trigger demo modal
+/{orgId}/{projectId}?demo=true
+
+# Trigger invitation accepted modal (testing only)
+/{orgId}/{projectId}?invited=true
+```
+
+### Database State
+
+After completing the full flow, the database will have:
+
+**User's Own Organization:**
+- 1 organization (created in onboarding)
+- 1 project (created in onboarding)
+- 1 member record (user as owner)
+- 1 API token (auto-generated)
+
+**Demo Organization:**
+- 1 member record (user as member)
+- 1 invitation record (status: "accepted")
+
+### Key Implementation Files
+
+**Backend:**
+- `packages/auth/src/index.ts` - Auto-creates demo invitations on signup
+- `packages/api/src/router/invitation.ts` - Handles invitation acceptance and demo detection
+- `packages/auth/env.ts` - Environment variable configuration
+
+**Frontend:**
+- `apps/dashboard/src/app/page.tsx` - Root redirect logic
+- `apps/dashboard/src/app/(onboarding)/onboarding/page.tsx` - Onboarding flow
+- `apps/dashboard/src/components/header/notifications-popover.tsx` - Invitation acceptance
+- `apps/dashboard/src/components/modals/welcome-modal.tsx` - Welcome modal
+- `apps/dashboard/src/components/modals/demo-project-modal.tsx` - Demo modal
+- `apps/dashboard/src/components/modals/invitation-accepted-modal.tsx` - Team invitation modal
+
+---
+
+## Common Questions
+
+### Why doesn't the Invitation Accepted Modal show for demo invitations?
+
+Demo invitations are treated specially because they're automatic and universal. The Demo Project Modal provides a better experience by explaining the playground data source. Regular team invitations use the Invitation Accepted Modal to celebrate joining a specific team.
+
+### Can users decline the demo invitation?
+
+Yes! Users can click "Decline" in the notifications popover. However, they can always accept it later if they change their mind.
+
+### What happens if the demo project isn't configured?
+
+If `DEV_BKLIT_DEFAULT_PROJECT` or `BKLIT_DEFAULT_PROJECT` isn't set, new users won't receive automatic demo invitations. They'll only see their own project after onboarding.
+
+### Can users switch between their project and the demo?
+
+Yes! The sidebar shows all organizations the user belongs to. They can easily switch between their own organization and the demo organization to compare their data with the playground data.
+
+---
+
+## Related Documentation
+
+- [Onboarding Overview](/dashboard/onboarding) - Technical details of each onboarding step
+- [Workspace Setup](/dashboard/onboarding/workspace-setup) - Creating organizations
+- [Project Setup](/dashboard/onboarding/project-setup) - Creating projects
+- [SDK Integration](/dashboard/onboarding/sdk-integration) - Installing the SDK
+- [Testing Connection](/dashboard/onboarding/testing-connection) - Verifying tracking works
+- [Playground Setup](/playground/setup) - Setting up the demo playground
+
