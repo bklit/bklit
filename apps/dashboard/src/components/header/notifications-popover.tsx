@@ -239,6 +239,12 @@ export function NotificationsPopover() {
             className="relative cursor-pointer"
           >
             <Bell size={14} />
+            {hasNotifications && (
+              <span
+                data-count={invitations.length}
+                className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-primary text-white rounded-full "
+              />
+            )}
           </Button>
         </DrawerTrigger>
         <DrawerContent>
