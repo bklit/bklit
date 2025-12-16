@@ -32,9 +32,6 @@
 - **PostgreSQL** database
 - **ClickHouse** database (for analytics)
 
-> [!TIP]
-> 📚 For detailed setup instructions, environment variables, and deployment guides, visit [docs.bklit.com](https://docs.bklit.com)
-
 ### Project Structure
 
 This monorepo is managed with [Turborepo](https://turbo.build/repo) and [pnpm workspaces](https://pnpm.io/workspaces).
