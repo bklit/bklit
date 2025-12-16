@@ -73,9 +73,7 @@ bklit/
 - **Monorepo:** Turborepo + pnpm workspaces
 - **Documentation:** Fumadocs (Next.js-based docs framework)
 
-### Docs
-
-Guides and references are available at **[docs.bklit.com](https://docs.bklit.com)**:
+### [Docs](https://docs.bklit.com)
 
 - [Quick Start Guide](https://docs.bklit.com/getting-started/quick-start) - Get up and running in minutes
 - [SDK Documentation](https://docs.bklit.com/sdk) - Integrate Bklit into your app
@@ -83,12 +81,14 @@ Guides and references are available at **[docs.bklit.com](https://docs.bklit.com
 - [Local Development](https://docs.bklit.com/reference/local-development) - Set up isolated dev environment
 - [Playground](https://docs.bklit.com/playground) - Test SDK integration
 
+## Repo activity
+
 ![Alt](https://repobeats.axiom.co/api/embed/967f6b8d93c20cd08f66a7c82048a635bcfa8733.svg "Repobeats analytics image")
 
 ### Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://docs.bklit.com/reference/contributing) for details.
+- Please see our [Contributing Guide](https://docs.bklit.com/reference/contributing) for details.
 
 ### License
 
-MIT
+- MIT
