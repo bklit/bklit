@@ -1,8 +1,8 @@
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
+import { OrganizationSettings } from "@/components/organization/settings";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
-import { OrganizationSettings } from "../../_components/organization-settings";
 
 export default async function OrganizationSettingsPage({
   params,

@@ -36,7 +36,7 @@ import { InviteMemberForm } from "@/components/forms/invite-member-form";
 import { PageHeader } from "@/components/header/page-header";
 import { useTRPC } from "@/trpc/react";
 
-export const OrganizationDashboard = ({
+export const Organization = ({
   organizationId,
 }: {
   organizationId: string;
