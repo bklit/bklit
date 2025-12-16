@@ -89,7 +89,12 @@ export function NotificationsPopover() {
 
           const demoProject = orgQueryResult?.projects[0];
 
+          console.log("demoProject", demoProject);
           if (demoProject) {
+            console.log(
+              "pushing to",
+              `/${data.organizationId}/${demoProject.id}?demo=true`,
+            );
             router.push(`/${data.organizationId}/${demoProject.id}?demo=true`);
           } else {
             // Fallback to organization dashboard

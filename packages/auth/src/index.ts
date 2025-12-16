@@ -289,3 +289,6 @@ export const polarConfig = {
 
 // Export plans with injected IDs
 export { plans };
+
+// Export env function for other packages
+export { authEnv };

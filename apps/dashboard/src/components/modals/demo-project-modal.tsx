@@ -1,53 +1,69 @@
-'use client';
+"use client";
 
 import { Button } from "@bklit/ui/components/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@bklit/ui/components/dialog";
-import { Info } from "lucide-react";
+import { BklitLogo } from "@bklit/ui/icons/bklit";
+import { ExternalLink } from "lucide-react";
+import Image from "next/image";
 import { parseAsBoolean, useQueryState } from "nuqs";
 
 export function DemoProjectModal() {
-  const [demo, setDemo] = useQueryState('demo', parseAsBoolean);
+  const [demo, setDemo] = useQueryState("demo", parseAsBoolean);
   const open = demo === true;
-  
+
   const handleClose = () => {
     setDemo(null);
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center space-y-3">
-          <div className="mx-auto size-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-            <Info className="size-6 text-blue-600 dark:text-blue-400" />
+        <DialogHeader className="relative text-center space-y-3 w-[calc(100%+4.5rem)] -mx-9 -mt-9 rounded-t-xl aspect-1000/560 p-9 flex flex-col items-center justify-end">
+          <div className="absolute top-0 left-0 w-full aspect-1000/560 rounded-t-xl overflow-hidden">
+            <Image
+              src="/playground.jpg"
+              alt="Playground"
+              width={1000}
+              height={560}
+            />
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent from-50% to-background rounded-t-xl" />
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-transparent to-background/50 rounded-t-xl" />
           </div>
-          <DialogTitle className="text-xl">
-            This is a Demo Project
+          <DialogTitle className="z-10 flex items-center justify-center gap-2">
+            <BklitLogo size={48} className="dark:text-white text-black" />
+            <span className="text-2xl font-bold">Bklit Demo</span>
           </DialogTitle>
-          <DialogDescription className="text-base space-y-2">
-            <p>
-              All the data you see here is collected from our live playground at{" "}
-              <a 
-                href="https://playground.bklit.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                playground.bklit.com
-              </a>
-            </p>
-            <p>
-              Explore the dashboard, check out the analytics, and see what Bklit can do for your projects!
-            </p>
-          </DialogDescription>
         </DialogHeader>
+        <div className="text-base space-y-3 text-center text-muted-foreground pt-4">
+          <p>
+            All the data you see here is collected from our live playground at{" "}
+            <a
+              href="https://playground.bklit.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:underline"
+            >
+              playground.bklit.com
+            </a>
+          </p>
+        </div>
         <DialogFooter className="sm:justify-center">
+          <Button variant="ghost" size="lg" asChild>
+            <a
+              href="https://playground.bklit.com/?utm_source=dashboard&utm_medium=referral&utm_campaign=demo-project-modal"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Playground
+              <ExternalLink className="size-4" />
+            </a>
+          </Button>
           <Button onClick={handleClose} size="lg">
             Start Exploring
           </Button>
@@ -56,4 +72,3 @@ export function DemoProjectModal() {
     </Dialog>
   );
 }
-

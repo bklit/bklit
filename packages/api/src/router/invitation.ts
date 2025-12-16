@@ -1,3 +1,4 @@
+import { authEnv } from "@bklit/auth";
 import { sendEmail } from "@bklit/email/client";
 import { BklitInvitationEmail } from "@bklit/email/emails/invitation";
 import { render } from "@react-email/render";
@@ -5,6 +6,8 @@ import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
+
+const env = authEnv();
 
 export const invitationRouter = {
   create: protectedProcedure
@@ -226,7 +229,7 @@ export const invitationRouter = {
         });
 
         // Check if this is the demo project's organization
-        const demoProjectId = process.env.BKLIT_DEFAULT_PROJECT || process.env.DEV_BKLIT_DEFAULT_PROJECT;
+        const demoProjectId = env.BKLIT_DEFAULT_PROJECT;
         let isDemoProject = false;
         
         if (demoProjectId) {
@@ -264,7 +267,7 @@ export const invitationRouter = {
       ]);
 
       // Check if this is the demo project's organization
-      const demoProjectId = process.env.BKLIT_DEFAULT_PROJECT || process.env.DEV_BKLIT_DEFAULT_PROJECT;
+      const demoProjectId = env.BKLIT_DEFAULT_PROJECT;
       let isDemoProject = false;
       
       if (demoProjectId) {
