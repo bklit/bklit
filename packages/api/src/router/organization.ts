@@ -3,6 +3,29 @@ import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
 
+// Plan limits for usage calculation
+enum PlanType {
+  FREE = "free",
+  PRO = "pro",
+}
+
+const PLAN_LIMITS = {
+  [PlanType.FREE]: {
+    projectLimit: 1,
+    teamMemberLimit: 1,
+    eventLimit: 4000,
+  },
+  [PlanType.PRO]: {
+    projectLimit: 5,
+    teamMemberLimit: 5,
+    eventLimit: 10000,
+  },
+};
+
+function getPlanLimits(planType: PlanType) {
+  return PLAN_LIMITS[planType];
+}
+
 export const organizationRouter = {
   fetch: protectedProcedure
     .input(
@@ -143,5 +166,141 @@ export const organizationRouter = {
         where: { id: input.id },
         data: { plan: input.plan },
       });
+    }),
+
+  getBillingSnapshot: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Verify user has access to this organization
+      const organization = await ctx.prisma.organization.findFirst({
+        where: {
+          id: input.organizationId,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+            },
+          },
+        },
+      });
+
+      if (!organization) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Organization not found or you don't have access",
+        });
+      }
+
+      // Get plan limits
+      const planType =
+        organization.plan === "pro" ? PlanType.PRO : PlanType.FREE;
+      const planLimits = getPlanLimits(planType);
+
+      // Get all projects for this organization
+      const projects = await ctx.prisma.project.findMany({
+        where: { organizationId: input.organizationId },
+        select: { id: true },
+      });
+      const projectIds = projects.map((p) => p.id);
+
+      // Fetch active subscriptions from Polar
+      let billingData = {
+        planName: "free" as const,
+        status: "none" as const,
+        currentPeriodEnd: null as Date | null,
+        amount: null as number | null,
+        currency: "usd",
+        lastInvoiceDate: null as Date | null,
+        lastInvoiceAmount: null as number | null,
+        periodStart: null as Date | null,
+      };
+
+      try {
+        const subscriptions = await ctx.authApi.subscriptions({
+          query: {
+            page: 1,
+            limit: 1,
+            active: true,
+            referenceId: input.organizationId,
+          },
+          headers: ctx.headers,
+        });
+
+        const activeSubscription = subscriptions.result.items[0];
+
+        if (activeSubscription && organization.plan === "pro") {
+          // Pro plan with active subscription
+          billingData = {
+            planName: "pro" as const,
+            status: (activeSubscription.status || "active") as
+              | "active"
+              | "cancelled",
+            currentPeriodEnd: activeSubscription.currentPeriodEnd
+              ? new Date(activeSubscription.currentPeriodEnd)
+              : null,
+            amount: activeSubscription.recurringInterval
+              ? (activeSubscription.amount ?? null)
+              : null,
+            currency: activeSubscription.currency || "usd",
+            lastInvoiceDate: activeSubscription.startedAt
+              ? new Date(activeSubscription.startedAt)
+              : null,
+            lastInvoiceAmount: activeSubscription.amount ?? null,
+            periodStart: activeSubscription.currentPeriodStart
+              ? new Date(activeSubscription.currentPeriodStart)
+              : activeSubscription.startedAt
+                ? new Date(activeSubscription.startedAt)
+                : null,
+          };
+        }
+      } catch (error) {
+        console.error("Error fetching billing snapshot:", error);
+      }
+
+      // Determine billing period start date
+      let periodStart: Date;
+      if (billingData.periodStart) {
+        // Use subscription period start for Pro users
+        periodStart = billingData.periodStart;
+      } else {
+        // Use calendar month for Free users or as fallback
+        const now = new Date();
+        periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        periodStart.setHours(0, 0, 0, 0);
+      }
+
+      // Count events since period start across all organization projects
+      const [pageViewCount, trackedEventCount] = await Promise.all([
+        ctx.prisma.pageViewEvent.count({
+          where: {
+            projectId: { in: projectIds },
+            createdAt: { gte: periodStart },
+          },
+        }),
+        ctx.prisma.trackedEvent.count({
+          where: {
+            projectId: { in: projectIds },
+            createdAt: { gte: periodStart },
+          },
+        }),
+      ]);
+
+      const totalEvents = pageViewCount + trackedEventCount;
+      const percentageUsed = (totalEvents / planLimits.eventLimit) * 100;
+
+      return {
+        ...billingData,
+        usage: {
+          pageviews: pageViewCount,
+          trackedEvents: trackedEventCount,
+          total: totalEvents,
+          limit: planLimits.eventLimit,
+          periodStart,
+          percentageUsed,
+        },
+      };
     }),
 } satisfies TRPCRouterRecord;

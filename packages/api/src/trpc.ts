@@ -40,6 +40,7 @@ export const createTRPCContext = async (opts: {
     session,
     prisma,
     analytics: new AnalyticsService(),
+    headers: opts.headers,
   };
 };
 /**

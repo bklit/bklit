@@ -32,6 +32,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layers2, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { BillingSnapshotCard } from "@/components/billing/billing-snapshot-card";
 import { InviteMemberForm } from "@/components/forms/invite-member-form";
 import { PageHeader } from "@/components/header/page-header";
 import { useTRPC } from "@/trpc/react";
@@ -64,8 +65,9 @@ export const Organization = ({
           </Button>
         )}
       </PageHeader>
-      <div className="container mx-auto flex flex-col sm:flex-row gap-4">
-        <div className="w-full sm:w-1/5 flex flex-col gap-4">
+
+      <div className="w-full flex flex-col gap-4">
+        <div className="w-full flex flex-col gap-4 sm:grid sm:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Team</CardTitle>
@@ -83,30 +85,26 @@ export const Organization = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {organization.members.map((member) => (
+                {organization.members.slice(0, 5).map((member) => (
                   <div
                     key={member.id}
                     className="flex items-center justify-between"
                   >
-                    {/* {member.user.name}
+                    {/* 
                       {member.user.email}*/}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Avatar>
-                          <AvatarImage src={member.user.image || ""} />
-                          <AvatarFallback>
-                            {member.user.name?.[0]?.toUpperCase() || "?"}
-                          </AvatarFallback>
-                        </Avatar>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{member.user.name}</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <div className="flex items-center gap-2">
+                      <Avatar>
+                        <AvatarImage src={member.user.image || ""} />
+                        <AvatarFallback>
+                          {member.user.name?.[0]?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">
+                        {member.user.name}
+                      </span>
+                    </div>
                     <Badge
-                      variant={
-                        member.role === "owner" ? "secondary" : "outline"
-                      }
+                      variant={member.role === "owner" ? "default" : "outline"}
                     >
                       {member.role}
                     </Badge>
@@ -115,70 +113,69 @@ export const Organization = ({
               </div>
             </CardContent>
           </Card>
+
+          <BillingSnapshotCard organizationId={organizationId} />
         </div>
 
-        <div className="w-full sm:w-4/5">
-          {/* Projects Section */}
-          <div className="space-y-4">
-            {organization.projects.length === 0 ? (
-              <Card>
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                      <Layers2 />
-                    </EmptyMedia>
-                    <EmptyTitle>No Projects Yet</EmptyTitle>
-                    <EmptyDescription>
-                      No projects yet.{" "}
-                      {organization.userMembership.role === "owner"
-                        ? "Create your first project to get started."
-                        : "Ask your organization owner to create a project."}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button asChild>
-                      <Link href={`/${organizationId}/projects/create`}>
-                        <Plus size={16} />
-                        Create project
+        <div className="space-y-4">
+          {organization.projects.length === 0 ? (
+            <Card>
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Layers2 />
+                  </EmptyMedia>
+                  <EmptyTitle>No Projects Yet</EmptyTitle>
+                  <EmptyDescription>
+                    No projects yet.{" "}
+                    {organization.userMembership.role === "owner"
+                      ? "Create your first project to get started."
+                      : "Ask your organization owner to create a project."}
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button asChild>
+                    <Link href={`/${organizationId}/projects/create`}>
+                      <Plus size={16} />
+                      Create project
+                    </Link>
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {organization.projects.map((site) => (
+                <Card
+                  key={site.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardHeader className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1">
+                      <CardTitle className="text-base">{site.name}</CardTitle>
+                      <CardDescription className="font-mono text-xs">
+                        {site.domain || "No domain configured"}
+                      </CardDescription>
+                    </div>
+                    <Button asChild size="icon" variant="outline">
+                      <Link href={`/${organizationId}/${site.id}/settings`}>
+                        <Settings size={16} />
                       </Link>
                     </Button>
-                  </EmptyContent>
-                </Empty>
-              </Card>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {organization.projects.map((site) => (
-                  <Card
-                    key={site.id}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardHeader className="flex items-center justify-between">
-                      <div className="flex flex-col gap-1">
-                        <CardTitle className="text-base">{site.name}</CardTitle>
-                        <CardDescription className="font-mono text-xs">
-                          {site.domain || "No domain configured"}
-                        </CardDescription>
-                      </div>
-                      <Button asChild size="icon" variant="outline">
-                        <Link href={`/${organizationId}/${site.id}/settings`}>
-                          <Settings size={16} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/${organizationId}/${site.id}`}>
+                          View Project
                         </Link>
                       </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-2">
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/${organizationId}/${site.id}`}>
-                            View Project
-                          </Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
