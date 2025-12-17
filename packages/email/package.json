@@ -12,7 +12,7 @@
     "dev": "email dev --dir src/emails --port 4000"
   },
   "dependencies": {
-    "@react-email/components": "^0.5.7",
+    "@react-email/components": "^1.0.1",
     "@react-email/render": "^1.4.0",
     "@t3-oss/env-nextjs": "catalog:",
     "react": "catalog:react19",
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@bklit/tsconfig": "workspace:*",
-    "@react-email/preview-server": "4.3.2",
-    "react-email": "4.3.2"
+    "@react-email/preview-server": "5.0.8",
+    "react-email": "5.0.8"
   }
 }
