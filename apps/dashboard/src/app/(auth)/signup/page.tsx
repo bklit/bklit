@@ -12,7 +12,7 @@ function LoginPage() {
   const searchParams = useSearchParams();
   const invitationId = searchParams.get("invitationId");
   const invited = searchParams.get("invited") === "true";
-  
+
   // Build callback URL that preserves invitation parameters
   let callbackUrl = searchParams.get("callbackUrl") || "/";
   if (invited && invitationId) {

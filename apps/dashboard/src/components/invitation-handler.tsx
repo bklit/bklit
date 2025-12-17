@@ -13,7 +13,8 @@ export function InvitationHandler() {
   const queryClient = useQueryClient();
 
   const invitationId = searchParams.get("invitationId");
-  const shouldAutoAccept = searchParams.get("invited") === "true" && invitationId;
+  const shouldAutoAccept =
+    searchParams.get("invited") === "true" && invitationId;
 
   const acceptInvite = useMutation(
     trpc.invitation.accept.mutationOptions({
@@ -75,4 +76,3 @@ export function InvitationHandler() {
 
   return null;
 }
-
