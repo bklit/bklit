@@ -10,8 +10,15 @@ import { authClient } from "@/auth/client";
 
 function LoginPage() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const invitationId = searchParams.get("invitationId");
   const invited = searchParams.get("invited") === "true";
+  
+  // Build callback URL that preserves invitation parameters
+  let callbackUrl = searchParams.get("callbackUrl") || "/";
+  if (invited && invitationId) {
+    const separator = callbackUrl.includes("?") ? "&" : "?";
+    callbackUrl = `${callbackUrl}${separator}invited=true&invitationId=${encodeURIComponent(invitationId)}`;
+  }
 
   return (
     <div className="flex flex-col gap-6">
