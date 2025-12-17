@@ -204,7 +204,6 @@ export const organizationRouter = {
         where: { organizationId: input.organizationId },
         select: { id: true },
       });
-      const projectIds = projects.map((p) => p.id);
 
       // Fetch active subscriptions from Polar
       let billingData = {
@@ -229,32 +228,46 @@ export const organizationRouter = {
           headers: ctx.headers,
         });
 
-        const activeSubscription = subscriptions.result.items[0];
+        // Defensive checks for API response structure
+        if (
+          !subscriptions ||
+          typeof subscriptions !== "object" ||
+          !subscriptions.result ||
+          typeof subscriptions.result !== "object" ||
+          !Array.isArray(subscriptions.result.items) ||
+          subscriptions.result.items.length === 0
+        ) {
+          console.warn(
+            `[Billing] Malformed or empty subscriptions response for org ${input.organizationId}`,
+          );
+        } else {
+          const activeSubscription = subscriptions.result.items[0];
 
-        if (activeSubscription && organization.plan === "pro") {
-          // Pro plan with active subscription
-          billingData = {
-            planName: "pro" as const,
-            status: (activeSubscription.status || "active") as
-              | "active"
-              | "cancelled",
-            currentPeriodEnd: activeSubscription.currentPeriodEnd
-              ? new Date(activeSubscription.currentPeriodEnd)
-              : null,
-            amount: activeSubscription.recurringInterval
-              ? (activeSubscription.amount ?? null)
-              : null,
-            currency: activeSubscription.currency || "usd",
-            lastInvoiceDate: activeSubscription.startedAt
-              ? new Date(activeSubscription.startedAt)
-              : null,
-            lastInvoiceAmount: activeSubscription.amount ?? null,
-            periodStart: activeSubscription.currentPeriodStart
-              ? new Date(activeSubscription.currentPeriodStart)
-              : activeSubscription.startedAt
+          if (activeSubscription && organization.plan === "pro") {
+            // Pro plan with active subscription
+            billingData = {
+              planName: "pro" as const,
+              status: (activeSubscription.status || "active") as
+                | "active"
+                | "cancelled",
+              currentPeriodEnd: activeSubscription.currentPeriodEnd
+                ? new Date(activeSubscription.currentPeriodEnd)
+                : null,
+              amount: activeSubscription.recurringInterval
+                ? (activeSubscription.amount ?? null)
+                : null,
+              currency: activeSubscription.currency || "usd",
+              lastInvoiceDate: activeSubscription.startedAt
                 ? new Date(activeSubscription.startedAt)
                 : null,
-          };
+              lastInvoiceAmount: activeSubscription.amount ?? null,
+              periodStart: activeSubscription.currentPeriodStart
+                ? new Date(activeSubscription.currentPeriodStart)
+                : activeSubscription.startedAt
+                  ? new Date(activeSubscription.startedAt)
+                  : null,
+            };
+          }
         }
       } catch (error) {
         console.error("Error fetching billing snapshot:", error);

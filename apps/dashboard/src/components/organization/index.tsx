@@ -23,11 +23,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@bklit/ui/components/empty";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@bklit/ui/components/tooltip";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layers2, Plus, Settings } from "lucide-react";
 import Link from "next/link";
@@ -92,8 +87,6 @@ export const Organization = ({
                     key={member.id}
                     className="flex items-center justify-between"
                   >
-                    {/* 
-                      {member.user.email}*/}
                     <div className="flex items-center gap-2">
                       <Avatar>
                         <AvatarImage src={member.user.image || ""} />
