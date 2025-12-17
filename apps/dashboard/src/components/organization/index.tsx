@@ -68,6 +68,8 @@ export const Organization = ({
 
       <div className="w-full flex flex-col gap-4">
         <div className="w-full flex flex-col gap-4 sm:grid sm:grid-cols-2">
+          <BillingSnapshotCard organizationId={organizationId} />
+
           <Card>
             <CardHeader>
               <CardTitle>Team</CardTitle>
@@ -113,11 +115,12 @@ export const Organization = ({
               </div>
             </CardContent>
           </Card>
-
-          <BillingSnapshotCard organizationId={organizationId} />
         </div>
 
         <div className="space-y-4">
+          <div>
+            <h2 className="text-base font-semibold">Projects</h2>
+          </div>
           {organization.projects.length === 0 ? (
             <Card>
               <Empty>

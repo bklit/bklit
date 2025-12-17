@@ -272,21 +272,30 @@ export const organizationRouter = {
         periodStart.setHours(0, 0, 0, 0);
       }
 
-      // Count events since period start across all organization projects
-      const [pageViewCount, trackedEventCount] = await Promise.all([
-        ctx.prisma.pageViewEvent.count({
-          where: {
-            projectId: { in: projectIds },
-            createdAt: { gte: periodStart },
-          },
+      // Count events since period start across all organization projects from ClickHouse
+      const usageCounts = await Promise.all(
+        projects.map(async (project) => {
+          const [pageviews, trackedEvents] = await Promise.all([
+            ctx.analytics.countPageViews(project.id, periodStart, new Date()),
+            ctx.analytics.countTrackedEvents(
+              project.id,
+              periodStart,
+              new Date(),
+            ),
+          ]);
+          return { pageviews, trackedEvents };
         }),
-        ctx.prisma.trackedEvent.count({
-          where: {
-            projectId: { in: projectIds },
-            createdAt: { gte: periodStart },
-          },
-        }),
-      ]);
+      );
+
+      // Sum up counts from all projects
+      const pageViewCount = usageCounts.reduce(
+        (sum, count) => sum + count.pageviews,
+        0,
+      );
+      const trackedEventCount = usageCounts.reduce(
+        (sum, count) => sum + count.trackedEvents,
+        0,
+      );
 
       const totalEvents = pageViewCount + trackedEventCount;
       const percentageUsed = (totalEvents / planLimits.eventLimit) * 100;

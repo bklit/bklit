@@ -1,3 +1,4 @@
+import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
 import { getPlanLimits, PlanType } from "./plans";
 
@@ -70,23 +71,28 @@ export async function checkEventLimit(
     where: { organizationId },
     select: { id: true },
   });
-  const projectIds = projects.map((p) => p.id);
 
-  // Count events across ALL projects in the organization
-  const [pageViewCount, trackedEventCount] = await Promise.all([
-    prisma.pageViewEvent.count({
-      where: {
-        projectId: { in: projectIds },
-        createdAt: { gte: startOfMonth },
-      },
+  // Count events across ALL projects in the organization from ClickHouse
+  const analytics = new AnalyticsService();
+  const usageCounts = await Promise.all(
+    projects.map(async (project) => {
+      const [pageviews, trackedEvents] = await Promise.all([
+        analytics.countPageViews(project.id, startOfMonth, new Date()),
+        analytics.countTrackedEvents(project.id, startOfMonth, new Date()),
+      ]);
+      return { pageviews, trackedEvents };
     }),
-    prisma.trackedEvent.count({
-      where: {
-        projectId: { in: projectIds },
-        createdAt: { gte: startOfMonth },
-      },
-    }),
-  ]);
+  );
+
+  // Sum up counts from all projects
+  const pageViewCount = usageCounts.reduce(
+    (sum, count) => sum + count.pageviews,
+    0,
+  );
+  const trackedEventCount = usageCounts.reduce(
+    (sum, count) => sum + count.trackedEvents,
+    0,
+  );
 
   const totalEvents = pageViewCount + trackedEventCount;
 
