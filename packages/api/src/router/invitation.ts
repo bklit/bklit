@@ -102,7 +102,7 @@ export const invitationRouter = {
       const inviterName = organization.members[0]?.user.name || "Someone";
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const inviteLink = `${baseUrl}/invite/${invitation.id}`;
+      const inviteLink = `${baseUrl}/signin?invited=true`;
 
       const emailHtml = await render(
         BklitInvitationEmail({

@@ -11,6 +11,7 @@ import { authClient } from "@/auth/client";
 function LoginPage() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const invited = searchParams.get("invited") === "true";
 
   return (
     <div className="flex flex-col gap-6">
@@ -18,7 +19,19 @@ function LoginPage() {
         <h1 className="text-2xl font-normal">
           Sign up to <span className="font-bold">Bklit</span>
         </h1>
+        {invited && (
+          <p className="text-sm text-muted-foreground mt-2">
+            You've been invited to join a team on Bklit
+          </p>
+        )}
       </div>
+      {invited && (
+        <div className="text-center p-4 bg-muted rounded-lg">
+          <p className="text-sm text-foreground">
+            Sign in or create an account to view your invitation
+          </p>
+        </div>
+      )}
       <div className="flex flex-col gap-3">
         <Button
           onClick={() =>

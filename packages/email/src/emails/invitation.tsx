@@ -48,9 +48,20 @@ export const BklitInvitationEmail = ({
             their users and grow their business together.
           </Text>
 
+          <Text style={text}>
+            To accept this invitation, sign in to Bklit with this email address.
+            If you don't have an account yet, you can create one when you sign in.
+            Your invitation will be waiting in your notifications (bell icon) when
+            you log in.
+          </Text>
+
           <Button style={button} href={inviteLink}>
-            Accept Invitation
+            Sign in to Accept
           </Button>
+
+          <Text style={footerText}>
+            This invitation expires in 7 days.
+          </Text>
 
           <Text style={footerText}>
             If you weren't expecting this invitation, you can ignore this email.
