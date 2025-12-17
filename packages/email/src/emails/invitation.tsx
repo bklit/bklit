@@ -49,7 +49,7 @@ export const BklitInvitationEmail = ({
             />
           </div>
 
-          <Text className="text-2xl font-smeibold">
+          <Text className="text-2xl font-semibold">
             You've been invited to {organizationName}
           </Text>
 
