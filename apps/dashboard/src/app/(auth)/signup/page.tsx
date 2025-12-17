@@ -10,7 +10,15 @@ import { authClient } from "@/auth/client";
 
 function LoginPage() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const invitationId = searchParams.get("invitationId");
+  const invited = searchParams.get("invited") === "true";
+
+  // Build callback URL that preserves invitation parameters
+  let callbackUrl = searchParams.get("callbackUrl") || "/";
+  if (invited && invitationId) {
+    const separator = callbackUrl.includes("?") ? "&" : "?";
+    callbackUrl = `${callbackUrl}${separator}invited=true&invitationId=${encodeURIComponent(invitationId)}`;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -18,7 +26,19 @@ function LoginPage() {
         <h1 className="text-2xl font-normal">
           Sign up to <span className="font-bold">Bklit</span>
         </h1>
+        {invited && (
+          <p className="text-sm text-muted-foreground mt-2">
+            You've been invited to join a team on Bklit
+          </p>
+        )}
       </div>
+      {invited && (
+        <div className="text-center p-4 bg-muted rounded-lg">
+          <p className="text-sm text-foreground">
+            Sign in or create an account to view your invitation
+          </p>
+        </div>
+      )}
       <div className="flex flex-col gap-3">
         <Button
           onClick={() =>

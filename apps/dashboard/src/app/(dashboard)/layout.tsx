@@ -1,5 +1,6 @@
 import { SidebarInset, SidebarProvider } from "@bklit/ui/components/sidebar";
 import { SiteHeader } from "@/components/header/site-header";
+import { InvitationHandler } from "@/components/invitation-handler";
 import { DemoProjectModal } from "@/components/modals/demo-project-modal";
 import { WelcomeModal } from "@/components/modals/welcome-modal";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
@@ -32,6 +33,7 @@ export default async function DashboardLayout({
           </SidebarInset>
         </div>
       </SidebarProvider>
+      <InvitationHandler />
       <WelcomeModal />
       <DemoProjectModal />
     </WorkspaceProvider>

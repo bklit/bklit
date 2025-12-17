@@ -102,7 +102,8 @@ export const invitationRouter = {
       const inviterName = organization.members[0]?.user.name || "Someone";
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const inviteLink = `${baseUrl}/invite/${invitation.id}`;
+      const encodedInvitationId = encodeURIComponent(invitation.id);
+      const inviteLink = `${baseUrl}/signin?invited=true&invitationId=${encodedInvitationId}&utm_source=email&utm_medium=email&utm_campaign=invitation&utm_content=cta-button`;
 
       const emailHtml = await render(
         BklitInvitationEmail({
