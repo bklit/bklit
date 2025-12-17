@@ -1,17 +1,19 @@
 import {
   Body,
   Button,
-  CodeBlock,
+  Column,
   Container,
-  Font,
   Head,
   Html,
   Img,
   Link,
   Preview,
+  Row,
   Section,
+  Tailwind,
   Text,
 } from "@react-email/components";
+import { tailwindConfig } from "../tailwind.config";
 
 interface BklitNewProjectEmailProps {
   username?: string;
@@ -21,87 +23,91 @@ interface BklitNewProjectEmailProps {
 
 const baseUrl = process.env.BKLIT_WEBSITE_URL
   ? process.env.BKLIT_WEBSITE_URL
-  : "https://bklit.com";
+  : "http://localhost:3001";
 
 export const BklitNewProjectEmail = ({
   username,
   projectName,
   projectId,
 }: BklitNewProjectEmailProps) => (
-  <Html>
-    <Head />
-    <Body style={main}>
-      <Preview>
-        {projectName
-          ? `Your new project "${projectName}" has been created`
-          : "Your new project has been created"}
-      </Preview>
-      <Container style={container}>
-        <Img width="184" src={`${baseUrl}/bklit-logo.png`} alt="Bklit" />
+  <Tailwind config={tailwindConfig}>
+    <Html>
+      <Head />
+      <Body style={main}>
+        <Preview>
+          {projectName
+            ? `Your new project "${projectName}" has been created`
+            : "Your new project has been created"}
+        </Preview>
+        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
+          <div className="bg-black flex items-center justify-center rounded-lg overflow-clip">
+            <Img
+              src={`${baseUrl}/react-email-header.jpg`}
+              alt="Bklit"
+              width="100%"
+              height="auto"
+            />
+          </div>
 
-        <Text style={title}>
-          <strong>{username}</strong>, a new project was created on your
-          account: <strong>{projectName}</strong>.
-        </Text>
-
-        <Section style={section}>
-          <Text style={text}>
-            Hey <strong>{username}</strong>!
+          <Text className="text-2xl font-semibold">
+            <strong>{username}</strong>, a new project was created on your
+            account: <strong>{projectName}</strong>.
           </Text>
-          <Text style={text}>To get started, install the SDK...</Text>
-          <Font
-            fallbackFontFamily="monospace"
-            fontFamily="CommitMono"
-            fontStyle="normal"
-            fontWeight={400}
-            webFont={{
-              url: "https://react.email/fonts/commit-mono/commit-mono-regular.ttf",
-              format: "truetype",
-            }}
-          />
-          <CodeBlock
-            code={`npm install @bklit/sdk
-# or
-pnpm add @bklit/sdk`}
-            fontFamily="'CommitMono', monospace"
-            language="bash"
-            theme={{}}
-            style={codeblock}
-          />
-          <Text style={text}>Initialize the SDK in your website:</Text>
-          <CodeBlock
-            code={`import { initBklit } from "@bklit/sdk";
 
-initBklit({
-  projectId: "${projectId}",
-  apiKey: "your-api-key",
-  debug: true, // Optional - enables console logging
-});`}
-            fontFamily="'CommitMono', monospace"
-            language="javascript"
-            theme={{}}
-            style={codeblock}
-          />
+          <Section className="p-4 border border-gray-200 rounded-md bg-white">
+            <Text className="text-left text-lg">
+              Hey <strong>{username}</strong>!
+            </Text>
+            <Text className="text-left">
+              You've successfully created a new project. To get started, install
+              the SDK:
+            </Text>
 
-          <Button style={button} href={`${baseUrl}`}>
-            View your project
-          </Button>
-        </Section>
+            <div className="bg-black text-gray-400 p-3 rounded-md my-2 font-mono text-xs">
+              <code>
+                <span className="text-lime-200">npm install</span>{" "}
+                <span className="text-white">@bklit/sdk</span>
+                <br /># or
+                <br />
+                <span className="text-lime-200">pnpm add</span>{" "}
+                <span className="text-white">@bklit/sdk</span>
+              </code>
+            </div>
 
-        <Text style={footer}>
-          <Link style={link} href={baseUrl}>
-            Bklit.com
-          </Link>
-          <Link style={link} href="https://github.com/bklit/bklit">
-            GitHub
-          </Link>
-          <Link style={link} href="https://x.com/bklitai">
-            X.com
-          </Link>
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+            <Text className="text-left">
+              See the{" "}
+              <Link href="https://docs.bklit.com/sdk" className="text-lime-500">
+                SDK documentation
+              </Link>{" "}
+              for more information.
+            </Text>
+
+            <Button
+              className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+              href={`${baseUrl}?utm_source=email&utm_medium=email&utm_campaign=new-project&utm_content=cta-button`}
+            >
+              View your project
+            </Button>
+          </Section>
+
+          <Section className="mt-8">
+            <Row className="text-center">
+              {links?.map((link) => (
+                <Column key={link.title}>
+                  <Link
+                    className="text-xs font-bold text-black"
+                    href={link.href}
+                  >
+                    {link.title}
+                  </Link>{" "}
+                </Column>
+              ))}
+            </Row>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  </Tailwind>
 );
 
 BklitNewProjectEmail.PreviewProps = {
@@ -112,71 +118,19 @@ BklitNewProjectEmail.PreviewProps = {
 
 export default BklitNewProjectEmail;
 
+const links = [
+  {
+    title: "Bklit.com",
+    href: "https://bklit.com?utm_source=email&utm_medium=email&utm_campaign=new-project&utm_content=footer-link",
+  },
+  { title: "Discord", href: "https://discord.gg/GFfD67gZGf" },
+  { title: "X.com", href: "https://x.com/bklitai" },
+  { title: "GitHub", href: "https://github.com/bklit/bklit" },
+];
+
 const main = {
   backgroundColor: "#ffffff",
   color: "#24292e",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
-};
-
-const container = {
-  maxWidth: "480px",
-  margin: "0 auto",
-  padding: "20px 0 48px",
-};
-
-const title = {
-  fontSize: "24px",
-  lineHeight: 1.25,
-  marginBottom: "24px",
-};
-
-const section = {
-  padding: "24px",
-  border: "solid 1px #dedede",
-  borderRadius: "5px",
-  textAlign: "left" as const,
-};
-
-const text = {
-  margin: "0 0 10px 0",
-  textAlign: "left" as const,
-};
-
-const button = {
-  fontSize: "14px",
-  backgroundColor: "#000000",
-  color: "#fff",
-  lineHeight: 1.5,
-  borderRadius: "0.5em",
-  padding: "12px 24px",
-};
-
-const link = {
-  color: "#0366d6",
-  fontSize: "12px",
-};
-
-const footer = {
-  color: "#6a737d",
-  fontSize: "12px",
-  textAlign: "center" as const,
-  marginTop: "60px",
-  display: "flex",
-  gap: "16px",
-  justifyContent: "center",
-  alignItems: "center",
-};
-
-const codeblock = {
-  backgroundColor: "#000000",
-  color: "#888",
-  padding: "12px 24px",
-  borderRadius: "0.5em",
-  margin: "0 0 10px 0",
-  boxSizing: "border-box" as const,
-  width: "100%",
-  fontSize: "12px",
-  lineHeight: "1.5",
-  textAlign: "left" as const,
 };

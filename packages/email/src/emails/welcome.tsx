@@ -1,15 +1,19 @@
 import {
   Body,
   Button,
+  Column,
   Container,
   Head,
   Html,
   Img,
   Link,
   Preview,
+  Row,
   Section,
+  Tailwind,
   Text,
 } from "@react-email/components";
+import { tailwindConfig } from "../tailwind.config";
 
 interface BklitWelcomeEmailProps {
   username?: string;
@@ -17,59 +21,66 @@ interface BklitWelcomeEmailProps {
 
 const baseUrl = process.env.BKLIT_WEBSITE_URL
   ? process.env.BKLIT_WEBSITE_URL
-  : "https://bklit.com";
+  : "http://localhost:3001";
 
 export const BklitWelcomeEmail = ({ username }: BklitWelcomeEmailProps) => (
-  <Html>
-    <Head />
-    <Body style={main}>
-      <Preview>Welcome to Bklit - Start tracking your analytics today</Preview>
-      <Container style={container}>
-        <Img width="184" src={`${baseUrl}/bklit-logo.png`} alt="Bklit" />
+  <Tailwind config={tailwindConfig}>
+    <Html>
+      <Head />
+      <Body style={main}>
+        <Preview>
+          Welcome to Bklit - Start tracking your analytics today
+        </Preview>
+        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
+          <div className="bg-black flex items-center justify-center rounded-lg overflow-clip">
+            <Img
+              src={`${baseUrl}/react-email-header.jpg`}
+              alt="Bklit"
+              width="100%"
+              height="auto"
+            />
+          </div>
 
-        <Text style={title}>
-          Welcome to Bklit, <strong>{username}</strong>!
-        </Text>
-
-        <Section style={section}>
-          <Text style={text}>
-            Hey <strong>{username}</strong>!
-          </Text>
-          <Text style={text}>
-            Thanks for signing up! We're excited to have you on board. Bklit is
-            a powerful analytics platform that helps you understand your users
-            and grow your business.
-          </Text>
-
-          <Text style={text}>Here's what you can do next:</Text>
-
-          <Text style={listItem}>
-            • Create your first workspace to organize your projects
-          </Text>
-          <Text style={listItem}>
-            • Add a project and install the SDK on your website to start
-            tracking analytics
+          <Text className="text-2xl font-semibold">
+            Welcome to Bklit, <strong>{username}</strong>!
           </Text>
 
-          <Button style={button} href={`${baseUrl}`}>
-            Get Started
-          </Button>
-        </Section>
+          <Section className="p-4 border border-gray-200 rounded-md bg-white">
+            <Text className="text-left text-lg">
+              Hey <strong>{username}</strong>!
+            </Text>
+            <Text className="text-left">
+              Thanks for signing up! We're excited to have you on board. Bklit
+              is a powerful analytics platform that helps you understand your
+              users and grow your business.
+            </Text>
 
-        <Text style={footer}>
-          <Link style={link} href={baseUrl}>
-            Bklit.com
-          </Link>
-          <Link style={link} href="https://github.com/bklit/bklit">
-            GitHub
-          </Link>
-          <Link style={link} href="https://x.com/bklitai">
-            X.com
-          </Link>
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+            <Button
+              className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+              href={`${baseUrl}?utm_source=email&utm_medium=email&utm_campaign=welcome&utm_content=cta-button`}
+            >
+              Get Started
+            </Button>
+          </Section>
+
+          <Section className="mt-8">
+            <Row className="text-center">
+              {links?.map((link) => (
+                <Column key={link.title}>
+                  <Link
+                    className="text-xs font-bold text-black"
+                    href={link.href}
+                  >
+                    {link.title}
+                  </Link>{" "}
+                </Column>
+              ))}
+            </Row>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  </Tailwind>
 );
 
 BklitWelcomeEmail.PreviewProps = {
@@ -78,64 +89,19 @@ BklitWelcomeEmail.PreviewProps = {
 
 export default BklitWelcomeEmail;
 
+const links = [
+  {
+    title: "Bklit.com",
+    href: "https://bklit.com?utm_source=email&utm_medium=email&utm_campaign=welcome&utm_content=footer-link",
+  },
+  { title: "Discord", href: "https://discord.gg/GFfD67gZGf" },
+  { title: "X.com", href: "https://x.com/bklitai" },
+  { title: "GitHub", href: "https://github.com/bklit/bklit" },
+];
+
 const main = {
   backgroundColor: "#ffffff",
   color: "#24292e",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
-};
-
-const container = {
-  maxWidth: "480px",
-  margin: "0 auto",
-  padding: "20px 0 48px",
-};
-
-const title = {
-  fontSize: "24px",
-  lineHeight: 1.25,
-  marginBottom: "24px",
-};
-
-const section = {
-  padding: "24px",
-  border: "solid 1px #dedede",
-  borderRadius: "5px",
-  textAlign: "left" as const,
-};
-
-const text = {
-  margin: "0 0 10px 0",
-  textAlign: "left" as const,
-};
-
-const listItem = {
-  margin: "0 0 8px 0",
-  textAlign: "left" as const,
-  paddingLeft: "8px",
-};
-
-const button = {
-  fontSize: "14px",
-  backgroundColor: "#000000",
-  color: "#fff",
-  lineHeight: 1.5,
-  borderRadius: "0.5em",
-  padding: "12px 24px",
-};
-
-const link = {
-  color: "#0366d6",
-  fontSize: "12px",
-};
-
-const footer = {
-  color: "#6a737d",
-  fontSize: "12px",
-  textAlign: "center" as const,
-  marginTop: "60px",
-  display: "flex",
-  gap: "16px",
-  justifyContent: "center",
-  alignItems: "center",
 };

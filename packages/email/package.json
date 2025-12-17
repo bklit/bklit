@@ -18,7 +18,8 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "resend": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@bklit/ui": "workspace:*"
   },
   "devDependencies": {
     "@bklit/tsconfig": "workspace:*",
