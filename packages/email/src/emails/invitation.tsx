@@ -67,7 +67,7 @@ export const BklitInvitationEmail = ({
             </Text>
 
             <Button
-              className="inlne-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+              className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
               href={inviteLink}
             >
               Sign in to Accept
