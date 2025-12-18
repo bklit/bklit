@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
@@ -9,21 +8,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@bklit/ui/components/item";
 import { Progress } from "@bklit/ui/components/progress";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { authClient } from "@/auth/client";
 import { calculateDaysUntil } from "@/lib/billing-utils";
-import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/react";
 
 interface BillingSnapshotCardProps {
   organizationId: string;
+  hideViewBillingButton?: boolean;
 }
 
 export function BillingSnapshotCard({
   organizationId,
+  hideViewBillingButton = false,
 }: BillingSnapshotCardProps) {
   const trpc = useTRPC();
 
@@ -77,7 +84,6 @@ export function BillingSnapshotCard({
           <Button asChild variant="outline" className="w-full">
             <Link href={`/${organizationId}/settings/billing`}>
               Go to Billing
-              <ArrowRight className="ml-2 size-4" />
             </Link>
           </Button>
         </CardContent>
@@ -112,9 +118,6 @@ export function BillingSnapshotCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Usage</CardTitle>
-          <Badge variant={isProPlan ? "default" : "secondary"}>
-            {isProPlan ? "Pro" : "Free"}
-          </Badge>
         </div>
         <CardDescription>
           {daysRemaining !== null
@@ -129,76 +132,115 @@ export function BillingSnapshotCard({
       <CardContent className="space-y-4">
         {/* Usage Metrics */}
         {billing.usage && (
-          <div className="space-y-3 pb-4 border-b">
-            {/* Total Operations */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Total Operations</span>
-                <span className="font-medium">
-                  {billing.usage.total.toLocaleString()} /{" "}
-                  {billing.usage.limit.toLocaleString()}
-                </span>
-              </div>
-              <Progress
-                value={Math.min(billing.usage.percentageUsed, 100)}
-                className={cn(
-                  billing.usage.percentageUsed >= 90 && "bg-red-100",
-                  billing.usage.percentageUsed >= 90 &&
-                    "[&>div]:bg-red-500 dark:[&>div]:bg-red-600",
-                  billing.usage.percentageUsed >= 70 &&
-                    billing.usage.percentageUsed < 90 &&
-                    "bg-yellow-100",
-                  billing.usage.percentageUsed >= 70 &&
-                    billing.usage.percentageUsed < 90 &&
-                    "[&>div]:bg-yellow-500 dark:[&>div]:bg-yellow-600",
+          <Item variant="outline" className="bg-bklit-600/30">
+            <ItemContent className="space-y-2">
+              {/* Total Operations */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    Total Operations
+                  </span>
+                  <span className="font-medium">
+                    {billing.usage.total.toLocaleString()} /{" "}
+                    {billing.usage.limit.toLocaleString()}
+                  </span>
+                </div>
+                <Progress value={Math.min(billing.usage.percentageUsed, 100)} />
+                {billing.usage.percentageUsed >= 90 && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {billing.usage.percentageUsed >= 100
+                      ? "Limit reached"
+                      : "Approaching limit"}
+                  </p>
                 )}
-              />
-              {billing.usage.percentageUsed >= 90 && (
-                <p className="text-xs text-red-600 dark:text-red-400">
-                  {billing.usage.percentageUsed >= 100
-                    ? "Limit reached"
-                    : "Approaching limit"}
-                </p>
-              )}
-            </div>
+              </div>
 
-            {/* Pageviews */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Pageviews</span>
-                <span className="font-medium">
-                  {billing.usage.pageviews.toLocaleString()}
-                </span>
+              {/* Pageviews */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Pageviews</span>
+                  <span className="font-medium">
+                    {billing.usage.pageviews.toLocaleString()}
+                  </span>
+                </div>
+                <Progress
+                  value={Math.min(
+                    (billing.usage.pageviews / billing.usage.limit) * 100,
+                    100,
+                  )}
+                />
               </div>
-              <Progress
-                value={Math.min(
-                  (billing.usage.pageviews / billing.usage.limit) * 100,
-                  100,
-                )}
-              />
-            </div>
 
-            {/* Tracked Events */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Custom Events</span>
-                <span className="font-medium">
-                  {billing.usage.trackedEvents.toLocaleString()}
-                </span>
+              {/* Tracked Events */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Custom Events</span>
+                  <span className="font-medium">
+                    {billing.usage.trackedEvents.toLocaleString()}
+                  </span>
+                </div>
+                <Progress
+                  value={Math.min(
+                    (billing.usage.trackedEvents / billing.usage.limit) * 100,
+                    100,
+                  )}
+                />
               </div>
-              <Progress
-                value={Math.min(
-                  (billing.usage.trackedEvents / billing.usage.limit) * 100,
-                  100,
-                )}
-              />
-            </div>
-          </div>
+            </ItemContent>
+          </Item>
         )}
 
-        <Button asChild variant="outline" className="w-full">
-          <Link href={`/${organizationId}/settings/billing`}>View billing</Link>
-        </Button>
+        {!hideViewBillingButton && (
+          <Button asChild variant="outline" className="w-full">
+            <Link href={`/${organizationId}/settings/billing`}>
+              View billing
+            </Link>
+          </Button>
+        )}
+
+        {hideViewBillingButton &&
+          (isProPlan ? (
+            <Item variant="success">
+              <ItemContent>
+                <ItemTitle>You are on the Pro Plan</ItemTitle>
+                <ItemDescription className="text-teal-600">
+                  {billing.usage?.limit.toLocaleString() || "0"} operations per
+                  month
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  variant="secondary"
+                  className="cursor-pointer w-full"
+                  onClick={async () => {
+                    await authClient.customer.portal();
+                  }}
+                >
+                  Manage subscription
+                </Button>
+              </ItemActions>
+            </Item>
+          ) : (
+            <Item variant="outline" className="bg-bklit-600/30">
+              <ItemContent>
+                <ItemTitle>You are on the Free Plan</ItemTitle>
+                <ItemDescription>
+                  {billing.usage?.limit.toLocaleString() || "0"} operations per
+                  month
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  className="cursor-pointer w-full"
+                  onClick={async () => {
+                    await authClient.customer.portal();
+                  }}
+                >
+                  Upgrade to Pro
+                </Button>
+              </ItemActions>
+            </Item>
+          ))}
       </CardContent>
     </Card>
   );

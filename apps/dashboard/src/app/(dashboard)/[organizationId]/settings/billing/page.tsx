@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { auth } from "@/auth/server";
 import { BillingDetailsCard } from "@/components/billing/billing-details-card";
 import { BillingSnapshotCard } from "@/components/billing/billing-snapshot-card";
+// import { PlanOverviewCard } from "@/components/billing/plan-overview-card";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
@@ -75,15 +76,20 @@ export default async function BillingPage({
 
         {/* Billing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Suspense
-            fallback={
-              <div className="h-[400px] w-full">
-                <Skeleton className="h-full w-full" />
-              </div>
-            }
-          >
-            <BillingSnapshotCard organizationId={organization.id} />
-          </Suspense>
+          <div className="flex flex-col gap-4">
+            <Suspense
+              fallback={
+                <div className="h-[400px] w-full">
+                  <Skeleton className="h-full w-full" />
+                </div>
+              }
+            >
+              <BillingSnapshotCard
+                organizationId={organization.id}
+                hideViewBillingButton
+              />
+            </Suspense>
+          </div>
           <Suspense
             fallback={
               <div className="h-[400px] w-full">
@@ -136,15 +142,20 @@ export default async function BillingPage({
 
       {/* Billing Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Suspense
-          fallback={
-            <div className="h-[400px] w-full">
-              <Skeleton className="h-full w-full" />
-            </div>
-          }
-        >
-          <BillingSnapshotCard organizationId={organizationId} />
-        </Suspense>
+        <div className="flex flex-col gap-4">
+          <Suspense
+            fallback={
+              <div className="h-[400px] w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
+            }
+          >
+            <BillingSnapshotCard
+              organizationId={organizationId}
+              hideViewBillingButton
+            />
+          </Suspense>
+        </div>
         <Suspense
           fallback={
             <div className="h-[400px] w-full">
@@ -156,10 +167,12 @@ export default async function BillingPage({
         </Suspense>
       </div>
 
+      {/* TODO: New pricing structure coming soon */}
+      {/*
       <PricingTable
         organization={organization}
         subscriptions={subscriptions.result.items}
-      />
+      /> */}
     </>
   );
 }

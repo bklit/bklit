@@ -9,19 +9,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from "@bklit/ui/components/item";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Calendar,
-  ExternalLink,
-  FileText,
-  MapPin,
-  Receipt,
-  User,
-} from "lucide-react";
-import { CircleFlag } from "react-circle-flags";
+import { ExternalLink } from "lucide-react";
 import { authClient } from "@/auth/client";
-import { getAlpha2Code } from "@/lib/maps/country-coordinates";
 import { useTRPC } from "@/trpc/react";
 
 interface BillingDetailsCardProps {
@@ -51,15 +50,6 @@ export function BillingDetailsCard({
           <CardDescription>Billing information and invoices</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Billing Information Skeleton */}
-          <div className="space-y-3">
-            <Skeleton className="h-4 w-32" />
-            <div className="space-y-2">
-              <Skeleton className="h-20 w-full" />
-            </div>
-          </div>
-
-          {/* Invoice History Skeleton */}
           <div className="space-y-3">
             <Skeleton className="h-4 w-32" />
             <div className="space-y-2">
@@ -67,12 +57,6 @@ export function BillingDetailsCard({
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
-          </div>
-
-          {/* Next Invoice Skeleton */}
-          <div className="space-y-3">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-12 w-full" />
           </div>
         </CardContent>
       </Card>
@@ -115,6 +99,7 @@ export function BillingDetailsCard({
   const hasInvoices =
     billingDetails?.invoices && billingDetails.invoices.length > 0;
   const hasNextInvoice = billingDetails?.nextInvoice !== null;
+  const hasCustomerId = !!billingDetails?.customerId;
 
   // Log billing details to console for debugging
   console.log("[BillingDetailsCard] 🔍 Component received billing details:");
@@ -137,198 +122,98 @@ export function BillingDetailsCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Billing Details</CardTitle>
-        <CardDescription>Billing information and invoices</CardDescription>
+        <CardTitle>Invoices</CardTitle>
+        <CardDescription>Your past and upcoming invoices</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Billing Information Section */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold flex items-center gap-2">
-            <User className="size-4" />
-            Billing Information
-          </h4>
-
-          {hasBillingAddress || billingDetails?.billingName ? (
-            <div className="p-3 rounded-lg border bg-muted/50 space-y-2">
-              {billingDetails?.billingName && (
-                <div className="flex items-start gap-2">
-                  <User className="size-4 text-muted-foreground mt-0.5" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">
-                      {billingDetails.billingName}
-                    </span>
-                    {billingDetails.billingEmail && (
-                      <span className="text-xs text-muted-foreground">
-                        {billingDetails.billingEmail}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {hasBillingAddress && (
-                <div className="flex items-start gap-2">
-                  <MapPin className="size-4 text-muted-foreground mt-0.5" />
-                  <div className="flex flex-col">
-                    <span className="text-sm">
-                      {billingDetails.billingAddress.line1}
-                    </span>
-                    {billingDetails.billingAddress.line2 && (
-                      <span className="text-sm">
-                        {billingDetails.billingAddress.line2}
-                      </span>
-                    )}
-                    <span className="text-sm">
-                      {billingDetails.billingAddress.city}
-                      {billingDetails.billingAddress.state &&
-                        `, ${billingDetails.billingAddress.state}`}{" "}
-                      {billingDetails.billingAddress.postalCode}
-                    </span>
-                    <span className="text-sm flex items-center gap-2">
-                      <CircleFlag
-                        countryCode={getAlpha2Code(
-                          billingDetails.billingAddress.country,
-                        )}
-                        className="size-4"
-                      />
-                      {billingDetails.billingAddress.country}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : billingDetails?.customerId ? (
-            <div className="p-3 rounded-lg border bg-muted/50">
-              <div className="flex items-center gap-3">
-                <User className="size-5 text-muted-foreground" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">
-                    Billing information on file
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Click "Manage Billing" below to view and update
-                  </span>
-                </div>
-              </div>
-            </div>
+        {hasCustomerId &&
+          (hasNextInvoice && billingDetails.nextInvoice ? (
+            <Item variant="outline" className="bg-bklit-600/30">
+              <ItemContent>
+                <ItemTitle>
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: billingDetails.nextInvoice.currency.toUpperCase(),
+                  }).format(billingDetails.nextInvoice.amount / 100)}
+                </ItemTitle>
+                <ItemDescription>
+                  Due on{" "}
+                  {new Date(
+                    billingDetails.nextInvoice.dueDate,
+                  ).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Badge variant="alternative" size="lg">
+                  Due soon
+                </Badge>
+              </ItemActions>
+            </Item>
           ) : (
-            <div className="p-4 rounded-lg border border-dashed text-center">
-              <p className="text-sm text-muted-foreground">
-                No billing information on file
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Upgrade to Pro to add billing details
-              </p>
-            </div>
-          )}
-        </div>
+            <Item>
+              <ItemContent>
+                <ItemTitle>No upcoming invoices</ItemTitle>
+                <ItemDescription>
+                  You don't have any upcoming invoices
+                </ItemDescription>
+              </ItemContent>
+            </Item>
+          ))}
 
-        {/* Invoice History Section */}
-        <div className="space-y-3 pb-4 border-b">
-          <h4 className="text-sm font-semibold flex items-center gap-2">
-            <Receipt className="size-4" />
-            Recent Invoices
-          </h4>
-
-          {hasInvoices ? (
-            <div className="space-y-2">
-              {billingDetails.invoices.map((invoice) => (
-                <div
-                  key={invoice.id}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="size-4 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: invoice.currency.toUpperCase(),
-                          }).format(invoice.amount / 100)}
-                        </span>
-                        {invoice.invoiceNumber && (
-                          <span className="text-xs text-muted-foreground">
-                            #{invoice.invoiceNumber}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(invoice.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          },
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="text-xs capitalize">
-                    {invoice.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-4 rounded-lg border border-dashed text-center">
-              <p className="text-sm text-muted-foreground">No invoices yet</p>
-            </div>
-          )}
-        </div>
-
-        {/* Next Invoice Section */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold flex items-center gap-2">
-            <Calendar className="size-4" />
-            Next Invoice
-          </h4>
-
-          {hasNextInvoice ? (
-            <div className="p-3 rounded-lg border bg-muted/50">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">
+        {hasInvoices ? (
+          <ItemGroup>
+            {billingDetails.invoices.map((invoice) => (
+              <Item
+                key={invoice.id}
+                size="sm"
+                variant="outline"
+                className="rounded-b-none rounded-t-none border-b-0 last:border-b first:rounded-t-md last:rounded-b-md"
+              >
+                <ItemContent>
+                  <ItemTitle>
                     {new Intl.NumberFormat("en-US", {
                       style: "currency",
-                      currency:
-                        billingDetails.nextInvoice.currency.toUpperCase(),
-                    }).format(billingDetails.nextInvoice.amount / 100)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Due on{" "}
-                    {new Date(
-                      billingDetails.nextInvoice.dueDate,
-                    ).toLocaleDateString("en-US", {
-                      month: "long",
+                      currency: invoice.currency.toUpperCase(),
+                    }).format(invoice.amount / 100)}
+
+                    {invoice.invoiceNumber && <>#{invoice.invoiceNumber}</>}
+                  </ItemTitle>
+                  <ItemDescription>
+                    {new Date(invoice.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 rounded-lg border border-dashed text-center">
-              <p className="text-sm text-muted-foreground">
-                No upcoming invoices
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Manage Subscription Button */}
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={async () => {
-            await authClient.customer.portal();
-          }}
-        >
-          <ExternalLink className="size-4 mr-2" />
-          Manage Billing
-        </Button>
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Badge
+                    variant={
+                      invoice.status === "paid" ? "success" : "secondary"
+                    }
+                    size="lg"
+                    className="capitalize"
+                  >
+                    {invoice.status}
+                  </Badge>
+                </ItemActions>
+              </Item>
+            ))}
+          </ItemGroup>
+        ) : (
+          <Item variant="outline" className="bg-bklit-600/30">
+            <ItemContent>
+              <ItemTitle>No previous invoices</ItemTitle>
+              <ItemDescription>
+                You haven't had any previous invoices
+              </ItemDescription>
+            </ItemContent>
+          </Item>
+        )}
       </CardContent>
     </Card>
   );
