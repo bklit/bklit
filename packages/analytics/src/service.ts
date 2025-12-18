@@ -30,8 +30,8 @@ export class AnalyticsService {
           {
             id: data.id,
             url: data.url,
-            timestamp: data.timestamp,
-            created_at: data.createdAt || new Date(),
+            timestamp: formatDateForClickHouse(data.timestamp),
+            created_at: formatDateForClickHouse(data.createdAt || new Date()),
             city: data.city,
             country: data.country,
             country_code: data.countryCode,
@@ -75,9 +75,9 @@ export class AnalyticsService {
       values: [
         {
           id: data.id,
-          timestamp: data.timestamp,
+          timestamp: formatDateForClickHouse(data.timestamp),
           metadata: data.metadata ? JSON.stringify(data.metadata) : null,
-          created_at: data.createdAt || new Date(),
+          created_at: formatDateForClickHouse(data.createdAt || new Date()),
           event_definition_id: data.eventDefinitionId,
           project_id: data.projectId,
           session_id: data.sessionId,
@@ -115,8 +115,8 @@ export class AnalyticsService {
           {
             id: data.id,
             session_id: data.sessionId,
-            started_at: data.startedAt,
-            ended_at: data.endedAt,
+            started_at: formatDateForClickHouse(data.startedAt),
+            ended_at: data.endedAt ? formatDateForClickHouse(data.endedAt) : null,
             duration: data.duration,
             did_bounce: data.didBounce ?? false,
             visitor_id: data.visitorId,
@@ -126,7 +126,7 @@ export class AnalyticsService {
             country: data.country,
             city: data.city,
             project_id: data.projectId,
-            updated_at: new Date(), // Set updated_at to current time
+            updated_at: formatDateForClickHouse(new Date()), // Set updated_at to current time
           },
         ],
         format: "JSONEachRow",
@@ -146,7 +146,7 @@ export class AnalyticsService {
     // Get the latest session state
     const existingSession = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           session_id,
           started_at,
@@ -161,7 +161,7 @@ export class AnalyticsService {
           city,
           project_id
         FROM (
-          SELECT 
+          SELECT
             id,
             session_id,
             started_at,
@@ -242,7 +242,7 @@ export class AnalyticsService {
     // Much simpler than argMax
     const existingSession = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           session_id,
           started_at,
@@ -257,7 +257,7 @@ export class AnalyticsService {
           city,
           project_id
         FROM (
-          SELECT 
+          SELECT
             id,
             session_id,
             started_at,
@@ -341,7 +341,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           url,
           timestamp,
@@ -408,7 +408,7 @@ export class AnalyticsService {
     // for the project and filter by session_id in code (more reliable)
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           url,
           timestamp,
@@ -463,7 +463,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           count() as total_views,
           uniq(ip) as unique_visits,
           uniq(url) as unique_pages,
@@ -515,7 +515,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           country,
           country_code,
           count() as visits,
@@ -560,7 +560,7 @@ export class AnalyticsService {
     // This is much simpler than argMax and avoids all the aggregate function issues
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           session_id,
           started_at,
@@ -576,7 +576,7 @@ export class AnalyticsService {
           city,
           project_id
         FROM (
-          SELECT 
+          SELECT
             id,
             session_id,
             started_at,
@@ -637,7 +637,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           count() as total_sessions,
           countIf(did_bounce = true) as bounced_sessions,
           avg(duration) as avg_duration
@@ -678,7 +678,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           toDate(started_at) as date,
           count() as total,
           countIf(did_bounce = false) as engaged,
@@ -708,7 +708,7 @@ export class AnalyticsService {
       query: `
         SELECT count() as count
         FROM (
-          SELECT 
+          SELECT
             session_id,
             ended_at,
             updated_at,
@@ -753,7 +753,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           timestamp,
           metadata,
@@ -806,7 +806,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           count() as total_events,
           uniq(session_id) as unique_sessions
         FROM tracked_event
@@ -907,7 +907,7 @@ export class AnalyticsService {
   > {
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           timestamp,
           metadata,
@@ -964,7 +964,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           timestamp,
           metadata,
@@ -1017,7 +1017,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           toDate(timestamp) as date,
           count() as total
         FROM tracked_event
@@ -1071,7 +1071,7 @@ export class AnalyticsService {
   async getEventDetails(eventId: string, projectId: string) {
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           timestamp,
           metadata,
@@ -1122,7 +1122,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           event_definition_id,
           count() as count
         FROM tracked_event
@@ -1147,7 +1147,7 @@ export class AnalyticsService {
     // Get live sessions using window function to get latest state per session_id
     const sessionsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           session_id,
           started_at,
@@ -1156,7 +1156,7 @@ export class AnalyticsService {
           country,
           city
         FROM (
-          SELECT 
+          SELECT
             id,
             session_id,
             started_at,
@@ -1238,7 +1238,7 @@ export class AnalyticsService {
     // Order by updated_at DESC to show most recently active sessions first
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           session_id,
           started_at,
@@ -1247,7 +1247,7 @@ export class AnalyticsService {
           user_agent,
           entry_page
         FROM (
-          SELECT 
+          SELECT
             id,
             session_id,
             started_at,
@@ -1289,7 +1289,7 @@ export class AnalyticsService {
   async getSessionById(sessionId: string, projectId: string) {
     const sessionResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           session_id,
           started_at,
@@ -1335,7 +1335,7 @@ export class AnalyticsService {
 
     const pageviewsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           url,
           timestamp
@@ -1356,7 +1356,7 @@ export class AnalyticsService {
 
     const eventsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           timestamp,
           metadata,
@@ -1412,7 +1412,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           session_id,
           entry_page,
           exit_page
@@ -1438,7 +1438,7 @@ export class AnalyticsService {
       query: `
         SELECT session_id
         FROM (
-          SELECT 
+          SELECT
             session_id,
             ended_at,
             updated_at,
@@ -1469,7 +1469,7 @@ export class AnalyticsService {
     // Query all pageviews and filter in code (more reliable than Array parameter)
     const pageviewsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           session_id,
           country,
           country_code,
@@ -1540,7 +1540,7 @@ export class AnalyticsService {
       query: `
         SELECT session_id
         FROM (
-          SELECT 
+          SELECT
             session_id,
             ended_at,
             updated_at,
@@ -1571,7 +1571,7 @@ export class AnalyticsService {
     // Query all pageviews and filter in code (more reliable than Array parameter)
     const pageviewsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           session_id,
           url,
           timestamp
@@ -1631,7 +1631,7 @@ export class AnalyticsService {
     await this.client.command({
       query: `
         ALTER TABLE tracked_session
-        UPDATE 
+        UPDATE
           ended_at = {now:DateTime},
           duration = 1800,
           did_bounce = false
@@ -1674,7 +1674,7 @@ export class AnalyticsService {
   ) {
     const sessionsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           session_id,
           started_at,
@@ -1725,7 +1725,7 @@ export class AnalyticsService {
     // Query all pageviews and filter in code (more reliable than Array parameter)
     const pageviewsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           url,
           timestamp,
@@ -1759,7 +1759,7 @@ export class AnalyticsService {
     // Query all events and filter in code
     const eventsResult = await this.client.query({
       query: `
-        SELECT 
+        SELECT
           id,
           timestamp,
           metadata,
