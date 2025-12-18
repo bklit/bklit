@@ -211,7 +211,8 @@ export function initAuth(options: {
                 productId: plan.polarProductId as string,
                 slug: plan.slug,
               })),
-            successUrl: "/settings/billing?purchase=success", // Generic success URL, will redirect to correct organization
+            // Use absolute URL to prevent localhost redirect from internal docker/proxy requests
+            successUrl: `${options.baseUrl}/settings/billing?purchase=success`,
             authenticatedUsersOnly: true,
           }),
           portal(),
