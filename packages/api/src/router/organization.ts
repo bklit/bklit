@@ -1,3 +1,4 @@
+import { polarClient } from "@bklit/auth";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
@@ -324,6 +325,381 @@ export const organizationRouter = {
           percentageUsed,
         },
       };
+    }),
+
+  getBillingDetails: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Verify user has access to this organization
+      const organization = await ctx.prisma.organization.findFirst({
+        where: {
+          id: input.organizationId,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+            },
+          },
+        },
+      });
+
+      if (!organization) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Organization not found or you don't have access",
+        });
+      }
+
+      // Initialize response data
+      const billingDetails: {
+        billingAddress: {
+          line1: string;
+          line2: string | null;
+          city: string;
+          state: string | null;
+          postalCode: string;
+          country: string;
+        } | null;
+        billingEmail: string | null;
+        billingName: string | null;
+        invoices: Array<{
+          id: string;
+          amount: number;
+          currency: string;
+          createdAt: Date;
+          status: string;
+          url: string | null;
+          invoiceNumber: string | null;
+        }>;
+        nextInvoice: {
+          dueDate: Date;
+          amount: number;
+          currency: string;
+        } | null;
+        customerId: string | null;
+      } = {
+        billingAddress: null,
+        billingEmail: null,
+        billingName: null,
+        invoices: [],
+        nextInvoice: null,
+        customerId: null,
+      };
+
+      try {
+        // Fetch subscriptions to get customer ID and next invoice info
+        const subscriptions = await ctx.authApi.subscriptions({
+          query: {
+            page: 1,
+            limit: 1,
+            active: true,
+            referenceId: input.organizationId,
+          },
+          headers: ctx.headers,
+        });
+
+        console.log("[Billing Details] Subscriptions API response:", {
+          hasResult: !!subscriptions?.result,
+          itemsCount: subscriptions?.result?.items?.length || 0,
+        });
+
+        const activeSubscription = subscriptions?.result?.items?.[0];
+
+        if (activeSubscription) {
+          console.log("[Billing Details] Active subscription found");
+          console.log(
+            "[Billing Details] Subscription ID:",
+            activeSubscription.id,
+          );
+          console.log(
+            "[Billing Details] Customer ID:",
+            activeSubscription.customerId,
+          );
+
+          const customerId = activeSubscription.customerId;
+          billingDetails.customerId = customerId || null;
+
+          if (!customerId) {
+            console.warn(
+              "[Billing Details] WARNING: No customer ID found in subscription!",
+            );
+          }
+
+          // Check if subscription itself contains payment method info
+          const subData = activeSubscription as any;
+          if (subData.stripePaymentMethodId || subData.paymentMethod) {
+            console.log(
+              "[Billing Details] Payment method found in subscription:",
+              subData.paymentMethod || subData.stripePaymentMethodId,
+            );
+          }
+
+          // Get next invoice details from subscription
+          if (
+            activeSubscription.currentPeriodEnd &&
+            activeSubscription.amount
+          ) {
+            billingDetails.nextInvoice = {
+              dueDate: new Date(activeSubscription.currentPeriodEnd),
+              amount: activeSubscription.amount,
+              currency: activeSubscription.currency || "usd",
+            };
+          }
+
+          // Fetch customer details including payment methods if we have a customer ID
+          if (customerId) {
+            console.log(
+              "[Billing Details] ==> Fetching orders for customer:",
+              customerId,
+            );
+
+            try {
+              // Fetch orders/invoices for this customer
+              console.log(
+                "[Billing Details] Calling polarClient.orders.list with:",
+                { customerId, limit: 10 },
+              );
+
+              const orders = await polarClient.orders.list({
+                customerId,
+                limit: 10, // Fetch more to ensure we get paid orders
+              });
+
+              console.log("[Billing Details] Orders API response received");
+              console.log("[Billing Details] Orders response structure:", {
+                hasOrders: !!orders,
+                hasResult: !!orders?.result,
+                hasItems: !!orders?.result?.items,
+                itemsType: typeof orders?.result?.items,
+                itemsIsArray: Array.isArray(orders?.result?.items),
+                itemsCount: orders?.result?.items?.length || 0,
+              });
+
+              if (orders?.result?.items) {
+                console.log(
+                  "[Billing Details] Raw orders data (first 3):",
+                  JSON.stringify(orders.result.items.slice(0, 3), null, 2),
+                );
+              } else {
+                console.warn(
+                  "[Billing Details] No orders.result.items found in response!",
+                );
+                console.log(
+                  "[Billing Details] Full orders response:",
+                  JSON.stringify(orders, null, 2),
+                );
+              }
+
+              if (orders?.result?.items && orders.result.items.length > 0) {
+                console.log(
+                  "[Billing Details] Processing",
+                  orders.result.items.length,
+                  "orders...",
+                );
+
+                // Filter and sort orders - we want completed/paid orders
+                const paidOrders = orders.result.items
+                  .map((order, index) => {
+                    // Cast to access Polar API fields
+                    const orderData = order as any;
+
+                    // Log each order to see what fields are available
+                    console.log(`[Billing Details] Order #${index + 1}:`, {
+                      id: order.id,
+                      // Polar API fields
+                      totalAmount: orderData.totalAmount,
+                      total_amount: orderData.total_amount,
+                      paid: orderData.paid,
+                      status: orderData.status,
+                      invoiceNumber: orderData.invoiceNumber,
+                      invoice_number: orderData.invoice_number,
+                      isInvoiceGenerated: orderData.isInvoiceGenerated,
+                      is_invoice_generated: orderData.is_invoice_generated,
+                      createdAt: order.createdAt,
+                      created_at: orderData.created_at,
+                      currency: order.currency,
+                      billingReason: orderData.billingReason,
+                      billing_reason: orderData.billing_reason,
+                      // Log all available fields
+                      allFields: Object.keys(order),
+                    });
+                    return order;
+                  })
+                  .filter((order) => {
+                    const orderData = order as any;
+
+                    // Check both camelCase and snake_case for Polar API fields
+                    const totalAmount =
+                      orderData.totalAmount || orderData.total_amount;
+                    const isPaid = orderData.paid === true;
+                    const createdAt = order.createdAt || orderData.created_at;
+
+                    const hasAmount = !!totalAmount && totalAmount > 0;
+                    const hasCreatedAt = !!createdAt;
+                    const passes = hasAmount && hasCreatedAt && isPaid;
+
+                    console.log(
+                      `[Billing Details] Order ${order.id} filter result:`,
+                      {
+                        totalAmount,
+                        isPaid,
+                        hasAmount,
+                        hasCreatedAt,
+                        passes,
+                      },
+                    );
+
+                    return passes;
+                  })
+                  .sort((a, b) => {
+                    // Sort by creation date descending (newest first)
+                    const orderDataA = a as any;
+                    const orderDataB = b as any;
+                    const dateA = new Date(
+                      a.createdAt || orderDataA.created_at,
+                    ).getTime();
+                    const dateB = new Date(
+                      b.createdAt || orderDataB.created_at,
+                    ).getTime();
+                    return dateB - dateA;
+                  })
+                  .slice(0, 3) // Take top 3
+                  .map((order) => {
+                    const orderData = order as any;
+                    const totalAmount =
+                      orderData.totalAmount || orderData.total_amount || 0;
+                    const invoiceNumber =
+                      orderData.invoiceNumber || orderData.invoice_number;
+
+                    return {
+                      id: order.id,
+                      amount: totalAmount,
+                      currency: order.currency || "usd",
+                      createdAt: new Date(
+                        order.createdAt || orderData.created_at,
+                      ),
+                      status: orderData.paid
+                        ? "paid"
+                        : orderData.status || "pending",
+                      url: null,
+                      invoiceNumber: invoiceNumber || null,
+                    };
+                  });
+
+                console.log(
+                  "[Billing Details] ✅ Processed invoices count:",
+                  paidOrders.length,
+                );
+                console.log(
+                  "[Billing Details] ✅ Invoices to display:",
+                  paidOrders,
+                );
+                billingDetails.invoices = paidOrders;
+              } else {
+                console.warn("[Billing Details] ⚠️ No orders found to process!");
+              }
+            } catch (error) {
+              console.error(
+                "[Billing Details] ❌ Error fetching orders from Polar!",
+              );
+              console.error(
+                "[Billing Details] Error type:",
+                error?.constructor?.name,
+              );
+              console.error(
+                "[Billing Details] Error message:",
+                (error as Error)?.message,
+              );
+              console.error("[Billing Details] Full error:", error);
+
+              // Try to log more details if it's an API error
+              if (error && typeof error === "object") {
+                console.error(
+                  "[Billing Details] Error keys:",
+                  Object.keys(error),
+                );
+              }
+            }
+
+            try {
+              // Fetch customer to get billing address and details
+              const customer = await polarClient.customers.get({
+                id: customerId,
+              });
+
+              console.log(
+                "[Billing Details] Customer data:",
+                JSON.stringify(customer, null, 2),
+              );
+
+              if (customer && typeof customer === "object") {
+                const customerData = customer as {
+                  email?: string;
+                  name?: string;
+                  billingAddress?: {
+                    line1?: string;
+                    line2?: string;
+                    city?: string;
+                    state?: string;
+                    postalCode?: string;
+                    country?: string;
+                  };
+                };
+
+                // Set billing email and name
+                billingDetails.billingEmail = customerData.email || null;
+                billingDetails.billingName = customerData.name || null;
+
+                // Set billing address if available
+                if (customerData.billingAddress) {
+                  billingDetails.billingAddress = {
+                    line1: customerData.billingAddress.line1 || "",
+                    line2: customerData.billingAddress.line2 || null,
+                    city: customerData.billingAddress.city || "",
+                    state: customerData.billingAddress.state || null,
+                    postalCode: customerData.billingAddress.postalCode || "",
+                    country: customerData.billingAddress.country || "",
+                  };
+                }
+              }
+            } catch (error) {
+              console.error("Error fetching customer from Polar:", error);
+            }
+          } else {
+            console.warn(
+              "[Billing Details] ⚠️ Skipping customer fetch - no customer ID",
+            );
+          }
+        } else {
+          console.warn(
+            "[Billing Details] ⚠️ No active subscription found for organization:",
+            input.organizationId,
+          );
+        }
+      } catch (error) {
+        console.error(
+          "[Billing Details] ❌ Error in getBillingDetails:",
+          error,
+        );
+        console.error("[Billing Details] Error occurred at top level");
+        // Return empty data structure instead of throwing
+      }
+
+      console.log(
+        "[Billing Details] 📊 Final billing details being returned:",
+        {
+          hasCustomerId: !!billingDetails.customerId,
+          hasBillingAddress: !!billingDetails.billingAddress,
+          hasBillingName: !!billingDetails.billingName,
+          invoicesCount: billingDetails.invoices.length,
+          hasNextInvoice: !!billingDetails.nextInvoice,
+        },
+      );
+
+      return billingDetails;
     }),
 
   members: {

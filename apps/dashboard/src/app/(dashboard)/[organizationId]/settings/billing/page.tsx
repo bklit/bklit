@@ -1,6 +1,10 @@
+import { Skeleton } from "@bklit/ui/components/skeleton";
 import { unstable_noStore } from "next/cache";
 import { headers } from "next/headers";
+import { Suspense } from "react";
 import { auth } from "@/auth/server";
+import { BillingDetailsCard } from "@/components/billing/billing-details-card";
+import { BillingSnapshotCard } from "@/components/billing/billing-snapshot-card";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
@@ -68,6 +72,29 @@ export default async function BillingPage({
           />
         </PageHeader>
         <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
+
+        {/* Billing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Suspense
+            fallback={
+              <div className="h-[400px] w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
+            }
+          >
+            <BillingSnapshotCard organizationId={organization.id} />
+          </Suspense>
+          <Suspense
+            fallback={
+              <div className="h-[400px] w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
+            }
+          >
+            <BillingDetailsCard organizationId={organization.id} />
+          </Suspense>
+        </div>
+
         <PricingTable
           organization={organization}
           subscriptions={subscriptions.result.items}
@@ -106,6 +133,29 @@ export default async function BillingPage({
         />
       </PageHeader>
       <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
+
+      {/* Billing Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Suspense
+          fallback={
+            <div className="h-[400px] w-full">
+              <Skeleton className="h-full w-full" />
+            </div>
+          }
+        >
+          <BillingSnapshotCard organizationId={organizationId} />
+        </Suspense>
+        <Suspense
+          fallback={
+            <div className="h-[400px] w-full">
+              <Skeleton className="h-full w-full" />
+            </div>
+          }
+        >
+          <BillingDetailsCard organizationId={organizationId} />
+        </Suspense>
+      </div>
+
       <PricingTable
         organization={organization}
         subscriptions={subscriptions.result.items}
