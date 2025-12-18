@@ -8,6 +8,7 @@ import {
   SendHorizontal,
   Settings,
   Split,
+  Users,
 } from "lucide-react";
 
 interface NavigationItem {
@@ -28,6 +29,17 @@ export const navigationConfig: NavigationConfig = {
       title: "Projects",
       icon: Layers2,
       href: "/[organizationId]",
+    },
+    {
+      title: "Team",
+      icon: Users,
+      href: "/[organizationId]/team",
+      items: [
+        {
+          title: "Members",
+          href: "/[organizationId]/team",
+        },
+      ],
     },
     {
       title: "Settings",
@@ -138,6 +150,14 @@ export const navigationConfig: NavigationConfig = {
     },
   ],
 
+  // Organization team navigation
+  organizationTeam: [
+    {
+      title: "Members",
+      href: "/[organizationId]/team",
+    },
+  ],
+
   // Project settings navigation
   projectSettings: [
     {
@@ -172,12 +192,13 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
   }
 
   // Project level: /[organizationId]/[projectId]/...
-  // Exclude organization-level routes like settings, billing, projects
+  // Exclude organization-level routes like settings, billing, projects, team
   if (
     segments.length >= 2 &&
     segments[1] !== "billing" &&
     segments[1] !== "settings" &&
-    segments[1] !== "projects"
+    segments[1] !== "projects" &&
+    segments[1] !== "team"
   ) {
     return navigationConfig.project ?? [];
   }

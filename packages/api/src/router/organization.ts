@@ -325,4 +325,240 @@ export const organizationRouter = {
         },
       };
     }),
+
+  members: {
+    list: protectedProcedure
+      .input(
+        z.object({
+          organizationId: z.string(),
+          page: z.number().min(1).default(1),
+          limit: z.number().min(1).max(50).default(15),
+        }),
+      )
+      .query(async ({ input, ctx }) => {
+        // Verify user is member of organization
+        const organization = await ctx.prisma.organization.findFirst({
+          where: {
+            id: input.organizationId,
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+              },
+            },
+          },
+        });
+
+        if (!organization) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Organization not found or you don't have access",
+          });
+        }
+
+        // Get total count
+        const totalCount = await ctx.prisma.member.count({
+          where: {
+            organizationId: input.organizationId,
+          },
+        });
+
+        // Get paginated members
+        const members = await ctx.prisma.member.findMany({
+          where: {
+            organizationId: input.organizationId,
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+          skip: (input.page - 1) * input.limit,
+          take: input.limit,
+        });
+
+        const totalPages = Math.ceil(totalCount / input.limit);
+
+        return {
+          members,
+          totalCount,
+          totalPages,
+          currentPage: input.page,
+        };
+      }),
+
+    updateRole: protectedProcedure
+      .input(
+        z.object({
+          organizationId: z.string(),
+          memberId: z.string(),
+          role: z.enum(["owner", "admin", "member"]),
+        }),
+      )
+      .mutation(async ({ input, ctx }) => {
+        // Verify user is admin or owner of organization
+        const organization = await ctx.prisma.organization.findFirst({
+          where: {
+            id: input.organizationId,
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+                role: {
+                  in: ["admin", "owner"],
+                },
+              },
+            },
+          },
+          include: {
+            members: true,
+          },
+        });
+
+        if (!organization) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Organization not found or you don't have permission to update roles",
+          });
+        }
+
+        // Check if the member being updated exists
+        const memberToUpdate = organization.members.find(
+          (m) => m.id === input.memberId,
+        );
+
+        if (!memberToUpdate) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Member not found",
+          });
+        }
+
+        // Prevent changing the role of the last owner
+        if (memberToUpdate.role === "owner") {
+          const ownerCount = organization.members.filter(
+            (m) => m.role === "owner",
+          ).length;
+
+          if (ownerCount === 1 && input.role !== "owner") {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Cannot change the role of the last owner",
+            });
+          }
+        }
+
+        // Update member role
+        return ctx.prisma.member.update({
+          where: { id: input.memberId },
+          data: { role: input.role },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        });
+      }),
+
+    remove: protectedProcedure
+      .input(
+        z.object({
+          organizationId: z.string(),
+          memberId: z.string(),
+          confirmEmail: z.string().email(),
+        }),
+      )
+      .mutation(async ({ input, ctx }) => {
+        // Verify user is admin or owner of organization
+        const organization = await ctx.prisma.organization.findFirst({
+          where: {
+            id: input.organizationId,
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+                role: {
+                  in: ["admin", "owner"],
+                },
+              },
+            },
+          },
+          include: {
+            members: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        });
+
+        if (!organization) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Organization not found or you don't have permission to remove members",
+          });
+        }
+
+        // Find the member to remove
+        const memberToRemove = organization.members.find(
+          (m) => m.id === input.memberId,
+        );
+
+        if (!memberToRemove) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Member not found",
+          });
+        }
+
+        // Prevent removing yourself
+        if (memberToRemove.userId === ctx.session.user.id) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "You cannot remove yourself from the organization",
+          });
+        }
+
+        // Verify email matches
+        if (memberToRemove.user.email !== input.confirmEmail) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Email does not match",
+          });
+        }
+
+        // Prevent removing the last owner
+        if (memberToRemove.role === "owner") {
+          const ownerCount = organization.members.filter(
+            (m) => m.role === "owner",
+          ).length;
+
+          if (ownerCount === 1) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Cannot remove the last owner",
+            });
+          }
+        }
+
+        // Delete the member
+        await ctx.prisma.member.delete({
+          where: { id: input.memberId },
+        });
+
+        return { success: true };
+      }),
+  },
 } satisfies TRPCRouterRecord;
