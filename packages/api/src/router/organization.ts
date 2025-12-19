@@ -1,3 +1,4 @@
+import { polarClient } from "@bklit/auth";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
@@ -206,15 +207,24 @@ export const organizationRouter = {
       });
 
       // Fetch active subscriptions from Polar
-      let billingData = {
-        planName: "free" as const,
-        status: "none" as const,
-        currentPeriodEnd: null as Date | null,
-        amount: null as number | null,
+      const billingData: {
+        planName: "free" | "pro";
+        status: "none" | "active" | "cancelled";
+        currentPeriodEnd: Date | null;
+        amount: number | null;
+        currency: string;
+        lastInvoiceDate: Date | null;
+        lastInvoiceAmount: number | null;
+        periodStart: Date | null;
+      } = {
+        planName: "free",
+        status: "none",
+        currentPeriodEnd: null,
+        amount: null,
         currency: "usd",
-        lastInvoiceDate: null as Date | null,
-        lastInvoiceAmount: null as number | null,
-        periodStart: null as Date | null,
+        lastInvoiceDate: null,
+        lastInvoiceAmount: null,
+        periodStart: null,
       };
 
       try {
@@ -245,28 +255,26 @@ export const organizationRouter = {
 
           if (activeSubscription && organization.plan === "pro") {
             // Pro plan with active subscription
-            billingData = {
-              planName: "pro" as const,
-              status: (activeSubscription.status || "active") as
-                | "active"
-                | "cancelled",
-              currentPeriodEnd: activeSubscription.currentPeriodEnd
-                ? new Date(activeSubscription.currentPeriodEnd)
-                : null,
-              amount: activeSubscription.recurringInterval
-                ? (activeSubscription.amount ?? null)
-                : null,
-              currency: activeSubscription.currency || "usd",
-              lastInvoiceDate: activeSubscription.startedAt
+            billingData.planName = "pro";
+            billingData.status = (activeSubscription.status || "active") as
+              | "active"
+              | "cancelled";
+            billingData.currentPeriodEnd = activeSubscription.currentPeriodEnd
+              ? new Date(activeSubscription.currentPeriodEnd)
+              : null;
+            billingData.amount = activeSubscription.recurringInterval
+              ? (activeSubscription.amount ?? null)
+              : null;
+            billingData.currency = activeSubscription.currency || "usd";
+            billingData.lastInvoiceDate = activeSubscription.startedAt
+              ? new Date(activeSubscription.startedAt)
+              : null;
+            billingData.lastInvoiceAmount = activeSubscription.amount ?? null;
+            billingData.periodStart = activeSubscription.currentPeriodStart
+              ? new Date(activeSubscription.currentPeriodStart)
+              : activeSubscription.startedAt
                 ? new Date(activeSubscription.startedAt)
-                : null,
-              lastInvoiceAmount: activeSubscription.amount ?? null,
-              periodStart: activeSubscription.currentPeriodStart
-                ? new Date(activeSubscription.currentPeriodStart)
-                : activeSubscription.startedAt
-                  ? new Date(activeSubscription.startedAt)
-                  : null,
-            };
+                : null;
           }
         }
       } catch (error) {
@@ -324,6 +332,244 @@ export const organizationRouter = {
           percentageUsed,
         },
       };
+    }),
+
+  getBillingDetails: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Verify user has access to this organization
+      const organization = await ctx.prisma.organization.findFirst({
+        where: {
+          id: input.organizationId,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+            },
+          },
+        },
+      });
+
+      if (!organization) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Organization not found or you don't have access",
+        });
+      }
+
+      // Initialize response data
+      const billingDetails: {
+        billingAddress: {
+          line1: string;
+          line2: string | null;
+          city: string;
+          state: string | null;
+          postalCode: string;
+          country: string;
+        } | null;
+        billingEmail: string | null;
+        billingName: string | null;
+        invoices: Array<{
+          id: string;
+          amount: number;
+          currency: string;
+          createdAt: Date;
+          status: string;
+          url: string | null;
+          invoiceNumber: string | null;
+        }>;
+        nextInvoice: {
+          dueDate: Date;
+          amount: number;
+          currency: string;
+        } | null;
+        customerId: string | null;
+      } = {
+        billingAddress: null,
+        billingEmail: null,
+        billingName: null,
+        invoices: [],
+        nextInvoice: null,
+        customerId: null,
+      };
+
+      try {
+        // Fetch subscriptions to get customer ID and next invoice info
+        const subscriptions = await ctx.authApi.subscriptions({
+          query: {
+            page: 1,
+            limit: 1,
+            active: true,
+            referenceId: input.organizationId,
+          },
+          headers: ctx.headers,
+        });
+
+        const activeSubscription = subscriptions?.result?.items?.[0];
+
+        if (activeSubscription) {
+          const customerId = activeSubscription.customerId;
+          billingDetails.customerId = customerId || null;
+
+          if (!customerId) {
+            console.warn(
+              "[Billing Details] WARNING: No customer ID found in subscription!",
+            );
+          }
+
+          // Get next invoice details from subscription
+          if (
+            activeSubscription.currentPeriodEnd &&
+            activeSubscription.amount
+          ) {
+            billingDetails.nextInvoice = {
+              dueDate: new Date(activeSubscription.currentPeriodEnd),
+              amount: activeSubscription.amount,
+              currency: activeSubscription.currency || "usd",
+            };
+          }
+
+          // Fetch customer details including payment methods if we have a customer ID
+          if (customerId) {
+            try {
+              const orders = await polarClient.orders.list({
+                customerId,
+                limit: 10, // Fetch more to ensure we get paid orders
+              });
+
+              if (orders?.result?.items) {
+                console.log(
+                  "[Billing Details] Raw orders data (first 3):",
+                  JSON.stringify(orders.result.items.slice(0, 3), null, 2),
+                );
+              } else {
+                console.warn(
+                  "[Billing Details] No orders.result.items found in response!",
+                );
+              }
+
+              if (orders?.result?.items && orders.result.items.length > 0) {
+                // Define type for Polar order response
+                type PolarOrder = {
+                  id: string;
+                  createdAt?: string | Date;
+                  created_at?: string | Date;
+                  currency?: string;
+                  totalAmount?: number;
+                  total_amount?: number;
+                  paid?: boolean;
+                  status?: string;
+                  invoiceNumber?: string;
+                  invoice_number?: string;
+                };
+
+                // Filter and sort orders - we want completed/paid orders
+                const paidOrders = orders.result.items
+                  .filter((order) => {
+                    const orderData = order as unknown as PolarOrder;
+
+                    // Check both camelCase and snake_case for Polar API fields
+                    const totalAmount =
+                      orderData.totalAmount || orderData.total_amount;
+                    const isPaid = orderData.paid === true;
+                    const createdAt =
+                      orderData.createdAt || orderData.created_at;
+
+                    const hasAmount = !!totalAmount && totalAmount > 0;
+                    const hasCreatedAt = !!createdAt;
+
+                    return hasAmount && hasCreatedAt && isPaid;
+                  })
+                  .sort((a, b) => {
+                    // Sort by creation date descending (newest first)
+                    const orderDataA = a as unknown as PolarOrder;
+                    const orderDataB = b as unknown as PolarOrder;
+                    const dateA = new Date(
+                      orderDataA.createdAt || orderDataA.created_at || "",
+                    ).getTime();
+                    const dateB = new Date(
+                      orderDataB.createdAt || orderDataB.created_at || "",
+                    ).getTime();
+                    return dateB - dateA;
+                  })
+                  .slice(0, 3) // Take top 3
+                  .map((order) => {
+                    const orderData = order as unknown as PolarOrder;
+                    const totalAmount =
+                      orderData.totalAmount || orderData.total_amount || 0;
+                    const invoiceNumber =
+                      orderData.invoiceNumber || orderData.invoice_number;
+
+                    return {
+                      id: orderData.id,
+                      amount: totalAmount,
+                      currency: orderData.currency || "usd",
+                      createdAt: new Date(
+                        orderData.createdAt || orderData.created_at || "",
+                      ),
+                      status: orderData.paid
+                        ? "paid"
+                        : orderData.status || "pending",
+                      url: null,
+                      invoiceNumber: invoiceNumber || null,
+                    };
+                  });
+
+                billingDetails.invoices = paidOrders;
+              }
+            } catch {
+              // Silently fail - billing details are optional
+            }
+
+            try {
+              // Fetch customer to get billing address and details
+              const customer = await polarClient.customers.get({
+                id: customerId,
+              });
+
+              if (customer && typeof customer === "object") {
+                const customerData = customer as {
+                  email?: string;
+                  name?: string;
+                  billingAddress?: {
+                    line1?: string;
+                    line2?: string;
+                    city?: string;
+                    state?: string;
+                    postalCode?: string;
+                    country?: string;
+                  };
+                };
+
+                // Set billing email and name
+                billingDetails.billingEmail = customerData.email || null;
+                billingDetails.billingName = customerData.name || null;
+
+                // Set billing address if available
+                if (customerData.billingAddress) {
+                  billingDetails.billingAddress = {
+                    line1: customerData.billingAddress.line1 || "",
+                    line2: customerData.billingAddress.line2 || null,
+                    city: customerData.billingAddress.city || "",
+                    state: customerData.billingAddress.state || null,
+                    postalCode: customerData.billingAddress.postalCode || "",
+                    country: customerData.billingAddress.country || "",
+                  };
+                }
+              }
+            } catch {
+              // Silently fail - billing details are optional
+            }
+          }
+        }
+      } catch {
+        // Return empty data structure instead of throwing
+      }
+
+      return billingDetails;
     }),
 
   members: {

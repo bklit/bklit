@@ -279,6 +279,9 @@ export type BetterAuth = typeof betterAuth;
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
 
+// Export Polar client for direct API access
+export { polarClient };
+
 // Export Polar configuration
 export const polarConfig = {
   organizationId: env.POLAR_ORGANIZATION_ID,
