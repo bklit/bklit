@@ -101,24 +101,6 @@ export function BillingDetailsCard({
   const hasNextInvoice = billingDetails?.nextInvoice !== null;
   const hasCustomerId = !!billingDetails?.customerId;
 
-  // Log billing details to console for debugging
-  console.log("[BillingDetailsCard] 🔍 Component received billing details:");
-  console.log("[BillingDetailsCard] Raw data:", billingDetails);
-  console.log("[BillingDetailsCard] Parsed state:", {
-    hasBillingAddress,
-    hasInvoices,
-    invoicesCount: billingDetails?.invoices?.length || 0,
-    hasNextInvoice,
-    customerId: billingDetails?.customerId,
-  });
-
-  if (billingDetails?.invoices) {
-    console.log(
-      "[BillingDetailsCard] Invoices array:",
-      billingDetails.invoices,
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
