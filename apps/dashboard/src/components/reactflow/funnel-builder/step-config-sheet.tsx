@@ -183,16 +183,18 @@ export function StepConfigSheet({
   const handleTabChange = (value: StepType) => {
     setActiveTab(value);
     form.setFieldValue("type", value);
-    if (value === "event" && form.state.values.eventName) {
-      const selectedEvent = events?.find(
-        (e) => e.trackingId === form.state.values.eventName,
-      );
-      if (selectedEvent) {
-        onLiveUpdate?.({
-          type: "event",
-          name: selectedEvent.name,
-          eventName: selectedEvent.trackingId,
-        });
+    if (value === "event") {
+      if (form.state.values.eventName) {
+        const selectedEvent = events?.find(
+          (e) => e.trackingId === form.state.values.eventName,
+        );
+        if (selectedEvent) {
+          onLiveUpdate?.({
+            type: "event",
+            name: selectedEvent.name,
+            eventName: selectedEvent.trackingId,
+          });
+        }
       }
     } else {
       onLiveUpdate?.({
@@ -243,13 +245,7 @@ export function StepConfigSheet({
             </SheetDescription>
           </SheetHeader>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-            className="px-4"
-          >
+          <div className="px-4">
             <Tabs
               value={activeTab}
               onValueChange={(v) => handleTabChange(v as StepType)}
@@ -328,10 +324,11 @@ export function StepConfigSheet({
                   <form.Field name="eventName">
                     {(field) => (
                       <>
-                        <div className="grid gap-2 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="grid gap-2 max-h-[370px] overflow-y-auto pr-1">
                           {events.map((event) => (
-                            <button
-                              type="button"
+                            <div
+                              role="button"
+                              tabIndex={0}
                               key={event.id}
                               className={cn(
                                 "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all",
@@ -342,6 +339,13 @@ export function StepConfigSheet({
                               onClick={() => {
                                 field.handleChange(event.trackingId);
                                 handleEventSelect(event.trackingId);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  field.handleChange(event.trackingId);
+                                  handleEventSelect(event.trackingId);
+                                }
                               }}
                             >
                               <div className="flex-1 min-w-0">
@@ -368,7 +372,7 @@ export function StepConfigSheet({
                                   <Copy className="w-4 h-4" />
                                 )}
                               </Button>
-                            </button>
+                            </div>
                           ))}
                         </div>
                         <FieldError className="mt-2">
@@ -380,7 +384,7 @@ export function StepConfigSheet({
                 )}
               </TabsContent>
             </Tabs>
-          </form>
+          </div>
 
           <SheetFooter>
             <div className="flex justify-between w-full">
