@@ -49,7 +49,6 @@ export const ModuleWorkspaces = () => {
         <CommandGroup heading="Workspaces">
           {organizations?.map((organization: Organization) => {
             const isPro = organization.plan === "pro";
-            const planName = isPro ? "Pro" : "Free";
             const isCurrent = organization.id === activeOrganization?.id;
 
             return (
@@ -79,7 +78,7 @@ export const ModuleWorkspaces = () => {
                     <span className="truncate">{organization.name}</span>
                   </div>
                   <Badge variant={isPro ? "default" : "secondary"}>
-                    {planName}
+                    {isPro ? "Pro" : "Free"}
                   </Badge>
                 </div>
               </CommandItem>

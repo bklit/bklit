@@ -13,6 +13,7 @@ import { CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspace } from "@/contexts/workspace-provider";
 
 interface BillingSuccessDialogProps {
@@ -25,21 +26,23 @@ export function BillingSuccessDialog({
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { activeOrganization } = useWorkspace();
   const [, setPurchase] = useQueryState("purchase");
 
-  // Detect when plan updates and auto-close dialog
   useEffect(() => {
-    if (isProcessing && activeOrganization?.plan === "pro") {
-      // Plan has been updated to pro, close the dialog
+    const isPaidPlan =
+      activeOrganization?.plan && activeOrganization.plan !== "free";
+
+    if (isProcessing && isPaidPlan) {
       setIsProcessing(false);
+      queryClient.invalidateQueries();
       setTimeout(() => {
         setIsOpen(false);
-        // Remove the purchase parameter from URL
         setPurchase(null);
-      }, 2000); // Show success message for 2 seconds before closing
+      }, 2000);
     }
-  }, [activeOrganization?.plan, isProcessing, setPurchase]);
+  }, [activeOrganization?.plan, isProcessing, setPurchase, queryClient]);
 
   useEffect(() => {
     if (isOpenInitially) {

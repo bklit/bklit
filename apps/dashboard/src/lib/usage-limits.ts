@@ -1,5 +1,7 @@
 import { AnalyticsService } from "@bklit/analytics/service";
+import { auth } from "@/auth/server";
 import { prisma } from "@bklit/db/client";
+import { headers } from "next/headers";
 import { getPlanLimits, PlanType } from "./plans";
 
 interface UsageCheckResult {
@@ -105,6 +107,34 @@ export async function checkEventLimit(
   }, 0);
 
   const totalEvents = pageViewCount + trackedEventCount;
+
+  if (validPlan === PlanType.PRO) {
+    try {
+      const subscriptions = await auth.api.subscriptions({
+        query: {
+          page: 1,
+          limit: 1,
+          active: true,
+          referenceId: organizationId,
+        },
+        headers: await headers(),
+      });
+
+      const activeSubscription = subscriptions?.result?.items?.[0];
+      const isCanceled = activeSubscription?.cancelAtPeriodEnd || false;
+
+      if (isCanceled && totalEvents >= eventLimit) {
+        return {
+          allowed: false,
+          currentUsage: totalEvents,
+          limit: eventLimit,
+          message: `Your Pro subscription is canceled. Event limit of ${eventLimit.toLocaleString()} reached.`,
+        };
+      }
+    } catch {
+      // If we can't check subscription status, allow (fail open)
+    }
+  }
 
   if (totalEvents >= eventLimit) {
     return {

@@ -20,8 +20,6 @@ export function authEnv() {
         .default("sandbox"),
       POLAR_WEBHOOK_SECRET: z.string().min(1),
       POLAR_ORGANIZATION_ID: z.string().min(1),
-      POLAR_FREE_PRODUCT_ID: z.string().optional(), // Optional - Free plan may not exist in Polar
-      POLAR_PRO_PRODUCT_ID: z.string().min(1),
 
       BKLIT_DEFAULT_PROJECT: z.string().optional(), // Optional - Auto-invite new users to the organization of this project
       DEV_BKLIT_DEFAULT_PROJECT: z.string().optional(), // Optional - Local dev demo project

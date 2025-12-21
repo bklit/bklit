@@ -17,9 +17,9 @@ const PLAN_LIMITS = {
     eventLimit: 4000,
   },
   [PlanType.PRO]: {
-    projectLimit: 5,
-    teamMemberLimit: 5,
-    eventLimit: 10000,
+    projectLimit: 999999,
+    teamMemberLimit: 999999,
+    eventLimit: 100000,
   },
 };
 
@@ -195,9 +195,8 @@ export const organizationRouter = {
         });
       }
 
-      // Get plan limits
-      const planType =
-        organization.plan === "pro" ? PlanType.PRO : PlanType.FREE;
+      // Get plan limits based on current tier
+      const planType = organization.plan as PlanType;
       const planLimits = getPlanLimits(planType);
 
       // Get all projects for this organization
@@ -206,9 +205,8 @@ export const organizationRouter = {
         select: { id: true },
       });
 
-      // Fetch active subscriptions from Polar
       const billingData: {
-        planName: "free" | "pro";
+        planName: string;
         status: "none" | "active" | "cancelled";
         currentPeriodEnd: Date | null;
         amount: number | null;
@@ -216,8 +214,9 @@ export const organizationRouter = {
         lastInvoiceDate: Date | null;
         lastInvoiceAmount: number | null;
         periodStart: Date | null;
+        cancelAtPeriodEnd: boolean;
       } = {
-        planName: "free",
+        planName: organization.plan,
         status: "none",
         currentPeriodEnd: null,
         amount: null,
@@ -225,6 +224,7 @@ export const organizationRouter = {
         lastInvoiceDate: null,
         lastInvoiceAmount: null,
         periodStart: null,
+        cancelAtPeriodEnd: false,
       };
 
       try {
@@ -253,9 +253,10 @@ export const organizationRouter = {
         } else {
           const activeSubscription = subscriptions.result.items[0];
 
-          if (activeSubscription && organization.plan === "pro") {
-            // Pro plan with active subscription
-            billingData.planName = "pro";
+          const isPaidPlan = organization.plan && organization.plan !== "free";
+
+          if (activeSubscription && isPaidPlan) {
+            billingData.planName = organization.plan;
             billingData.status = (activeSubscription.status || "active") as
               | "active"
               | "cancelled";
@@ -275,6 +276,8 @@ export const organizationRouter = {
               : activeSubscription.startedAt
                 ? new Date(activeSubscription.startedAt)
                 : null;
+            billingData.cancelAtPeriodEnd =
+              activeSubscription.cancelAtPeriodEnd || false;
           }
         }
       } catch (error) {
@@ -397,7 +400,6 @@ export const organizationRouter = {
       };
 
       try {
-        // Fetch subscriptions to get customer ID and next invoice info
         const subscriptions = await ctx.authApi.subscriptions({
           query: {
             page: 1,
@@ -409,9 +411,10 @@ export const organizationRouter = {
         });
 
         const activeSubscription = subscriptions?.result?.items?.[0];
+        let customerId: string | null = null;
 
         if (activeSubscription) {
-          const customerId = activeSubscription.customerId;
+          customerId = activeSubscription.customerId;
           billingDetails.customerId = customerId || null;
 
           if (!customerId) {
@@ -420,10 +423,10 @@ export const organizationRouter = {
             );
           }
 
-          // Get next invoice details from subscription
           if (
             activeSubscription.currentPeriodEnd &&
-            activeSubscription.amount
+            activeSubscription.amount &&
+            !activeSubscription.cancelAtPeriodEnd
           ) {
             billingDetails.nextInvoice = {
               dueDate: new Date(activeSubscription.currentPeriodEnd),
@@ -432,13 +435,19 @@ export const organizationRouter = {
             };
           }
 
-          // Fetch customer details including payment methods if we have a customer ID
-          if (customerId) {
-            try {
-              const orders = await polarClient.orders.list({
-                customerId,
-                limit: 10, // Fetch more to ensure we get paid orders
-              });
+        }
+
+        if (!customerId && organization.polarCustomerId) {
+          customerId = organization.polarCustomerId;
+          billingDetails.customerId = customerId;
+        }
+
+        if (customerId) {
+          try {
+            const orders = await polarClient.orders.list({
+              customerId,
+              limit: 10,
+            });
 
               if (orders?.result?.items) {
                 console.log(
@@ -564,7 +573,6 @@ export const organizationRouter = {
               // Silently fail - billing details are optional
             }
           }
-        }
       } catch {
         // Return empty data structure instead of throwing
       }

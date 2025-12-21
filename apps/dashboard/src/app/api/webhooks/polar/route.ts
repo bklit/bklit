@@ -2,7 +2,6 @@ import { prisma } from "@bklit/db/client";
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 
-// Simple in-memory cache for webhook deduplication (in production, use Redis)
 const processedWebhooks = new Set<string>();
 
 export async function POST(request: NextRequest) {
@@ -10,10 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Create a unique identifier for this webhook
     const webhookId = `${body.type}-${body.data?.id || body.data?.subscription_id || "unknown"}`;
 
-    // Check if we've already processed this webhook
     if (processedWebhooks.has(webhookId)) {
       return NextResponse.json({
         success: true,
@@ -22,10 +19,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Mark this webhook as processed
     processedWebhooks.add(webhookId);
 
-    // Only process events we care about
     const relevantEvents = [
       "subscription.active",
       "subscription.created",
@@ -39,12 +34,9 @@ export async function POST(request: NextRequest) {
       let referenceId = body.data?.reference_id;
       let status = body.data?.status;
 
-      // Handle checkout.updated event structure
       if (body.type === "checkout.updated") {
-        // For checkout.updated, check if checkout succeeded
         if (body.data?.status === "succeeded") {
           status = "active";
-          // Get reference ID from metadata
           referenceId = body.data?.metadata?.referenceId;
         } else {
           status = "failed";
@@ -52,7 +44,6 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Handle subscription events that don't have reference_id
       if (
         (body.type === "subscription.active" ||
           body.type === "subscription.created" ||
@@ -61,7 +52,6 @@ export async function POST(request: NextRequest) {
           body.type === "subscription.revoked") &&
         !referenceId
       ) {
-        // Try to extract reference_id from subscription metadata or customer data
         const subscription = body.data;
         referenceId =
           subscription?.metadata?.referenceId ||
@@ -69,8 +59,6 @@ export async function POST(request: NextRequest) {
           subscription?.customer?.external_id;
 
         if (!referenceId) {
-          // For subscription events without reference_id, we can't update the organization
-          // This is normal for some subscription lifecycle events
           return NextResponse.json({
             success: true,
             message:
@@ -81,29 +69,44 @@ export async function POST(request: NextRequest) {
       }
 
       if (referenceId) {
-        let plan = "free"; // Default to free
-
-        // Determine plan based on subscription status
-        if (status === "active") {
-          plan = "pro";
-        } else if (status === "canceled" || status === "revoked") {
-          plan = "free";
-        } else {
-          return NextResponse.json({
-            success: true,
-            message: "Webhook received but status not handled",
-            status: status,
-          });
-        }
-
         try {
-          // Direct database update
+          let plan = "free";
+          let polarCustomerId: string | null = null;
+          let billingInterval: string | null = null;
+
+          if (
+            body.type === "subscription.active" ||
+            body.type === "subscription.created" ||
+            body.type === "subscription.updated"
+          ) {
+            const subscription = body.data;
+            plan = "pro";
+            polarCustomerId = subscription.customer_id;
+            billingInterval = "monthly";
+          } else if (
+            body.type === "subscription.canceled" ||
+            body.type === "subscription.revoked"
+          ) {
+            plan = "free";
+            polarCustomerId = organization.polarCustomerId;
+            billingInterval = null;
+          } else {
+            return NextResponse.json({
+              success: true,
+              message: "Webhook received but status not handled",
+              status: status,
+            });
+          }
+
           const updatedOrg = await prisma.organization.update({
             where: { id: referenceId },
-            data: { plan: plan },
+            data: {
+              plan: plan,
+              polarCustomerId: polarCustomerId,
+              billingInterval: billingInterval,
+            },
           });
 
-          // Revalidate the organization pages to ensure fresh data
           revalidatePath(`/${referenceId}/settings/billing`);
           revalidatePath(`/${referenceId}`);
           revalidatePath(`/settings/billing`);

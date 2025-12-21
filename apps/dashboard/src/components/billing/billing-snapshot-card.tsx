@@ -3,6 +3,7 @@
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -10,7 +11,6 @@ import {
 } from "@bklit/ui/components/card";
 import {
   Item,
-  ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
@@ -19,9 +19,10 @@ import { Progress } from "@bklit/ui/components/progress";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { authClient } from "@/auth/client";
+import { useWorkspace } from "@/contexts/workspace-provider";
 import { calculateDaysUntil } from "@/lib/billing-utils";
 import { useTRPC } from "@/trpc/react";
+import { PricingUpgrade } from "../pricing/pricing-upgrade";
 
 interface BillingSnapshotCardProps {
   organizationId: string;
@@ -33,12 +34,23 @@ export function BillingSnapshotCard({
   hideViewBillingButton = false,
 }: BillingSnapshotCardProps) {
   const trpc = useTRPC();
+  const { activeOrganization } = useWorkspace();
 
   const { data: billing, isLoading } = useQuery(
     trpc.organization.getBillingSnapshot.queryOptions({
       organizationId,
     }),
   );
+
+  const { data: productsData } = useQuery({
+    queryKey: ["pro-product"],
+    queryFn: async () => {
+      const res = await fetch("/api/pricing/pro-product");
+      if (!res.ok) throw new Error("Failed to fetch pricing");
+      return res.json();
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   if (isLoading) {
     return (
@@ -91,7 +103,8 @@ export function BillingSnapshotCard({
     );
   }
 
-  const isProPlan = String(billing?.planName) === "pro";
+  const isPro = billing?.planName === "pro";
+  const proProduct = productsData?.product;
 
   // Calculate days remaining in billing cycle
   const getDaysRemaining = () => {
@@ -116,9 +129,7 @@ export function BillingSnapshotCard({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Usage</CardTitle>
-        </div>
+        <CardTitle>Usage</CardTitle>
         <CardDescription>
           {daysRemaining !== null
             ? daysRemaining === 0
@@ -128,6 +139,14 @@ export function BillingSnapshotCard({
                 : `${daysRemaining} days remaining in cycle`
             : "Manage your subscription"}
         </CardDescription>
+
+        {!hideViewBillingButton && (
+          <CardAction>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={`/${organizationId}/settings/billing`}>Billing</Link>
+            </Button>
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Usage Metrics */}
@@ -186,61 +205,66 @@ export function BillingSnapshotCard({
                   )}
                 />
               </div>
+
+              {/* Overage Events (Pro only) */}
+              {isPro && proProduct && (
+                <div className="space-y-1.5 pt-2 border-t">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      Overage Events
+                    </span>
+                    <span className="font-medium">
+                      {Math.max(
+                        0,
+                        billing.usage.total - proProduct.baseEvents,
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      On-demand Charges
+                    </span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      }).format(
+                        Math.max(
+                          0,
+                          billing.usage.total - proProduct.baseEvents,
+                        ) * proProduct.overagePrice,
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
             </ItemContent>
           </Item>
         )}
 
-        {!hideViewBillingButton && (
-          <Button asChild variant="outline" className="w-full">
-            <Link href={`/${organizationId}/settings/billing`}>
-              View billing
-            </Link>
-          </Button>
+        {billing.cancelAtPeriodEnd && billing.currentPeriodEnd && (
+          <Item
+            variant="outline"
+            className="border-destructive bg-destructive/10"
+          >
+            <ItemContent>
+              <ItemTitle>Subscription Ending</ItemTitle>
+              <ItemDescription className="text-destructive/80">
+                Your Pro plan will end on{" "}
+                {new Date(billing.currentPeriodEnd).toLocaleDateString(
+                  "en-US",
+                  {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  },
+                )}
+              </ItemDescription>
+            </ItemContent>
+          </Item>
         )}
 
-        {hideViewBillingButton &&
-          (isProPlan ? (
-            <Item variant="success">
-              <ItemContent>
-                <ItemTitle>You are on the Pro Plan</ItemTitle>
-                <ItemDescription className="text-teal-600">
-                  {billing.usage?.limit.toLocaleString() || "0"} operations per
-                  month
-                </ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Button
-                  variant="secondary"
-                  className="cursor-pointer w-full"
-                  onClick={async () => {
-                    await authClient.customer.portal();
-                  }}
-                >
-                  Manage subscription
-                </Button>
-              </ItemActions>
-            </Item>
-          ) : (
-            <Item variant="outline" className="bg-bklit-600/30">
-              <ItemContent>
-                <ItemTitle>You are on the Free Plan</ItemTitle>
-                <ItemDescription>
-                  {billing.usage?.limit.toLocaleString() || "0"} operations per
-                  month
-                </ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Button
-                  className="cursor-pointer w-full"
-                  onClick={async () => {
-                    await authClient.customer.portal();
-                  }}
-                >
-                  Upgrade to Pro
-                </Button>
-              </ItemActions>
-            </Item>
-          ))}
+        <PricingUpgrade currentPlan={activeOrganization?.plan} />
       </CardContent>
     </Card>
   );
