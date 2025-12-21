@@ -434,7 +434,6 @@ export const organizationRouter = {
               currency: activeSubscription.currency || "usd",
             };
           }
-
         }
 
         if (!customerId && organization.polarCustomerId) {
@@ -449,130 +448,129 @@ export const organizationRouter = {
               limit: 10,
             });
 
-              if (orders?.result?.items) {
-                console.log(
-                  "[Billing Details] Raw orders data (first 3):",
-                  JSON.stringify(orders.result.items.slice(0, 3), null, 2),
-                );
-              } else {
-                console.warn(
-                  "[Billing Details] No orders.result.items found in response!",
-                );
-              }
-
-              if (orders?.result?.items && orders.result.items.length > 0) {
-                // Define type for Polar order response
-                type PolarOrder = {
-                  id: string;
-                  createdAt?: string | Date;
-                  created_at?: string | Date;
-                  currency?: string;
-                  totalAmount?: number;
-                  total_amount?: number;
-                  paid?: boolean;
-                  status?: string;
-                  invoiceNumber?: string;
-                  invoice_number?: string;
-                };
-
-                // Filter and sort orders - we want completed/paid orders
-                const paidOrders = orders.result.items
-                  .filter((order) => {
-                    const orderData = order as unknown as PolarOrder;
-
-                    // Check both camelCase and snake_case for Polar API fields
-                    const totalAmount =
-                      orderData.totalAmount || orderData.total_amount;
-                    const isPaid = orderData.paid === true;
-                    const createdAt =
-                      orderData.createdAt || orderData.created_at;
-
-                    const hasAmount = !!totalAmount && totalAmount > 0;
-                    const hasCreatedAt = !!createdAt;
-
-                    return hasAmount && hasCreatedAt && isPaid;
-                  })
-                  .sort((a, b) => {
-                    // Sort by creation date descending (newest first)
-                    const orderDataA = a as unknown as PolarOrder;
-                    const orderDataB = b as unknown as PolarOrder;
-                    const dateA = new Date(
-                      orderDataA.createdAt || orderDataA.created_at || "",
-                    ).getTime();
-                    const dateB = new Date(
-                      orderDataB.createdAt || orderDataB.created_at || "",
-                    ).getTime();
-                    return dateB - dateA;
-                  })
-                  .slice(0, 3) // Take top 3
-                  .map((order) => {
-                    const orderData = order as unknown as PolarOrder;
-                    const totalAmount =
-                      orderData.totalAmount || orderData.total_amount || 0;
-                    const invoiceNumber =
-                      orderData.invoiceNumber || orderData.invoice_number;
-
-                    return {
-                      id: orderData.id,
-                      amount: totalAmount,
-                      currency: orderData.currency || "usd",
-                      createdAt: new Date(
-                        orderData.createdAt || orderData.created_at || "",
-                      ),
-                      status: orderData.paid
-                        ? "paid"
-                        : orderData.status || "pending",
-                      url: null,
-                      invoiceNumber: invoiceNumber || null,
-                    };
-                  });
-
-                billingDetails.invoices = paidOrders;
-              }
-            } catch {
-              // Silently fail - billing details are optional
+            if (orders?.result?.items) {
+              console.log(
+                "[Billing Details] Raw orders data (first 3):",
+                JSON.stringify(orders.result.items.slice(0, 3), null, 2),
+              );
+            } else {
+              console.warn(
+                "[Billing Details] No orders.result.items found in response!",
+              );
             }
 
-            try {
-              // Fetch customer to get billing address and details
-              const customer = await polarClient.customers.get({
-                id: customerId,
-              });
+            if (orders?.result?.items && orders.result.items.length > 0) {
+              // Define type for Polar order response
+              type PolarOrder = {
+                id: string;
+                createdAt?: string | Date;
+                created_at?: string | Date;
+                currency?: string;
+                totalAmount?: number;
+                total_amount?: number;
+                paid?: boolean;
+                status?: string;
+                invoiceNumber?: string;
+                invoice_number?: string;
+              };
 
-              if (customer && typeof customer === "object") {
-                const customerData = customer as {
-                  email?: string;
-                  name?: string;
-                  billingAddress?: {
-                    line1?: string;
-                    line2?: string;
-                    city?: string;
-                    state?: string;
-                    postalCode?: string;
-                    country?: string;
+              // Filter and sort orders - we want completed/paid orders
+              const paidOrders = orders.result.items
+                .filter((order) => {
+                  const orderData = order as unknown as PolarOrder;
+
+                  // Check both camelCase and snake_case for Polar API fields
+                  const totalAmount =
+                    orderData.totalAmount || orderData.total_amount;
+                  const isPaid = orderData.paid === true;
+                  const createdAt = orderData.createdAt || orderData.created_at;
+
+                  const hasAmount = !!totalAmount && totalAmount > 0;
+                  const hasCreatedAt = !!createdAt;
+
+                  return hasAmount && hasCreatedAt && isPaid;
+                })
+                .sort((a, b) => {
+                  // Sort by creation date descending (newest first)
+                  const orderDataA = a as unknown as PolarOrder;
+                  const orderDataB = b as unknown as PolarOrder;
+                  const dateA = new Date(
+                    orderDataA.createdAt || orderDataA.created_at || "",
+                  ).getTime();
+                  const dateB = new Date(
+                    orderDataB.createdAt || orderDataB.created_at || "",
+                  ).getTime();
+                  return dateB - dateA;
+                })
+                .slice(0, 3) // Take top 3
+                .map((order) => {
+                  const orderData = order as unknown as PolarOrder;
+                  const totalAmount =
+                    orderData.totalAmount || orderData.total_amount || 0;
+                  const invoiceNumber =
+                    orderData.invoiceNumber || orderData.invoice_number;
+
+                  return {
+                    id: orderData.id,
+                    amount: totalAmount,
+                    currency: orderData.currency || "usd",
+                    createdAt: new Date(
+                      orderData.createdAt || orderData.created_at || "",
+                    ),
+                    status: orderData.paid
+                      ? "paid"
+                      : orderData.status || "pending",
+                    url: null,
+                    invoiceNumber: invoiceNumber || null,
                   };
-                };
+                });
 
-                // Set billing email and name
-                billingDetails.billingEmail = customerData.email || null;
-                billingDetails.billingName = customerData.name || null;
-
-                // Set billing address if available
-                if (customerData.billingAddress) {
-                  billingDetails.billingAddress = {
-                    line1: customerData.billingAddress.line1 || "",
-                    line2: customerData.billingAddress.line2 || null,
-                    city: customerData.billingAddress.city || "",
-                    state: customerData.billingAddress.state || null,
-                    postalCode: customerData.billingAddress.postalCode || "",
-                    country: customerData.billingAddress.country || "",
-                  };
-                }
-              }
-            } catch {
-              // Silently fail - billing details are optional
+              billingDetails.invoices = paidOrders;
             }
+          } catch {
+            // Silently fail - billing details are optional
           }
+
+          try {
+            // Fetch customer to get billing address and details
+            const customer = await polarClient.customers.get({
+              id: customerId,
+            });
+
+            if (customer && typeof customer === "object") {
+              const customerData = customer as {
+                email?: string;
+                name?: string;
+                billingAddress?: {
+                  line1?: string;
+                  line2?: string;
+                  city?: string;
+                  state?: string;
+                  postalCode?: string;
+                  country?: string;
+                };
+              };
+
+              // Set billing email and name
+              billingDetails.billingEmail = customerData.email || null;
+              billingDetails.billingName = customerData.name || null;
+
+              // Set billing address if available
+              if (customerData.billingAddress) {
+                billingDetails.billingAddress = {
+                  line1: customerData.billingAddress.line1 || "",
+                  line2: customerData.billingAddress.line2 || null,
+                  city: customerData.billingAddress.city || "",
+                  state: customerData.billingAddress.state || null,
+                  postalCode: customerData.billingAddress.postalCode || "",
+                  country: customerData.billingAddress.country || "",
+                };
+              }
+            }
+          } catch {
+            // Silently fail - billing details are optional
+          }
+        }
       } catch {
         // Return empty data structure instead of throwing
       }

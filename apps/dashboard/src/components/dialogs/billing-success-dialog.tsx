@@ -9,11 +9,11 @@ import {
   DialogTitle,
 } from "@bklit/ui/components/dialog";
 import { Spinner } from "@bklit/ui/components/spinner";
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspace } from "@/contexts/workspace-provider";
 
 interface BillingSuccessDialogProps {
