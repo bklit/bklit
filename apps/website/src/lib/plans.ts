@@ -13,68 +13,57 @@ export interface PlanDetails {
   interval: "month" | "year";
   features: string[];
   popular?: boolean;
-  polarProductId?: string; // For linking to Polar subscription products
 }
 
 export const PLAN_DETAILS: Record<PlanType, PlanDetails> = {
   [PlanType.FREE]: {
-    name: "Free Team",
-    description: "Perfect for small teams getting started",
+    name: "Free",
+    description: "Perfect for getting started",
     projectLimit: 1,
     teamMemberLimit: 1,
     price: 0,
     currency: "USD",
     interval: "month",
     features: [
-      "1 project per team",
+      "4,000 events per month",
+      "1 project",
       "1 team member",
-      "Basic analytics dashboard",
-      "Page view tracking",
+      "Real-time analytics",
+      "Funnel analysis",
+      "Custom event tracking",
+      "API access",
       "Community support",
-      "Standard data retention",
     ],
   },
   [PlanType.PRO]: {
-    name: "Pro Team",
-    description: "For growing teams that need more power",
-    projectLimit: 5,
-    teamMemberLimit: 5,
-    price: 0, // Price comes from Polar
-    currency: "USD", // Currency comes from Polar
+    name: "Pro",
+    description: "For growing businesses",
+    projectLimit: 999999,
+    teamMemberLimit: 999999,
+    price: 3000,
+    currency: "USD",
     interval: "month",
     features: [
-      "5 projects per team",
-      "5 team members",
-      "Advanced analytics dashboard",
-      "Custom event tracking",
-      "Session recordings",
-      "Priority support",
-      "Extended data retention",
-      "Custom domains",
-      "API access",
-      "Export capabilities",
+      "100,000 events per month",
+      "then $0.0004 per event",
+      "Unlimited projects",
+      "Unlimited team members",
+      "All analytics features",
+      "Funnel analysis",
+      "Priority support - Discord",
+      "Realtime analytics",
     ],
     popular: true,
-    polarProductId:
-      process.env.POLAR_PRO_PLAN_PRODUCT_ID ||
-      process.env.NEXT_PUBLIC_POLAR_PRO_PLAN_PRODUCT_ID ||
-      "9fb16a1d-6922-4d4d-9c4a-deb3caa97712",
   },
 };
 
-// Helper function to get plan details by plan ID string
 export function getPlanDetails(planId?: string | null): PlanDetails {
   if (planId === PlanType.PRO) {
     return PLAN_DETAILS[PlanType.PRO];
   }
-  // Default to free plan if planId is null, undefined, or not 'pro'
   return PLAN_DETAILS[PlanType.FREE];
 }
 
-// Helper function to get plan type by Polar product ID
 export function getPlanTypeByPolarProductId(polarProductId: string): PlanType {
-  if (polarProductId === PLAN_DETAILS[PlanType.PRO].polarProductId) {
-    return PlanType.PRO;
-  }
   return PlanType.FREE;
 }
