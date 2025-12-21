@@ -42,8 +42,16 @@ export async function GET() {
   }
 }
 
+import { auth } from "@/auth/server";
+
 export async function DELETE() {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   cachedData = null;
   cacheTime = 0;
   return NextResponse.json({ message: "Cache cleared" });
+}
 }
