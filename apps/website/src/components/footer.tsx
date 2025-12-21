@@ -55,9 +55,9 @@ export const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="#"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                  <a
+                    href="mailto:support@bklit.com?subject=Support%20Request"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
@@ -65,7 +65,7 @@ export const Footer = () => {
                     <span className="transition-all duration-200 group-hover:translate-x-[20px]">
                       Contact
                     </span>
-                  </Link>
+                  </a>
                 </li>
                 <li>
                   <a
