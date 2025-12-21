@@ -1,5 +1,7 @@
 import { getProProduct } from "@bklit/api";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth/server";
 
 const CACHE_TTL = 10 * 60 * 1000;
 let cachedData: Awaited<ReturnType<typeof getProProduct>> | null = null;
@@ -42,16 +44,20 @@ export async function GET() {
   }
 }
 
-import { auth } from "@/auth/server";
-
 export async function DELETE() {
-  const session = await auth();
-  if (!session?.user) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    cachedData = null;
+    cacheTime = 0;
+    return NextResponse.json({ message: "Cache cleared" });
+  } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  cachedData = null;
-  cacheTime = 0;
-  return NextResponse.json({ message: "Cache cleared" });
-}
 }
