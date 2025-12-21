@@ -71,20 +71,23 @@ model Verification {
 }
 
 model Organization {
-  id          String       @id
-  name        String
-  slug        String?      @unique
-  logo        String?
-  createdAt   DateTime
-  metadata    String?
-  theme       String?
-  plan        String       @default("free")
-  projects    Project[]
-  invitations Invitation[]
-  members     Member[]
-  apiTokens   ApiToken[]
+  id               String       @id
+  name             String
+  slug             String?      @unique
+  logo             String?
+  createdAt        DateTime
+  metadata         String?
+  theme            String?
+  plan             String       @default("free")
+  polarCustomerId  String?      @unique // Polar customer ID for billing
+  billingInterval  String?      // "monthly" or "annual"
+  projects         Project[]
+  invitations      Invitation[]
+  members          Member[]
+  apiTokens        ApiToken[]
 
   @@index([plan])
+  @@index([polarCustomerId])
   @@map("organization")
 }
 

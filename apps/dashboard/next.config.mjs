@@ -5,12 +5,29 @@ await jiti.import("./src/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  transpilePackages: ["@bklit/auth", "@bklit/db", "@bklit/ui", "@bklit/utils"],
+  transpilePackages: [
+    "@bklit/auth",
+    "@bklit/db",
+    "@bklit/ui",
+    "@bklit/utils",
+    "@bklit/analytics",
+    "@bklit/api",
+  ],
   typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
+
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
 
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+
+  skipMiddlewareUrlNormalize: true,
+  skipTrailingSlashRedirect: true,
 
   images: {
     remotePatterns: [

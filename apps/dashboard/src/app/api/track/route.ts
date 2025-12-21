@@ -1,6 +1,11 @@
 import { randomBytes } from "node:crypto";
-import { AnalyticsService } from "@bklit/analytics/service";
-import { type NextRequest, NextResponse } from "next/server";
+import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
+import { prisma } from "@bklit/db/client";
+import {
+  unstable_after as after,
+  type NextRequest,
+  NextResponse,
+} from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
 import { checkEventLimit } from "@/lib/usage-limits";
@@ -326,6 +331,34 @@ export async function POST(request: NextRequest) {
       projectId: payload.projectId,
       sessionId: payload.sessionId,
     });
+
+    const orgId = tokenValidation.organizationId;
+    if (orgId) {
+      after(async () => {
+        try {
+          const org = await prisma.organization.findUnique({
+            where: { id: orgId },
+            select: { polarCustomerId: true },
+          });
+
+          if (org?.polarCustomerId) {
+            await sendEventToPolar({
+              organizationId: orgId,
+              polarCustomerId: org.polarCustomerId,
+              eventType: "pageview",
+              metadata: {
+                url: payload.url,
+                projectId: payload.projectId,
+              },
+            }).catch((err) => {
+              console.error("Failed to send pageview to Polar:", err);
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch organization for Polar:", err);
+        }
+      });
+    }
 
     return createCorsResponse({ message: "Data received and stored" }, 200);
   } catch (error) {

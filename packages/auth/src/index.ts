@@ -18,7 +18,6 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { authEnv } from "../env";
-import plansTemplate from "./pricing-plans.json";
 import {
   logWebhookPayload,
   type PolarWebhookPayload,
@@ -27,23 +26,8 @@ import {
 
 const env = authEnv();
 
-// Inject env vars into plans
-const plans = plansTemplate.map((plan) => {
-  if (plan.name === "Free") {
-    return {
-      ...plan,
-      // Free plan may not have a Polar product (users are on free by default)
-      polarProductId: env.POLAR_FREE_PRODUCT_ID || null,
-    };
-  }
-  if (plan.name === "Pro") {
-    return {
-      ...plan,
-      polarProductId: env.POLAR_PRO_PRODUCT_ID,
-    };
-  }
-  return plan;
-});
+// No static plans - all pricing fetched from Polar API
+const plans: any[] = [];
 
 const polarClient = new Polar({
   accessToken: env.POLAR_ACCESS_TOKEN,
@@ -285,9 +269,8 @@ export { polarClient };
 // Export Polar configuration
 export const polarConfig = {
   organizationId: env.POLAR_ORGANIZATION_ID,
-  freeProductId: env.POLAR_FREE_PRODUCT_ID || null,
-  proProductId: env.POLAR_PRO_PRODUCT_ID,
   serverMode: env.POLAR_SERVER_MODE,
+  meterIdEvents: env.POLAR_METER_ID_EVENTS || null,
 } as const;
 
 // Export plans with injected IDs

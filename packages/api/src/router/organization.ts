@@ -17,9 +17,9 @@ const PLAN_LIMITS = {
     eventLimit: 4000,
   },
   [PlanType.PRO]: {
-    projectLimit: 5,
-    teamMemberLimit: 5,
-    eventLimit: 10000,
+    projectLimit: 999999,
+    teamMemberLimit: 999999,
+    eventLimit: 100000,
   },
 };
 
@@ -195,9 +195,11 @@ export const organizationRouter = {
         });
       }
 
-      // Get plan limits
-      const planType =
-        organization.plan === "pro" ? PlanType.PRO : PlanType.FREE;
+      const planType = Object.values(PlanType).includes(
+        organization.plan as PlanType,
+      )
+        ? (organization.plan as PlanType)
+        : PlanType.FREE;
       const planLimits = getPlanLimits(planType);
 
       // Get all projects for this organization
@@ -206,9 +208,8 @@ export const organizationRouter = {
         select: { id: true },
       });
 
-      // Fetch active subscriptions from Polar
       const billingData: {
-        planName: "free" | "pro";
+        planName: string;
         status: "none" | "active" | "cancelled";
         currentPeriodEnd: Date | null;
         amount: number | null;
@@ -216,8 +217,9 @@ export const organizationRouter = {
         lastInvoiceDate: Date | null;
         lastInvoiceAmount: number | null;
         periodStart: Date | null;
+        cancelAtPeriodEnd: boolean;
       } = {
-        planName: "free",
+        planName: organization.plan,
         status: "none",
         currentPeriodEnd: null,
         amount: null,
@@ -225,6 +227,7 @@ export const organizationRouter = {
         lastInvoiceDate: null,
         lastInvoiceAmount: null,
         periodStart: null,
+        cancelAtPeriodEnd: false,
       };
 
       try {
@@ -253,9 +256,10 @@ export const organizationRouter = {
         } else {
           const activeSubscription = subscriptions.result.items[0];
 
-          if (activeSubscription && organization.plan === "pro") {
-            // Pro plan with active subscription
-            billingData.planName = "pro";
+          const isPaidPlan = organization.plan && organization.plan !== "free";
+
+          if (activeSubscription && isPaidPlan) {
+            billingData.planName = organization.plan;
             billingData.status = (activeSubscription.status || "active") as
               | "active"
               | "cancelled";
@@ -275,6 +279,8 @@ export const organizationRouter = {
               : activeSubscription.startedAt
                 ? new Date(activeSubscription.startedAt)
                 : null;
+            billingData.cancelAtPeriodEnd =
+              activeSubscription.cancelAtPeriodEnd || false;
           }
         }
       } catch (error) {
@@ -397,7 +403,6 @@ export const organizationRouter = {
       };
 
       try {
-        // Fetch subscriptions to get customer ID and next invoice info
         const subscriptions = await ctx.authApi.subscriptions({
           query: {
             page: 1,
@@ -409,9 +414,10 @@ export const organizationRouter = {
         });
 
         const activeSubscription = subscriptions?.result?.items?.[0];
+        let customerId: string | null = null;
 
         if (activeSubscription) {
-          const customerId = activeSubscription.customerId;
+          customerId = activeSubscription.customerId;
           billingDetails.customerId = customerId || null;
 
           if (!customerId) {
@@ -420,10 +426,10 @@ export const organizationRouter = {
             );
           }
 
-          // Get next invoice details from subscription
           if (
             activeSubscription.currentPeriodEnd &&
-            activeSubscription.amount
+            activeSubscription.amount &&
+            !activeSubscription.cancelAtPeriodEnd
           ) {
             billingDetails.nextInvoice = {
               dueDate: new Date(activeSubscription.currentPeriodEnd),
@@ -431,138 +437,130 @@ export const organizationRouter = {
               currency: activeSubscription.currency || "usd",
             };
           }
+        }
 
-          // Fetch customer details including payment methods if we have a customer ID
-          if (customerId) {
-            try {
-              const orders = await polarClient.orders.list({
-                customerId,
-                limit: 10, // Fetch more to ensure we get paid orders
-              });
+        if (!customerId && organization.polarCustomerId) {
+          customerId = organization.polarCustomerId;
+          billingDetails.customerId = customerId;
+        }
 
-              if (orders?.result?.items) {
-                console.log(
-                  "[Billing Details] Raw orders data (first 3):",
-                  JSON.stringify(orders.result.items.slice(0, 3), null, 2),
-                );
-              } else {
-                console.warn(
-                  "[Billing Details] No orders.result.items found in response!",
-                );
-              }
+        if (customerId) {
+          try {
+            const orders = await polarClient.orders.list({
+              customerId,
+              limit: 10,
+            });
 
-              if (orders?.result?.items && orders.result.items.length > 0) {
-                // Define type for Polar order response
-                type PolarOrder = {
-                  id: string;
-                  createdAt?: string | Date;
-                  created_at?: string | Date;
-                  currency?: string;
-                  totalAmount?: number;
-                  total_amount?: number;
-                  paid?: boolean;
-                  status?: string;
-                  invoiceNumber?: string;
-                  invoice_number?: string;
-                };
+            if (orders?.result?.items && orders.result.items.length > 0) {
+              // Define type for Polar order response
+              type PolarOrder = {
+                id: string;
+                createdAt?: string | Date;
+                created_at?: string | Date;
+                currency?: string;
+                totalAmount?: number;
+                total_amount?: number;
+                paid?: boolean;
+                status?: string;
+                invoiceNumber?: string;
+                invoice_number?: string;
+              };
 
-                // Filter and sort orders - we want completed/paid orders
-                const paidOrders = orders.result.items
-                  .filter((order) => {
-                    const orderData = order as unknown as PolarOrder;
+              // Filter and sort orders - we want completed/paid orders
+              const paidOrders = orders.result.items
+                .filter((order) => {
+                  const orderData = order as unknown as PolarOrder;
 
-                    // Check both camelCase and snake_case for Polar API fields
-                    const totalAmount =
-                      orderData.totalAmount || orderData.total_amount;
-                    const isPaid = orderData.paid === true;
-                    const createdAt =
-                      orderData.createdAt || orderData.created_at;
+                  // Check both camelCase and snake_case for Polar API fields
+                  const totalAmount =
+                    orderData.totalAmount || orderData.total_amount;
+                  const isPaid = orderData.paid === true;
+                  const createdAt = orderData.createdAt || orderData.created_at;
 
-                    const hasAmount = !!totalAmount && totalAmount > 0;
-                    const hasCreatedAt = !!createdAt;
+                  const hasAmount = !!totalAmount && totalAmount > 0;
+                  const hasCreatedAt = !!createdAt;
 
-                    return hasAmount && hasCreatedAt && isPaid;
-                  })
-                  .sort((a, b) => {
-                    // Sort by creation date descending (newest first)
-                    const orderDataA = a as unknown as PolarOrder;
-                    const orderDataB = b as unknown as PolarOrder;
-                    const dateA = new Date(
-                      orderDataA.createdAt || orderDataA.created_at || "",
-                    ).getTime();
-                    const dateB = new Date(
-                      orderDataB.createdAt || orderDataB.created_at || "",
-                    ).getTime();
-                    return dateB - dateA;
-                  })
-                  .slice(0, 3) // Take top 3
-                  .map((order) => {
-                    const orderData = order as unknown as PolarOrder;
-                    const totalAmount =
-                      orderData.totalAmount || orderData.total_amount || 0;
-                    const invoiceNumber =
-                      orderData.invoiceNumber || orderData.invoice_number;
+                  return hasAmount && hasCreatedAt && isPaid;
+                })
+                .sort((a, b) => {
+                  // Sort by creation date descending (newest first)
+                  const orderDataA = a as unknown as PolarOrder;
+                  const orderDataB = b as unknown as PolarOrder;
+                  const dateA = new Date(
+                    orderDataA.createdAt || orderDataA.created_at || "",
+                  ).getTime();
+                  const dateB = new Date(
+                    orderDataB.createdAt || orderDataB.created_at || "",
+                  ).getTime();
+                  return dateB - dateA;
+                })
+                .slice(0, 3) // Take top 3
+                .map((order) => {
+                  const orderData = order as unknown as PolarOrder;
+                  const totalAmount =
+                    orderData.totalAmount || orderData.total_amount || 0;
+                  const invoiceNumber =
+                    orderData.invoiceNumber || orderData.invoice_number;
 
-                    return {
-                      id: orderData.id,
-                      amount: totalAmount,
-                      currency: orderData.currency || "usd",
-                      createdAt: new Date(
-                        orderData.createdAt || orderData.created_at || "",
-                      ),
-                      status: orderData.paid
-                        ? "paid"
-                        : orderData.status || "pending",
-                      url: null,
-                      invoiceNumber: invoiceNumber || null,
-                    };
-                  });
-
-                billingDetails.invoices = paidOrders;
-              }
-            } catch {
-              // Silently fail - billing details are optional
-            }
-
-            try {
-              // Fetch customer to get billing address and details
-              const customer = await polarClient.customers.get({
-                id: customerId,
-              });
-
-              if (customer && typeof customer === "object") {
-                const customerData = customer as {
-                  email?: string;
-                  name?: string;
-                  billingAddress?: {
-                    line1?: string;
-                    line2?: string;
-                    city?: string;
-                    state?: string;
-                    postalCode?: string;
-                    country?: string;
+                  return {
+                    id: orderData.id,
+                    amount: totalAmount,
+                    currency: orderData.currency || "usd",
+                    createdAt: new Date(
+                      orderData.createdAt || orderData.created_at || "",
+                    ),
+                    status: orderData.paid
+                      ? "paid"
+                      : orderData.status || "pending",
+                    url: null,
+                    invoiceNumber: invoiceNumber || null,
                   };
-                };
+                });
 
-                // Set billing email and name
-                billingDetails.billingEmail = customerData.email || null;
-                billingDetails.billingName = customerData.name || null;
-
-                // Set billing address if available
-                if (customerData.billingAddress) {
-                  billingDetails.billingAddress = {
-                    line1: customerData.billingAddress.line1 || "",
-                    line2: customerData.billingAddress.line2 || null,
-                    city: customerData.billingAddress.city || "",
-                    state: customerData.billingAddress.state || null,
-                    postalCode: customerData.billingAddress.postalCode || "",
-                    country: customerData.billingAddress.country || "",
-                  };
-                }
-              }
-            } catch {
-              // Silently fail - billing details are optional
+              billingDetails.invoices = paidOrders;
             }
+          } catch {
+            // Silently fail - billing details are optional
+          }
+
+          try {
+            // Fetch customer to get billing address and details
+            const customer = await polarClient.customers.get({
+              id: customerId,
+            });
+
+            if (customer && typeof customer === "object") {
+              const customerData = customer as {
+                email?: string;
+                name?: string;
+                billingAddress?: {
+                  line1?: string;
+                  line2?: string;
+                  city?: string;
+                  state?: string;
+                  postalCode?: string;
+                  country?: string;
+                };
+              };
+
+              // Set billing email and name
+              billingDetails.billingEmail = customerData.email || null;
+              billingDetails.billingName = customerData.name || null;
+
+              // Set billing address if available
+              if (customerData.billingAddress) {
+                billingDetails.billingAddress = {
+                  line1: customerData.billingAddress.line1 || "",
+                  line2: customerData.billingAddress.line2 || null,
+                  city: customerData.billingAddress.city || "",
+                  state: customerData.billingAddress.state || null,
+                  postalCode: customerData.billingAddress.postalCode || "",
+                  country: customerData.billingAddress.country || "",
+                };
+              }
+            }
+          } catch {
+            // Silently fail - billing details are optional
           }
         }
       } catch {

@@ -1,16 +1,11 @@
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import { unstable_noStore } from "next/cache";
-import { headers } from "next/headers";
 import { Suspense } from "react";
-import { auth } from "@/auth/server";
 import { BillingDetailsCard } from "@/components/billing/billing-details-card";
 import { BillingSnapshotCard } from "@/components/billing/billing-snapshot-card";
-// import { PlanOverviewCard } from "@/components/billing/plan-overview-card";
 import { BillingSuccessDialog } from "@/components/dialogs/billing-success-dialog";
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
-import { PricingTable } from "@/components/plans/pricing-table";
-import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
 export default async function BillingPage({
@@ -50,17 +45,6 @@ export default async function BillingPage({
       unstable_noStore();
     }
 
-    // Fetch active subscriptions for the organization
-    const subscriptions = await auth.api.subscriptions({
-      query: {
-        page: 1,
-        limit: 10,
-        active: true,
-        referenceId: organization.id,
-      },
-      headers: await headers(),
-    });
-
     return (
       <>
         <PageHeader
@@ -74,7 +58,6 @@ export default async function BillingPage({
         </PageHeader>
         <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
 
-        {/* Billing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="flex flex-col gap-4">
             <Suspense
@@ -100,32 +83,12 @@ export default async function BillingPage({
             <BillingDetailsCard organizationId={organization.id} />
           </Suspense>
         </div>
-
-        <PricingTable
-          organization={organization}
-          subscriptions={subscriptions.result.items}
-        />
       </>
     );
   }
 
-  const _session = await authenticated({
-    callbackUrl: `/${organizationId}/billing`,
-  });
-
   const organization = await api.organization.fetch({ id: organizationId });
   const showSuccessMessage = resolvedSearchParams?.purchase === "success";
-
-  // Fetch active subscriptions for the organization
-  const subscriptions = await auth.api.subscriptions({
-    query: {
-      page: 1,
-      limit: 10,
-      active: true,
-      referenceId: organizationId,
-    },
-    headers: await headers(),
-  });
 
   return (
     <>
@@ -166,13 +129,6 @@ export default async function BillingPage({
           <BillingDetailsCard organizationId={organizationId} />
         </Suspense>
       </div>
-
-      {/* TODO: New pricing structure coming soon */}
-      {/*
-      <PricingTable
-        organization={organization}
-        subscriptions={subscriptions.result.items}
-      /> */}
     </>
   );
 }
