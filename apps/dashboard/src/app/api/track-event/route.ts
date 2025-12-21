@@ -1,5 +1,4 @@
-import { sendEventToPolar } from "@bklit/analytics/polar-events";
-import { AnalyticsService } from "@bklit/analytics/service";
+import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
 import { randomBytes } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";

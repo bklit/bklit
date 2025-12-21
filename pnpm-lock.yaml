@@ -432,6 +432,9 @@ importers:
 
   packages/analytics:
     dependencies:
+      '@bklit/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@bklit/db':
         specifier: workspace:*
         version: link:../db
@@ -441,6 +444,9 @@ importers:
       '@clickhouse/client':
         specifier: ^1.12.1
         version: 1.14.0
+      '@polar-sh/sdk':
+        specifier: ^0.39.1
+        version: 0.39.1
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
         version: 0.13.8(typescript@5.9.3)(zod@3.25.76)

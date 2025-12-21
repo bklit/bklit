@@ -1,13 +1,13 @@
 import { authEnv } from "@bklit/auth/env";
 import { Polar } from "@polar-sh/sdk";
 
-const env = authEnv();
-
-// Initialize Polar client
-const polar = new Polar({
-  accessToken: env.POLAR_ACCESS_TOKEN,
-  server: env.POLAR_SERVER_MODE,
-});
+function getPolarClient() {
+  const env = authEnv();
+  return new Polar({
+    accessToken: env.POLAR_ACCESS_TOKEN,
+    server: env.POLAR_SERVER_MODE,
+  });
+}
 
 export interface PolarEventData {
   organizationId: string;
@@ -30,7 +30,7 @@ export async function sendEventToPolar(data: PolarEventData): Promise<void> {
       return;
     }
 
-    // Send event to Polar
+    const polar = getPolarClient();
     await polar.events.create({
       name: data.eventType,
       externalCustomerId: data.organizationId,
@@ -72,9 +72,7 @@ export async function sendEventsToPolarBatch(
   return { succeeded, failed };
 }
 
-/**
- * Get the Polar meter ID for events
- */
 export function getPolarMeterIdEvents(): string | undefined {
+  const env = authEnv();
   return env.POLAR_METER_ID_EVENTS;
 }

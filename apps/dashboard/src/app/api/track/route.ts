@@ -1,6 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { sendEventToPolar } from "@bklit/analytics/polar-events";
-import { AnalyticsService } from "@bklit/analytics/service";
+import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";

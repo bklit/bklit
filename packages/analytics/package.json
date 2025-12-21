@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./service": "./src/service.ts",
     "./types": "./src/types.ts",
@@ -20,9 +21,11 @@
     "migrate-data": "pnpm with-env-dev tsx src/migrations/migrate-data.ts"
   },
   "dependencies": {
+    "@bklit/auth": "workspace:*",
     "@bklit/db": "workspace:*",
     "@bklit/utils": "workspace:*",
     "@clickhouse/client": "^1.12.1",
+    "@polar-sh/sdk": "^0.39.1",
     "@t3-oss/env-nextjs": "catalog:",
     "zod": "catalog:"
   },
