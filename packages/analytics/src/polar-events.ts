@@ -71,8 +71,3 @@ export async function sendEventsToPolarBatch(
 
   return { succeeded, failed };
 }
-
-export function getPolarMeterIdEvents(): string | undefined {
-  const env = authEnv();
-  return env.POLAR_METER_ID_EVENTS;
-}

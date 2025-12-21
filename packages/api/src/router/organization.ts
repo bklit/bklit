@@ -195,8 +195,11 @@ export const organizationRouter = {
         });
       }
 
-      // Get plan limits based on current tier
-      const planType = organization.plan as PlanType;
+      const planType = Object.values(PlanType).includes(
+        organization.plan as PlanType,
+      )
+        ? (organization.plan as PlanType)
+        : PlanType.FREE;
       const planLimits = getPlanLimits(planType);
 
       // Get all projects for this organization
@@ -447,17 +450,6 @@ export const organizationRouter = {
               customerId,
               limit: 10,
             });
-
-            if (orders?.result?.items) {
-              console.log(
-                "[Billing Details] Raw orders data (first 3):",
-                JSON.stringify(orders.result.items.slice(0, 3), null, 2),
-              );
-            } else {
-              console.warn(
-                "[Billing Details] No orders.result.items found in response!",
-              );
-            }
 
             if (orders?.result?.items && orders.result.items.length > 0) {
               // Define type for Polar order response

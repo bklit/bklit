@@ -1,7 +1,11 @@
+import { randomBytes } from "node:crypto";
 import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
-import { randomBytes } from "crypto";
-import { type NextRequest, NextResponse } from "next/server";
+import {
+  unstable_after as after,
+  type NextRequest,
+  NextResponse,
+} from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { checkEventLimit } from "@/lib/usage-limits";
 
@@ -188,18 +192,18 @@ export async function POST(request: NextRequest) {
       sessionLinked: !!payload.sessionId,
     });
 
-    // Send event to Polar for billing (async, don't await to avoid slowing down response)
-    if (tokenValidation.organizationId) {
-      // Fetch organization's Polar customer ID
-      prisma.organization
-        .findUnique({
-          where: { id: tokenValidation.organizationId },
-          select: { polarCustomerId: true },
-        })
-        .then((org) => {
+    const orgId = tokenValidation.organizationId;
+    if (orgId) {
+      after(async () => {
+        try {
+          const org = await prisma.organization.findUnique({
+            where: { id: orgId },
+            select: { polarCustomerId: true },
+          });
+
           if (org?.polarCustomerId) {
-            sendEventToPolar({
-              organizationId: tokenValidation.organizationId!,
+            await sendEventToPolar({
+              organizationId: orgId,
               polarCustomerId: org.polarCustomerId,
               eventType: "custom_event",
               metadata: {
@@ -209,13 +213,13 @@ export async function POST(request: NextRequest) {
                 ...payload.metadata,
               },
             }).catch((err) => {
-              console.error("❌ Failed to send custom event to Polar:", err);
+              console.error("Failed to send custom event to Polar:", err);
             });
           }
-        })
-        .catch((err) => {
-          console.error("❌ Failed to fetch organization for Polar:", err);
-        });
+        } catch (err) {
+          console.error("Failed to fetch organization for Polar:", err);
+        }
+      });
     }
 
     return createCorsResponse({ message: "Event tracked successfully" }, 200);

@@ -7,8 +7,8 @@ export interface ProProduct {
   priceId: string;
   name: string;
   baseEvents: number;
-  basePrice: number;
-  overagePrice: number;
+  basePrice: number; // in cents
+  overagePrice: number; // in dollars
 }
 
 export async function getProProduct(): Promise<ProProduct | null> {

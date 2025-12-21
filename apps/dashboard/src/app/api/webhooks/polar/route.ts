@@ -87,8 +87,12 @@ export async function POST(request: NextRequest) {
             body.type === "subscription.canceled" ||
             body.type === "subscription.revoked"
           ) {
+            const existingOrg = await prisma.organization.findUnique({
+              where: { id: referenceId },
+              select: { polarCustomerId: true },
+            });
             plan = "free";
-            polarCustomerId = organization.polarCustomerId;
+            polarCustomerId = existingOrg?.polarCustomerId ?? null;
             billingInterval = null;
           } else {
             return NextResponse.json({
