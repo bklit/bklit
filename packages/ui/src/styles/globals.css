@@ -203,3 +203,23 @@
   /* biome-ignore lint/correctness/noUnknownProperty: corner-shape is experimental */
   corner-shape: squircle;
 }
+
+.page-content {
+  @apply text-muted-foreground space-y-4;
+
+  & h2 {
+    @apply text-2xl font-bold text-card-foreground;
+  }
+
+  & h3 {
+    @apply text-lg font-semibold mb-2 text-card-foreground;
+  }
+
+  & p {
+    @apply text-lg mb-4;
+  }
+
+  & ul {
+    @apply list-disc pl-4 space-y-2;
+  }
+}
