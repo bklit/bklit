@@ -4,7 +4,6 @@ import { Button } from "@bklit/ui/components/button";
 import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -63,6 +62,20 @@ export function TestConnectionStepForm({
           clearTimeout(redirectTimeoutRef.current);
         }
         redirectTimeoutRef.current = setTimeout(() => {
+          // Validate IDs before navigation
+          if (!organizationId || organizationId.trim() === "") {
+            toast.error(
+              "Organization ID is missing. Cannot navigate to dashboard.",
+            );
+            setIsRedirecting(false);
+            return;
+          }
+          if (!projectId || projectId.trim() === "") {
+            toast.error("Project ID is missing. Cannot navigate to dashboard.");
+            setIsRedirecting(false);
+            return;
+          }
+
           router.push(`/${organizationId}/${projectId}?onboarding=new`);
         }, 5000);
       }
@@ -111,6 +124,20 @@ export function TestConnectionStepForm({
     window.open(projectDomain, "_blank", "noopener,noreferrer");
   };
 
+  const handleSkip = () => {
+    // Validate IDs before navigation
+    if (!organizationId || organizationId.trim() === "") {
+      toast.error("Organization ID is missing. Cannot navigate to dashboard.");
+      return;
+    }
+    if (!projectId || projectId.trim() === "") {
+      toast.error("Project ID is missing. Cannot navigate to dashboard.");
+      return;
+    }
+
+    router.push(`/${organizationId}/${projectId}?onboarding=new`);
+  };
+
   if (isRedirecting) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -129,10 +156,8 @@ export function TestConnectionStepForm({
         <Button onClick={handleOpenWebsite} variant="secondary" size="lg">
           <ExternalLink size={16} /> Open your website
         </Button>
-        <Button variant="ghost" size="lg" asChild>
-          <Link href={`/${organizationId}/${projectId}?onboarding=new`}>
-            Skip
-          </Link>
+        <Button variant="ghost" size="lg" onClick={handleSkip}>
+          Skip
         </Button>
       </div>
 
