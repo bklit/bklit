@@ -161,8 +161,10 @@ export function NavWorkspace({ user }: { user: User }) {
         {activeProject && (
           <>
             <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{activeProject.name}</BreadcrumbPage>
+            <BreadcrumbItem className="min-w-0 flex-1">
+              <BreadcrumbPage className="truncate">
+                {activeProject.name}
+              </BreadcrumbPage>
             </BreadcrumbItem>
 
             {isDesktop ? (
