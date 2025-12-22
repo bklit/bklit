@@ -9,7 +9,8 @@
       "fumadocs-mdx:collections/*": ["./.source/*"]
     },
     "plugins": [{ "name": "next" }],
-    "module": "esnext"
+    "module": "esnext",
+    "strictNullChecks": true
   },
   "include": [".", ".next/types/**/*.ts", ".source/**/*.ts"],
   "exclude": ["node_modules"]

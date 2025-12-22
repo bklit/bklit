@@ -37,19 +37,19 @@ export const ApiHealthAlertEmail = ({
           API Health Alert: {endpoint} has been unhealthy for{" "}
           {durationMinutes.toFixed(1)} minutes
         </Preview>
-        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
-          <div className="bg-black flex items-center justify-center rounded-lg overflow-clip">
+        <Container className="mx-auto max-w-480px px-8 pt-12 pb-12">
+          <div className="flex items-center justify-center overflow-clip rounded-lg bg-black">
             <Img
-              src={`${baseUrl}/react-email-header.jpg`}
               alt="Bklit"
-              width="100%"
               height="auto"
+              src={`${baseUrl}/react-email-header.jpg`}
+              width="100%"
             />
           </div>
 
-          <Text className="text-2xl font-semibold">API Health Alert</Text>
+          <Text className="font-semibold text-2xl">API Health Alert</Text>
 
-          <Section className="p-4 border border-red-200 rounded-md bg-red-50">
+          <Section className="rounded-md border border-red-200 bg-red-50 p-4">
             <Text className="text-left">
               <strong>Endpoint:</strong> {endpoint}
             </Text>
@@ -81,7 +81,7 @@ export const ApiHealthAlertEmail = ({
               {links?.map((link) => (
                 <Column key={link.title}>
                   <Link
-                    className="text-xs font-bold text-black"
+                    className="font-bold text-black text-xs"
                     href={link.href}
                   >
                     {link.title}

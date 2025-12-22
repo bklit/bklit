@@ -39,7 +39,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -60,7 +60,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   // Get entry points data when in entry-points mode
@@ -81,7 +81,6 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
     <>
       {/* Header */}
       <PageHeader
-        title="Pageviews"
         description={
           isLoading
             ? "Loading pageviews..."
@@ -89,16 +88,17 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
               ? `${entryPointsData?.entryPages?.length || 0} unique entry points`
               : `${statsData?.totalViews || 0} total pageviews`
         }
+        title="Pageviews"
       >
-        <div className="flex flex-row items-center gap-2 w-full justify-end">
+        <div className="flex w-full flex-row items-center justify-end gap-2">
           <DateRangePicker />
           <Select
-            value={viewMode}
             onValueChange={(value) => setDateParams({ viewMode: value })}
+            value={viewMode}
           >
             <SelectTrigger
-              size="sm"
               className={cn("w-auto", isDesktop && "w-full sm:w-[180px]")}
+              size="sm"
             >
               {isDesktop ? (
                 <SelectValue placeholder="Select view mode" />
@@ -135,7 +135,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 viewMode === "entry-points"
                   ? entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.sessions,
-                      0,
+                      0
                     ) || 0
                   : statsData?.uniquePages || 0,
             },
@@ -146,7 +146,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 viewMode === "entry-points"
                   ? entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.mobileSessions,
-                      0,
+                      0
                     ) || 0
                   : statsData?.mobileViews || 0,
             },
@@ -157,7 +157,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 viewMode === "entry-points"
                   ? entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.desktopSessions,
-                      0,
+                      0
                     ) || 0
                   : statsData?.desktopViews || 0,
             },

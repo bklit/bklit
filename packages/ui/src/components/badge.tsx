@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-md border font-medium transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {
@@ -13,25 +13,25 @@ const badgeVariants = cva(
         secondary:
           "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "border-transparent bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
         success:
-          "border-transparent bg-teal-900 text-teal-500 [a&]:hover:bg-teal-600 focus-visible:ring-teal-500/20",
+          "border-transparent bg-teal-900 text-teal-500 focus-visible:ring-teal-500/20 [a&]:hover:bg-teal-600",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         alternative:
-          "border-transparent bg-purple-900 text-purple-300 [a&]:hover:bg-purple-600 focus-visible:ring-purple-500/20",
-        code: "border-transparent bg-bklit-300 dark:bg-bklit-600 text-bklit-500 dark:text-bklit-100 font-mono [a&]:hover:bg-muted/90 focus-visible:ring-muted-foreground/20",
+          "border-transparent bg-purple-900 text-purple-300 focus-visible:ring-purple-500/20 [a&]:hover:bg-purple-600",
+        code: "border-transparent bg-bklit-300 font-mono text-bklit-500 focus-visible:ring-muted-foreground/20 dark:bg-bklit-600 dark:text-bklit-100 [a&]:hover:bg-muted/90",
       },
       size: {
-        default: "text-xs px-2 py-0.5",
-        lg: "text-sm px-2 py-1",
+        default: "px-2 py-0.5 text-xs",
+        lg: "px-2 py-1 text-sm",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
     },
-  },
+  }
 );
 
 function Badge({
@@ -46,8 +46,8 @@ function Badge({
 
   return (
     <Comp
-      data-slot="badge"
       className={cn(badgeVariants({ variant, size }), className)}
+      data-slot="badge"
       {...props}
     />
   );

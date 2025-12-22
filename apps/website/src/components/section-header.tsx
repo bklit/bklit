@@ -9,9 +9,9 @@ export const SectionHeader = ({
   children,
 }: SectionHeaderProps) => {
   return (
-    <div className="container mx-auto max-w-4xl flex flex-col text-center space-y-4">
-      <h2 className="text-3xl sm:text-5xl font-regular">{title}</h2>
-      <p className="text-lg sm:text-2xl font-light text-muted-foreground">
+    <div className="container mx-auto flex max-w-4xl flex-col space-y-4 text-center">
+      <h2 className="font-regular text-3xl sm:text-5xl">{title}</h2>
+      <p className="font-light text-lg text-muted-foreground sm:text-2xl">
         {description}
       </p>
       {children && children}

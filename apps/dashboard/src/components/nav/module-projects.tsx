@@ -28,32 +28,32 @@ export const ModuleProjects = () => {
 
   return (
     <Command>
-      <CommandInput placeholder="Find project" className="" />
+      <CommandInput className="" placeholder="Find project" />
       <CommandList>
         <CommandEmpty>No projects found.</CommandEmpty>
         <CommandGroup>
           {activeOrganization.projects?.map((project: NavProject) => (
             <CommandItem
-              value={project.id}
+              className="h-12 cursor-pointer"
               key={project.id}
               onSelect={() =>
                 onChangeProject(activeOrganization.id, project.id)
               }
-              className="cursor-pointer h-12"
+              value={project.id}
             >
-              <div className="flex items-center justify-between w-full">
+              <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="truncate">{project.name}</span>
                 </div>
                 {project.id === activeProject?.id && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge className="text-xs" variant="secondary">
                     Current
                   </Badge>
                 )}
               </div>
             </CommandItem>
           ))}
-          <CommandItem asChild className="cursor-pointer h-12">
+          <CommandItem asChild className="h-12 cursor-pointer">
             <Link href={`/${activeOrganization.id}/projects/create`}>
               <Plus className="size-4" />
               Create new project

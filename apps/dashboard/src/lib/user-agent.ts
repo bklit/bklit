@@ -7,7 +7,7 @@ export function isMobileDevice(userAgent: string | null | undefined): boolean {
 }
 
 export function detectDevice(
-  userAgent: string | null | undefined,
+  userAgent: string | null | undefined
 ): "mobile" | "desktop" | "tablet" | "unknown" {
   if (!userAgent) return "unknown";
 

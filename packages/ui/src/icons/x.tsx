@@ -1,10 +1,10 @@
 export function XIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
+      aria-label="X.com"
+      fill="currentColor"
       viewBox="0 0 300 300"
       xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-      aria-label="X.com"
       {...props}
     >
       <title>X.com</title>

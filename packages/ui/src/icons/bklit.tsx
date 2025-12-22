@@ -29,13 +29,13 @@ export function BklitLogo({
   return (
     <div
       className={cn(
-        "w-full h-full aspect-square min-w-4 min-h-4 relative",
-        className,
+        "relative aspect-square h-full min-h-4 w-full min-w-4",
+        className
       )}
       style={{ width: size, height: size }}
     >
       <div
-        className="flex w-2/3 h-2/3 absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
+        className="absolute top-0 left-1/2 flex h-2/3 w-2/3 -translate-x-1/2 rounded-full"
         style={{
           background: "conic-gradient(from 0deg, #D9D9D9, #000000)",
           ...(variant === "color" && { mixBlendMode: "color-burn" }),
@@ -48,7 +48,7 @@ export function BklitLogo({
         }}
       />
       <div
-        className="flex w-2/3 h-2/3 absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full"
+        className="absolute bottom-0 left-1/2 flex h-2/3 w-2/3 -translate-x-1/2 rounded-full"
         style={{
           background: "conic-gradient(from 180deg, #D9D9D9, #000000)",
           transform: "translate3d(0,0,0)",

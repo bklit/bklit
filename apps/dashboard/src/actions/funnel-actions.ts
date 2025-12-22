@@ -42,8 +42,7 @@ export async function createFunnel(data: {
     });
 
     if (
-      !project ||
-      !project.organization ||
+      !(project && project.organization) ||
       project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
@@ -52,8 +51,7 @@ export async function createFunnel(data: {
     // Check if user is admin or owner
     const userMembership = project.organization.members[0];
     if (
-      !userMembership ||
-      !hasPermission(userMembership.role, MemberRole.ADMIN)
+      !(userMembership && hasPermission(userMembership.role, MemberRole.ADMIN))
     ) {
       return {
         success: false,
@@ -70,7 +68,7 @@ export async function createFunnel(data: {
 
     // Sort steps by positionX (left to right) to calculate stepOrder
     const sortedSteps = [...data.steps].sort(
-      (a, b) => a.positionX - b.positionX,
+      (a, b) => a.positionX - b.positionX
     );
 
     const funnel = await prisma.funnel.create({
@@ -141,8 +139,7 @@ export async function updateFunnel(data: {
     });
 
     if (
-      !funnel ||
-      !funnel.project.organization ||
+      !(funnel && funnel.project.organization) ||
       funnel.project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
@@ -151,8 +148,7 @@ export async function updateFunnel(data: {
     // Check if user is admin or owner
     const userMembership = funnel.project.organization.members[0];
     if (
-      !userMembership ||
-      !hasPermission(userMembership.role, MemberRole.ADMIN)
+      !(userMembership && hasPermission(userMembership.role, MemberRole.ADMIN))
     ) {
       return {
         success: false,
@@ -171,7 +167,7 @@ export async function updateFunnel(data: {
 
       // Sort steps by positionX to calculate stepOrder
       const sortedSteps = [...data.steps].sort(
-        (a, b) => a.positionX - b.positionX,
+        (a, b) => a.positionX - b.positionX
       );
 
       // Delete all existing steps and create new ones atomically
@@ -256,8 +252,7 @@ export async function deleteFunnel(data: {
     });
 
     if (
-      !funnel ||
-      !funnel.project.organization ||
+      !(funnel && funnel.project.organization) ||
       funnel.project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
@@ -266,8 +261,7 @@ export async function deleteFunnel(data: {
     // Check if user is admin or owner
     const userMembership = funnel.project.organization.members[0];
     if (
-      !userMembership ||
-      !hasPermission(userMembership.role, MemberRole.ADMIN)
+      !(userMembership && hasPermission(userMembership.role, MemberRole.ADMIN))
     ) {
       return {
         success: false,

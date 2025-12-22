@@ -8,10 +8,10 @@ interface IconProps {
 export function ChromeIcon({ className, size = 16 }: IconProps) {
   return (
     <svg
+      className={cn("icon", className)}
       height={size}
       viewBox="0 0 512 512"
       width={size}
-      className={cn("icon", className)}
     >
       <title>Chrome Icon</title>
       <g id="_x31_07-chrome">

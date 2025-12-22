@@ -14,33 +14,33 @@ export default function OnboardingLayout({
         <div className="flex flex-col gap-4 p-6 md:p-10">
           <div className="flex justify-center gap-2 md:justify-start">
             <div className="flex items-center gap-2">
-              <BklitLogo size={32} className="dark:text-white text-black" />
-              <span className="text-2xl font-bold">Bklit</span>
+              <BklitLogo className="text-black dark:text-white" size={32} />
+              <span className="font-bold text-2xl">Bklit</span>
             </div>
           </div>
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-lg">{children}</div>
           </div>
         </div>
-        <div className="bg-background relative hidden lg:grid grid-cols-1 grid-rows-1 h-full overflow-hidden">
-          <div className="col-start-1 row-start-1 w-full h-full">
+        <div className="relative hidden h-full grid-cols-1 grid-rows-1 overflow-hidden bg-background lg:grid">
+          <div className="col-start-1 row-start-1 h-full w-full">
             <Diamonds
-              vignetteStrength={0.8}
+              distortAmount={10}
+              gradientColors={["#000000", "#d2f98b"]}
               grainScale={0.5}
-              tileCount={3}
-              tileMinSize={60}
-              mouseDampening={0.71}
               mirrorGradient={true}
+              mixBlendMode={"normal"}
+              mouseDampening={0.71}
+              shineDirection={"left"}
+              spotlightOpacity={1}
               spotlightRadius={1}
               spotlightSoftness={1}
-              spotlightOpacity={1}
-              distortAmount={10}
-              shineDirection={"left"}
-              mixBlendMode={"normal"}
-              gradientColors={["#000000", "#d2f98b"]}
+              tileCount={3}
+              tileMinSize={60}
+              vignetteStrength={0.8}
             />
           </div>
-          <div className="col-start-1 row-start-1 w-full h-full bg-linear-to-b from-transparent via-background/10 to-background z-10 pointer-events-none" />
+          <div className="pointer-events-none z-10 col-start-1 row-start-1 h-full w-full bg-linear-to-b from-transparent via-background/10 to-background" />
         </div>
       </div>
       <Toaster closeButton />

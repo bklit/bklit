@@ -83,10 +83,10 @@ export function ApiTokens({
   return (
     <>
       {tokens.length === 0 ? (
-        <Empty className="border border-bklit-500 bg-bklit-800/50 aspect-3/1">
+        <Empty className="aspect-3/1 border border-bklit-500 bg-bklit-800/50">
           <EmptyHeader>
             <EmptyMedia>
-              <ShieldCheck size={24} className="text-bklit-300" />
+              <ShieldCheck className="text-bklit-300" size={24} />
             </EmptyMedia>
             <EmptyTitle className="text-base">No API tokens yet</EmptyTitle>
             <EmptyDescription className="text-sm">
@@ -133,22 +133,22 @@ export function ApiTokens({
                           </div>
                           {token.allowedDomains &&
                           token.allowedDomains.length > 0 ? (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              <span className="text-xs text-muted-foreground">
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              <span className="text-muted-foreground text-xs">
                                 Allowed domains:
                               </span>
                               {token.allowedDomains.map((domain) => (
                                 <Badge
+                                  className="text-xs"
                                   key={domain}
                                   variant="outline"
-                                  className="text-xs"
                                 >
                                   {domain}
                                 </Badge>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-xs text-muted-foreground mt-1">
+                            <div className="mt-1 text-muted-foreground text-xs">
                               No domain restrictions
                             </div>
                           )}
@@ -159,7 +159,7 @@ export function ApiTokens({
                       <ButtonGroup>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
+                            <Button size="sm" variant="outline">
                               <Layers2 size={14} />
                             </Button>
                           </DropdownMenuTrigger>
@@ -174,7 +174,7 @@ export function ApiTokens({
                         </DropdownMenu>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
+                            <Button size="sm" variant="outline">
                               <MoreHorizontal size={14} />
                             </Button>
                           </DropdownMenuTrigger>
@@ -212,8 +212,6 @@ export function ApiTokens({
 
       {editingToken && (
         <UpdateApiTokenForm
-          organizationId={organizationId}
-          tokenId={editingToken}
           isOpen={!!editingToken}
           onOpenChange={(open) => {
             if (!open) setEditingToken(null);
@@ -223,14 +221,13 @@ export function ApiTokens({
             toast.success("Token updated successfully");
             router.refresh();
           }}
+          organizationId={organizationId}
+          tokenId={editingToken}
         />
       )}
 
       {deletingToken && (
         <DeleteApiTokenForm
-          organizationId={organizationId}
-          tokenId={deletingToken.id}
-          tokenName={deletingToken.name}
           isOpen={!!deletingToken}
           onOpenChange={(open) => {
             if (!open) setDeletingToken(null);
@@ -240,6 +237,9 @@ export function ApiTokens({
             toast.success("Token deleted successfully");
             router.refresh();
           }}
+          organizationId={organizationId}
+          tokenId={deletingToken.id}
+          tokenName={deletingToken.name}
         />
       )}
     </>

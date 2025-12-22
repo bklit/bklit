@@ -32,10 +32,10 @@ export interface PolarWebhookPayload {
  */
 export async function updateOrganizationPlan(
   organizationId: string,
-  plan: PlanType,
+  plan: PlanType
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log(`🔥 updateOrganizationPlan called with:`, {
+    console.log("🔥 updateOrganizationPlan called with:", {
       organizationId,
       plan,
     });
@@ -45,7 +45,7 @@ export async function updateOrganizationPlan(
       where: { id: organizationId },
     });
 
-    console.log(`🔥 Organization found:`, organization);
+    console.log("🔥 Organization found:", organization);
 
     if (!organization) {
       console.error(`🔥 Organization ${organizationId} not found`);
@@ -54,7 +54,7 @@ export async function updateOrganizationPlan(
 
     // Update the organization's plan
     console.log(
-      `🔥 Updating organization ${organizationId} from ${organization.plan} to ${plan}`,
+      `🔥 Updating organization ${organizationId} from ${organization.plan} to ${plan}`
     );
 
     const updatedOrg = await prisma.organization.update({
@@ -64,13 +64,13 @@ export async function updateOrganizationPlan(
 
     console.log(
       `🔥 Successfully updated organization ${organizationId} plan to ${plan}:`,
-      updatedOrg,
+      updatedOrg
     );
     return { success: true };
   } catch (error) {
     console.error(
       `🔥 Error updating organization ${organizationId} plan:`,
-      error,
+      error
     );
     return {
       success: false,
@@ -83,7 +83,7 @@ export async function updateOrganizationPlan(
  * Get organization from reference ID (used in webhooks)
  */
 export async function getOrganizationFromReferenceId(
-  referenceId: string,
+  referenceId: string
 ): Promise<{
   success: boolean;
   organization?: { id: string; name: string; plan: string };
@@ -114,7 +114,7 @@ export async function getOrganizationFromReferenceId(
 export function logWebhookPayload(
   eventType: string,
   payload: Record<string, unknown> | PolarWebhookPayload,
-  organizationId?: string,
+  organizationId?: string
 ): void {
   console.log(`[Polar Webhook] ${eventType}`, {
     organizationId,

@@ -13,7 +13,7 @@ export const acquisitionRouter = createTRPCRouter({
         limit: z.number().min(1).max(100).default(20),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to this project
@@ -98,18 +98,18 @@ export const acquisitionRouter = createTRPCRouter({
             lastViewed: Date;
             firstViewed: Date;
           }
-        >,
+        >
       );
 
       // Convert to array and sort by view count
       const acquisitionGroupsArray = Object.values(acquisitionGroups).sort(
-        (a, b) => b.viewCount - a.viewCount,
+        (a, b) => b.viewCount - a.viewCount
       );
 
       // Apply pagination
       const paginatedAcquisitions = acquisitionGroupsArray.slice(
         (input.page - 1) * input.limit,
-        input.page * input.limit,
+        input.page * input.limit
       );
 
       // Transform data to include user metrics
@@ -126,11 +126,11 @@ export const acquisitionRouter = createTRPCRouter({
             sourceType: acquisition.sourceType,
             viewCount: acquisition.viewCount,
             uniqueUserCount,
-            avgViewsPerUser: parseFloat(avgViewsPerUser),
+            avgViewsPerUser: Number.parseFloat(avgViewsPerUser),
             lastViewed: acquisition.lastViewed,
             firstViewed: acquisition.firstViewed,
           };
-        },
+        }
       );
 
       return {
@@ -154,7 +154,7 @@ export const acquisitionRouter = createTRPCRouter({
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to this project
@@ -207,7 +207,7 @@ export const acquisitionRouter = createTRPCRouter({
           p.referrer &&
           (p.referrer.includes("google.com") ||
             p.referrer.includes("bing.com") ||
-            p.referrer.includes("yahoo.com")),
+            p.referrer.includes("yahoo.com"))
       ).length;
       const socialTraffic = pageviews.filter(
         (p) =>
@@ -215,7 +215,7 @@ export const acquisitionRouter = createTRPCRouter({
           (p.referrer.includes("facebook.com") ||
             p.referrer.includes("twitter.com") ||
             p.referrer.includes("linkedin.com") ||
-            p.referrer.includes("instagram.com")),
+            p.referrer.includes("instagram.com"))
       ).length;
       const paidTraffic = pageviews.filter((p) => p.utm_source).length;
       const mobileViews = stats.mobile_visits;
@@ -241,7 +241,7 @@ export const acquisitionRouter = createTRPCRouter({
         startDate: z.date().optional(),
         endDate: z.date().optional(),
         limit: z.number().min(1).max(10).default(5),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to this project
@@ -304,7 +304,7 @@ export const acquisitionRouter = createTRPCRouter({
 
           return acc;
         },
-        {} as Record<string, Record<string, number>>,
+        {} as Record<string, Record<string, number>>
       );
 
       const topSources = Object.entries(acquisitionGroups)
@@ -316,7 +316,7 @@ export const acquisitionRouter = createTRPCRouter({
                 utmSource: p.utm_source,
                 utmMedium: p.utm_medium,
                 utmCampaign: p.utm_campaign,
-              }) === source,
+              }) === source
           );
           const sourceType = getSourceType({
             referrer: samplePageview?.referrer || null,
@@ -332,7 +332,7 @@ export const acquisitionRouter = createTRPCRouter({
             }),
             totalViews: Object.values(dailyViews).reduce(
               (sum, count) => sum + count,
-              0,
+              0
             ),
             dailyViews,
           };

@@ -11,7 +11,7 @@ import { Vercel as VercelLogo } from "@bklit/ui/logos/vercel";
 export const BrandTiles = () => {
   return (
     <div className="perspective-normal">
-      <div className="grid grid-cols-3 -translate-y-5 rotate-x-40 rotate-y-0 text-black/50 gap-0 scale-90">
+      <div className="grid -translate-y-5 rotate-x-40 rotate-y-0 scale-90 grid-cols-3 gap-0 text-black/50">
         <div className="col-span-1 flex items-center justify-center p-3 sm:p-8">
           <NextLogo height="50px" />
         </div>
@@ -31,13 +31,13 @@ export const BrandTiles = () => {
           <TailwindLogo height="50px" />
         </div>
         <div className="col-span-1 flex items-center justify-center p-3 sm:p-8">
-          <TriggerDevLogo variant="mono" height="50px" />
+          <TriggerDevLogo height="50px" variant="mono" />
         </div>
         <div className="col-span-1 flex items-center justify-center p-3 sm:p-8">
           <BetterAuthLogo height="50px" />
         </div>
         <div className="col-span-1 flex items-center justify-center p-3 sm:p-8">
-          <TurborepoLogo variant="mono" height="50px" />
+          <TurborepoLogo height="50px" variant="mono" />
         </div>
       </div>
     </div>

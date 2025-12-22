@@ -57,7 +57,7 @@ export function BillingSuccessDialog({
       const stopPolling = setTimeout(() => {
         clearInterval(pollInterval);
         setIsProcessing(false);
-      }, 20000);
+      }, 20_000);
 
       return () => {
         clearInterval(pollInterval);
@@ -71,7 +71,7 @@ export function BillingSuccessDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="items-center text-center">
           {isProcessing ? (
@@ -79,7 +79,7 @@ export function BillingSuccessDialog({
           ) : (
             <CheckCircle className="size-6" />
           )}
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="font-bold text-2xl">
             {isProcessing ? "Updating your plan..." : "Success"}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">

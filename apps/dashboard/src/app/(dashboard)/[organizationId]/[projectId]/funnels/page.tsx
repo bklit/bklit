@@ -20,7 +20,7 @@ export default async function FunnelsPage({ params }: PageProps) {
     trpc.funnel.list.queryOptions({
       projectId,
       organizationId,
-    }),
+    })
   );
 
   return <Funnels organizationId={organizationId} projectId={projectId} />;

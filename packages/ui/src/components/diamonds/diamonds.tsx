@@ -37,7 +37,7 @@ const parseColor = (color: string) => {
 
   // Handle standard rgb/rgba: rgb(r, g, b) or rgb(r g b)
   const rgbMatch = computed.match(
-    /rgba?\((\d+\.?\d*)[,\s]+(\d+\.?\d*)[,\s]+(\d+\.?\d*)/,
+    /rgba?\((\d+\.?\d*)[,\s]+(\d+\.?\d*)[,\s]+(\d+\.?\d*)/
   );
   if (rgbMatch && rgbMatch.length >= 4) {
     return [
@@ -49,7 +49,7 @@ const parseColor = (color: string) => {
 
   // Handle color(srgb r g b) format
   const colorMatch = computed.match(
-    /color\(\s*srgb\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/,
+    /color\(\s*srgb\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/
   );
   if (colorMatch && colorMatch.length >= 4) {
     return [
@@ -66,7 +66,7 @@ const parseColor = (color: string) => {
 const prepStops = (stops?: string[]) => {
   const base = (stops?.length ? stops : ["#FF9FFC", "#5227FF"]).slice(
     0,
-    MAX_COLORS,
+    MAX_COLORS
   );
   if (base.length === 1) base.push(base[0] || "#FF9FFC");
   while (base.length < MAX_COLORS) {
@@ -482,7 +482,7 @@ void main() {
     let animationId = 0;
     const loop = (t: number) => {
       animationId = requestAnimationFrame(loop);
-      if (!rendererRef.current || !programRef.current || !meshRef.current)
+      if (!(rendererRef.current && programRef.current && meshRef.current))
         return;
 
       if (uniforms?.iTime) {
@@ -634,11 +634,11 @@ void main() {
 
   return (
     <div
-      ref={containerRef}
       className={cn("diamonds-container", className)}
+      ref={containerRef}
       style={{
         ...(mixBlendMode && {
-          mixBlendMode: mixBlendMode,
+          mixBlendMode,
         }),
       }}
     />

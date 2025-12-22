@@ -69,12 +69,12 @@ export function SDKConnectionStepForm({
       onError: (error) => {
         toast.error(`Failed to create token: ${error.message}`);
       },
-    }),
+    })
   );
 
   // Auto-create token on mount (only once)
   useEffect(() => {
-    if (!hasCreatedToken.current && !createdToken && !createToken.isPending) {
+    if (!(hasCreatedToken.current || createdToken || createToken.isPending)) {
       hasCreatedToken.current = true;
       createToken.mutate({
         organizationId,
@@ -91,10 +91,10 @@ export function SDKConnectionStepForm({
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2">
           <svg
+            aria-label="Loading"
             className="size-5 animate-spin text-muted-foreground"
             fill="none"
             viewBox="0 0 24 24"
-            aria-label="Loading"
           >
             <title>Loading</title>
             <circle
@@ -107,11 +107,11 @@ export function SDKConnectionStepForm({
             />
             <path
               className="opacity-75"
-              fill="currentColor"
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              fill="currentColor"
             />
           </svg>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             Creating API token...
           </span>
         </div>
@@ -122,43 +122,43 @@ export function SDKConnectionStepForm({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-medium mb-2">Your API Token</h3>
-        <p className="mb-4 text-xs text-muted-foreground">
+        <h3 className="mb-2 font-medium text-sm">Your API Token</h3>
+        <p className="mb-4 text-muted-foreground text-xs">
           Copy this token - you won&apos;t be able to see it again!
         </p>
         <CopyInput value={createdToken} />
       </div>
 
       <div>
-        <h3 className="text-sm font-medium mb-2">Install the SDK</h3>
+        <h3 className="mb-2 font-medium text-sm">Install the SDK</h3>
         <CodeBlockClient language="bash">{`npm install @bklit/sdk
 # or
 pnpm add @bklit/sdk`}</CodeBlockClient>
       </div>
 
       <div>
-        <h3 className="flex items-center gap-2 text-sm font-medium mb-2">
+        <h3 className="mb-2 flex items-center gap-2 font-medium text-sm">
           Initialize the SDK
           <Popover>
             <PopoverTrigger asChild>
-              <Info size={16} className="cursor-pointer" />
+              <Info className="cursor-pointer" size={16} />
             </PopoverTrigger>
-            <PopoverContent side="top" align="center">
-              <p className="text-sm text-muted-foreground">
+            <PopoverContent align="center" side="top">
+              <p className="text-muted-foreground text-sm">
                 Add this to your application entry point.
               </p>
             </PopoverContent>
           </Popover>
         </h3>
         <CodeBlockClient
-          language="typescript"
-          lineNumbers={false}
           footer={
             <>
               The SDK will automatically use the correct API endpoint based on
               your environment.
             </>
           }
+          language="typescript"
+          lineNumbers={false}
         >{`import { initBklit } from "@bklit/sdk";
 
 initBklit({

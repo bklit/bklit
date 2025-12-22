@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="w-full min-h-screen flex flex-col gap-32">
+    <main className="flex min-h-screen w-full flex-col gap-32">
       <PageHeader />
       <div className="container mx-auto max-w-4xl px-4 pt-32">
-        <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
+        <h1 className="mb-8 font-bold text-4xl">Privacy Policy</h1>
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8">
           <p className="text-muted-foreground">
             Last updated: December 21, 2025
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
               <li>Opt out of marketing communications</li>
               <li>Cancel your subscription at any time</li>
             </ul>
-            <p className="mt-4 text-sm text-muted-foreground">
+            <p className="mt-4 text-muted-foreground text-sm">
               Note: Analytics data (pageviews, events, session data) collected
               through our Service is owned by Bklit and is not available for
               export. Deleting your account removes your personal information
@@ -163,8 +163,8 @@ export default function PrivacyPage() {
               For privacy-related questions or to exercise your rights, contact
               us at{" "}
               <a
-                href="mailto:support@bklit.com"
                 className="text-primary hover:underline"
+                href="mailto:support@bklit.com"
               >
                 privacy@bklit.com
               </a>

@@ -47,7 +47,7 @@ export function QuickStatsCard({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -93,7 +93,7 @@ export function QuickStatsCard({
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   const sessionStats: SessionAnalyticsSummary = {
@@ -112,41 +112,41 @@ export function QuickStatsCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
+              <div className="font-bold text-2xl">
                 <NumberFlow value={sessionStats.totalSessions} />
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 Total Sessions
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold">
+              <div className="font-bold text-2xl">
                 <NumberFlow
-                  value={Math.round(sessionStats.bounceRate)}
                   suffix="%"
+                  value={Math.round(sessionStats.bounceRate)}
                 />
               </div>
-              <div className="text-sm text-muted-foreground">Bounce Rate</div>
+              <div className="text-muted-foreground text-sm">Bounce Rate</div>
             </div>
           </div>
-          <div className="flex justify-between items-center pt-2 border-t">
+          <div className="flex items-center justify-between border-t pt-2">
             <div>
-              <div className="text-2xl font-bold">
+              <div className="font-bold text-2xl">
                 <NumberFlow value={displayStats.uniqueVisits} />
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 Unique Visitors
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold">
+              <div className="font-bold text-2xl">
                 <NumberFlow
                   value={conversionsData?.conversions ?? initialConversions}
                 />
               </div>
-              <div className="text-sm text-muted-foreground">Conversions</div>
+              <div className="text-muted-foreground text-sm">Conversions</div>
             </div>
           </div>
         </div>

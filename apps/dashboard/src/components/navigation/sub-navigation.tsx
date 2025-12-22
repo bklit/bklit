@@ -23,29 +23,28 @@ export function SubNavigation({
   const items = navigationConfig[configKey] ?? [];
   const resolvedItems = replaceDynamicParams(items, organizationId, projectId);
 
-  if (!open) {
-    return (
-      <nav className="flex flex-row gap-px">
-        {resolvedItems.map((item) => {
-          const isActive = pathname === item.href;
-
-          return (
-            <Button
-              key={item.href}
-              variant="ghost"
-              asChild
-              className={cn(
-                "justify-start",
-                isActive && "bg-accent text-accent-foreground",
-              )}
-            >
-              <Link href={item.href}>{item.title}</Link>
-            </Button>
-          );
-        })}
-      </nav>
-    );
-  } else {
+  if (open) {
     return null;
   }
+  return (
+    <nav className="flex flex-row gap-px">
+      {resolvedItems.map((item) => {
+        const isActive = pathname === item.href;
+
+        return (
+          <Button
+            asChild
+            className={cn(
+              "justify-start",
+              isActive && "bg-accent text-accent-foreground"
+            )}
+            key={item.href}
+            variant="ghost"
+          >
+            <Link href={item.href}>{item.title}</Link>
+          </Button>
+        );
+      })}
+    </nav>
+  );
 }

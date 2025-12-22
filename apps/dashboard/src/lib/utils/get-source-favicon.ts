@@ -1,6 +1,6 @@
 export function getSourceFavicon(
   source: string,
-  projectDomain?: string | null,
+  projectDomain?: string | null
 ): string {
   const specialSources = new Set(["direct", "(direct)"]);
 

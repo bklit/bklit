@@ -41,11 +41,11 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
         const Icon = item.icon;
         return (
           <Card
-            key={item.name}
             className={cn(
               "gap-0",
-              variant === "glass" && "bg-card/80 backdrop-blur-sm",
+              variant === "glass" && "bg-card/80 backdrop-blur-sm"
             )}
+            key={item.name}
           >
             <CardHeader className="pb-1">
               <div className="flex items-center gap-2">
@@ -56,10 +56,10 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-semibold">
+              <div className="font-semibold text-4xl">
                 <NumberFlow
-                  value={Number(item.stat)}
                   suffix={item.suffix || ""}
+                  value={Number(item.stat)}
                 />
               </div>
             </CardContent>

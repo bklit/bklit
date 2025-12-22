@@ -1,7 +1,8 @@
 {
   "extends": "@bklit/tsconfig/internal-package.json",
   "compilerOptions": {
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "strictNullChecks": true
   },
   "include": ["src"],
   "exclude": ["node_modules"]

@@ -65,15 +65,15 @@ export const Features = () => {
   return (
     <div className="w-full">
       <div className="container mx-auto max-w-6xl px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {features.map((feature, index) => (
             <div
+              className="relative col-span-1 grid grid-cols-1 grid-rows-1 rounded-3xl bg-bklit-100 p-12 dark:bg-zinc-900"
               key={index}
-              className="col-span-1 dark:bg-zinc-900 bg-bklit-100 rounded-3xl grid grid-cols-1 grid-rows-1 p-12 relative"
             >
               <div className="col-span-1 col-start-1 row-start-1 flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-2xl font-regular dark:text-white text-black">
+                  <h3 className="font-regular text-2xl text-black dark:text-white">
                     {feature.title}
                   </h3>
                   <h4 className="text-base text-muted-foreground">

@@ -41,7 +41,7 @@ export function DeleteOrganizationForm({
   const [confirmationInput, setConfirmationInput] = useState("");
   const [state, formAction] = useActionState(
     deleteOrganizationAction,
-    initialState,
+    initialState
   );
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -80,7 +80,7 @@ export function DeleteOrganizationForm({
       });
     } else {
       toast.error(
-        "Organization name does not match. Please type it correctly to confirm.",
+        "Organization name does not match. Please type it correctly to confirm."
       );
     }
   };
@@ -92,7 +92,7 @@ export function DeleteOrganizationForm({
   }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
         <Button size="lg" variant="destructive">
           Delete organization
@@ -111,17 +111,17 @@ export function DeleteOrganizationForm({
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label
+              className="sr-only text-right"
               htmlFor="organization-name-confirmation"
-              className="text-right sr-only"
             >
               Organization Name
             </Label>
             <Input
+              className="col-span-4"
               id="organization-name-confirmation"
-              value={confirmationInput}
               onChange={(e) => setConfirmationInput(e.target.value)}
               placeholder={organizationName}
-              className="col-span-4"
+              value={confirmationInput}
             />
           </div>
         </div>
@@ -130,9 +130,9 @@ export function DeleteOrganizationForm({
             <Button variant="outline">Cancel</Button>
           </DialogClose>
           <Button
-            variant="destructive"
-            onClick={handleSubmitDeletion}
             disabled={isPending || confirmationInput !== organizationName}
+            onClick={handleSubmitDeletion}
+            variant="destructive"
           >
             {isPending ? "Deleting..." : "Delete Organization"}
           </Button>

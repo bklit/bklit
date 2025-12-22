@@ -125,7 +125,7 @@ export function initAuth(options: {
             // If session was created within 5 seconds of user creation, treat as new signup
             const timeDiff = Math.abs(
               new Date(newSession.session.createdAt).getTime() -
-                user.createdAt.getTime(),
+                user.createdAt.getTime()
             );
             const isNewUser = timeDiff < 5000;
 
@@ -178,7 +178,7 @@ export function initAuth(options: {
                         },
                       });
 
-                    if (!existingMember && !existingInvitation) {
+                    if (!(existingMember || existingInvitation)) {
                       // Create invitation
                       const invitation = await prisma.invitation.create({
                         data: {
@@ -188,7 +188,7 @@ export function initAuth(options: {
                           role: "member",
                           status: "pending",
                           expiresAt: new Date(
-                            Date.now() + 30 * 24 * 60 * 60 * 1000,
+                            Date.now() + 30 * 24 * 60 * 60 * 1000
                           ), // 30 days
                           inviterId: user.id, // Self-invitation from system
                         },
@@ -207,7 +207,7 @@ export function initAuth(options: {
                             organizationName: project.organization.name,
                             inviteLink,
                             role: "member",
-                          }),
+                          })
                         );
 
                         await sendEmail({
@@ -219,7 +219,7 @@ export function initAuth(options: {
                       } catch (emailError) {
                         console.error(
                           "Failed to send auto-invite email:",
-                          emailError,
+                          emailError
                         );
                         // Don't fail the whole process if email fails
                       }

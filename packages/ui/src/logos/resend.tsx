@@ -6,7 +6,7 @@ interface ResendProps {
 
 export const Resend = ({ height = "30px", className }: ResendProps) => {
   return (
-    <svg height={height} viewBox="0 0 145 30" fill="none" className={className}>
+    <svg className={className} fill="none" height={height} viewBox="0 0 145 30">
       <title>Resend Logo</title>
       <g>
         <path

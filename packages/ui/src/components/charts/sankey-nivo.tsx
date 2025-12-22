@@ -23,7 +23,7 @@ function SankeyNodeTooltip({
   node: { id: string; label?: string; value?: number; color?: string };
 }) {
   return (
-    <div className="border-border/50 bg-background grid min-w-32 items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
+    <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
       <div className="font-medium">{node.label || node.id}</div>
       {node.value !== undefined && (
         <div className="flex items-center gap-2">
@@ -33,9 +33,9 @@ function SankeyNodeTooltip({
               style={{ backgroundColor: node.color }}
             />
           )}
-          <div className="flex flex-1 justify-between leading-none items-center">
+          <div className="flex flex-1 items-center justify-between leading-none">
             <span className="text-muted-foreground">Sessions</span>
-            <span className="text-foreground font-mono font-medium tabular-nums">
+            <span className="font-medium font-mono text-foreground tabular-nums">
               {node.value.toLocaleString()}
             </span>
           </div>
@@ -56,7 +56,7 @@ function SankeyLinkTooltip({
   };
 }) {
   return (
-    <div className="border-border/50 bg-background grid min-w-32 items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
+    <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
       <div className="font-medium">
         {link.source.label || link.source.id} →{" "}
         {link.target.label || link.target.id}
@@ -68,9 +68,9 @@ function SankeyLinkTooltip({
             style={{ backgroundColor: link.color }}
           />
         )}
-        <div className="flex flex-1 justify-between leading-none items-center">
+        <div className="flex flex-1 items-center justify-between leading-none">
           <span className="text-muted-foreground">Sessions</span>
-          <span className="text-foreground font-mono font-medium tabular-nums">
+          <span className="font-medium font-mono text-foreground tabular-nums">
             {link.value.toLocaleString()}
           </span>
         </div>
@@ -101,7 +101,7 @@ function darkenColor(color: string, amount: number): string {
   // For simplicity, we'll use CSS filter or return a darker version
   // This is a basic implementation - you might want to use a color library
   if (color.startsWith("#")) {
-    const num = parseInt(color.replace("#", ""), 16);
+    const num = Number.parseInt(color.replace("#", ""), 16);
     const r = Math.max(0, ((num >> 16) & 0xff) * (1 - amount));
     const g = Math.max(0, ((num >> 8) & 0xff) * (1 - amount));
     const b = Math.max(0, (num & 0xff) * (1 - amount));
@@ -127,13 +127,13 @@ export function SankeyNivo({
   const [resolvedColors, setResolvedColors] = useState({
     entry: resolveCSSVariable(customColors?.entry || defaultColors.entry),
     passThrough: resolveCSSVariable(
-      customColors?.passThrough || defaultColors.passThrough,
+      customColors?.passThrough || defaultColors.passThrough
     ),
     exit: resolveCSSVariable(customColors?.exit || defaultColors.exit),
   });
 
   const [resolvedLabelColor, setResolvedLabelColor] = useState<string | null>(
-    labelColor === "theme" ? resolveCSSVariable("var(--foreground)") : null,
+    labelColor === "theme" ? resolveCSSVariable("var(--foreground)") : null
   );
 
   useEffect(() => {
@@ -141,7 +141,7 @@ export function SankeyNivo({
     setResolvedColors({
       entry: resolveCSSVariable(customColors?.entry || defaultColors.entry),
       passThrough: resolveCSSVariable(
-        customColors?.passThrough || defaultColors.passThrough,
+        customColors?.passThrough || defaultColors.passThrough
       ),
       exit: resolveCSSVariable(customColors?.exit || defaultColors.exit),
     });
@@ -164,7 +164,7 @@ export function SankeyNivo({
   const colors = resolvedColors;
 
   const chartData = useMemo(() => {
-    if (!data.nodes.length || !data.links.length) {
+    if (!(data.nodes.length && data.links.length)) {
       console.log("SankeyNivo: Missing nodes or links", {
         nodeCount: data.nodes.length,
         linkCount: data.links.length,
@@ -257,7 +257,7 @@ export function SankeyNivo({
 
   if (!chartData) {
     return (
-      <div className="flex h-[400px] items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
         No data available
       </div>
     );
@@ -266,27 +266,14 @@ export function SankeyNivo({
   return (
     <div className={className || "h-[400px] w-full"}>
       <ResponsiveSankey
+        animate={true}
+        colors={getNodeColor}
         data={chartData}
-        margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
-        nodeOpacity={1}
         // nodeHoverOthersOpacity={0.35}
-        nodeThickness={18}
-        nodeSpacing={24}
-        nodeBorderWidth={0}
-        nodeBorderColor={{
-          from: "color",
-          modifiers: [["darker", 0.8]],
-        }}
-        nodeBorderRadius={3}
-        linkOpacity={0.1}
-        // linkHoverOthersOpacity={0.15}
-        // linkHoverOpacity={1}
-        linkContract={4}
         enableLinkGradient={true}
-        linkBlendMode="hard-light"
-        labelPosition="outside"
         labelOrientation="vertical"
         labelPadding={16}
+        labelPosition="outside"
         labelTextColor={
           labelColor === "auto"
             ? (node: { color?: string }) => {
@@ -299,17 +286,30 @@ export function SankeyNivo({
               }
             : resolvedLabelColor || labelColor
         }
-        colors={getNodeColor}
+        linkBlendMode="hard-light"
+        // linkHoverOthersOpacity={0.15}
+        // linkHoverOpacity={1}
+        linkContract={4}
+        linkOpacity={0.1}
+        linkTooltip={SankeyLinkTooltip}
+        margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
+        motionConfig="gentle"
+        nodeBorderColor={{
+          from: "color",
+          modifiers: [["darker", 0.8]],
+        }}
+        nodeBorderRadius={3}
+        nodeBorderWidth={0}
+        nodeOpacity={1}
+        nodeSpacing={24}
+        nodeThickness={18}
+        nodeTooltip={SankeyNodeTooltip}
         theme={{
           text: {
             fontFamily: "inherit",
             fontSize: 12,
           },
         }}
-        animate={true}
-        motionConfig="gentle"
-        nodeTooltip={SankeyNodeTooltip}
-        linkTooltip={SankeyLinkTooltip}
       />
     </div>
   );

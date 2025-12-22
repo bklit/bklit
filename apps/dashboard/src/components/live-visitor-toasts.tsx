@@ -21,7 +21,7 @@ export function LiveVisitorToasts({
   const lastToastTime = useRef<number>(0);
   const toastDebounceMs = 2000;
 
-  if (!projectId || !organizationId) {
+  if (!(projectId && organizationId)) {
     return null;
   }
 
@@ -36,8 +36,8 @@ export function LiveVisitorToasts({
       {
         enabled: !!projectId && !!organizationId,
         retry: false,
-      },
-    ),
+      }
+    )
   );
 
   const sessionsQuery = useQuery(
@@ -48,8 +48,8 @@ export function LiveVisitorToasts({
       },
       {
         enabled: !!projectId && !!organizationId,
-        refetchInterval: 15000,
-        staleTime: 10000,
+        refetchInterval: 15_000,
+        staleTime: 10_000,
         refetchOnWindowFocus: false,
         refetchOnMount: true,
         retry: (failureCount, error) => {
@@ -58,8 +58,8 @@ export function LiveVisitorToasts({
           }
           return failureCount < 3;
         },
-      },
-    ),
+      }
+    )
   );
 
   const recentSessionsData = sessionsQuery.data || [];
@@ -116,9 +116,9 @@ export function LiveVisitorToasts({
 
         toast(`New live visitor from ${location}${city}.`, {
           description: `Viewing on ${deviceType}`,
-          icon: <CircleFlag countryCode={countryCode} className="size-4" />,
+          icon: <CircleFlag className="size-4" countryCode={countryCode} />,
         });
-      },
+      }
     );
   }, [recentSessionsData, preferences?.liveVisitorToasts, seenSessionIds]);
 
@@ -135,7 +135,7 @@ export function LiveVisitorToasts({
           return filtered;
         });
       },
-      5 * 60 * 1000,
+      5 * 60 * 1000
     );
 
     return () => clearInterval(cleanup);

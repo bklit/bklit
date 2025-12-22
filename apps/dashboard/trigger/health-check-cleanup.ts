@@ -15,7 +15,7 @@ export const healthCheckCleanupTask = schedules.task({
     cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
 
     console.log(
-      `Starting health check cleanup: deleting records older than ${cutoffDate.toISOString()}`,
+      `Starting health check cleanup: deleting records older than ${cutoffDate.toISOString()}`
     );
 
     // Delete old health check records
@@ -28,7 +28,7 @@ export const healthCheckCleanupTask = schedules.task({
     });
 
     console.log(
-      `Health check cleanup completed: deleted ${result.count} records`,
+      `Health check cleanup completed: deleted ${result.count} records`
     );
 
     return {

@@ -215,7 +215,7 @@ export function replaceDynamicParams(
   items: NavigationItem[],
   organizationId?: string,
   projectId?: string,
-  userId?: string,
+  userId?: string
 ): NavigationItem[] {
   return items.map((item) => ({
     ...item,
@@ -230,7 +230,7 @@ export function replaceDynamicParams(
 }
 
 export function getLiveNavigationItems(
-  items: NavigationItem[],
+  items: NavigationItem[]
 ): NavigationItem[] {
   return items.filter((item) => item.href.includes("/live"));
 }

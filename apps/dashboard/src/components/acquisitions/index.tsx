@@ -26,7 +26,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -45,18 +45,18 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   return (
     <>
       <PageHeader
-        title="Acquisitions"
         description={
           statsLoading
             ? "Loading acquisitions..."
             : `${statsData?.totalViews || 0} total views`
         }
+        title="Acquisitions"
       >
         <div className="flex items-center gap-2">
           <DateRangePicker />

@@ -12,7 +12,8 @@ const { prisma } = await import(dbClientPath);
 async function pageViewExists(id: string): Promise<boolean> {
   const client = getClickHouseClient();
   const result = await client.query({
-    query: `SELECT count() as count FROM page_view_event WHERE id = {id:String} LIMIT 1`,
+    query:
+      "SELECT count() as count FROM page_view_event WHERE id = {id:String} LIMIT 1",
     query_params: { id },
     format: "JSONEachRow",
   });
@@ -24,7 +25,8 @@ async function pageViewExists(id: string): Promise<boolean> {
 async function eventExists(id: string): Promise<boolean> {
   const client = getClickHouseClient();
   const result = await client.query({
-    query: `SELECT count() as count FROM tracked_event WHERE id = {id:String} LIMIT 1`,
+    query:
+      "SELECT count() as count FROM tracked_event WHERE id = {id:String} LIMIT 1",
     query_params: { id },
     format: "JSONEachRow",
   });
@@ -114,7 +116,7 @@ async function migrateData() {
 
     pageViewOffset += batchSize;
     console.log(
-      `   Progress: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors (${pageViewOffset}/${totalPageViews})`,
+      `   Progress: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors (${pageViewOffset}/${totalPageViews})`
     );
   }
 
@@ -160,7 +162,7 @@ async function migrateData() {
 
     eventOffset += batchSize;
     console.log(
-      `   Progress: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors (${eventOffset}/${totalEvents})`,
+      `   Progress: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors (${eventOffset}/${totalEvents})`
     );
   }
 
@@ -222,20 +224,20 @@ async function migrateData() {
 
     sessionOffset += batchSize;
     console.log(
-      `   Progress: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors (${sessionOffset}/${totalSessions})`,
+      `   Progress: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors (${sessionOffset}/${totalSessions})`
     );
   }
 
   console.log("\n✅ Migration completed!\n");
   console.log("📊 Migration Summary:");
   console.log(
-    `   PageViewEvent: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors`,
+    `   PageViewEvent: ${pageViewCount} migrated, ${pageViewSkipped} skipped, ${pageViewErrors} errors`
   );
   console.log(
-    `   TrackedEvent: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors`,
+    `   TrackedEvent: ${eventCount} migrated, ${eventSkipped} skipped, ${eventErrors} errors`
   );
   console.log(
-    `   TrackedSession: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors`,
+    `   TrackedSession: ${sessionCount} migrated, ${sessionSkipped} skipped, ${sessionErrors} errors`
   );
 
   const postgresCounts = {
@@ -252,7 +254,7 @@ async function migrateData() {
   // Verify ClickHouse counts
   const client = getClickHouseClient();
   const chPageViewCount = await client.query({
-    query: `SELECT count() as count FROM page_view_event`,
+    query: "SELECT count() as count FROM page_view_event",
     format: "JSONEachRow",
   });
   const chPageViewRows = (await chPageViewCount.json()) as Array<{
@@ -260,13 +262,13 @@ async function migrateData() {
   }>;
 
   const chEventCount = await client.query({
-    query: `SELECT count() as count FROM tracked_event`,
+    query: "SELECT count() as count FROM tracked_event",
     format: "JSONEachRow",
   });
   const chEventRows = (await chEventCount.json()) as Array<{ count: number }>;
 
   const chSessionCount = await client.query({
-    query: `SELECT count() as count FROM tracked_session`,
+    query: "SELECT count() as count FROM tracked_session",
     format: "JSONEachRow",
   });
   const chSessionRows = (await chSessionCount.json()) as Array<{
@@ -294,7 +296,7 @@ async function migrateData() {
     console.log("\n⚠️ Migration completed with some issues:");
     if (pageViewErrors > 0 || eventErrors > 0 || sessionErrors > 0) {
       console.log(
-        `   Errors: ${pageViewErrors + eventErrors + sessionErrors} total`,
+        `   Errors: ${pageViewErrors + eventErrors + sessionErrors} total`
       );
     }
     if (!allMigrated) {

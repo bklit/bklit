@@ -17,7 +17,7 @@ interface TokenValidationResult {
  */
 export async function validateApiToken(
   token: string,
-  projectId: string,
+  projectId: string
 ): Promise<TokenValidationResult> {
   try {
     if (!token) {
@@ -75,7 +75,7 @@ export async function validateApiToken(
 
     // Check if token is assigned to the project
     const isAssignedToProject = matchedToken.projects.some(
-      (tp) => tp.projectId === projectId,
+      (tp) => tp.projectId === projectId
     );
 
     if (!isAssignedToProject) {
@@ -112,7 +112,7 @@ export async function validateApiToken(
  * @returns The token string or null if invalid format
  */
 export function extractTokenFromHeader(
-  authHeader: string | null,
+  authHeader: string | null
 ): string | null {
   if (!authHeader) {
     return null;

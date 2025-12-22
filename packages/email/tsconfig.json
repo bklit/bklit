@@ -2,7 +2,8 @@
   "extends": "@bklit/tsconfig/internal-package.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "lib": ["ES2022", "dom", "dom.iterable"]
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "strictNullChecks": true
   },
   "include": ["src", "src/emails"],
   "exclude": ["node_modules"]

@@ -11,7 +11,6 @@ import {
 } from "@bklit/ui/components/card";
 import { Funnel as FunnelChart } from "@bklit/ui/components/charts/funnel";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
-import { Separator } from "@bklit/ui/components/separator";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import {
   Table,
@@ -52,7 +51,7 @@ export function FunnelDetails({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const { data: funnel, isLoading: funnelLoading } = useQuery(
@@ -60,7 +59,7 @@ export function FunnelDetails({
       funnelId,
       projectId,
       organizationId,
-    }),
+    })
   );
 
   // Initialize date params based on funnel creation date
@@ -118,7 +117,7 @@ export function FunnelDetails({
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   const isLoading = funnelLoading || statsLoading;
@@ -139,7 +138,7 @@ export function FunnelDetails({
   }, [funnel?.steps, stats?.stepStats]);
 
   const stepProgressData = useMemo(() => {
-    if (!funnel?.steps || !stats?.stepStats) return [];
+    if (!(funnel?.steps && stats?.stepStats)) return [];
 
     const chartColors = [
       "var(--chart-1)",
@@ -150,7 +149,7 @@ export function FunnelDetails({
     ];
 
     const sortedSteps = [...funnel.steps].sort(
-      (a, b) => a.stepOrder - b.stepOrder,
+      (a, b) => a.stepOrder - b.stepOrder
     );
 
     return sortedSteps.map((step, index) => {
@@ -162,7 +161,7 @@ export function FunnelDetails({
         const previousStep = sortedSteps[index - 1];
         if (previousStep) {
           const previousStepStat = stats.stepStats.find(
-            (s) => s.stepId === previousStep.id,
+            (s) => s.stepId === previousStep.id
           );
           const previousConversions = previousStepStat?.conversions ?? 0;
           if (previousConversions > 0) {
@@ -195,8 +194,8 @@ export function FunnelDetails({
     return (
       <>
         <PageHeader
-          title="Funnel Details"
           description="Loading funnel details..."
+          title="Funnel Details"
         />
         <div className="space-y-6">
           <Card>
@@ -216,8 +215,8 @@ export function FunnelDetails({
     return (
       <>
         <PageHeader
-          title="Funnel Not Found"
           description="The funnel you're looking for doesn't exist."
+          title="Funnel Not Found"
         />
         <div className="flex justify-center py-12">
           <Button asChild variant="outline">
@@ -234,8 +233,8 @@ export function FunnelDetails({
   return (
     <>
       <PageHeader
-        title={funnel.name}
         description={funnel.description || "Funnel details and analytics"}
+        title={funnel.name}
       >
         <div className="flex items-center gap-2">
           <DateRangePicker />
@@ -248,7 +247,7 @@ export function FunnelDetails({
         </div>
       </PageHeader>
       <div className="space-y-6">
-        <div className="flex flex-col sm:grid sm:grid-cols-4 gap-4">
+        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-4">
           {/* Funnel Overview Card */}
           <div className="col-span-1">
             <Card>
@@ -261,44 +260,44 @@ export function FunnelDetails({
               <CardContent className="space-y-6">
                 {funnel.description && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Description</p>
+                    <p className="text-muted-foreground text-sm">Description</p>
                     <p className="font-medium">{funnel.description}</p>
                   </div>
                 )}
-                <div className="flex items-center justify-between w-full">
-                  <p className="text-sm text-muted-foreground">Created</p>
+                <div className="flex w-full items-center justify-between">
+                  <p className="text-muted-foreground text-sm">Created</p>
                   <p className="font-medium text-sm">
                     {format(new Date(funnel.createdAt), "PPP")}
                   </p>
                 </div>
                 {funnel.endDate && (
-                  <div className="flex items-center justify-between w-full">
-                    <p className="text-sm text-muted-foreground">End Date</p>
+                  <div className="flex w-full items-center justify-between">
+                    <p className="text-muted-foreground text-sm">End Date</p>
                     <p className="font-medium text-sm">
                       {format(new Date(funnel.endDate), "PPP")}
                     </p>
                   </div>
                 )}
                 {stepProgressData.length > 0 && (
-                  <div className="flex flex-col space-y-4 w-full">
+                  <div className="flex w-full flex-col space-y-4">
                     {stepProgressData.map((step) => (
-                      <div key={step.id} className="flex flex-col">
+                      <div className="flex flex-col" key={step.id}>
                         <div className="flex items-center justify-start gap-4 pb-3">
                           <div className="flex items-center gap-1.5">
                             <div
                               className="h-2 w-2 shrink-0 rounded-[2px]"
                               style={{ backgroundColor: step.color }}
                             />
-                            <span className="text-xs font-medium">
+                            <span className="font-medium text-xs">
                               {step.stepName}
                             </span>
                           </div>
                         </div>
                         <ProgressRow
-                          label={step.label}
-                          value={step.value}
-                          percentage={step.percentage}
                           color={step.color}
+                          label={step.label}
+                          percentage={step.percentage}
+                          value={step.value}
                           variant="secondary"
                         />
                       </div>
@@ -307,11 +306,11 @@ export function FunnelDetails({
                 )}
 
                 {stats && (
-                  <div className="flex items-center justify-between w-full">
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex w-full items-center justify-between">
+                    <p className="text-muted-foreground text-sm">
                       Total Conversions
                     </p>
-                    <div className="text-lg font-bold">
+                    <div className="font-bold text-lg">
                       {stats.totalConversions}
                     </div>
                   </div>
@@ -331,7 +330,7 @@ export function FunnelDetails({
               </CardHeader>
               <CardContent>
                 {chartData.length > 0 && (
-                  <div className="flex items-center justify-start gap-4 pb-3 flex-wrap">
+                  <div className="flex flex-wrap items-center justify-start gap-4 pb-3">
                     {chartData.map((step, index) => {
                       const chartColors = [
                         "bg-chart-1",
@@ -345,13 +344,13 @@ export function FunnelDetails({
 
                       return (
                         <div
-                          key={step.id}
                           className="flex items-center gap-1.5"
+                          key={step.id}
                         >
                           <div
                             className={`h-2 w-2 shrink-0 rounded-[2px] ${colorClass}`}
                           />
-                          <span className="text-xs font-medium">
+                          <span className="font-medium text-xs">
                             {step.label}
                           </span>
                         </div>
@@ -388,7 +387,7 @@ export function FunnelDetails({
               <TableBody>
                 {funnel.steps.map((step) => {
                   const stepStat = stats?.stepStats.find(
-                    (s) => s.stepId === step.id,
+                    (s) => s.stepId === step.id
                   );
                   const conversions = stepStat?.conversions ?? 0;
                   const conversionRate = stepStat?.conversionRate ?? 0;
@@ -401,16 +400,16 @@ export function FunnelDetails({
                       <TableCell>{step.name}</TableCell>
                       <TableCell>
                         <Badge
+                          size="lg"
                           variant={
                             step.type === "pageview" ? "default" : "alternative"
                           }
-                          size="lg"
                         >
                           {step.type === "pageview" ? "Pageview" : "Event"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        <Badge variant="code" size="lg">
+                        <Badge size="lg" variant="code">
                           {step.type === "pageview"
                             ? step.url || "—"
                             : step.eventName || "—"}
@@ -419,10 +418,10 @@ export function FunnelDetails({
                       <TableCell>{conversions.toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge
+                          size="lg"
                           variant={
                             conversionRate > 30 ? "success" : "destructive"
                           }
-                          size="lg"
                         >
                           {conversionRate > 0
                             ? conversionRate >= 99.995

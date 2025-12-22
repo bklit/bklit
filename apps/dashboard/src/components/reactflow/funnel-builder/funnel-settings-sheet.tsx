@@ -53,7 +53,7 @@ export function FunnelSettingsSheet({
   showNameError = false,
 }: FunnelSettingsSheetProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    initialEndDate ? new Date(initialEndDate) : undefined,
+    initialEndDate ? new Date(initialEndDate) : undefined
   );
 
   const form = useForm({
@@ -97,7 +97,7 @@ export function FunnelSettingsSheet({
   }, [showNameError, open, form]);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet onOpenChange={onOpenChange} open={open}>
       <SheetContent className="sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>Funnel Settings</SheetTitle>
@@ -107,21 +107,21 @@ export function FunnelSettingsSheet({
         </SheetHeader>
 
         <form
+          className="mt-6 space-y-6"
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="space-y-6 mt-6"
         >
           <form.Field name="name">
             {(field) => (
               <FieldGroup>
                 <FieldLabel>Funnel Name</FieldLabel>
                 <Input
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="e.g., Sign Up Funnel"
+                  value={field.state.value}
                 />
                 <FieldError>{field.state.meta.errors[0]}</FieldError>
               </FieldGroup>
@@ -161,9 +161,9 @@ export function FunnelSettingsSheet({
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
+                        className="w-full justify-start text-left font-normal"
                         type="button"
                         variant="outline"
-                        className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 size-4" />
                         {selectedDate ? (
@@ -173,15 +173,15 @@ export function FunnelSettingsSheet({
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent align="start" className="w-auto p-0">
                       <CalendarComponent
+                        initialFocus
                         mode="single"
-                        selected={selectedDate}
                         onSelect={(date) => {
                           setSelectedDate(date);
                           field.handleChange(date);
                         }}
-                        initialFocus
+                        selected={selectedDate}
                       />
                     </PopoverContent>
                   </Popover>
@@ -193,16 +193,16 @@ export function FunnelSettingsSheet({
 
           <SheetFooter>
             <Button
+              onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
             <Button
+              disabled={!form.state.isValid}
               type="submit"
               variant="secondary"
-              disabled={!form.state.isValid}
             >
               Update
             </Button>

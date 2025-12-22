@@ -8,11 +8,11 @@ interface IconProps {
 export function SafariIcon({ className, size = 16 }: IconProps) {
   return (
     <svg
+      className={cn("icon", className)}
       height={size}
       viewBox="0 0 512 512"
       width={size}
       xmlns="http://www.w3.org/2000/svg"
-      className={cn("icon", className)}
     >
       <title>Safari Icon</title>
       <g id="_x34_0-safari_x2C__browser">

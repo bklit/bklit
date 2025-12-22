@@ -27,7 +27,7 @@ export function BounceRateCard({ projectId, userId }: BounceRateCardProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -59,8 +59,8 @@ export function BounceRateCard({ projectId, userId }: BounceRateCardProps) {
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -69,7 +69,7 @@ export function BounceRateCard({ projectId, userId }: BounceRateCardProps) {
 
   if (!data || data.totalSessions === 0) {
     return (
-      <NoDataCard title="Bounce Rate" description="Sessions that bounced" />
+      <NoDataCard description="Sessions that bounced" title="Bounce Rate" />
     );
   }
 

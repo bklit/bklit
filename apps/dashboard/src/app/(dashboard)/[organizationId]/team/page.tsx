@@ -15,7 +15,7 @@ export default async function TeamPage({
       organizationId,
       page: 1,
       limit: 15,
-    }),
+    })
   );
 
   prefetch(trpc.organization.fetch.queryOptions({ id: organizationId }));

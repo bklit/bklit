@@ -36,7 +36,7 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -81,7 +81,7 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
             Loading chart...
           </div>
         </CardContent>
@@ -99,7 +99,7 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
             No data available
           </div>
         </CardContent>
@@ -117,12 +117,12 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
       </CardHeader>
       <CardContent>
         <ChartContainer
-          config={chartConfig}
           className="aspect-auto h-[400px] w-full"
+          config={chartConfig}
         >
           <AreaChart data={timeSeriesData.timeSeriesData}>
             <defs>
-              <linearGradient id="fillSessions" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="fillSessions" x1="0" x2="0" y1="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="var(--color-sessions)"
@@ -134,7 +134,7 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
                   stopOpacity={0.1}
                 />
               </linearGradient>
-              <linearGradient id="fillConversions" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="fillConversions" x1="0" x2="0" y1="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="var(--color-conversions)"
@@ -152,10 +152,8 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
               strokeDasharray="3 3"
             />
             <XAxis
-              dataKey="date"
-              tickLine={false}
               axisLine={false}
-              tickMargin={8}
+              dataKey="date"
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
@@ -164,34 +162,36 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
                   day: "numeric",
                 });
               }}
+              tickLine={false}
+              tickMargin={8}
             />
             <ChartTooltip
-              cursor={false}
               content={
                 <ChartTooltipContent
+                  indicator="dot"
                   labelFormatter={(value) =>
                     new Date(value).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                     })
                   }
-                  indicator="dot"
                 />
               }
+              cursor={false}
             />
             <Area
               dataKey="sessions"
-              type="linear"
               fill="url(#fillSessions)"
-              stroke="var(--color-sessions)"
               fillOpacity={0.6}
+              stroke="var(--color-sessions)"
+              type="linear"
             />
             <Area
               dataKey="conversions"
-              type="linear"
               fill="url(#fillConversions)"
-              stroke="var(--color-conversions)"
               fillOpacity={0.6}
+              stroke="var(--color-conversions)"
+              type="linear"
             />
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>

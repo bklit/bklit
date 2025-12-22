@@ -11,7 +11,7 @@ export const sessionRouter = createTRPCRouter({
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -24,8 +24,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -66,7 +65,7 @@ export const sessionRouter = createTRPCRouter({
         {} as Record<
           string,
           { total: number; engaged: number; bounced: number }
-        >,
+        >
       );
 
       const endDate = input.endDate || new Date();
@@ -102,7 +101,7 @@ export const sessionRouter = createTRPCRouter({
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -115,8 +114,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -163,7 +161,7 @@ export const sessionRouter = createTRPCRouter({
           }
           return acc;
         },
-        {} as Record<string, Array<{ mobile: boolean | null }>>,
+        {} as Record<string, Array<{ mobile: boolean | null }>>
       );
 
       const totalSessions = sessions.length;
@@ -192,7 +190,7 @@ export const sessionRouter = createTRPCRouter({
         limit: z.number().min(1).max(1000).default(10),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .output(
       z.object({
@@ -217,9 +215,9 @@ export const sessionRouter = createTRPCRouter({
                 id: z.string(),
                 url: z.string(),
                 timestamp: z.date(),
-              }),
+              })
             ),
-          }),
+          })
         ),
         totalCount: z.number(),
         pagination: z.object({
@@ -229,7 +227,7 @@ export const sessionRouter = createTRPCRouter({
           hasNextPage: z.boolean(),
           hasPreviousPage: z.boolean(),
         }),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to the project
@@ -250,8 +248,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -285,7 +282,7 @@ export const sessionRouter = createTRPCRouter({
 
       const sessions = allSessions.slice(
         (input.page - 1) * input.limit,
-        input.page * input.limit,
+        input.page * input.limit
       );
 
       // Get pageviews for the specific sessions we found
@@ -295,7 +292,7 @@ export const sessionRouter = createTRPCRouter({
         sessionIds.length > 0
           ? await ctx.analytics.getPageViewsBySessionIds(
               input.projectId,
-              sessionIds,
+              sessionIds
             )
           : [];
 
@@ -317,7 +314,7 @@ export const sessionRouter = createTRPCRouter({
         {} as Record<
           string,
           Array<{ id: string; url: string; timestamp: Date }>
-        >,
+        >
       );
 
       // Map sessions with their pageviews
@@ -338,7 +335,7 @@ export const sessionRouter = createTRPCRouter({
         city: s.city,
         projectId: s.project_id,
         pageViewEvents: (pageviewsBySession[s.session_id] || []).sort(
-          (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+          (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
         ),
       }));
 
@@ -360,7 +357,7 @@ export const sessionRouter = createTRPCRouter({
         sessionId: z.string(),
         projectId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to the project
@@ -381,8 +378,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -410,7 +406,7 @@ export const sessionRouter = createTRPCRouter({
       // Get full session with pageviews and events
       const session = await ctx.analytics.getSessionById(
         sessionData.session_id,
-        input.projectId,
+        input.projectId
       );
 
       if (!session) {
@@ -442,7 +438,7 @@ export const sessionRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to the project
@@ -463,8 +459,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -483,7 +478,7 @@ export const sessionRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to the project
@@ -504,8 +499,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -516,13 +510,13 @@ export const sessionRouter = createTRPCRouter({
 
       // Get active sessions with their latest page view location from ClickHouse
       const liveSessionsData = await ctx.analytics.getLiveUserLocations(
-        input.projectId,
+        input.projectId
       );
 
       // Helper function to validate coordinates
       const isValidCoordinate = (
         lat: number | null,
-        lon: number | null,
+        lon: number | null
       ): boolean => {
         if (lat === null || lon === null) return false;
         // Check if coordinates are valid (not 0,0 and within valid ranges)
@@ -612,7 +606,7 @@ export const sessionRouter = createTRPCRouter({
               countryCode = session.pageview_country_code;
             } else {
               console.log(
-                `No center coordinates for country code: ${countryCodeUpper}`,
+                `No center coordinates for country code: ${countryCodeUpper}`
               );
             }
           }
@@ -638,7 +632,7 @@ export const sessionRouter = createTRPCRouter({
         })
         .filter(
           (location): location is NonNullable<typeof location> =>
-            location !== null,
+            location !== null
         );
     }),
   recentSessions: protectedProcedure
@@ -647,7 +641,7 @@ export const sessionRouter = createTRPCRouter({
         projectId: z.string(),
         organizationId: z.string(),
         since: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to the project
@@ -668,8 +662,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -681,7 +674,7 @@ export const sessionRouter = createTRPCRouter({
       const recentSessions = await ctx.analytics.getRecentSessions(
         input.projectId,
         since,
-        10,
+        10
       );
 
       return recentSessions.map((s) => ({
@@ -701,7 +694,7 @@ export const sessionRouter = createTRPCRouter({
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -714,8 +707,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
@@ -741,7 +733,7 @@ export const sessionRouter = createTRPCRouter({
       const journeys = await ctx.analytics.getSessionJourneys(
         input.projectId,
         normalizedStartDate,
-        normalizedEndDate,
+        normalizedEndDate
       );
 
       // Get pageviews for all sessions to build transitions
@@ -762,7 +754,7 @@ export const sessionRouter = createTRPCRouter({
           }
           return acc;
         },
-        {} as Record<string, Array<{ url: string; timestamp: string }>>,
+        {} as Record<string, Array<{ url: string; timestamp: string }>>
       );
 
       const sessions = journeys.map((journey) => ({
@@ -772,7 +764,7 @@ export const sessionRouter = createTRPCRouter({
         pageViewEvents: (pageviewsBySession[journey.session_id] || []).sort(
           (a, b) =>
             parseClickHouseDate(a.timestamp).getTime() -
-            parseClickHouseDate(b.timestamp).getTime(),
+            parseClickHouseDate(b.timestamp).getTime()
         ),
       }));
 
@@ -797,7 +789,7 @@ export const sessionRouter = createTRPCRouter({
         if (session.pageViewEvents.length === 0) continue;
 
         const paths = session.pageViewEvents.map((event) =>
-          extractPath(event.url),
+          extractPath(event.url)
         );
 
         const entryPage = paths[0];
@@ -858,7 +850,7 @@ export const sessionRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -878,15 +870,14 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");
       }
 
       const liveTopCountries = await ctx.analytics.getLiveTopCountries(
-        input.projectId,
+        input.projectId
       );
 
       const countryCounts: Record<
@@ -921,7 +912,7 @@ export const sessionRouter = createTRPCRouter({
         projectId: z.string(),
         organizationId: z.string(),
         limit: z.number().default(5),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -941,8 +932,7 @@ export const sessionRouter = createTRPCRouter({
       });
 
       if (
-        !project ||
-        !project.organization ||
+        !(project && project.organization) ||
         project.organization.members.length === 0
       ) {
         throw new Error("Forbidden");

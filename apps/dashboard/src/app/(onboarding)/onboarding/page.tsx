@@ -29,13 +29,13 @@ function CreateWorkspaceStep({
     <>
       <Stepper.Content>
         <CreateWorkspaceStepForm
-          onSuccess={handleSuccess}
           onLoadingChange={setIsLoading}
+          onSuccess={handleSuccess}
         />
       </Stepper.Content>
       <Stepper.Footer>
         <div />
-        <Button type="submit" form="create-workspace-form" disabled={isLoading}>
+        <Button disabled={isLoading} form="create-workspace-form" type="submit">
           {isLoading ? "Creating..." : "Next"}
         </Button>
       </Stepper.Footer>
@@ -51,7 +51,7 @@ function CreateProjectStep({
   onSuccess: (
     projectId: string,
     projectName: string,
-    projectDomain: string,
+    projectDomain: string
   ) => void;
 }) {
   const { goToNextStep } = useStepper();
@@ -60,7 +60,7 @@ function CreateProjectStep({
   const handleSuccess = (
     projectId: string,
     projectName: string,
-    projectDomain: string,
+    projectDomain: string
   ) => {
     onSuccess(projectId, projectName, projectDomain);
     goToNextStep();
@@ -70,14 +70,14 @@ function CreateProjectStep({
     <>
       <Stepper.Content>
         <CreateProjectStepForm
-          organizationId={organizationId}
-          onSuccess={handleSuccess}
           onLoadingChange={setIsLoading}
+          onSuccess={handleSuccess}
+          organizationId={organizationId}
         />
       </Stepper.Content>
       <Stepper.Footer>
         <div />
-        <Button type="submit" form="create-project-form" disabled={isLoading}>
+        <Button disabled={isLoading} form="create-project-form" type="submit">
           {isLoading ? "Creating..." : "Next"}
         </Button>
       </Stepper.Footer>
@@ -124,15 +124,15 @@ function SDKConnectionStep({
     <>
       <Stepper.Content>
         <SDKConnectionStepForm
+          onTokenCreated={handleTokenCreated}
           organizationId={organizationId}
+          projectDomain={projectDomain}
           projectId={projectId}
           projectName={projectName}
-          projectDomain={projectDomain}
-          onTokenCreated={handleTokenCreated}
         />
       </Stepper.Content>
       <Stepper.Footer>
-        <Button variant="ghost" onClick={handleSkip}>
+        <Button onClick={handleSkip} variant="ghost">
           Skip for now
         </Button>
         <Button onClick={goToNextStep}>Next</Button>
@@ -155,8 +155,8 @@ function TestConnectionStep({
       <Stepper.Content>
         <TestConnectionStepForm
           organizationId={organizationId}
-          projectId={projectId}
           projectDomain={projectDomain}
+          projectId={projectId}
         />
       </Stepper.Content>
       <Stepper.Footer>
@@ -171,7 +171,7 @@ function OnboardingPageContent() {
   // Use nuqs for URL-based state (for testing/debugging)
   const [stepParam, setStepParam] = useQueryState(
     "step",
-    parseAsInteger.withDefault(1),
+    parseAsInteger.withDefault(1)
   );
   const [orgIdParam] = useQueryState("organizationId", parseAsString);
   const [projectIdParam] = useQueryState("projectId", parseAsString);
@@ -201,7 +201,7 @@ function OnboardingPageContent() {
   const handleProjectSuccess = (
     projectId: string,
     projectName: string,
-    projectDomain: string,
+    projectDomain: string
   ) => {
     setProjectData({ id: projectId, name: projectName, domain: projectDomain });
   };
@@ -224,15 +224,15 @@ function OnboardingPageContent() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex px-3 gap-2 justify-between">
-        <h1 className="text-2xl font-semibold">Let's get you setup</h1>
+      <div className="flex justify-between gap-2 px-3">
+        <h1 className="font-semibold text-2xl">Let's get you setup</h1>
         <div className="block align-text-bottom">
-          <span className="text-sm text-muted-foreground mr-2">Step</span>
+          <span className="mr-2 text-muted-foreground text-sm">Step</span>
           <NumberFlow
-            value={stepParam}
-            className="text-2xl font-bold [&::part(suffix)]:ml-1 [&::part(suffix)]:font-normal [&::part(suffix)]:text-sm [&::part(suffix)]:text-bklit-300"
-            suffix="/4"
+            className="font-bold text-2xl [&::part(suffix)]:ml-1 [&::part(suffix)]:font-normal [&::part(suffix)]:text-bklit-300 [&::part(suffix)]:text-sm"
             format={{ notation: "compact" }}
+            suffix="/4"
+            value={stepParam}
           />
         </div>
       </div>
@@ -245,18 +245,18 @@ function OnboardingPageContent() {
           <Stepper.Title>Create your project</Stepper.Title>
           {effectiveOrgId ? (
             <CreateProjectStep
-              organizationId={effectiveOrgId}
               onSuccess={handleProjectSuccess}
+              organizationId={effectiveOrgId}
             />
           ) : (
             <Stepper.Content>
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="py-8 text-center text-muted-foreground">
                 <p className="text-sm">
                   Please complete step 1 first to create a workspace.
                 </p>
-                <p className="text-xs mt-2">
+                <p className="mt-2 text-xs">
                   For testing: Add{" "}
-                  <code className="bg-muted px-1 rounded">
+                  <code className="rounded bg-muted px-1">
                     ?organizationId=YOUR_ORG_ID
                   </code>{" "}
                   to the URL.
@@ -269,21 +269,21 @@ function OnboardingPageContent() {
           <Stepper.Title>Install the SDK</Stepper.Title>
           {effectiveProjectData ? (
             <SDKConnectionStep
+              onTokenCreated={handleTokenCreated}
               organizationId={effectiveOrgId}
+              projectDomain={effectiveProjectData.domain}
               projectId={effectiveProjectData.id}
               projectName={effectiveProjectData.name}
-              projectDomain={effectiveProjectData.domain}
-              onTokenCreated={handleTokenCreated}
             />
           ) : (
             <Stepper.Content>
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="py-8 text-center text-muted-foreground">
                 <p className="text-sm">
                   Please complete step 2 first to create a project.
                 </p>
-                <p className="text-xs mt-2">
+                <p className="mt-2 text-xs">
                   For testing: Add{" "}
-                  <code className="bg-muted px-1 rounded">
+                  <code className="rounded bg-muted px-1">
                     ?projectId=ID&projectName=NAME&projectDomain=DOMAIN
                   </code>{" "}
                   to the URL.
@@ -297,12 +297,12 @@ function OnboardingPageContent() {
           {effectiveProjectData && tokenCreated ? (
             <TestConnectionStep
               organizationId={effectiveOrgId}
-              projectId={effectiveProjectData.id}
               projectDomain={effectiveProjectData.domain}
+              projectId={effectiveProjectData.id}
             />
           ) : (
             <Stepper.Content>
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="py-8 text-center text-muted-foreground">
                 <p className="text-sm">
                   Please complete step 3 first to install the SDK.
                 </p>

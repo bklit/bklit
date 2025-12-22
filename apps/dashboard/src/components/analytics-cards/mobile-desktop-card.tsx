@@ -31,7 +31,7 @@ export function MobileDesktopCard({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -63,8 +63,8 @@ export function MobileDesktopCard({
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -74,9 +74,9 @@ export function MobileDesktopCard({
   if (!stats) {
     return (
       <NoDataCard
-        title="Mobile/Desktop"
         description="Unique page visits by device type."
         icon={<MonitorSmartphone size={16} />}
+        title="Mobile/Desktop"
       />
     );
   }
@@ -86,9 +86,9 @@ export function MobileDesktopCard({
   if (totalVisits === 0) {
     return (
       <NoDataCard
-        title="Mobile/Desktop"
         description="Unique page visits by device type."
         icon={<MonitorSmartphone size={16} />}
+        title="Mobile/Desktop"
       />
     );
   }

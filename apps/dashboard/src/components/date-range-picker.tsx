@@ -60,7 +60,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   }, [dateParams.startDate, dateParams.endDate, setDateParams]);
 
   const isDefaultRange = useMemo(() => {
-    if (!dateParams.startDate || !dateParams.endDate) return false;
+    if (!(dateParams.startDate && dateParams.endDate)) return false;
 
     const today = new Date();
     const defaultEndDate = endOfDay(today);
@@ -97,7 +97,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
     });
     onRangeChange?.(
       normalizedStartDate ?? undefined,
-      normalizedEndDate ?? undefined,
+      normalizedEndDate ?? undefined
     );
     setIsOpen(false);
   };
@@ -119,11 +119,11 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      // Reset local state if popover is closed without applying
+    if (open) {
+      // Sync local state with current filters when opening
       setLocalRange({ from: startDate, to: endDate });
     } else {
-      // Sync local state with current filters when opening
+      // Reset local state if popover is closed without applying
       setLocalRange({ from: startDate, to: endDate });
     }
     setIsOpen(open);
@@ -131,15 +131,15 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
 
   return (
     <ButtonGroup>
-      <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <Popover onOpenChange={handleOpenChange} open={isOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant="outline"
-            size="lg"
             className="justify-start text-left font-normal"
+            size="lg"
+            variant="outline"
           >
             <CalendarIcon className="size-4" />
-            <span className="hidden sm:inline text-sm">
+            <span className="hidden text-sm sm:inline">
               {startDate && endDate ? (
                 <>
                   {format(startDate, "MMM dd, yyyy")} -{" "}
@@ -153,24 +153,24 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
             </span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent align="end" className="w-auto p-0">
           <div className="flex flex-col">
             <CalendarComponent
-              mode="range"
-              selected={localRange}
-              onSelect={setLocalRange}
-              numberOfMonths={2}
               initialFocus
+              mode="range"
+              numberOfMonths={2}
+              onSelect={setLocalRange}
+              selected={localRange}
             />
-            <div className="flex items-center justify-end gap-2 p-3 border-t">
+            <div className="flex items-center justify-end gap-2 border-t p-3">
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => setIsOpen(false)}
+                size="sm"
+                variant="ghost"
               >
                 Cancel
               </Button>
-              <Button size="sm" onClick={applyDateRange}>
+              <Button onClick={applyDateRange} size="sm">
                 Apply
               </Button>
             </div>
@@ -178,7 +178,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
         </PopoverContent>
       </Popover>
       {hasActiveFilters && (
-        <Button variant="secondary" size="lg" onClick={clearFilters}>
+        <Button onClick={clearFilters} size="lg" variant="secondary">
           Clear filters
         </Button>
       )}

@@ -39,7 +39,7 @@ export function BillingSnapshotCard({
   const { data: billing, isLoading } = useQuery(
     trpc.organization.getBillingSnapshot.queryOptions({
       organizationId,
-    }),
+    })
   );
 
   const { data: productsData } = useQuery({
@@ -93,7 +93,7 @@ export function BillingSnapshotCard({
           <CardDescription>Unable to load billing information</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button asChild variant="outline" className="w-full">
+          <Button asChild className="w-full" variant="outline">
             <Link href={`/${organizationId}/settings/billing`}>
               Go to Billing
             </Link>
@@ -142,7 +142,7 @@ export function BillingSnapshotCard({
 
         {!hideViewBillingButton && (
           <CardAction>
-            <Button asChild variant="outline" className="w-full">
+            <Button asChild className="w-full" variant="outline">
               <Link href={`/${organizationId}/settings/billing`}>Billing</Link>
             </Button>
           </CardAction>
@@ -151,7 +151,7 @@ export function BillingSnapshotCard({
       <CardContent className="space-y-4">
         {/* Usage Metrics */}
         {billing.usage && (
-          <Item variant="outline" className="bg-bklit-600/30">
+          <Item className="bg-bklit-600/30" variant="outline">
             <ItemContent className="space-y-2">
               {/* Total Operations */}
               <div className="space-y-1.5">
@@ -166,7 +166,7 @@ export function BillingSnapshotCard({
                 </div>
                 <Progress value={Math.min(billing.usage.percentageUsed, 100)} />
                 {billing.usage.percentageUsed >= 90 && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
+                  <p className="text-red-600 text-xs dark:text-red-400">
                     {billing.usage.percentageUsed >= 100
                       ? "Limit reached"
                       : "Approaching limit"}
@@ -185,7 +185,7 @@ export function BillingSnapshotCard({
                 <Progress
                   value={Math.min(
                     (billing.usage.pageviews / billing.usage.limit) * 100,
-                    100,
+                    100
                   )}
                 />
               </div>
@@ -201,14 +201,14 @@ export function BillingSnapshotCard({
                 <Progress
                   value={Math.min(
                     (billing.usage.trackedEvents / billing.usage.limit) * 100,
-                    100,
+                    100
                   )}
                 />
               </div>
 
               {/* Overage Events (Pro only) */}
               {isPro && proProduct && (
-                <div className="space-y-1.5 pt-2 border-t">
+                <div className="space-y-1.5 border-t pt-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">
                       Overage Events
@@ -216,7 +216,7 @@ export function BillingSnapshotCard({
                     <span className="font-medium">
                       {Math.max(
                         0,
-                        billing.usage.total - proProduct.baseEvents,
+                        billing.usage.total - proProduct.baseEvents
                       ).toLocaleString()}
                     </span>
                   </div>
@@ -231,8 +231,8 @@ export function BillingSnapshotCard({
                       }).format(
                         Math.max(
                           0,
-                          billing.usage.total - proProduct.baseEvents,
-                        ) * proProduct.overagePrice,
+                          billing.usage.total - proProduct.baseEvents
+                        ) * proProduct.overagePrice
                       )}
                     </span>
                   </div>
@@ -244,8 +244,8 @@ export function BillingSnapshotCard({
 
         {billing.cancelAtPeriodEnd && billing.currentPeriodEnd && (
           <Item
-            variant="outline"
             className="border-destructive bg-destructive/10"
+            variant="outline"
           >
             <ItemContent>
               <ItemTitle>Subscription Ending</ItemTitle>
@@ -257,7 +257,7 @@ export function BillingSnapshotCard({
                     month: "long",
                     day: "numeric",
                     year: "numeric",
-                  },
+                  }
                 )}
               </ItemDescription>
             </ItemContent>

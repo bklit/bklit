@@ -28,9 +28,9 @@ export const LogoDropdown = () => {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <Link href="/" className="flex items-center gap-3 cursor-pointer">
+        <Link className="flex cursor-pointer items-center gap-3" href="/">
           <BklitLogo size={38} variant="mono" />
-          <span className="text-2xl font-bold">Bklit</span>
+          <span className="font-bold text-2xl">Bklit</span>
         </Link>
       </ContextMenuTrigger>
       <ContextMenuContent>
@@ -46,7 +46,7 @@ export const LogoDropdown = () => {
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem asChild>
-          <a href="/bklit-branding.zip" download title="Download branding zip">
+          <a download href="/bklit-branding.zip" title="Download branding zip">
             Download Zip
           </a>
         </ContextMenuItem>

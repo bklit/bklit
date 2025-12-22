@@ -66,14 +66,14 @@ export const FAQ = () => {
   return (
     <div className="container mx-auto max-w-4xl">
       <div className="flex flex-col">
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion className="w-full" collapsible type="single">
           {faqs.map((faq) => (
             <AccordionItem
+              className="border-none"
               key={faq.value}
               value={faq.value}
-              className="border-none"
             >
-              <AccordionTrigger className="text-lg sm:text-2xl font-normal hover:cursor-pointer">
+              <AccordionTrigger className="font-normal text-lg hover:cursor-pointer sm:text-2xl">
                 {faq.question}
               </AccordionTrigger>
               <AccordionContent className="flex flex-col gap-4 text-balance">

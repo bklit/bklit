@@ -81,7 +81,7 @@ export function SessionsTable({
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
     },
-    { history: "push" },
+    { history: "push" }
   );
 
   const startDate = useMemo(() => {
@@ -102,7 +102,7 @@ export function SessionsTable({
       limit: queryParams.limit,
       startDate,
       endDate,
-    }),
+    })
   );
   return (
     <Card>
@@ -115,14 +115,14 @@ export function SessionsTable({
             <div className="space-y-3">
               {Array.from({ length: 4 }, () => (
                 <div
+                  className="flex items-center justify-between rounded-lg border p-4"
                   key={crypto.randomUUID()}
-                  className="flex items-center justify-between p-4 rounded-lg border"
                 >
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-48" />
                   </div>
-                  <div className="text-right space-y-2">
+                  <div className="space-y-2 text-right">
                     <Skeleton className="h-4 w-16" />
                     <Skeleton className="h-3 w-20" />
                   </div>
@@ -130,20 +130,20 @@ export function SessionsTable({
               ))}
             </div>
           ) : sessionsData.sessions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
+            <p className="py-8 text-center text-muted-foreground text-sm">
               No sessions found
             </p>
           ) : (
             sessionsData.sessions.map((session: Session) => (
               <Link
-                key={session.id}
-                href={`/${organizationId}/${projectId}/sessions/${session.id}`}
                 className="block"
+                href={`/${organizationId}/${projectId}/sessions/${session.id}`}
+                key={session.id}
               >
-                <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors group">
+                <div className="group flex items-center justify-between rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50">
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center space-x-3">
-                      <div className="text-sm font-medium">
+                      <div className="font-medium text-sm">
                         {formatDistanceToNow(new Date(session.startedAt), {
                           addSuffix: true,
                         })}
@@ -154,18 +154,18 @@ export function SessionsTable({
                         {session.didBounce ? "Bounced" : "Engaged"}
                       </Badge>
                     </div>
-                    <div className="text-xs text-muted-foreground space-x-4">
+                    <div className="space-x-4 text-muted-foreground text-xs">
                       <span>{session.pageViewEvents.length} pages</span>
                       <span>{getBrowserFromUserAgent(session.userAgent)}</span>
                       <span>{getDeviceType(session.userAgent)}</span>
                       {session.country && <span>{session.country}</span>}
                     </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <div className="text-sm font-medium">
+                  <div className="space-y-1 text-right">
+                    <div className="font-medium text-sm">
                       {formatDuration(session.duration)}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-muted-foreground text-xs">
                       {format(new Date(session.startedAt), "MMM d, HH:mm")}
                     </div>
                   </div>
@@ -178,8 +178,8 @@ export function SessionsTable({
       <CardFooter>
         {/* Pagination Controls */}
         {sessionsData && sessionsData.pagination.totalPages > 1 && (
-          <div className="flex justify-between items-center w-full gap-4 mt-4">
-            <div className="text-sm text-muted-foreground shrink-0">
+          <div className="mt-4 flex w-full items-center justify-between gap-4">
+            <div className="shrink-0 text-muted-foreground text-sm">
               Showing{" "}
               {(sessionsData.pagination.page - 1) *
                 sessionsData.pagination.limit +
@@ -187,7 +187,7 @@ export function SessionsTable({
               to{" "}
               {Math.min(
                 sessionsData.pagination.page * sessionsData.pagination.limit,
-                sessionsData.totalCount,
+                sessionsData.totalCount
               )}{" "}
               of {sessionsData.totalCount} results
             </div>
@@ -195,6 +195,11 @@ export function SessionsTable({
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
+                    className={
+                      sessionsData.pagination.hasPreviousPage
+                        ? "cursor-pointer"
+                        : "pointer-events-none opacity-50"
+                    }
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
@@ -204,18 +209,13 @@ export function SessionsTable({
                         });
                       }
                     }}
-                    className={
-                      !sessionsData.pagination.hasPreviousPage
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
                   />
                 </PaginationItem>
 
                 {/* Generate page numbers with ellipsis */}
                 {Array.from(
                   { length: sessionsData.pagination.totalPages },
-                  (_, i) => i + 1,
+                  (_, i) => i + 1
                 )
                   .filter((page) => {
                     const current = sessionsData.pagination.page;
@@ -241,13 +241,13 @@ export function SessionsTable({
                         )}
                         <PaginationItem>
                           <PaginationLink
+                            className="cursor-pointer"
                             href="#"
+                            isActive={page === sessionsData.pagination.page}
                             onClick={(e) => {
                               e.preventDefault();
                               setQueryParams({ page });
                             }}
-                            isActive={page === sessionsData.pagination.page}
-                            className="cursor-pointer"
                           >
                             {page}
                           </PaginationLink>
@@ -258,6 +258,11 @@ export function SessionsTable({
 
                 <PaginationItem>
                   <PaginationNext
+                    className={
+                      sessionsData.pagination.hasNextPage
+                        ? "cursor-pointer"
+                        : "pointer-events-none opacity-50"
+                    }
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
@@ -267,11 +272,6 @@ export function SessionsTable({
                         });
                       }
                     }}
-                    className={
-                      !sessionsData.pagination.hasNextPage
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
                   />
                 </PaginationItem>
               </PaginationContent>

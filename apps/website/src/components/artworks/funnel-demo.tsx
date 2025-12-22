@@ -5,7 +5,7 @@ import { Funnel } from "@bklit/ui/components/charts/funnel";
 const data = [
   {
     id: "landing-page",
-    value: 10000,
+    value: 10_000,
     label: "Landing Page",
   },
   {
@@ -27,7 +27,7 @@ const data = [
 
 export const FunnelDemo = () => {
   return (
-    <div className="h-[500px] w-full sm:max-w-4xl mx-auto">
+    <div className="mx-auto h-[500px] w-full sm:max-w-4xl">
       <Funnel data={data} />
     </div>
   );

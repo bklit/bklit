@@ -10,7 +10,7 @@ interface HealthCheckResult {
 }
 
 const ALERT_THRESHOLD = 1; // Alert after 1 consecutive failure (1 hour of downtime)
-const TIMEOUT_MS = 10000; // 10 seconds
+const TIMEOUT_MS = 10_000; // 10 seconds
 const SLOW_RESPONSE_MS = 5000; // 5 seconds
 
 function getBaseUrl(): string {
@@ -44,7 +44,7 @@ function getBaseUrl(): string {
 
 async function checkEndpoint(
   endpoint: string,
-  payload: Record<string, unknown>,
+  payload: Record<string, unknown>
 ): Promise<HealthCheckResult> {
   const baseUrl = getBaseUrl();
   const url = `${baseUrl}${endpoint}`;
@@ -113,7 +113,7 @@ interface EmailPayload {
 
 async function handleAlerting(
   endpoint: string,
-  isHealthy: boolean,
+  isHealthy: boolean
 ): Promise<void> {
   // Use a transaction to atomically read and update the alert state
   // Collect email payload inside transaction, but send email after transaction completes
@@ -135,7 +135,24 @@ async function handleAlerting(
         });
       }
 
-      if (!isHealthy) {
+      if (isHealthy) {
+        // Health recovered - reset state
+        if (state.isInAlertState) {
+          console.log(
+            `Health recovered for ${endpoint} after ${state.consecutiveFailures} failures`
+          );
+        }
+
+        // Reset all alert state fields atomically
+        await tx.apiHealthAlertState.update({
+          where: { endpoint },
+          data: {
+            consecutiveFailures: 0,
+            isInAlertState: false,
+            lastAlertSentAt: null, // Clear the last alert timestamp on recovery
+          },
+        });
+      } else {
         // Increment consecutive failures and mark as in alert state
         const updatedState = await tx.apiHealthAlertState.update({
           where: { endpoint },
@@ -169,27 +186,10 @@ async function handleAlerting(
           // Return email payload to send after transaction completes
           return payload;
         }
-      } else {
-        // Health recovered - reset state
-        if (state.isInAlertState) {
-          console.log(
-            `Health recovered for ${endpoint} after ${state.consecutiveFailures} failures`,
-          );
-        }
-
-        // Reset all alert state fields atomically
-        await tx.apiHealthAlertState.update({
-          where: { endpoint },
-          data: {
-            consecutiveFailures: 0,
-            isInAlertState: false,
-            lastAlertSentAt: null, // Clear the last alert timestamp on recovery
-          },
-        });
       }
 
       return null; // No email to send
-    },
+    }
   );
 
   // Send email after transaction completes (outside of transaction)
@@ -201,7 +201,7 @@ async function handleAlerting(
     const alertEmail = env.ALERT_EMAIL;
     if (!alertEmail || alertEmail.trim() === "") {
       console.error(
-        "ALERT_EMAIL environment variable is not configured. Cannot send API health alerts. Please set ALERT_EMAIL in your environment variables.",
+        "ALERT_EMAIL environment variable is not configured. Cannot send API health alerts. Please set ALERT_EMAIL in your environment variables."
       );
       return;
     }
@@ -225,12 +225,12 @@ async function handleAlerting(
       });
 
       console.log(
-        `Alert sent for ${emailPayload.endpoint} after ${emailPayload.consecutiveFailures} failures`,
+        `Alert sent for ${emailPayload.endpoint} after ${emailPayload.consecutiveFailures} failures`
       );
     } catch (error) {
       console.error(
         `Failed to send alert for ${emailPayload.endpoint}:`,
-        error,
+        error
       );
       // Note: DB state is already updated (lastAlertSentAt is set)
       // We don't rollback the DB update even if email fails

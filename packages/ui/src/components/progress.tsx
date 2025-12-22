@@ -11,16 +11,16 @@ function Progress({
 }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
   return (
     <ProgressPrimitive.Root
-      data-slot="progress"
       className={cn(
-        "bg-bklit-600 relative h-2 w-full overflow-hidden rounded-full",
-        className,
+        "relative h-2 w-full overflow-hidden rounded-full bg-bklit-600",
+        className
       )}
+      data-slot="progress"
       {...props}
     >
       <ProgressPrimitive.Indicator
+        className="h-full w-full flex-1 bg-bklit-300 transition-all"
         data-slot="progress-indicator"
-        className="bg-bklit-300 h-full w-full flex-1 transition-all"
         style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
       />
     </ProgressPrimitive.Root>

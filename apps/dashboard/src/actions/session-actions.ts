@@ -20,13 +20,13 @@ function generateVisitorId(userAgent: string): string {
 // Kept for backward compatibility but should not be called
 export async function createOrUpdateSession(
   data: SessionData,
-  prismaClient: typeof prisma = prisma,
+  prismaClient: typeof prisma = prisma
 ) {
   console.warn(
-    "createOrUpdateSession is deprecated - use ClickHouse directly via AnalyticsService",
+    "createOrUpdateSession is deprecated - use ClickHouse directly via AnalyticsService"
   );
   throw new Error(
-    "createOrUpdateSession is deprecated - use ClickHouse directly",
+    "createOrUpdateSession is deprecated - use ClickHouse directly"
   );
 }
 
@@ -34,16 +34,13 @@ export async function createOrUpdateSession(
 // Kept for backward compatibility but should not be called
 export async function endSession(sessionId: string) {
   console.warn(
-    "endSession is deprecated - use ClickHouse directly via AnalyticsService",
+    "endSession is deprecated - use ClickHouse directly via AnalyticsService"
   );
   throw new Error("endSession is deprecated - use ClickHouse directly");
 }
 
 // Get session analytics for a site
-export async function getSessionAnalytics(
-  projectId: string,
-  days: number = 30,
-) {
+export async function getSessionAnalytics(projectId: string, days = 30) {
   try {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -78,7 +75,7 @@ export async function getSessionAnalytics(
         }
         return acc;
       },
-      {} as Record<string, Array<{ id: string; url: string; timestamp: Date }>>,
+      {} as Record<string, Array<{ id: string; url: string; timestamp: Date }>>
     );
 
     const sessionsWithPageviews = sessions.map((s) => ({
@@ -96,13 +93,13 @@ export async function getSessionAnalytics(
       city: s.city,
       projectId: s.project_id,
       pageViewEvents: (pageviewsBySession[s.session_id] || []).sort(
-        (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
       ),
     }));
 
     const totalSessions = sessionsWithPageviews.length;
     const bouncedSessions = sessionsWithPageviews.filter(
-      (s) => s.didBounce,
+      (s) => s.didBounce
     ).length;
     const bounceRate =
       totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
@@ -111,7 +108,7 @@ export async function getSessionAnalytics(
       sessionsWithPageviews.length > 0
         ? sessionsWithPageviews.reduce(
             (sum: number, s) => sum + (s.duration || 0),
-            0,
+            0
           ) / sessionsWithPageviews.length
         : 0;
 
@@ -119,7 +116,7 @@ export async function getSessionAnalytics(
       sessionsWithPageviews.length > 0
         ? sessionsWithPageviews.reduce(
             (sum: number, s) => sum + s.pageViewEvents.length,
-            0,
+            0
           ) / sessionsWithPageviews.length
         : 0;
 
@@ -138,7 +135,7 @@ export async function getSessionAnalytics(
 }
 
 // Get recent sessions with page flow
-export async function getRecentSessions(projectId: string, limit: number = 10) {
+export async function getRecentSessions(projectId: string, limit = 10) {
   try {
     const analytics = new AnalyticsService();
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
@@ -165,7 +162,7 @@ export async function getRecentSessions(projectId: string, limit: number = 10) {
         }
         return acc;
       },
-      {} as Record<string, Array<{ id: string; url: string; timestamp: Date }>>,
+      {} as Record<string, Array<{ id: string; url: string; timestamp: Date }>>
     );
 
     return sessions.map((s) => ({
@@ -183,7 +180,7 @@ export async function getRecentSessions(projectId: string, limit: number = 10) {
       city: s.city,
       projectId,
       pageViewEvents: (pageviewsBySession[s.session_id] || []).sort(
-        (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
       ),
     }));
   } catch (error) {
@@ -240,7 +237,7 @@ export async function getSessionById(sessionId: string) {
       if (sessionData) {
         const session = await analytics.getSessionById(
           sessionData.session_id,
-          project.id,
+          project.id
         );
 
         if (session) {

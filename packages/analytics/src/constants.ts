@@ -5,4 +5,4 @@
  * This should be used whenever calculating stats, aggregations, or time series
  * data where we need the complete dataset, not just a sample.
  */
-export const ANALYTICS_UNLIMITED_QUERY_LIMIT = 100000;
+export const ANALYTICS_UNLIMITED_QUERY_LIMIT = 100_000;

@@ -33,7 +33,7 @@ export function RecentPageViewsCard({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -70,8 +70,8 @@ export function RecentPageViewsCard({
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -81,8 +81,8 @@ export function RecentPageViewsCard({
   if (!topPages || topPages.length === 0) {
     return (
       <NoDataCard
-        title="Popular Pages"
         description="The most popular pages by views."
+        title="Popular Pages"
       />
     );
   }
@@ -107,10 +107,10 @@ export function RecentPageViewsCard({
           {topPages.map((page) => (
             <ProgressRow
               key={page.path}
-              variant="secondary"
               label={page.path}
-              value={page.count}
               percentage={(page.count / totalViews) * 100}
+              value={page.count}
+              variant="secondary"
             />
           ))}
         </div>

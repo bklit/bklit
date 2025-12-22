@@ -39,7 +39,7 @@ export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -100,7 +100,7 @@ export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
     });
 
     const filteredNodes = journeysData.nodes.filter((node) =>
-      selectedPageSet.has(node.name),
+      selectedPageSet.has(node.name)
     );
 
     const filteredLinks = journeysData.links
@@ -118,7 +118,7 @@ export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
       })
       .filter(
         (link): link is { source: number; target: number; value: number } =>
-          link !== null,
+          link !== null
       );
 
     const rechartsData = { nodes: filteredNodes, links: filteredLinks };
@@ -147,7 +147,7 @@ export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
             Loading chart...
           </div>
         </CardContent>
@@ -165,7 +165,7 @@ export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
             No data available
           </div>
         </CardContent>
@@ -185,18 +185,18 @@ export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="size-4 mr-2" />
+              <Button size="sm" variant="outline">
+                <Filter className="mr-2 size-4" />
                 Filter Pages
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Pages</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {allPages.map((page) => (
                 <DropdownMenuCheckboxItem
-                  key={page}
                   checked={selectedPages.has(page)}
+                  key={page}
                   onCheckedChange={() => togglePage(page)}
                 >
                   {page}
@@ -207,7 +207,7 @@ export function UserJourneys({ organizationId, projectId }: UserJourneysProps) {
         </div>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="w-full min-h-[400px]">
+        <div className="min-h-[400px] w-full">
           <SankeyNivo data={filteredData} />
         </div>
       </CardContent>

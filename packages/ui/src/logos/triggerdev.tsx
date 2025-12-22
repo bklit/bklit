@@ -13,11 +13,11 @@ export const TriggerDev = ({
 }: TriggerDevProps) => {
   return (
     <svg
-      width={width}
+      className={className}
+      fill="none"
       height={height}
       viewBox="0 0 136 24"
-      fill="none"
-      className={className}
+      width={width}
     >
       <title>TriggerDev Logo</title>
       <path
@@ -89,7 +89,6 @@ export const TriggerDev = ({
         }
       />
       <path
-        fillRule="evenodd"
         clipRule="evenodd"
         d="M6.33197 7.92275L10.6153 0.504761L21.2306 18.8892H0L4.28333 11.4709L7.31329 13.2202L6.06014 15.3905H15.1705L10.6153 7.50183L9.36215 9.67219L6.33197 7.92275Z"
         fill={
@@ -97,136 +96,137 @@ export const TriggerDev = ({
             ? "currentColor"
             : "url(#paint11_linear_12475_3849)"
         }
+        fillRule="evenodd"
       />
       <defs>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint0_linear_12475_3849"
           x1="59.3629"
-          y1="27.3461"
           x2="59.3629"
+          y1="27.3461"
           y2="2.7887"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint1_linear_12475_3849"
           x1="59.3629"
-          y1="27.3461"
           x2="59.3629"
+          y1="27.3461"
           y2="2.7887"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint2_linear_12475_3849"
           x1="59.3629"
-          y1="27.3461"
           x2="59.3629"
+          y1="27.3461"
           y2="2.7887"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint3_linear_12475_3849"
           x1="59.3629"
-          y1="27.3461"
           x2="59.3629"
+          y1="27.3461"
           y2="2.7887"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint4_linear_12475_3849"
           x1="59.3629"
-          y1="27.3461"
           x2="59.3629"
+          y1="27.3461"
           y2="2.7887"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint5_linear_12475_3849"
           x1="59.3629"
-          y1="27.3461"
           x2="59.3629"
+          y1="27.3461"
           y2="2.7887"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint6_linear_12475_3849"
           x1="59.3629"
-          y1="27.3461"
           x2="59.3629"
+          y1="27.3461"
           y2="2.7887"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint7_linear_12475_3849"
           x1="114.417"
-          y1="25.4773"
           x2="117.399"
+          y1="25.4773"
           y2="4.96095"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#A855F7" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint8_linear_12475_3849"
           x1="114.417"
-          y1="25.4773"
           x2="117.399"
+          y1="25.4773"
           y2="4.96095"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#A855F7" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint9_linear_12475_3849"
           x1="114.417"
-          y1="25.4773"
           x2="117.399"
+          y1="25.4773"
           y2="4.96095"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#A855F7" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint10_linear_12475_3849"
           x1="114.417"
-          y1="25.4773"
           x2="117.399"
+          y1="25.4773"
           y2="4.96095"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#A855F7" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint11_linear_12475_3849"
           x1="17.1895"
-          y1="18.8892"
           x2="16.9913"
+          y1="18.8892"
           y2="5.91038"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#41FF54" />
           <stop offset="1" stopColor="#E7FF52" />

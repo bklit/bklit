@@ -60,7 +60,7 @@ export function InviteMemberForm({
       onError: (error) => {
         toast.error(`Failed to send invitation: ${error.message}`);
       },
-    }),
+    })
   );
 
   const form = useForm({
@@ -89,7 +89,7 @@ export function InviteMemberForm({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={isOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Invite Team Member</DialogTitle>
@@ -99,12 +99,12 @@ export function InviteMemberForm({
         </DialogHeader>
 
         <form
+          className="space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-4"
         >
           <form.Field name="email">
             {(field) => (
@@ -112,13 +112,13 @@ export function InviteMemberForm({
                 <FieldLabel htmlFor={field.name}>Email Address</FieldLabel>
                 <Field>
                   <Input
+                    disabled={sendInvite.isPending}
                     id={field.name}
-                    type="email"
-                    placeholder="colleague@example.com"
-                    value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    disabled={sendInvite.isPending}
+                    placeholder="colleague@example.com"
+                    type="email"
+                    value={field.state.value}
                   />
                 </Field>
                 <FieldDescription>
@@ -137,11 +137,11 @@ export function InviteMemberForm({
                 <FieldLabel htmlFor={field.name}>Role</FieldLabel>
                 <Field>
                   <Select
-                    value={field.state.value}
+                    disabled={sendInvite.isPending}
                     onValueChange={(value) =>
                       field.handleChange(value as "member" | "admin" | "owner")
                     }
-                    disabled={sendInvite.isPending}
+                    value={field.state.value}
                   >
                     <SelectTrigger id={field.name}>
                       <SelectValue placeholder="Select a role" />
@@ -171,14 +171,14 @@ export function InviteMemberForm({
 
           <DialogFooter>
             <Button
+              disabled={sendInvite.isPending}
+              onClick={handleClose}
               type="button"
               variant="outline"
-              onClick={handleClose}
-              disabled={sendInvite.isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={sendInvite.isPending}>
+            <Button disabled={sendInvite.isPending} type="submit">
               {sendInvite.isPending ? "Sending..." : "Send Invitation"}
             </Button>
           </DialogFooter>

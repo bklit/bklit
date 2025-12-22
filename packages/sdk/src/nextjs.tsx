@@ -50,12 +50,12 @@ export function BklitComponent({
 
   return (
     <Script
-      id="bklit-init"
-      strategy="afterInteractive"
-      // biome-ignore lint: dangerouslySetInnerHTML is fine here
       dangerouslySetInnerHTML={{
         __html: initCode,
       }}
+      id="bklit-init"
+      // biome-ignore lint: dangerouslySetInnerHTML is fine here
+      strategy="afterInteractive"
     />
   );
 }
