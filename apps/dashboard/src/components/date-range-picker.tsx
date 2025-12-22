@@ -20,15 +20,10 @@ interface DateRangePickerProps {
 }
 
 export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
-  const [dateParams, setDateParams] = useQueryStates(
-    {
-      startDate: parseAsIsoDateTime,
-      endDate: parseAsIsoDateTime,
-    },
-    {
-      history: "push",
-    },
-  );
+  const [dateParams, setDateParams] = useQueryStates({
+    startDate: parseAsIsoDateTime,
+    endDate: parseAsIsoDateTime,
+  });
 
   const startDate = useMemo(() => {
     if (dateParams.startDate) return dateParams.startDate;
