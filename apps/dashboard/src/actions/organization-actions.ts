@@ -16,32 +16,33 @@ import { api } from "@/trpc/server";
 async function generateUniqueSlug(baseSlug: string): Promise<string> {
   let slug = baseSlug;
   let counter = 1;
-  
+
   // Check if base slug is available
   const existing = await prisma.organization.findUnique({
     where: { slug },
     select: { id: true },
   });
-  
+
   if (!existing) {
     return slug;
   }
-  
+
   // Try with incremented suffixes until we find an available one
-  while (counter < 100) { // Safety limit to prevent infinite loop
+  while (counter < 100) {
+    // Safety limit to prevent infinite loop
     slug = `${baseSlug}-${counter}`;
     const exists = await prisma.organization.findUnique({
       where: { slug },
       select: { id: true },
     });
-    
+
     if (!exists) {
       return slug;
     }
-    
+
     counter++;
   }
-  
+
   // Fallback: add timestamp if we somehow hit the limit
   return `${baseSlug}-${Date.now()}`;
 }
@@ -248,7 +249,7 @@ export async function updateOrganizationNameAction(
     });
 
     let slug = baseSlug;
-    
+
     // If the new slug is different from the current one, ensure it's unique
     if (currentOrg?.slug !== baseSlug) {
       slug = await generateUniqueSlug(baseSlug);

@@ -51,7 +51,8 @@ function ResetPasswordPage() {
 
         if (result.error) {
           toast.error(
-            result.error.message || "Failed to reset password. Token may be expired."
+            result.error.message ||
+              "Failed to reset password. Token may be expired.",
           );
           setIsLoading(false);
         } else {
@@ -135,7 +136,8 @@ function ResetPasswordPage() {
                     disabled={isLoading}
                   />
                   <FieldDescription>
-                    At least 8 characters with uppercase, lowercase, and a special character
+                    At least 8 characters with uppercase, lowercase, and a
+                    special character
                   </FieldDescription>
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
@@ -202,4 +204,3 @@ export default function Page() {
     </Suspense>
   );
 }
-

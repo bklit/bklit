@@ -41,13 +41,13 @@ function addAttempt() {
   const attempts = getRateLimitData();
   const now = Date.now();
   const oneHourAgo = now - 60 * 60 * 1000;
-  
+
   // Filter out attempts older than 1 hour
   const recentAttempts = attempts.filter((a) => a.timestamp > oneHourAgo);
-  
+
   // Add new attempt
   recentAttempts.push({ timestamp: now });
-  
+
   localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(recentAttempts));
   localStorage.setItem(COOLDOWN_KEY, now.toString());
 }
@@ -62,30 +62,32 @@ function getCooldownRemaining(): number {
   if (typeof window === "undefined") return 0;
   const cooldownStart = localStorage.getItem(COOLDOWN_KEY);
   if (!cooldownStart) return 0;
-  
+
   const elapsed = Date.now() - parseInt(cooldownStart, 10);
   const remaining = COOLDOWN_SECONDS * 1000 - elapsed;
-  
+
   return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
 }
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(getCooldownRemaining());
+  const [cooldownSeconds, setCooldownSeconds] = useState(
+    getCooldownRemaining(),
+  );
 
   useEffect(() => {
     if (cooldownSeconds <= 0) return;
-    
+
     const timer = setInterval(() => {
       const remaining = getCooldownRemaining();
       setCooldownSeconds(remaining);
-      
+
       if (remaining <= 0) {
         clearInterval(timer);
       }
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, [cooldownSeconds]);
 
@@ -107,11 +109,11 @@ export default function ForgotPasswordPage() {
       const attemptsInLastHour = getAttemptsInLastHour();
       if (attemptsInLastHour >= MAX_ATTEMPTS_PER_HOUR) {
         toast.error(
-          `Too many attempts. Please try again later. (Max ${MAX_ATTEMPTS_PER_HOUR} per hour)`
+          `Too many attempts. Please try again later. (Max ${MAX_ATTEMPTS_PER_HOUR} per hour)`,
         );
         return;
       }
-      
+
       const cooldown = getCooldownRemaining();
       if (cooldown > 0) {
         toast.error(`Please wait ${cooldown} seconds before trying again.`);
@@ -130,13 +132,11 @@ export default function ForgotPasswordPage() {
         setCooldownSeconds(COOLDOWN_SECONDS);
 
         if (result.error) {
-          toast.error(
-            result.error.message || "Failed to send reset email"
-          );
+          toast.error(result.error.message || "Failed to send reset email");
           setIsLoading(false);
         } else {
           toast.success(
-            "If an account exists with this email, you'll receive a password reset link."
+            "If an account exists with this email, you'll receive a password reset link.",
           );
           form.reset();
           setIsLoading(false);
@@ -216,22 +216,18 @@ export default function ForgotPasswordPage() {
             getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR
           }
         >
-          {isLoading || form.state.isSubmitting
-            ? "Sending..."
-            : cooldownSeconds > 0
-              ? (
-                  <span className="flex items-center gap-1.5">
-                    Wait{" "}
-                    <NumberFlow
-                      value={cooldownSeconds}
-                      className="tabular-nums"
-                    />
-                    s
-                  </span>
-                )
-              : getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR
-                ? "Too many attempts"
-                : "Send reset link"}
+          {isLoading || form.state.isSubmitting ? (
+            "Sending..."
+          ) : cooldownSeconds > 0 ? (
+            <span className="flex items-center gap-1.5">
+              Wait{" "}
+              <NumberFlow value={cooldownSeconds} className="tabular-nums" />s
+            </span>
+          ) : getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR ? (
+            "Too many attempts"
+          ) : (
+            "Send reset link"
+          )}
         </Button>
       </form>
 
@@ -245,8 +241,8 @@ export default function ForgotPasswordPage() {
 
       {getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR && (
         <p className="text-sm text-center text-destructive">
-          Maximum attempts reached ({MAX_ATTEMPTS_PER_HOUR} per hour). Please try
-          again later.
+          Maximum attempts reached ({MAX_ATTEMPTS_PER_HOUR} per hour). Please
+          try again later.
         </p>
       )}
 
@@ -264,4 +260,3 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
-

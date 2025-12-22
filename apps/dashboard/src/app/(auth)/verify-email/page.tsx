@@ -27,10 +27,10 @@ function getResendCooldownRemaining(): number {
   if (typeof window === "undefined") return 0;
   const cooldownStart = localStorage.getItem(RESEND_COOLDOWN_KEY);
   if (!cooldownStart) return 0;
-  
+
   const elapsed = Date.now() - parseInt(cooldownStart, 10);
   const remaining = RESEND_COOLDOWN_SECONDS * 1000 - elapsed;
-  
+
   return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
 }
 
@@ -39,21 +39,23 @@ function VerifyEmailPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(getResendCooldownRemaining());
+  const [resendCooldown, setResendCooldown] = useState(
+    getResendCooldownRemaining(),
+  );
   const email = searchParams.get("email");
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
-    
+
     const timer = setInterval(() => {
       const remaining = getResendCooldownRemaining();
       setResendCooldown(remaining);
-      
+
       if (remaining <= 0) {
         clearInterval(timer);
       }
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
@@ -81,7 +83,8 @@ function VerifyEmailPage() {
 
         if (verifyResult.error) {
           toast.error(
-            verifyResult.error.message || "Invalid or expired verification code"
+            verifyResult.error.message ||
+              "Invalid or expired verification code",
           );
           setIsLoading(false);
           return;
@@ -90,7 +93,7 @@ function VerifyEmailPage() {
         // Email verified successfully - now we need to sign the user in
         // Get the user's password from session storage (stored during signup)
         const tempPassword = sessionStorage.getItem("temp_signup_password");
-        
+
         if (tempPassword && email) {
           // Sign in the user automatically
           const signInResult = await authClient.signIn.email({
@@ -102,7 +105,9 @@ function VerifyEmailPage() {
           sessionStorage.removeItem("temp_signup_password");
 
           if (signInResult.error) {
-            toast.error("Email verified but auto sign-in failed. Please sign in manually.");
+            toast.error(
+              "Email verified but auto sign-in failed. Please sign in manually.",
+            );
             router.push("/signin");
             return;
           }
@@ -143,7 +148,9 @@ function VerifyEmailPage() {
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
 
       if (result.error) {
-        toast.error(result.error.message || "Failed to resend verification code");
+        toast.error(
+          result.error.message || "Failed to resend verification code",
+        );
       } else {
         toast.success("Verification code sent! Check your email.");
       }
@@ -163,7 +170,9 @@ function VerifyEmailPage() {
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
           We sent a verification code to{" "}
-          <span className="font-medium text-foreground">{email || "your email"}</span>
+          <span className="font-medium text-foreground">
+            {email || "your email"}
+          </span>
         </p>
       </div>
 
@@ -227,7 +236,9 @@ function VerifyEmailPage() {
           className="w-full"
           disabled={isLoading || form.state.isSubmitting}
         >
-          {isLoading || form.state.isSubmitting ? "Verifying..." : "Verify Email"}
+          {isLoading || form.state.isSubmitting
+            ? "Verifying..."
+            : "Verify Email"}
         </Button>
       </form>
 
@@ -245,11 +256,7 @@ function VerifyEmailPage() {
             ) : resendCooldown > 0 ? (
               <>
                 Wait{" "}
-                <NumberFlow
-                  value={resendCooldown}
-                  className="tabular-nums"
-                />
-                s
+                <NumberFlow value={resendCooldown} className="tabular-nums" />s
               </>
             ) : (
               "Resend"
@@ -268,4 +275,3 @@ export default function Page() {
     </Suspense>
   );
 }
-

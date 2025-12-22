@@ -81,4 +81,3 @@ export type SignUpFormValues = z.infer<typeof signUpSchema>;
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 export type VerifyEmailFormValues = z.infer<typeof verifyEmailSchema>;
-

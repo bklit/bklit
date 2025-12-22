@@ -40,9 +40,7 @@ export const BklitResetPassword = ({
             />
           </div>
 
-          <Text className="text-2xl font-semibold">
-            Reset your password
-          </Text>
+          <Text className="text-2xl font-semibold">Reset your password</Text>
 
           <Section className="p-4 border border-gray-200 rounded-md bg-white">
             <Text className="text-left text-lg">
@@ -96,4 +94,3 @@ const main = {
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"',
 };
-

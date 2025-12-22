@@ -93,105 +93,105 @@ function LoginPage() {
           }}
           className="flex flex-col gap-4"
         >
-        <FieldGroup className="flex flex-col gap-3">
-          <form.Field name="email">
-            {(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name} className="sr-only">
-                    Email
-                  </FieldLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="email"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    aria-invalid={isInvalid}
-                    placeholder="Email"
-                    autoComplete="email"
-                    disabled={isLoading}
-                  />
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
-                </Field>
-              );
-            }}
-          </form.Field>
-          <form.Field name="password">
-            {(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
-              return (
-                <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name} className="sr-only">
-                    Password
-                  </FieldLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="password"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    aria-invalid={isInvalid}
-                    placeholder="Password"
-                    autoComplete="current-password"
-                    disabled={isLoading}
-                  />
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
-                </Field>
-              );
-            }}
-          </form.Field>
-        </FieldGroup>
+          <FieldGroup className="flex flex-col gap-3">
+            <form.Field name="email">
+              {(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name} className="sr-only">
+                      Email
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="email"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Email"
+                      autoComplete="email"
+                      disabled={isLoading}
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            </form.Field>
+            <form.Field name="password">
+              {(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel htmlFor={field.name} className="sr-only">
+                      Password
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="password"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="Password"
+                      autoComplete="current-password"
+                      disabled={isLoading}
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            </form.Field>
+          </FieldGroup>
 
-        <div className="text-right">
-          <Link
-            href="/forgot-password"
-            className="text-sm text-muted-foreground hover:text-primary transition-all"
+          <div className="text-right">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-primary transition-all"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            variant="secondary"
+            className="w-full"
+            disabled={isLoading || form.state.isSubmitting}
           >
-            Forgot password?
-          </Link>
+            {isLoading || form.state.isSubmitting ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
+
+        <div className="text-center space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowEmailForm(false)}
+            className="text-sm text-muted-foreground hover:text-primary transition-all cursor-pointer"
+          >
+            Use another method
+          </button>
+          <p className="text-sm font-normal text-muted-foreground">
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              className="text-card-foreground hover:text-primary transition-all"
+            >
+              Sign up
+            </Link>
+          </p>
         </div>
-
-        <Button
-          type="submit"
-          size="lg"
-          variant="secondary"
-          className="w-full"
-          disabled={isLoading || form.state.isSubmitting}
-        >
-          {isLoading || form.state.isSubmitting ? "Signing in..." : "Sign in"}
-        </Button>
-      </form>
-
-      <div className="text-center space-y-3">
-        <button
-          type="button"
-          onClick={() => setShowEmailForm(false)}
-          className="text-sm text-muted-foreground hover:text-primary transition-all cursor-pointer"
-        >
-          Use another method
-        </button>
-        <p className="text-sm font-normal text-muted-foreground">
-          Don't have an account?{" "}
-          <Link
-            href="/signup"
-            className="text-card-foreground hover:text-primary transition-all"
-          >
-            Sign up
-          </Link>
-        </p>
       </div>
-    </div>
-  );
+    );
   }
 
   return (
@@ -236,34 +236,34 @@ function LoginPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-        <Button
-          onClick={() =>
-            authClient.signIn.social({
-              provider: "github",
-              callbackURL: callbackUrl,
-            })
-          }
-          size="lg"
-          className="w-full gap-2"
-          variant="mono"
-        >
-          <GitHubIcon className="size-5" />
-          Continue with GitHub
-        </Button>
-        <Button
-          onClick={() =>
-            authClient.signIn.social({
-              provider: "google",
-              callbackURL: callbackUrl,
-            })
-          }
-          variant="outline"
-          size="lg"
-          className="w-full gap-2"
-        >
-          <GoogleIcon className="size-5" />
-          Continue with Google
-        </Button>
+          <Button
+            onClick={() =>
+              authClient.signIn.social({
+                provider: "github",
+                callbackURL: callbackUrl,
+              })
+            }
+            size="lg"
+            className="w-full gap-2"
+            variant="mono"
+          >
+            <GitHubIcon className="size-5" />
+            Continue with GitHub
+          </Button>
+          <Button
+            onClick={() =>
+              authClient.signIn.social({
+                provider: "google",
+                callbackURL: callbackUrl,
+              })
+            }
+            variant="outline"
+            size="lg"
+            className="w-full gap-2"
+          >
+            <GoogleIcon className="size-5" />
+            Continue with Google
+          </Button>
         </div>
       </div>
 

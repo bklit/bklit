@@ -78,13 +78,22 @@ export function initAuth(options: {
         // Require: 8+ chars, uppercase, lowercase, special character
         customValidation: (password: string) => {
           if (!/[A-Z]/.test(password)) {
-            return { valid: false, message: "Password must contain at least one uppercase letter" };
+            return {
+              valid: false,
+              message: "Password must contain at least one uppercase letter",
+            };
           }
           if (!/[a-z]/.test(password)) {
-            return { valid: false, message: "Password must contain at least one lowercase letter" };
+            return {
+              valid: false,
+              message: "Password must contain at least one lowercase letter",
+            };
           }
           if (!/[^A-Za-z0-9]/.test(password)) {
-            return { valid: false, message: "Password must contain at least one special character" };
+            return {
+              valid: false,
+              message: "Password must contain at least one special character",
+            };
           }
           return { valid: true };
         },

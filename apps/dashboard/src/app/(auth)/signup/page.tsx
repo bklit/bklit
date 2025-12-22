@@ -227,27 +227,27 @@ function LoginPage() {
           </Button>
         </form>
 
-         <div className="text-center space-y-3">
-           <button
-             type="button"
-             onClick={() => setShowEmailForm(false)}
-             className="text-sm text-muted-foreground hover:text-primary transition-all cursor-pointer"
-           >
-             Use another method
-           </button>
-           <p className="text-sm font-normal text-muted-foreground">
-             Already have an account?{" "}
-             <Link
-               href="/signin"
-               className="text-card-foreground hover:text-primary transition-all"
-             >
-               Log in
-             </Link>
-           </p>
-         </div>
-       </div>
-     );
-   }
+        <div className="text-center space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowEmailForm(false)}
+            className="text-sm text-muted-foreground hover:text-primary transition-all cursor-pointer"
+          >
+            Use another method
+          </button>
+          <p className="text-sm font-normal text-muted-foreground">
+            Already have an account?{" "}
+            <Link
+              href="/signin"
+              className="text-card-foreground hover:text-primary transition-all"
+            >
+              Log in
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
