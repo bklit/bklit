@@ -25,11 +25,12 @@ export function ErrorFallback({
       </CardHeader>
       <CardContent>
         <div className="h-[400px] flex items-center justify-center flex-col gap-2 text-sm text-muted-foreground">
-          <p className="font-medium">An error occurred while rendering this chart</p>
+          <p className="font-medium">
+            An error occurred while rendering this chart
+          </p>
           <p className="text-xs">{error.message}</p>
         </div>
       </CardContent>
     </Card>
   );
 }
-
