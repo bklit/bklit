@@ -163,10 +163,8 @@ function VerifyEmailPage() {
           Verify your <span className="font-bold">email</span>
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          We sent a verification code to{" "}
-          <span className="font-medium text-foreground">
-            {email || "your email"}
-          </span>
+          Verification code for{" "}
+          <span className="font-medium">{email || "your email"}</span>
         </p>
       </div>
 
@@ -175,7 +173,7 @@ function VerifyEmailPage() {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-4 max-w-full w-sm mx-auto"
       >
         <FieldGroup>
           <form.Field name="code">
@@ -184,7 +182,7 @@ function VerifyEmailPage() {
                 field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name}>
+                  <FieldLabel htmlFor={field.name} className="sr-only">
                     Verification Code
                   </FieldLabel>
                   <InputOTP
@@ -195,13 +193,31 @@ function VerifyEmailPage() {
                     disabled={isLoading}
                     aria-invalid={isInvalid}
                   >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
+                    <InputOTPGroup className="flex justify-center w-full items-stretch">
+                      <InputOTPSlot
+                        index={0}
+                        className="size-auto flex-1 aspect-square"
+                      />
+                      <InputOTPSlot
+                        index={1}
+                        className="size-auto flex-1 aspect-square"
+                      />
+                      <InputOTPSlot
+                        index={2}
+                        className="size-auto flex-1 aspect-square"
+                      />
+                      <InputOTPSlot
+                        index={3}
+                        className="size-auto flex-1 aspect-square"
+                      />
+                      <InputOTPSlot
+                        index={4}
+                        className="size-auto flex-1 aspect-square"
+                      />
+                      <InputOTPSlot
+                        index={5}
+                        className="size-auto flex-1 aspect-square"
+                      />
                     </InputOTPGroup>
                   </InputOTP>
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
