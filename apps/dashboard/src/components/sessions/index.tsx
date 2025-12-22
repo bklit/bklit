@@ -234,6 +234,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                   description="Unable to display entry and exit points data"
                 />
               )}
+              resetKeys={[isLoading, nivoSankeyData, entryPoints, exitPoints]}
             >
               <Card>
                 <CardHeader>
@@ -321,6 +322,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                   description="Unable to display user journey flow (circular path detected)"
                 />
               )}
+              resetKeys={[isLoading, nivoSankeyData]}
             >
               <Card>
                 <CardHeader>
