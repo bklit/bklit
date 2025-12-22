@@ -194,6 +194,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.2.1(react@19.2.1)
+      react-error-boundary:
+        specifier: ^6.0.0
+        version: 6.0.0(react@19.2.1)
       reactflow:
         specifier: ^11.11.4
         version: 11.11.4(@types/react@19.2.2)(immer@10.2.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -996,6 +999,10 @@ packages:
 
   '@babel/runtime-corejs3@7.28.4':
     resolution: {integrity: sha512-h7iEYiW4HebClDEhtvFObtPmIvrd1SSfpI9EhOeKk4CtIK/ngBWFpuhCzhdmRKtg71ylcue+9I6dv54XYO1epQ==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.28.4':
+    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -6978,6 +6985,11 @@ packages:
     engines: {node: '>=20.0.0'}
     hasBin: true
 
+  react-error-boundary@6.0.0:
+    resolution: {integrity: sha512-gdlJjD7NWr0IfkPlaREN2d9uUZUlksrfOx7SX62VRerwXbMY6ftGCIZua1VG1aXFNOimhISsTq+Owp725b9SiA==}
+    peerDependencies:
+      react: '>=16.13.1'
+
   react-hook-form@7.65.0:
     resolution: {integrity: sha512-xtOzDz063WcXvGWaHgLNrNzlsdFgtUWcb32E6WFaGTd7kPZG3EeDusjdZfUsPwKCKVXy1ZlntifaHZ4l8pAsmw==}
     engines: {node: '>=18.0.0'}
@@ -8381,6 +8393,8 @@ snapshots:
   '@babel/runtime-corejs3@7.28.4':
     dependencies:
       core-js-pure: 3.46.0
+
+  '@babel/runtime@7.28.4': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -14993,6 +15007,11 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  react-error-boundary@6.0.0(react@19.2.1):
+    dependencies:
+      '@babel/runtime': 7.28.4
+      react: 19.2.1
 
   react-hook-form@7.65.0(react@19.2.1):
     dependencies:
