@@ -96,13 +96,7 @@ export default function ForgotPasswordPage() {
       email: "",
     },
     validators: {
-      onSubmit: ({ value }) => {
-        const result = forgotPasswordSchema.safeParse(value);
-        if (!result.success) {
-          return result.error.format();
-        }
-        return undefined;
-      },
+      onSubmit: forgotPasswordSchema,
     },
     onSubmit: async ({ value }) => {
       // Check rate limiting
@@ -168,18 +162,7 @@ export default function ForgotPasswordPage() {
         className="flex flex-col gap-4"
       >
         <FieldGroup>
-          <form.Field
-            name="email"
-            validators={{
-              onChange: ({ value }) => {
-                if (!value) return "Email is required";
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                  return "Please enter a valid email";
-                }
-                return undefined;
-              },
-            }}
-          >
+          <form.Field name="email">
             {(field) => {
               const isInvalid =
                 field.state.meta.isTouched && !field.state.meta.isValid;

@@ -264,6 +264,12 @@ export function initAuth(options: {
               }),
             });
           } else {
+            // For password reset, look up the user to get their name
+            const user = await prisma.user.findUnique({
+              where: { email },
+              select: { name: true },
+            });
+            
             // For password reset, we'll use the reset password template
             await sendEmail({
               to: email,
@@ -271,6 +277,7 @@ export function initAuth(options: {
               subject: "Reset your Bklit password",
               react: BklitResetPassword({
                 resetLink: `${options.baseUrl}/reset-password?token=${otp}`,
+                username: user?.name || email.split("@")[0] || "there",
               }),
             });
           }

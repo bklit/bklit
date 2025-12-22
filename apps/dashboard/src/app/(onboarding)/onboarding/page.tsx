@@ -5,6 +5,7 @@ import NumberFlow from "@number-flow/react";
 import { useRouter } from "next/navigation";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { Suspense, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { CreateProjectStepForm } from "@/components/forms/onboarding/create-project-step-form";
 import { CreateWorkspaceStepForm } from "@/components/forms/onboarding/create-workspace-step-form";
 import { SDKConnectionStepForm } from "@/components/forms/onboarding/sdk-connection-step-form";
@@ -105,6 +106,16 @@ function SDKConnectionStep({
   };
 
   const handleSkip = () => {
+    // Validate IDs before navigation
+    if (!organizationId || organizationId.trim() === "") {
+      toast.error("Organization ID is missing. Please complete step 1 first.");
+      return;
+    }
+    if (!projectId || projectId.trim() === "") {
+      toast.error("Project ID is missing. Please complete step 2 first.");
+      return;
+    }
+    
     // Skip testing and go straight to dashboard with onboarding param
     router.push(`/${organizationId}/${projectId}?onboarding=new`);
   };

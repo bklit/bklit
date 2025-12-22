@@ -28,13 +28,7 @@ function ResetPasswordPage() {
       confirmPassword: "",
     },
     validators: {
-      onSubmit: ({ value }) => {
-        const result = resetPasswordSchema.safeParse(value);
-        if (!result.success) {
-          return result.error.format();
-        }
-        return undefined;
-      },
+      onSubmit: resetPasswordSchema,
     },
     onSubmit: async ({ value }) => {
       if (!token) {
@@ -104,19 +98,7 @@ function ResetPasswordPage() {
         className="flex flex-col gap-4"
       >
         <FieldGroup>
-          <form.Field
-            name="password"
-            validators={{
-              onChange: ({ value }) => {
-                if (!value) return "Password is required";
-                if (value.length < 8) return "At least 8 characters";
-                if (!/[A-Z]/.test(value)) return "Add an uppercase letter";
-                if (!/[a-z]/.test(value)) return "Add a lowercase letter";
-                if (!/[0-9]/.test(value)) return "Add a number";
-                return undefined;
-              },
-            }}
-          >
+          <form.Field name="password">
             {(field) => {
               const isInvalid =
                 field.state.meta.isTouched && !field.state.meta.isValid;
@@ -144,17 +126,7 @@ function ResetPasswordPage() {
               );
             }}
           </form.Field>
-          <form.Field
-            name="confirmPassword"
-            validators={{
-              onChange: ({ value, fieldApi }) => {
-                const password = fieldApi.form.getFieldValue("password");
-                if (!value) return "Please confirm your password";
-                if (value !== password) return "Passwords do not match";
-                return undefined;
-              },
-            }}
-          >
+          <form.Field name="confirmPassword">
             {(field) => {
               const isInvalid =
                 field.state.meta.isTouched && !field.state.meta.isValid;

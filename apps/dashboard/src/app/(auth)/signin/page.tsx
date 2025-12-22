@@ -12,7 +12,7 @@ import { GitHubIcon } from "@bklit/ui/icons/github";
 import { GoogleIcon } from "@bklit/ui/icons/google";
 import { useForm } from "@tanstack/react-form";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/client";
@@ -20,7 +20,6 @@ import { signInSchema } from "@/lib/schemas/auth-schema";
 
 function LoginPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const invitationId = searchParams.get("invitationId");
   const invited = searchParams.get("invited") === "true";
   const [isLoading, setIsLoading] = useState(false);

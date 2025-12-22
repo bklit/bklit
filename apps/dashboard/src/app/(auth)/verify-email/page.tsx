@@ -64,13 +64,7 @@ function VerifyEmailPage() {
       code: "",
     },
     validators: {
-      onSubmit: ({ value }) => {
-        const result = verifyEmailSchema.safeParse(value);
-        if (!result.success) {
-          return result.error.format();
-        }
-        return undefined;
-      },
+      onSubmit: verifyEmailSchema,
     },
     onSubmit: async ({ value }) => {
       setIsLoading(true);
@@ -184,20 +178,7 @@ function VerifyEmailPage() {
         className="flex flex-col gap-4"
       >
         <FieldGroup>
-          <form.Field
-            name="code"
-            validators={{
-              onChange: ({ value }) => {
-                if (value.length < 6) {
-                  return "Code must be 6 digits";
-                }
-                if (!/^\d+$/.test(value)) {
-                  return "Code must only contain numbers";
-                }
-                return undefined;
-              },
-            }}
-          >
+          <form.Field name="code">
             {(field) => {
               const isInvalid =
                 field.state.meta.isTouched && !field.state.meta.isValid;
