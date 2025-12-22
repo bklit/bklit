@@ -732,6 +732,9 @@ importers:
       hast-util-to-jsx-runtime:
         specifier: ^2.3.6
         version: 2.3.6
+      input-otp:
+        specifier: ^1.4.2
+        version: 1.4.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       lucide-react:
         specifier: ^0.475.0
         version: 0.475.0(react@19.2.1)

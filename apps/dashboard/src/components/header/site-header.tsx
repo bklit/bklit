@@ -34,7 +34,10 @@ export function SiteHeader() {
   const shouldShow = showLiveUsers && hasLiveUsers;
 
   const user = clientSession?.user && {
-    name: clientSession.user.name || "",
+    name:
+      clientSession.user.name ||
+      clientSession.user.email?.split("@")[0] ||
+      "User",
     email: clientSession.user.email || "",
     avatar: clientSession.user.image || "",
     id: clientSession.user.id,

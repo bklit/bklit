@@ -2,6 +2,7 @@
 
 import { Button } from "@bklit/ui/components/button";
 import NumberFlow from "@number-flow/react";
+import { useRouter } from "next/navigation";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { Suspense, useEffect, useState } from "react";
 import { CreateProjectStepForm } from "@/components/forms/onboarding/create-project-step-form";
@@ -97,9 +98,15 @@ function SDKConnectionStep({
   onTokenCreated: () => void;
 }) {
   const { goToNextStep } = useStepper();
+  const router = useRouter();
 
   const handleTokenCreated = () => {
     onTokenCreated();
+  };
+
+  const handleSkip = () => {
+    // Skip testing and go straight to dashboard with onboarding param
+    router.push(`/${organizationId}/${projectId}?onboarding=new`);
   };
 
   return (
@@ -114,7 +121,9 @@ function SDKConnectionStep({
         />
       </Stepper.Content>
       <Stepper.Footer>
-        <div />
+        <Button variant="ghost" onClick={handleSkip}>
+          Skip for now
+        </Button>
         <Button onClick={goToNextStep}>Next</Button>
       </Stepper.Footer>
     </>

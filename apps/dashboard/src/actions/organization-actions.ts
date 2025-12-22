@@ -10,6 +10,42 @@ import { auth } from "@/auth/server";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
+/**
+ * Generate a unique slug by appending -1, -2, -3, etc. if slug already exists
+ */
+async function generateUniqueSlug(baseSlug: string): Promise<string> {
+  let slug = baseSlug;
+  let counter = 1;
+  
+  // Check if base slug is available
+  const existing = await prisma.organization.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  
+  if (!existing) {
+    return slug;
+  }
+  
+  // Try with incremented suffixes until we find an available one
+  while (counter < 100) { // Safety limit to prevent infinite loop
+    slug = `${baseSlug}-${counter}`;
+    const exists = await prisma.organization.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    
+    if (!exists) {
+      return slug;
+    }
+    
+    counter++;
+  }
+  
+  // Fallback: add timestamp if we somehow hit the limit
+  return `${baseSlug}-${Date.now()}`;
+}
+
 const createOrganizationSchema = z.object({
   name: z
     .string()
@@ -86,28 +122,14 @@ export async function createOrganizationAction(
       }
     }
 
-    // Generate a URL-friendly slug from the organization name
-    const slug = validatedFields.data.name
+    // Generate a URL-friendly base slug from the organization name
+    const baseSlug = validatedFields.data.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    // Check if slug already exists
-    const data = await auth.api.checkOrganizationSlug({
-      body: {
-        slug,
-      },
-    });
-
-    if (data.status === false) {
-      return {
-        success: false,
-        message:
-          "An organization with this name already exists. Please choose a different name.",
-        newOrganizationId: undefined,
-        errors: {},
-      };
-    }
+    // Generate unique slug with auto-incrementing suffix if needed
+    const slug = await generateUniqueSlug(baseSlug);
 
     // Double-check at database level (race condition protection) - skip for super admin
     if (!isSuperAdmin) {
@@ -213,25 +235,23 @@ export async function updateOrganizationNameAction(
   }
 
   try {
-    // Generate a URL-friendly slug from the organization name
-    const slug = nameValidation.data
+    // Generate a URL-friendly base slug from the organization name
+    const baseSlug = nameValidation.data
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    // Check if slug already exists (excluding current organization)
-    const data = await auth.api.checkOrganizationSlug({
-      body: {
-        slug,
-      },
+    // For updates, we need to check if the slug is available (excluding current org)
+    const currentOrg = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { slug: true },
     });
 
-    if (data.status === false) {
-      return {
-        success: false,
-        message:
-          "An organization with this name already exists. Please choose a different name.",
-      };
+    let slug = baseSlug;
+    
+    // If the new slug is different from the current one, ensure it's unique
+    if (currentOrg?.slug !== baseSlug) {
+      slug = await generateUniqueSlug(baseSlug);
     }
 
     await auth.api.updateOrganization({
