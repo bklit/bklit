@@ -61,9 +61,6 @@ function LoginPage() {
           }
           setIsLoading(false);
         } else {
-          // Temporarily store password for auto sign-in after email verification
-          sessionStorage.setItem("temp_signup_password", value.password);
-
           // Send verification email
           const verificationResult =
             await authClient.emailOtp.sendVerificationOtp({

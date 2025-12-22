@@ -44,6 +44,14 @@ function VerifyEmailPage() {
   );
   const email = searchParams.get("email");
 
+  // Validate email parameter on mount
+  useEffect(() => {
+    if (!email || email.trim() === "") {
+      toast.error("Email address is missing. Please sign up again.");
+      router.replace("/signup");
+    }
+  }, [email, router]);
+
   useEffect(() => {
     if (resendCooldown <= 0) return;
 
@@ -59,6 +67,22 @@ function VerifyEmailPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
+  // Early return if email is missing (will redirect in useEffect above)
+  if (!email || email.trim() === "") {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-normal">
+            Invalid <span className="font-bold">verification link</span>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            Email address is missing. Redirecting to sign up...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const form = useForm({
     defaultValues: {
       code: "",
@@ -67,11 +91,18 @@ function VerifyEmailPage() {
       onSubmit: verifyEmailSchema,
     },
     onSubmit: async ({ value }) => {
+      // Guard: ensure email exists before proceeding
+      if (!email || email.trim() === "") {
+        toast.error("Email address is missing. Please sign up again.");
+        router.replace("/signup");
+        return;
+      }
+
       setIsLoading(true);
       try {
         // Verify the email OTP
         const verifyResult = await authClient.emailOtp.verifyEmail({
-          email: email || "",
+          email,
           otp: value.code,
         });
 
@@ -84,32 +115,10 @@ function VerifyEmailPage() {
           return;
         }
 
-        // Email verified successfully - now we need to sign the user in
-        // Get the user's password from session storage (stored during signup)
-        const tempPassword = sessionStorage.getItem("temp_signup_password");
-
-        if (tempPassword && email) {
-          // Sign in the user automatically
-          const signInResult = await authClient.signIn.email({
-            email,
-            password: tempPassword,
-          });
-
-          // Clear the temporary password
-          sessionStorage.removeItem("temp_signup_password");
-
-          if (signInResult.error) {
-            toast.error(
-              "Email verified but auto sign-in failed. Please sign in manually.",
-            );
-            router.push("/signin");
-            return;
-          }
-        }
-
-        toast.success("Email verified successfully! Let's get you set up.");
-        // Redirect to onboarding for first-time user experience
-        router.push("/onboarding");
+        // Email verified successfully
+        // Better Auth's verifyEmail should automatically create a session
+        toast.success("Email verified! Please sign in to continue.");
+        router.push("/signin");
       } catch (error) {
         console.error("Verification error:", error);
         toast.error("An error occurred. Please try again.");
@@ -119,8 +128,10 @@ function VerifyEmailPage() {
   });
 
   const handleResendCode = async () => {
-    if (!email) {
-      toast.error("Email address not found. Please sign up again.");
+    // Guard: ensure email exists before proceeding
+    if (!email || email.trim() === "") {
+      toast.error("Email address is missing. Please sign up again.");
+      router.replace("/signup");
       return;
     }
 
