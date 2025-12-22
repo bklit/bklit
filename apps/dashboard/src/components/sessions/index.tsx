@@ -14,7 +14,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin, Monitor } from "lucide-react";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { DateRangePicker } from "@/components/date-range-picker";
+import { ErrorFallback } from "@/components/error-fallback";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { useTRPC } from "@/trpc/react";
@@ -224,25 +226,122 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
         <div className="flex flex-col sm:grid sm:grid-cols-12 gap-4">
           <div className="col-span-3 flex flex-col gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Entry & Exit Points</CardTitle>
-                <CardDescription>
-                  Where users start and end their journeys
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isLoading ? (
-                  <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
-                    Loading data...
-                  </div>
-                ) : !nivoSankeyData || nivoSankeyData.nodes.length === 0 ? (
-                  <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
-                    No data available
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col">
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <ErrorFallback
+                  {...props}
+                  title="Entry & Exit Points Error"
+                  description="Unable to display entry and exit points data"
+                />
+              )}
+              resetKeys={[isLoading, nivoSankeyData, entryPoints, exitPoints]}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>Entry & Exit Points</CardTitle>
+                  <CardDescription>
+                    Where users start and end their journeys
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isLoading ? (
+                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                      Loading data...
+                    </div>
+                  ) : !nivoSankeyData || nivoSankeyData.nodes.length === 0 ? (
+                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                      No data available
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col">
+                        <div className="flex items-center justify-start gap-4 pb-3">
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-2" />
+                            <span className="text-xs font-medium">
+                              Entry Points
+                            </span>
+                          </div>
+                        </div>
+                        {entryPoints.length > 0 ? (
+                          entryPoints.map((entry) => (
+                            <ProgressRow
+                              key={entry.id}
+                              label={entry.id}
+                              value={entry.value}
+                              percentage={entry.percentage}
+                              color="var(--chart-2)"
+                              variant="secondary"
+                            />
+                          ))
+                        ) : (
+                          <div className="text-sm text-muted-foreground py-2">
+                            No entry points
+                          </div>
+                        )}
+                      </div>
+                      <Separator />
+                      <div className="flex flex-col">
+                        <div className="flex items-center justify-start gap-4 pb-3">
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-3" />
+                            <span className="text-xs font-medium">
+                              Exit Points
+                            </span>
+                          </div>
+                        </div>
+                        {exitPoints.length > 0 ? (
+                          exitPoints.map((exit) => (
+                            <ProgressRow
+                              key={exit.id}
+                              label={exit.id}
+                              value={exit.value}
+                              percentage={exit.percentage}
+                              color="var(--chart-3)"
+                              variant="secondary"
+                            />
+                          ))
+                        ) : (
+                          <div className="text-sm text-muted-foreground py-2">
+                            No exit points
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </ErrorBoundary>
+          </div>
+          <div className="col-span-9">
+            <ErrorBoundary
+              FallbackComponent={(props) => (
+                <ErrorFallback
+                  {...props}
+                  title="User Journeys Error"
+                  description="Unable to display user journey flow (circular path detected)"
+                />
+              )}
+              resetKeys={[isLoading, nivoSankeyData]}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Journeys</CardTitle>
+                  <CardDescription>
+                    Flow of users through your site pages
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                      Loading chart...
+                    </div>
+                  ) : !nivoSankeyData || nivoSankeyData.nodes.length === 0 ? (
+                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                      No data available
+                    </div>
+                  ) : (
+                    <>
                       <div className="flex items-center justify-start gap-4 pb-3">
                         <div className="flex items-center gap-1.5">
                           <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-2" />
@@ -250,27 +349,12 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                             Entry Points
                           </span>
                         </div>
-                      </div>
-                      {entryPoints.length > 0 ? (
-                        entryPoints.map((entry) => (
-                          <ProgressRow
-                            key={entry.id}
-                            label={entry.id}
-                            value={entry.value}
-                            percentage={entry.percentage}
-                            color="var(--chart-2)"
-                            variant="secondary"
-                          />
-                        ))
-                      ) : (
-                        <div className="text-sm text-muted-foreground py-2">
-                          No entry points
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-1" />
+                          <span className="text-xs font-medium">
+                            Pass Through
+                          </span>
                         </div>
-                      )}
-                    </div>
-                    <Separator />
-                    <div className="flex flex-col">
-                      <div className="flex items-center justify-start gap-4 pb-3">
                         <div className="flex items-center gap-1.5">
                           <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-3" />
                           <span className="text-xs font-medium">
@@ -278,74 +362,16 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                           </span>
                         </div>
                       </div>
-                      {exitPoints.length > 0 ? (
-                        exitPoints.map((exit) => (
-                          <ProgressRow
-                            key={exit.id}
-                            label={exit.id}
-                            value={exit.value}
-                            percentage={exit.percentage}
-                            color="var(--chart-3)"
-                            variant="secondary"
-                          />
-                        ))
-                      ) : (
-                        <div className="text-sm text-muted-foreground py-2">
-                          No exit points
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          <div className="col-span-9">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Journeys</CardTitle>
-                <CardDescription>
-                  Flow of users through your site pages
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
-                    Loading chart...
-                  </div>
-                ) : !nivoSankeyData || nivoSankeyData.nodes.length === 0 ? (
-                  <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
-                    No data available
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-start gap-4 pb-3">
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-2" />
-                        <span className="text-xs font-medium">
-                          Entry Points
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-1" />
-                        <span className="text-xs font-medium">
-                          Pass Through
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-3" />
-                        <span className="text-xs font-medium">Exit Points</span>
-                      </div>
-                    </div>
-                    <SankeyNivo
-                      className="h-[400px]"
-                      data={nivoSankeyData}
-                      labelColor="auto"
-                    />
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                      <SankeyNivo
+                        className="h-[400px]"
+                        data={nivoSankeyData}
+                        labelColor="auto"
+                      />
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </ErrorBoundary>
           </div>
         </div>
 
