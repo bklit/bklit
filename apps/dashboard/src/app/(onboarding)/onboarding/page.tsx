@@ -115,7 +115,7 @@ function SDKConnectionStep({
       toast.error("Project ID is missing. Please complete step 2 first.");
       return;
     }
-    
+
     // Skip testing and go straight to dashboard with onboarding param
     router.push(`/${organizationId}/${projectId}?onboarding=new`);
   };

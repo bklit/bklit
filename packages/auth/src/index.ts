@@ -269,7 +269,7 @@ export function initAuth(options: {
               where: { email },
               select: { name: true },
             });
-            
+
             // For password reset, we'll use the reset password template
             await sendEmail({
               to: email,

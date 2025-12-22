@@ -64,7 +64,9 @@ export function TestConnectionStepForm({
         redirectTimeoutRef.current = setTimeout(() => {
           // Validate IDs before navigation
           if (!organizationId || organizationId.trim() === "") {
-            toast.error("Organization ID is missing. Cannot navigate to dashboard.");
+            toast.error(
+              "Organization ID is missing. Cannot navigate to dashboard.",
+            );
             setIsRedirecting(false);
             return;
           }
@@ -73,7 +75,7 @@ export function TestConnectionStepForm({
             setIsRedirecting(false);
             return;
           }
-          
+
           router.push(`/${organizationId}/${projectId}?onboarding=new`);
         }, 5000);
       }
@@ -132,7 +134,7 @@ export function TestConnectionStepForm({
       toast.error("Project ID is missing. Cannot navigate to dashboard.");
       return;
     }
-    
+
     router.push(`/${organizationId}/${projectId}?onboarding=new`);
   };
 
