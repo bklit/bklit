@@ -12,7 +12,7 @@ function validateHealthCheckSecret(request: NextRequest): boolean {
 
   if (!expectedSecret || expectedSecret.trim() === "") {
     console.error(
-      "HEALTH_CHECK_SECRET is not configured. Health check endpoint is disabled.",
+      "HEALTH_CHECK_SECRET is not configured. Health check endpoint is disabled."
     );
     return false;
   }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: "Unauthorized",
       },
-      { status: 401 },
+      { status: 401 }
     );
   }
 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Manually trigger the health check task
     const handle = await tasks.trigger<typeof healthCheckTask>(
       "health-check",
-      {},
+      {}
     );
 
     console.log("Health check task triggered manually", {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

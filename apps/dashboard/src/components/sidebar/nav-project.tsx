@@ -69,8 +69,8 @@ export function NavProject({
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={isActive}
                 disabled={!isEnabled}
+                isActive={isActive}
               >
                 {isEnabled ? (
                   <Link href={item.href}>
@@ -81,7 +81,7 @@ export function NavProject({
                   <div
                     className={cn(
                       isLiveItem &&
-                        "opacity-50 cursor-not-allowed hover:opacity-50",
+                        "cursor-not-allowed opacity-50 hover:opacity-50"
                     )}
                   >
                     <Icon />

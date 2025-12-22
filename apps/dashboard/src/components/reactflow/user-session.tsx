@@ -88,28 +88,28 @@ function WebPageNode({ data }: NodeProps) {
       style={{ opacity: opacity ?? 1 }}
     >
       <Handle
-        type="target"
-        position={Position.Left}
+        className="sr-only"
         id="left"
-        className="sr-only"
+        position={Position.Left}
+        type="target"
       />
       <Handle
-        type="target"
-        position={Position.Top}
+        className="sr-only"
         id="top"
-        className="sr-only"
+        position={Position.Top}
+        type="target"
       />
       <Handle
-        type="target"
-        position={Position.Bottom}
-        id="bottom"
         className="sr-only"
+        id="bottom"
+        position={Position.Bottom}
+        type="target"
       />
       <Card className="relative border-2">
         <CardHeader className="pb-1">
-          <CardTitle className="text-sm font-semibold">{data.title}</CardTitle>
+          <CardTitle className="font-semibold text-sm">{data.title}</CardTitle>
           <CardDescription>
-            <code className="text-xs text-muted-foreground font-mono">
+            <code className="font-mono text-muted-foreground text-xs">
               {cleanUrl(data.url)}
             </code>
           </CardDescription>
@@ -139,37 +139,35 @@ function WebPageNode({ data }: NodeProps) {
                   navigation[idx - 1]?.page !== "Exit";
 
                 const separator = needsSeparator ? (
-                  <div className="w-6 h-6 flex items-center justify-center">
+                  <div className="flex h-6 w-6 items-center justify-center">
                     <ArrowUpFromDot
-                      size={12}
-                      key={`separator-${idx}`}
                       className="rotate-180 text-muted-foreground/30"
+                      key={`separator-${idx}`}
+                      size={12}
                     />
                   </div>
                 ) : null;
 
-                if (item.type === "from") {
-                  if (item.page === "Entry") {
-                    return (
-                      <Fragment key={idx}>
-                        {separator}
-                        <div className="flex flex-col gap-1 text-muted-foreground">
-                          <Badge variant="success">Entry</Badge>
-                          {item.time !== undefined && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <div className="w-6 h-6 flex items-center justify-center">
-                                <Timer
-                                  size={12}
-                                  className="text-muted-foreground/30"
-                                />
-                              </div>
-                              viewed for {formatDuration(item.time)}
+                if (item.type === "from" && item.page === "Entry") {
+                  return (
+                    <Fragment key={idx}>
+                      {separator}
+                      <div className="flex flex-col gap-1 text-muted-foreground">
+                        <Badge variant="success">Entry</Badge>
+                        {item.time !== undefined && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="flex h-6 w-6 items-center justify-center">
+                              <Timer
+                                className="text-muted-foreground/30"
+                                size={12}
+                              />
                             </div>
-                          )}
-                        </div>
-                      </Fragment>
-                    );
-                  }
+                            viewed for {formatDuration(item.time)}
+                          </div>
+                        )}
+                      </div>
+                    </Fragment>
+                  );
                 }
 
                 if (item.type === "to") {
@@ -177,9 +175,9 @@ function WebPageNode({ data }: NodeProps) {
                     return (
                       <Fragment key={idx}>
                         {separator}
-                        <div className="flex items-center gap-2 text-muted-foreground mt-0.5">
-                          <div className="w-6 h-6 flex items-center justify-center">
-                            <CornerDownRight size={14} className="ml-2" />
+                        <div className="mt-0.5 flex items-center gap-2 text-muted-foreground">
+                          <div className="flex h-6 w-6 items-center justify-center">
+                            <CornerDownRight className="ml-2" size={14} />
                           </div>
                           <Badge variant="destructive">Exit</Badge>
                         </div>
@@ -188,11 +186,11 @@ function WebPageNode({ data }: NodeProps) {
                   }
                   return (
                     <div
-                      key={idx}
                       className="flex flex-row items-center gap-2 text-muted-foreground"
+                      key={idx}
                     >
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        <CornerDownRight size={14} className="ml-2" />
+                      <div className="flex h-6 w-6 items-center justify-center">
+                        <CornerDownRight className="ml-2" size={14} />
                       </div>
                       <span>{item.page}</span>
                     </div>
@@ -205,17 +203,17 @@ function WebPageNode({ data }: NodeProps) {
                       {separator}
                       <div className="flex flex-col gap-1">
                         <Badge variant="alternative">
-                          <span className="text-xs font-medium opacity-60">
+                          <span className="font-medium text-xs opacity-60">
                             from
                           </span>{" "}
                           <span>{item.page}</span>
                         </Badge>
                         {item.time !== undefined && (
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <div className="w-6 h-6 flex items-center justify-center">
+                            <div className="flex h-6 w-6 items-center justify-center">
                               <Timer
-                                size={12}
                                 className="text-muted-foreground/30"
+                                size={12}
                               />
                             </div>
                             viewed for {formatDuration(item.time)}
@@ -233,10 +231,10 @@ function WebPageNode({ data }: NodeProps) {
         </CardContent>
       </Card>
       <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
         className="sr-only"
+        id="right"
+        position={Position.Right}
+        type="source"
       />
     </div>
   );
@@ -244,7 +242,7 @@ function WebPageNode({ data }: NodeProps) {
 
 function ConversionEdge({ data }: EdgeProps) {
   return (
-    <div className="bg-background border rounded px-2 py-1 text-xs font-medium shadow-sm">
+    <div className="rounded border bg-background px-2 py-1 font-medium text-xs shadow-sm">
       {data.rate}%
     </div>
   );
@@ -462,7 +460,7 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
     const currentPage = session.pageViewEvents[i];
     const nextPage = session.pageViewEvents[i + 1];
 
-    if (!currentPage || !nextPage) continue;
+    if (!(currentPage && nextPage)) continue;
 
     const currentUrlKey = cleanUrl(currentPage.url, session.site.domain);
     const nextUrlKey = cleanUrl(nextPage.url, session.site.domain);
@@ -541,7 +539,7 @@ function generateEdgesFromSession(session: SessionData): Edge[] {
 
 function getLayoutedElements(
   nodes: Node[],
-  edges: Edge[],
+  edges: Edge[]
 ): {
   nodes: Node[];
   edges: Edge[];
@@ -565,15 +563,15 @@ function getLayoutedElements(
 
   const regularNodes = nodes.filter(
     (n) =>
-      !(n.data.isExitPage as boolean) || (n.data.isExitAlsoEntry as boolean),
+      !(n.data.isExitPage as boolean) || (n.data.isExitAlsoEntry as boolean)
   );
   const exitNode = nodes.find(
     (n) =>
-      (n.data.isExitPage as boolean) && !(n.data.isExitAlsoEntry as boolean),
+      (n.data.isExitPage as boolean) && !(n.data.isExitAlsoEntry as boolean)
   );
 
   const sortedRegularNodes = [...regularNodes].sort(
-    (a, b) => (a.data.column as number) - (b.data.column as number),
+    (a, b) => (a.data.column as number) - (b.data.column as number)
   );
 
   const layoutedRegularNodes = sortedRegularNodes.map((node) => {
@@ -622,16 +620,16 @@ function UserSessionInner({ session }: UserSessionProps) {
 
   const initialNodes = useMemo(
     () => generateNodesFromSession(session),
-    [session],
+    [session]
   );
   const initialEdges = useMemo(
     () => generateEdgesFromSession(session),
-    [session],
+    [session]
   );
 
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(
     () => getLayoutedElements(initialNodes, initialEdges),
-    [initialNodes, initialEdges],
+    [initialNodes, initialEdges]
   );
 
   const nodesWithOpacity = useMemo(() => {
@@ -700,7 +698,7 @@ function UserSessionInner({ session }: UserSessionProps) {
         onEdgesChange([{ type: "add", item: newEdge }]);
       }
     },
-    [edgesState, onEdgesChange],
+    [edgesState, onEdgesChange]
   );
 
   const handleZoomIn = useCallback(() => {
@@ -716,41 +714,41 @@ function UserSessionInner({ session }: UserSessionProps) {
   }, [fitView]);
 
   return (
-    <div className="w-full relative border-2 rounded-xl overflow-clip h-[720px]">
+    <div className="relative h-[720px] w-full overflow-clip rounded-xl border-2">
       <ReactFlow
-        nodes={nodesState}
         edges={edgesState}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        onEdgeMouseEnter={(_event, edge) => setHoveredEdgeId(edge.id)}
-        onEdgeMouseLeave={() => setHoveredEdgeId(null)}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.5}
         maxZoom={1.5}
+        minZoom={0.5}
+        nodes={nodesState}
+        nodeTypes={nodeTypes}
+        onConnect={onConnect}
+        onEdgeMouseEnter={(_event, edge) => setHoveredEdgeId(edge.id)}
+        onEdgeMouseLeave={() => setHoveredEdgeId(null)}
+        onEdgesChange={onEdgesChange}
+        onNodesChange={onNodesChange}
       >
         <Panel position="top-right">
           <ButtonGroup orientation="horizontal">
-            <Button variant="secondary" onClick={handleZoomIn}>
+            <Button onClick={handleZoomIn} variant="secondary">
               <ZoomIn size={16} />
             </Button>
-            <Button variant="secondary" onClick={handleZoomOut}>
+            <Button onClick={handleZoomOut} variant="secondary">
               <ZoomOut size={16} />
             </Button>
-            <Button variant="secondary" onClick={handleFitView}>
+            <Button onClick={handleFitView} variant="secondary">
               <ImageUpscale size={16} />
             </Button>
           </ButtonGroup>
         </Panel>
         <Background
-          variant={BackgroundVariant.Dots}
+          className="bg-white dark:bg-bklit-600"
+          color="var(--bklit-300)"
           gap={20}
           size={1}
-          color="var(--bklit-300)"
-          className="bg-white dark:bg-bklit-600"
+          variant={BackgroundVariant.Dots}
         />
       </ReactFlow>
     </div>

@@ -46,8 +46,8 @@ export function UpdateNotificationPreferencesForm({
       },
       {
         enabled: !!projectId && !!organizationId,
-      },
-    ),
+      }
+    )
   );
 
   const updatePreferences = useMutation(
@@ -58,7 +58,7 @@ export function UpdateNotificationPreferencesForm({
       onError: (error) => {
         toast.error(`Failed to update preferences: ${error.message}`);
       },
-    }),
+    })
   );
 
   const form = useForm({
@@ -69,7 +69,7 @@ export function UpdateNotificationPreferencesForm({
       onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      if (!projectId || !organizationId) return;
+      if (!(projectId && organizationId)) return;
 
       try {
         await updatePreferences.mutateAsync({
@@ -79,7 +79,7 @@ export function UpdateNotificationPreferencesForm({
         });
       } catch (error) {
         toast.error(
-          `Failed to update preferences: ${error instanceof Error ? error.message : "Unknown error"}`,
+          `Failed to update preferences: ${error instanceof Error ? error.message : "Unknown error"}`
         );
       }
     },
@@ -122,8 +122,8 @@ export function UpdateNotificationPreferencesForm({
                     </div>
                     <Switch
                       checked={field.state.value}
-                      onCheckedChange={(checked) => field.handleChange(checked)}
                       disabled={updatePreferences.isPending}
+                      onCheckedChange={(checked) => field.handleChange(checked)}
                     />
                   </div>
                 </Field>
@@ -133,11 +133,11 @@ export function UpdateNotificationPreferencesForm({
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal" className="justify-between">
+        <Field className="justify-between" orientation="horizontal">
           <Button
-            type="submit"
-            form="update-notification-preferences-form"
             disabled={updatePreferences.isPending}
+            form="update-notification-preferences-form"
+            type="submit"
           >
             {updatePreferences.isPending ? "Updating..." : "Update preferences"}
           </Button>

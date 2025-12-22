@@ -51,43 +51,43 @@ if (!rootElement) {
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <div className="flex flex-col bg-blue-700 pb-0 fixed top-0 left-0 right-0 z-50">
-        <div className="flex items-center justify-between px-3 h-12">
+      <div className="fixed top-0 right-0 left-0 z-50 flex flex-col bg-blue-700 pb-0">
+        <div className="flex h-12 items-center justify-between px-3">
           <div className="flex items-center gap-2">
             <BklitLogo size={16} theme="dark" />
-            <span className="text-sm text-white font-medium block sm:hidden">
+            <span className="block font-medium text-sm text-white sm:hidden">
               Demo store
             </span>
-            <span className="text-sm text-white font-medium hidden sm:block">
+            <span className="hidden font-medium text-sm text-white sm:block">
               Demo this store's analytics in the{" "}
               <a
+                className="font-bold text-white underline transition-colors hover:text-blue-100 hover:no-underline"
                 href="https://app.bklit.com/?utm_source=playground&utm_medium=referral&utm_campaign=playground"
-                target="_blank"
                 rel="noopener noreferrer"
-                className="font-bold text-white hover:text-blue-100 transition-colors underline hover:no-underline"
+                target="_blank"
               >
                 Bklit dashboard
               </a>
             </span>
           </div>
-          <Button variant="mono" size="sm" asChild>
+          <Button asChild size="sm" variant="mono">
             <a
               href="https://app.bklit.com/?utm_source=playground&utm_medium=referral&utm_campaign=playground"
-              target="_blank"
               rel="noopener noreferrer"
+              target="_blank"
             >
-              <BklitLogo size={16} className="text-black" />
+              <BklitLogo className="text-black" size={16} />
               Open in Bklit
             </a>
           </Button>
         </div>
-        <div className="flex bg-blue-700 size-4 absolute left-0 -bottom-4 z-10 after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-4 after:bg-background after:rounded-tl-xl" />
-        <div className="flex bg-blue-700 size-4 absolute right-0 -bottom-4 z-10 after:content-[''] after:absolute after:right-0 after:bottom-0 after:w-full after:h-4 after:bg-background after:rounded-tr-xl" />
+        <div className="absolute -bottom-4 left-0 z-10 flex size-4 bg-blue-700 after:absolute after:bottom-0 after:left-0 after:h-4 after:w-full after:rounded-tl-xl after:bg-background after:content-['']" />
+        <div className="absolute right-0 -bottom-4 z-10 flex size-4 bg-blue-700 after:absolute after:right-0 after:bottom-0 after:h-4 after:w-full after:rounded-tr-xl after:bg-background after:content-['']" />
       </div>
-      <div className="flex flex-col flex-1 bg-background pt-12">
+      <div className="flex flex-1 flex-col bg-background pt-12">
         <RouterProvider router={router} />
       </div>
       <Toaster />
     </ThemeProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

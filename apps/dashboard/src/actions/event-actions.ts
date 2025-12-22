@@ -31,8 +31,7 @@ export async function createEvent(data: {
     });
 
     if (
-      !project ||
-      !project.organization ||
+      !(project && project.organization) ||
       project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
@@ -41,8 +40,7 @@ export async function createEvent(data: {
     // Check if user is admin or owner
     const userMembership = project.organization.members[0];
     if (
-      !userMembership ||
-      !hasPermission(userMembership.role, MemberRole.ADMIN)
+      !(userMembership && hasPermission(userMembership.role, MemberRole.ADMIN))
     ) {
       return {
         success: false,
@@ -126,8 +124,7 @@ export async function updateEvent(data: {
     });
 
     if (
-      !event ||
-      !event.project.organization ||
+      !(event && event.project.organization) ||
       event.project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
@@ -136,8 +133,7 @@ export async function updateEvent(data: {
     // Check if user is admin or owner
     const userMembership = event.project.organization.members[0];
     if (
-      !userMembership ||
-      !hasPermission(userMembership.role, MemberRole.ADMIN)
+      !(userMembership && hasPermission(userMembership.role, MemberRole.ADMIN))
     ) {
       return {
         success: false,
@@ -223,8 +219,7 @@ export async function deleteEvent(data: {
     });
 
     if (
-      !event ||
-      !event.project.organization ||
+      !(event && event.project.organization) ||
       event.project.organization.members.length === 0
     ) {
       return { success: false, error: "Forbidden" };
@@ -233,8 +228,7 @@ export async function deleteEvent(data: {
     // Check if user is admin or owner
     const userMembership = event.project.organization.members[0];
     if (
-      !userMembership ||
-      !hasPermission(userMembership.role, MemberRole.ADMIN)
+      !(userMembership && hasPermission(userMembership.role, MemberRole.ADMIN))
     ) {
       return {
         success: false,

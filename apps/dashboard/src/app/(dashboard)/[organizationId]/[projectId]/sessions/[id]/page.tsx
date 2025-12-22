@@ -24,7 +24,7 @@ export default async function SessionDetailsPage({ params }: PageProps) {
         sessionId: id,
         projectId,
         organizationId,
-      }),
+      })
     );
   } catch {
     notFound();

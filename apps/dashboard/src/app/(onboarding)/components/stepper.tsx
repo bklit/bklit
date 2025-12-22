@@ -63,7 +63,7 @@ const Stepper = ({ children }: StepperProps) => {
   // Use nuqs to sync step with URL query parameter (1-indexed in URL, 0-indexed internally)
   const [stepParam, setStepParam] = useQueryState(
     "step",
-    parseAsInteger.withDefault(1),
+    parseAsInteger.withDefault(1)
   );
   const [isConnected, setIsConnected] = useState(false);
 
@@ -111,7 +111,7 @@ const Stepper = ({ children }: StepperProps) => {
   // Check if current step has a custom title
   const hasCustomTitle = isValidElement(currentStepContent)
     ? Children.toArray(
-        (currentStepContent.props as StepperItemProps).children,
+        (currentStepContent.props as StepperItemProps).children
       ).some((child) => isValidElement(child) && child.type === StepperTitle)
     : false;
 
@@ -119,7 +119,7 @@ const Stepper = ({ children }: StepperProps) => {
     ? Children.toArray(
         isValidElement(currentStepContent)
           ? (currentStepContent.props as StepperItemProps).children
-          : [],
+          : []
       ).find((child) => isValidElement(child) && child.type === StepperTitle)
     : null;
 
@@ -153,7 +153,7 @@ const Stepper = ({ children }: StepperProps) => {
 const StepperItem = ({ children }: StepperItemProps) => {
   // Filter out StepperTitle from rendering in the body (it's only for the header)
   const filteredChildren = Children.toArray(children).filter(
-    (child) => !isValidElement(child) || child.type !== StepperTitle,
+    (child) => !isValidElement(child) || child.type !== StepperTitle
   );
   return <>{filteredChildren}</>;
 };

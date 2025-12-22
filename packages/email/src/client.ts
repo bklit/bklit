@@ -11,7 +11,7 @@ function getResend(): Resend {
 
     if (!apiKey || apiKey.trim() === "") {
       const error = new Error(
-        "RESEND_API_KEY is not configured. Cannot create Resend client. Please set RESEND_API_KEY environment variable.",
+        "RESEND_API_KEY is not configured. Cannot create Resend client. Please set RESEND_API_KEY environment variable."
       );
       console.error(error.message);
       // In production, throw error; in development, you might want to allow it
@@ -62,7 +62,7 @@ export async function sendEmail(params: SendEmailParams) {
     if (result.error) {
       throw new Error(
         result.error.message ||
-          "Failed to send email. Please check your domain verification in Resend.",
+          "Failed to send email. Please check your domain verification in Resend."
       );
     }
 
@@ -74,7 +74,7 @@ export async function sendEmail(params: SendEmailParams) {
   } catch (error) {
     console.error("Error sending email:", error);
     throw new Error(
-      error instanceof Error ? error.message : "Failed to send email",
+      error instanceof Error ? error.message : "Failed to send email"
     );
   }
 }

@@ -24,7 +24,7 @@ export function ErrorFallback({
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
-        <div className="h-[400px] flex items-center justify-center flex-col gap-2 text-sm text-muted-foreground">
+        <div className="flex h-[400px] flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
           <p className="font-medium">
             An error occurred while rendering this chart
           </p>

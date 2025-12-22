@@ -43,7 +43,7 @@ function formatPageName(path: string): string {
 }
 
 export function transformSessionsToSankey(
-  sessions: SessionWithPageViews[],
+  sessions: SessionWithPageViews[]
 ): SankeyData {
   const pageSet = new Set<string>();
   const transitions = new Map<string, number>();
@@ -126,10 +126,10 @@ export function transformSessionsToSankey(
   console.log("Transformed Sankey Data:", {
     sessionsProcessed: sessions.length,
     sessionsWithPageViews: sessions.filter(
-      (s) => s.pageViewEvents && s.pageViewEvents.length > 0,
+      (s) => s.pageViewEvents && s.pageViewEvents.length > 0
     ).length,
     uniquePages: pages.length,
-    pages: pages,
+    pages,
     totalTransitions: transitions.size,
     transitions: Array.from(transitions.entries()).map(([key, value]) => ({
       transition: key,
@@ -164,7 +164,7 @@ export interface NivoSankeyData {
 
 function removeCyclesSmart(
   nodes: string[],
-  links: Array<{ source: string; target: string; value: number }>,
+  links: Array<{ source: string; target: string; value: number }>
 ): Array<{ source: string; target: string; value: number }> {
   // First, handle bidirectional links by keeping the one with higher value
   const linkMap = new Map<
@@ -255,7 +255,7 @@ function removeCyclesSmart(
       node: string,
       visited: Set<string>,
       recStack: Set<string>,
-      path: string[],
+      path: string[]
     ): boolean {
       visited.add(node);
       recStack.add(node);
@@ -273,11 +273,11 @@ function removeCyclesSmart(
           cyclePath.push(neighbor);
 
           let weakestLink: string | null = null;
-          let weakestValue = Infinity;
+          let weakestValue = Number.POSITIVE_INFINITY;
 
           for (let i = 0; i < cyclePath.length - 1; i++) {
             const linkKey = `${cyclePath[i]}->${cyclePath[i + 1]}`;
-            const value = linkValueMap.get(linkKey) || Infinity;
+            const value = linkValueMap.get(linkKey) || Number.POSITIVE_INFINITY;
             if (value < weakestValue) {
               weakestValue = value;
               weakestLink = linkKey;
@@ -287,7 +287,7 @@ function removeCyclesSmart(
           if (weakestLink) {
             cycleLinks.add(weakestLink);
             console.log(
-              `NivoSankey: Cycle detected, removing weakest link: ${weakestLink} (value: ${weakestValue})`,
+              `NivoSankey: Cycle detected, removing weakest link: ${weakestLink} (value: ${weakestValue})`
             );
           }
 
@@ -320,7 +320,7 @@ function removeCyclesSmart(
 
   if (iteration >= MAX_ITERATIONS) {
     console.warn(
-      "NivoSankey: Maximum iterations reached while removing cycles. Some cycles may remain.",
+      "NivoSankey: Maximum iterations reached while removing cycles. Some cycles may remain."
     );
   }
 
@@ -349,7 +349,7 @@ export function transformToNivoSankey(sankeyData: SankeyData): NivoSankeyData {
       const sourceId = nodeIdMap.get(link.source);
       const targetId = nodeIdMap.get(link.target);
 
-      if (!sourceId || !targetId || sourceId === targetId) {
+      if (!(sourceId && targetId) || sourceId === targetId) {
         return null;
       }
 

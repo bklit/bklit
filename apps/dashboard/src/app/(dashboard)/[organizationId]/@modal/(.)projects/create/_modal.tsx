@@ -37,14 +37,14 @@ export default function Modal({ organizationId }: ModalProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add project</DialogTitle>
         </DialogHeader>
         <AddProjectForm
-          organizationId={organizationId}
           onSuccess={handleSuccess}
+          organizationId={organizationId}
         />
       </DialogContent>
     </Dialog>

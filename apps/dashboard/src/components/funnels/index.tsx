@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
-import { Separator } from "@bklit/ui/components/separator";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -36,7 +35,7 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -57,7 +56,7 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const trpc = useTRPC();
@@ -70,7 +69,7 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
       limit: paginationParams.limit,
       startDate,
       endDate,
-    }),
+    })
   );
 
   // Fetch stats for all funnels to show conversion percentages
@@ -82,7 +81,7 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
         organizationId,
         startDate,
         endDate,
-      }),
+      })
     ),
   });
 
@@ -105,8 +104,8 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
   return (
     <>
       <PageHeader
-        title="Funnels"
         description="Track and analyze conversion funnels"
+        title="Funnels"
       >
         <div className="flex items-center gap-2">
           <SubNavigation
@@ -125,7 +124,7 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
       </PageHeader>
 
       <div className="container mx-auto flex flex-col gap-4">
-        <div className="flex flex-col sm:grid sm:grid-cols-12 gap-4">
+        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-12">
           <div className="col-span-3 flex flex-col gap-6">
             <Card>
               <CardHeader>
@@ -136,11 +135,11 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoading ? (
-                  <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                  <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
                     Loading data...
                   </div>
                 ) : conversionData.length === 0 ? (
-                  <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                  <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
                     No funnels available
                   </div>
                 ) : (
@@ -148,16 +147,16 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
                     <div className="flex items-center justify-start gap-4 pb-3">
                       <div className="flex items-center gap-1.5">
                         <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-2" />
-                        <span className="text-xs font-medium">Funnels</span>
+                        <span className="font-medium text-xs">Funnels</span>
                       </div>
                     </div>
                     {conversionData.map((funnel) => (
                       <ProgressRow
+                        color="var(--chart-2)"
                         key={funnel.id}
                         label={funnel.name}
-                        value={funnel.conversionRate}
                         percentage={funnel.conversionRate}
-                        color="var(--chart-2)"
+                        value={funnel.conversionRate}
                         variant="secondary"
                       />
                     ))}
@@ -175,13 +174,13 @@ export function Funnels({ organizationId, projectId }: FunnelsProps) {
         </div>
 
         <FunnelsList
-          organizationId={organizationId}
-          projectId={projectId}
           funnels={data?.funnels ?? []}
           isLoading={isLoading}
-          totalCount={data?.totalCount}
-          pagination={data?.pagination}
           onPageChange={(page) => setPaginationParams({ page })}
+          organizationId={organizationId}
+          pagination={data?.pagination}
+          projectId={projectId}
+          totalCount={data?.totalCount}
         />
       </div>
     </>

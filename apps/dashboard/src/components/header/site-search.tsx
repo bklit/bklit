@@ -48,21 +48,21 @@ export function SiteSearch() {
   }, []);
 
   return (
-    <SearchDialog open={open} onOpenChange={setOpen}>
+    <SearchDialog onOpenChange={setOpen} open={open}>
       <SearchDialogTrigger>
-        <div className="group hidden sm:flex items-center justify-between w-48 gap-2 dark:bg-input/30 border-input hover:border-bklit-500 h-9 rounded-md border bg-transparent pl-3 pr-1.5 py-1 text-base shadow-xs transition-[color,box-shadow,border] outline-none md:text-sm">
+        <div className="group hidden h-9 w-48 items-center justify-between gap-2 rounded-md border border-input bg-transparent py-1 pr-1.5 pl-3 text-base shadow-xs outline-none transition-[color,box-shadow,border] hover:border-bklit-500 sm:flex md:text-sm dark:bg-input/30">
           <div className="flex items-center gap-2 text-muted-foreground">
             <SearchIcon
+              className="transition group-hover:text-bklit-100"
               size={16}
-              className="group-hover:text-bklit-100 transition"
             />
             <span>Search&hellip;</span>
           </div>
           <div className="flex items-center gap-1 font-semibold">
-            <kbd className="inline-flex items-center justify-center w-fit h-6 px-1.5 font-sans text-xs border border-bklit-500 rounded-[4px] text-muted-foreground/70 group-hover:text-muted-foreground transition">
+            <kbd className="inline-flex h-6 w-fit items-center justify-center rounded-[4px] border border-bklit-500 px-1.5 font-sans text-muted-foreground/70 text-xs transition group-hover:text-muted-foreground">
               ⌘
             </kbd>
-            <kbd className="inline-flex items-center justify-center w-fit h-6 px-1.5 font-sans text-xs border border-bklit-500 rounded-[4px] text-muted-foreground/70 group-hover:text-muted-foreground transition">
+            <kbd className="inline-flex h-6 w-fit items-center justify-center rounded-[4px] border border-bklit-500 px-1.5 font-sans text-muted-foreground/70 text-xs transition group-hover:text-muted-foreground">
               K
             </kbd>
           </div>
@@ -70,11 +70,11 @@ export function SiteSearch() {
       </SearchDialogTrigger>
       <SearchDialogContent>
         <Command>
-          <div className="flex items-center pr-1.5 w-full">
-            <div className="flex-1 w-full">
+          <div className="flex w-full items-center pr-1.5">
+            <div className="w-full flex-1">
               <CommandInput placeholder="Search&hellip;" />
             </div>
-            <kbd className="flex items-center justify-center h-6 px-1 text-xs font-mono border border-bklit-500 rounded-[4px] text-muted-foreground">
+            <kbd className="flex h-6 items-center justify-center rounded-[4px] border border-bklit-500 px-1 font-mono text-muted-foreground text-xs">
               Esc
             </kbd>
           </div>
@@ -82,16 +82,16 @@ export function SiteSearch() {
             <CommandEmpty>
               {isLoading ? "Loading..." : "No results found."}
             </CommandEmpty>
-            <div className="pt-2 space-y-1">
+            <div className="space-y-1 pt-2">
               {currentOrganization.map((group) => (
-                <CommandGroup key={group.heading} heading={group.heading}>
+                <CommandGroup heading={group.heading} key={group.heading}>
                   {group.items.map((item: SearchItem) => (
                     <CommandItem
                       key={item.value + item.label}
-                      value={item.value}
                       onSelect={() => {
                         handleSelect(item.href);
                       }}
+                      value={item.value}
                     >
                       {item.label}
                     </CommandItem>
@@ -99,14 +99,14 @@ export function SiteSearch() {
                 </CommandGroup>
               ))}
               {allOrganizations.map((group) => (
-                <CommandGroup key={group.heading} heading={group.heading}>
+                <CommandGroup heading={group.heading} key={group.heading}>
                   {group.items.map((item: SearchItem) => (
                     <CommandItem
                       key={item.value + item.label}
-                      value={item.value}
                       onSelect={() => {
                         handleSelect(item.href);
                       }}
+                      value={item.value}
                     >
                       {item.label}
                     </CommandItem>

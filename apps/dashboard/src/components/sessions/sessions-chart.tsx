@@ -40,7 +40,7 @@ export function SessionsChart({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -98,7 +98,7 @@ export function SessionsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
             Loading chart...
           </div>
         </CardContent>
@@ -116,7 +116,7 @@ export function SessionsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
             No data available
           </div>
         </CardContent>
@@ -138,18 +138,18 @@ export function SessionsChart({
         <div className="flex flex-col sm:grid sm:grid-cols-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
-              mobile={statsData?.mobileSessions || 0}
               desktop={statsData?.desktopSessions || 0}
+              mobile={statsData?.mobileSessions || 0}
             />
           </div>
           <div className="col-span-3">
             <ChartContainer
-              config={chartConfig}
               className="aspect-auto h-[250px] w-full"
+              config={chartConfig}
             >
               <AreaChart data={timeSeriesData.timeSeriesData}>
                 <defs>
-                  <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillTotal" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-total)"
@@ -161,7 +161,7 @@ export function SessionsChart({
                       stopOpacity={0.1}
                     />
                   </linearGradient>
-                  <linearGradient id="fillEngaged" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillEngaged" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-engaged)"
@@ -173,7 +173,7 @@ export function SessionsChart({
                       stopOpacity={0.1}
                     />
                   </linearGradient>
-                  <linearGradient id="fillBounced" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillBounced" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-bounced)"
@@ -191,10 +191,8 @@ export function SessionsChart({
                   strokeDasharray="3 3"
                 />
                 <XAxis
-                  dataKey="date"
-                  tickLine={false}
                   axisLine={false}
-                  tickMargin={8}
+                  dataKey="date"
                   minTickGap={32}
                   tickFormatter={(value) => {
                     const date = new Date(value);
@@ -203,47 +201,49 @@ export function SessionsChart({
                       day: "numeric",
                     });
                   }}
+                  tickLine={false}
+                  tickMargin={8}
                 />
                 <ChartTooltip
-                  cursor={false}
                   content={
                     <ChartTooltipContent
+                      indicator="dot"
                       labelFormatter={(value) =>
                         new Date(value).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                         })
                       }
-                      indicator="dot"
                     />
                   }
+                  cursor={false}
                 />
                 {/* Total sessions area - dashed line */}
                 <Area
                   dataKey="total"
-                  type="linear"
                   fill="url(#fillTotal)"
+                  fillOpacity={0.3}
                   stroke="var(--color-total)"
                   strokeDasharray="5 5"
-                  fillOpacity={0.3}
+                  type="linear"
                 />
 
                 {/* Engaged sessions area */}
                 <Area
                   dataKey="engaged"
-                  type="linear"
                   fill="url(#fillEngaged)"
-                  stroke="var(--color-engaged)"
                   fillOpacity={0.6}
+                  stroke="var(--color-engaged)"
+                  type="linear"
                 />
 
                 {/* Bounced sessions area */}
                 <Area
                   dataKey="bounced"
-                  type="linear"
                   fill="url(#fillBounced)"
-                  stroke="var(--color-bounced)"
                   fillOpacity={0.6}
+                  stroke="var(--color-bounced)"
+                  type="linear"
                 />
 
                 <ChartLegend content={<ChartLegendContent />} />

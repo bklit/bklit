@@ -12,10 +12,10 @@ interface UsageCheckResult {
 }
 
 export async function checkEventLimit(
-  organizationId: string,
+  organizationId: string
 ): Promise<UsageCheckResult> {
   if (process.env.NODE_ENV === "development") {
-    return { allowed: true, currentUsage: 0, limit: Infinity };
+    return { allowed: true, currentUsage: 0, limit: Number.POSITIVE_INFINITY };
   }
 
   const organization = await prisma.organization.findUnique({
@@ -44,10 +44,10 @@ export async function checkEventLimit(
 
   // Check if any organization owner is super admin (bypasses limits)
   const hasSuperAdmin = organization.members.some(
-    (member) => member.user.role === "super_admin",
+    (member) => member.user.role === "super_admin"
   );
   if (hasSuperAdmin) {
-    return { allowed: true, currentUsage: 0, limit: Infinity };
+    return { allowed: true, currentUsage: 0, limit: Number.POSITIVE_INFINITY };
   }
 
   // Validate plan type and default to FREE if invalid
@@ -88,7 +88,7 @@ export async function checkEventLimit(
         console.error(`Error counting usage for project ${project.id}:`, error);
         return { pageviews: 0, trackedEvents: 0 };
       }
-    }),
+    })
   );
 
   // Sum up counts from all projects, handling failures gracefully
@@ -121,7 +121,7 @@ export async function checkEventLimit(
       });
 
       const activeSubscription = subscriptions?.result?.items?.[0];
-      const isCanceled = activeSubscription?.cancelAtPeriodEnd || false;
+      const isCanceled = activeSubscription?.cancelAtPeriodEnd;
 
       if (isCanceled && totalEvents >= eventLimit) {
         return {

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     if (!organizationId) {
       return NextResponse.json(
         { error: "Missing organizationId" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found or no access" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch subscription" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

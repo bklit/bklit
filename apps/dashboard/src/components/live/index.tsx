@@ -7,8 +7,8 @@ interface LiveProps {
 
 export const Live = ({ projectId, organizationId }: LiveProps) => {
   return (
-    <div className="container grid grid-cols-1 md:grid-cols-3 gap-4 mx-auto">
-      <LiveStatsCard projectId={projectId} organizationId={organizationId} />
+    <div className="container mx-auto grid grid-cols-1 gap-4 md:grid-cols-3">
+      <LiveStatsCard organizationId={organizationId} projectId={projectId} />
     </div>
   );
 };

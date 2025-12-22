@@ -39,22 +39,22 @@ export const BklitNewProjectEmail = ({
             ? `Your new project "${projectName}" has been created`
             : "Your new project has been created"}
         </Preview>
-        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
-          <div className="bg-black flex items-center justify-center rounded-lg overflow-clip">
+        <Container className="mx-auto max-w-480px px-8 pt-12 pb-12">
+          <div className="flex items-center justify-center overflow-clip rounded-lg bg-black">
             <Img
-              src={`${baseUrl}/react-email-header.jpg`}
               alt="Bklit"
-              width="100%"
               height="auto"
+              src={`${baseUrl}/react-email-header.jpg`}
+              width="100%"
             />
           </div>
 
-          <Text className="text-2xl font-semibold">
+          <Text className="font-semibold text-2xl">
             <strong>{username}</strong>, a new project was created on your
             account: <strong>{projectName}</strong>.
           </Text>
 
-          <Section className="p-4 border border-gray-200 rounded-md bg-white">
+          <Section className="rounded-md border border-gray-200 bg-white p-4">
             <Text className="text-left text-lg">
               Hey <strong>{username}</strong>!
             </Text>
@@ -63,7 +63,7 @@ export const BklitNewProjectEmail = ({
               the SDK:
             </Text>
 
-            <div className="bg-black text-gray-400 p-3 rounded-md my-2 font-mono text-xs">
+            <div className="my-2 rounded-md bg-black p-3 font-mono text-gray-400 text-xs">
               <code>
                 <span className="text-lime-200">npm install</span>{" "}
                 <span className="text-white">@bklit/sdk</span>
@@ -76,14 +76,14 @@ export const BklitNewProjectEmail = ({
 
             <Text className="text-left">
               See the{" "}
-              <Link href="https://docs.bklit.com/sdk" className="text-lime-500">
+              <Link className="text-lime-500" href="https://docs.bklit.com/sdk">
                 SDK documentation
               </Link>{" "}
               for more information.
             </Text>
 
             <Button
-              className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+              className="inline-block rounded-md bg-lime-500 px-5 py-3 text-center font-bold text-base text-white"
               href={`${baseUrl}?utm_source=email&utm_medium=email&utm_campaign=new-project&utm_content=cta-button`}
             >
               View your project
@@ -95,7 +95,7 @@ export const BklitNewProjectEmail = ({
               {links?.map((link) => (
                 <Column key={link.title}>
                   <Link
-                    className="text-xs font-bold text-black"
+                    className="font-bold text-black text-xs"
                     href={link.href}
                   >
                     {link.title}

@@ -56,7 +56,7 @@ export function SessionEventsTable({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -76,7 +76,7 @@ export function SessionEventsTable({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const trpc = useTRPC();
@@ -90,7 +90,7 @@ export function SessionEventsTable({
       endDate,
       page: paginationParams.page,
       limit: 10,
-    }),
+    })
   );
 
   if (isLoading) {
@@ -105,7 +105,7 @@ export function SessionEventsTable({
         <CardContent>
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={`skeleton-${i}`} className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" key={`skeleton-${i}`} />
             ))}
           </div>
         </CardContent>
@@ -123,7 +123,7 @@ export function SessionEventsTable({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             No events found for this tracking ID.
           </div>
         </CardContent>
@@ -180,15 +180,15 @@ export function SessionEventsTable({
                   </TableCell>
                   <TableCell>
                     {session.hasClick ? (
-                      <Badge variant="success" size="lg">
+                      <Badge size="lg" variant="success">
                         Clicked
                       </Badge>
                     ) : session.hasView ? (
-                      <Badge variant="secondary" size="lg">
+                      <Badge size="lg" variant="secondary">
                         Viewed
                       </Badge>
                     ) : (
-                      <Badge variant="outline" size="lg">
+                      <Badge size="lg" variant="outline">
                         -
                       </Badge>
                     )}
@@ -197,11 +197,11 @@ export function SessionEventsTable({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         {session.hasClick ? (
-                          <Badge variant="success" size="lg">
+                          <Badge size="lg" variant="success">
                             Yes
                           </Badge>
                         ) : (
-                          <Badge variant="outline" size="lg">
+                          <Badge size="lg" variant="outline">
                             No
                           </Badge>
                         )}
@@ -227,12 +227,12 @@ export function SessionEventsTable({
                       {browserIcon} {browser}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-right">
+                  <TableCell className="text-right text-muted-foreground">
                     {formatDistanceToNow(
                       new Date(session.lastEvent.timestamp),
                       {
                         addSuffix: true,
-                      },
+                      }
                     )}
                   </TableCell>
                 </TableRow>
@@ -247,6 +247,11 @@ export function SessionEventsTable({
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
+                    className={
+                      data.pagination.hasPreviousPage
+                        ? ""
+                        : "pointer-events-none opacity-50"
+                    }
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
@@ -254,17 +259,12 @@ export function SessionEventsTable({
                         handlePageChange(paginationParams.page - 1);
                       }
                     }}
-                    className={
-                      !data.pagination.hasPreviousPage
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
                   />
                 </PaginationItem>
 
                 {Array.from(
                   { length: data.pagination.totalPages },
-                  (_, i) => i + 1,
+                  (_, i) => i + 1
                 )
                   .filter((page) => {
                     const current = paginationParams.page;
@@ -289,11 +289,11 @@ export function SessionEventsTable({
                         <PaginationItem>
                           <PaginationLink
                             href="#"
+                            isActive={page === paginationParams.page}
                             onClick={(e) => {
                               e.preventDefault();
                               handlePageChange(page);
                             }}
-                            isActive={page === paginationParams.page}
                           >
                             {page}
                           </PaginationLink>
@@ -304,6 +304,11 @@ export function SessionEventsTable({
 
                 <PaginationItem>
                   <PaginationNext
+                    className={
+                      data.pagination.hasNextPage
+                        ? ""
+                        : "pointer-events-none opacity-50"
+                    }
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
@@ -311,11 +316,6 @@ export function SessionEventsTable({
                         handlePageChange(paginationParams.page + 1);
                       }
                     }}
-                    className={
-                      !data.pagination.hasNextPage
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
                   />
                 </PaginationItem>
               </PaginationContent>

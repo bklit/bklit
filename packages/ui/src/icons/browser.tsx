@@ -8,10 +8,10 @@ interface IconProps {
 export function BrowserIcon({ className, size = 16 }: IconProps) {
   return (
     <svg
-      height={size}
-      width={size}
-      viewBox="0 0 512 512"
       className={cn("icon", className)}
+      height={size}
+      viewBox="0 0 512 512"
+      width={size}
     >
       <title>Browser Icon</title>
       <path

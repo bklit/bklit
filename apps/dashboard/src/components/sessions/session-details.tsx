@@ -64,18 +64,18 @@ export function SessionDetails({
       sessionId,
       projectId,
       organizationId,
-    }),
+    })
   );
 
   if (isLoading) {
     return (
       <>
         <PageHeader
-          title="Session Details"
           description="Loading session details..."
+          title="Session Details"
         />
-        <div className="container mx-auto py-6 px-4 flex gap-4">
-          <div className="w-3/12 flex flex-col gap-4">
+        <div className="container mx-auto flex gap-4 px-4 py-6">
+          <div className="flex w-3/12 flex-col gap-4">
             <Card>
               <CardHeader>
                 <CardTitle>Session overview</CardTitle>
@@ -83,28 +83,28 @@ export function SessionDetails({
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Started
                     </span>
-                    <span className="text-sm font-medium">Loading...</span>
+                    <span className="font-medium text-sm">Loading...</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Duration
                     </span>
-                    <span className="text-sm font-medium">Loading...</span>
+                    <span className="font-medium text-sm">Loading...</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Pages Viewed
                     </span>
-                    <span className="text-sm font-medium">Loading...</span>
+                    <span className="font-medium text-sm">Loading...</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Status
                     </span>
-                    <span className="text-sm font-medium">Loading...</span>
+                    <span className="font-medium text-sm">Loading...</span>
                   </div>
                 </div>
               </CardContent>
@@ -116,7 +116,7 @@ export function SessionDetails({
                 <CardTitle>Page Flow</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">Loading session data...</div>
+                <div className="py-8 text-center">Loading session data...</div>
               </CardContent>
             </Card>
           </div>
@@ -128,10 +128,10 @@ export function SessionDetails({
   if (!sessionData) {
     return (
       <>
-        <PageHeader title="Session Details" description="Session not found" />
+        <PageHeader description="Session not found" title="Session Details" />
         <div className="container mx-auto">
           <Card>
-            <CardContent className="text-center py-8">
+            <CardContent className="py-8 text-center">
               <p className="text-muted-foreground">Session not found</p>
             </CardContent>
           </Card>
@@ -147,12 +147,12 @@ export function SessionDetails({
     <>
       {/* Header */}
       <PageHeader
-        title="Session Details"
         description={`${sessionData.project.name} • ${sessionData.project.domain}`}
+        title="Session Details"
       >
         <div className="flex items-center gap-2">
           <Link href={`/${organizationId}/${projectId}/sessions`}>
-            <Button variant="ghost" size="lg">
+            <Button size="lg" variant="ghost">
               <ArrowLeft />
               Back to Sessions
             </Button>
@@ -160,37 +160,37 @@ export function SessionDetails({
         </div>
       </PageHeader>
       <div className="container mx-auto flex gap-4">
-        <div className="flex flex-col sm:grid grid-cols-4 gap-4 w-full">
-          <div className="flex flex-col gap-4 col-span-1">
+        <div className="flex w-full grid-cols-4 flex-col gap-4 sm:grid">
+          <div className="col-span-1 flex flex-col gap-4">
             <Card>
               <CardHeader>
                 <CardTitle>Session overview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Started</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-muted-foreground text-sm">Started</span>
+                  <span className="font-medium text-sm">
                     {format(new Date(sessionData.startedAt), "PPp")}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm">
                     Duration
                   </span>
-                  <span className="text-sm font-medium">
+                  <span className="font-medium text-sm">
                     {formatDuration(sessionData.duration)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm">
                     Pages Viewed
                   </span>
-                  <span className="text-sm font-medium">
+                  <span className="font-medium text-sm">
                     {sessionData.pageViewEvents.length}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
+                  <span className="text-muted-foreground text-sm">Status</span>
                   <Badge
                     variant={sessionData.didBounce ? "destructive" : "default"}
                   >
@@ -199,22 +199,22 @@ export function SessionDetails({
                 </div>
                 <Separator />
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Browser</span>
-                  <span className="text-sm font-medium flex items-center gap-2">
+                  <span className="text-muted-foreground text-sm">Browser</span>
+                  <span className="flex items-center gap-2 font-medium text-sm">
                     {getBrowserIcon(browser)}
                     {browser}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Device</span>
-                  <span className="text-sm font-medium flex items-center gap-2">
+                  <span className="text-muted-foreground text-sm">Device</span>
+                  <span className="flex items-center gap-2 font-medium text-sm">
                     {getDeviceIcon(deviceType)}
                     {deviceType}
                   </span>
                 </div>
                 {sessionData.visitorId && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Visitor ID
                     </span>
                     <Kbd>
@@ -226,32 +226,32 @@ export function SessionDetails({
                 {sessionData.country ? (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         Country
                       </span>
-                      <span className="flex items-center gap-2 text-sm font-medium">
+                      <span className="flex items-center gap-2 font-medium text-sm">
                         <CircleFlag
+                          className="size-4"
                           countryCode={
                             getCountryCodeForFlag(sessionData.country) || "us"
                           }
-                          className="size-4"
                         />
                         {sessionData.country}
                       </span>
                     </div>
                     {sessionData.city && (
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-muted-foreground text-sm">
                           City
                         </span>
-                        <span className="text-sm font-medium">
+                        <span className="font-medium text-sm">
                           {sessionData.city}
                         </span>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-muted-foreground text-sm">
                     Location data not available
                   </div>
                 )}
@@ -272,40 +272,40 @@ export function SessionDetails({
                       country: string | null;
                       city: string | null;
                     },
-                    index: number,
+                    index: number
                   ) => {
                     const cleanURL = cleanUrl(
                       pageView.url,
-                      sessionData.project.domain,
+                      sessionData.project.domain
                     );
                     return (
                       <Fragment key={pageView.id}>
-                        <div className="flex items-center space-x-4 group/row">
-                          <div className="shrink-0 size-8 rounded-full text-bklit-100 flex items-center justify-center text-sm font-semibold bg-bklit-600 group-first/row:bg-teal-900 group-first/row:text-teal-500">
+                        <div className="group/row flex items-center space-x-4">
+                          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-bklit-600 font-semibold text-bklit-100 text-sm group-first/row:bg-teal-900 group-first/row:text-teal-500">
                             {index + 1}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-mono text-bklit-200 truncate">
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-mono text-bklit-200 text-sm">
                               {cleanURL}
                             </div>
                           </div>
                           {index === 0 && (
-                            <Badge variant="success" size="lg">
+                            <Badge size="lg" variant="success">
                               Entry
                             </Badge>
                           )}
                           {index === sessionData.pageViewEvents.length - 1 && (
-                            <Badge variant="destructive" size="lg">
+                            <Badge size="lg" variant="destructive">
                               Exit
                             </Badge>
                           )}
                         </div>
                         {index !== sessionData.pageViewEvents.length - 1 && (
-                          <div className="block w-0.5 h-2 bg-bklit-500 ml-3.5" />
+                          <div className="ml-3.5 block h-2 w-0.5 bg-bklit-500" />
                         )}
                       </Fragment>
                     );
-                  },
+                  }
                 )}
               </CardContent>
             </Card>

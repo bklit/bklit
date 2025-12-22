@@ -57,9 +57,9 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
     ...trpc.session.liveUserLocations.queryOptions(
       { projectId, organizationId },
       {
-        refetchInterval: 15000, // Poll every 15 seconds
-        staleTime: 10000,
-      },
+        refetchInterval: 15_000, // Poll every 15 seconds
+        staleTime: 10_000,
+      }
     ),
   });
 
@@ -131,14 +131,14 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
       height: size,
       data: new Uint8Array(size * size * 4),
 
-      onAdd: function () {
+      onAdd() {
         const canvas = document.createElement("canvas");
         canvas.width = this.width;
         canvas.height = this.height;
         this.context = canvas.getContext("2d");
       },
 
-      render: function () {
+      render() {
         const duration = 1000;
         const t = (performance.now() % duration) / duration;
 
@@ -156,7 +156,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
           this.height / 2,
           outerRadius,
           0,
-          Math.PI * 2,
+          Math.PI * 2
         );
         context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
         context.fill();
@@ -370,7 +370,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   // Function to center the map on a country
   const centerOnCountry = useCallback(
     (countryCode: string | null, countryName?: string | null) => {
-      if (!map.current || !countryCode) return;
+      if (!(map.current && countryCode)) return;
 
       // Try to find coordinates by country code first
       let coordinates = findCountryCoordinates(countryCode);
@@ -379,7 +379,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
       if (!coordinates && countryName) {
         const coordinatesList = getCountryCoordinates();
         const found = coordinatesList.find(
-          (coord) => coord.country.toLowerCase() === countryName.toLowerCase(),
+          (coord) => coord.country.toLowerCase() === countryName.toLowerCase()
         );
         if (found) {
           coordinates = found;
@@ -412,7 +412,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         }
       }, 2500);
     },
-    [],
+    []
   );
 
   // Register the center function with the context
@@ -433,18 +433,18 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   return (
     <>
       <div
+        className="absolute! inset-0! h-full! w-full! overflow-hidden rounded-lg"
         ref={mapContainer}
-        className="absolute! inset-0! w-full! h-full! rounded-lg overflow-hidden"
       >
         {projection && (
-          <div className="absolute inset-0 w-full h-full bg-bklit-700/50 mix-blend-color pointer-events-none" />
+          <div className="pointer-events-none absolute inset-0 h-full w-full bg-bklit-700/50 mix-blend-color" />
         )}
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CircleFlag countryCode={countryCode} className="size-5" />
+              <CircleFlag className="size-5" countryCode={countryCode} />
               {countryName}
             </DialogTitle>
             <DialogDescription>Live user information</DialogDescription>
@@ -454,32 +454,32 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
               <CardContent className="space-y-4 pt-4">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Country</span>
+                    <span className="font-medium text-sm">Country</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         {countryName}
                       </span>
                       <CircleFlag
-                        countryCode={countryCode}
                         className="size-4"
+                        countryCode={countryCode}
                       />
                     </div>
                   </div>
                   {selectedUser.city && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">City</span>
+                      <span className="font-medium text-sm">City</span>
                       <Badge variant="secondary">{selectedUser.city}</Badge>
                     </div>
                   )}
                   {selectedUser.deviceType && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Device type</span>
+                      <span className="font-medium text-sm">Device type</span>
                       {getDeviceIcon(selectedUser.deviceType || "")}
                     </div>
                   )}
                   {selectedUser.browser && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Browser</span>
+                      <span className="font-medium text-sm">Browser</span>
                       {getBrowserIcon(selectedUser.browser)}
                     </div>
                   )}
@@ -487,7 +487,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
                 <Separator />
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Session started
                     </span>
                     <Badge variant="secondary">
@@ -495,10 +495,10 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Status
                     </span>
-                    <Badge variant="success" size="lg">
+                    <Badge size="lg" variant="success">
                       Live
                     </Badge>
                   </div>

@@ -17,12 +17,12 @@ export default function Products() {
   return (
     <>
       <title>Playground Products | Bklit</title>
-      <div className="flex flex-col min-h-screen gap-16">
+      <div className="flex min-h-screen flex-col gap-16">
         <Header />
 
         <div className="space-y-4">
           <section className="container mx-auto max-w-6xl px-4">
-            <div className="flex gap-2 justify-between">
+            <div className="flex justify-between gap-2">
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
@@ -38,20 +38,20 @@ export default function Products() {
               </Breadcrumb>
               <div className="flex gap-2">
                 <Button
-                  disabled
-                  variant="secondary"
-                  size="lg"
                   className="cursor-pointer"
+                  disabled
+                  size="lg"
+                  variant="secondary"
                 >
-                  <FilterIcon className="w-4 h-4" /> Filters
+                  <FilterIcon className="h-4 w-4" /> Filters
                 </Button>
                 <Button
-                  disabled
-                  variant="secondary"
-                  size="lg"
                   className="cursor-pointer"
+                  disabled
+                  size="lg"
+                  variant="secondary"
                 >
-                  <ArrowDownAZIcon className="w-4 h-4" /> Sort
+                  <ArrowDownAZIcon className="h-4 w-4" /> Sort
                 </Button>
               </div>
             </div>

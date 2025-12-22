@@ -30,9 +30,9 @@ const themeConfig: Record<Theme, ThemeColors> = {
 };
 
 export function getOrganizationTheme(
-  theme: string | null | undefined,
+  theme: string | null | undefined
 ): ThemeColors {
-  if (!theme || !(theme in themeConfig)) {
+  if (!(theme && theme in themeConfig)) {
     // Default to spring theme
     return themeConfig.spring;
   }

@@ -5,10 +5,10 @@ async function verifyData() {
 
   console.log("🔍 Verifying ClickHouse data...\n");
   console.log(
-    `⏰ Server Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
+    `⏰ Server Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`
   );
   console.log(
-    `⏰ Current Server Time: ${new Date().toLocaleString()} (UTC: ${new Date().toISOString()})\n`,
+    `⏰ Current Server Time: ${new Date().toLocaleString()} (UTC: ${new Date().toISOString()})\n`
   );
 
   try {
@@ -17,7 +17,7 @@ async function verifyData() {
     console.log("─".repeat(50));
 
     const pageViewCount = await client.query({
-      query: `SELECT count() as count FROM page_view_event`,
+      query: "SELECT count() as count FROM page_view_event",
       format: "JSONEachRow",
     });
     const pageViewRows = (await pageViewCount.json()) as Array<{
@@ -26,7 +26,7 @@ async function verifyData() {
     console.log(`Page Views: ${pageViewRows[0]?.count || 0}`);
 
     const sessionCount = await client.query({
-      query: `SELECT count() as count FROM tracked_session`,
+      query: "SELECT count() as count FROM tracked_session",
       format: "JSONEachRow",
     });
     const sessionRows = (await sessionCount.json()) as Array<{ count: number }>;
@@ -50,7 +50,7 @@ async function verifyData() {
     console.log(`Unique Sessions: ${uniqueSessionRows[0]?.count || 0}`);
 
     const eventCount = await client.query({
-      query: `SELECT count() as count FROM tracked_event`,
+      query: "SELECT count() as count FROM tracked_event",
       format: "JSONEachRow",
     });
     const eventRows = (await eventCount.json()) as Array<{ count: number }>;
@@ -110,15 +110,15 @@ async function verifyData() {
         const updatedAt = new Date(session.updated_at);
         console.log(`\n${index + 1}. Session: ${session.session_id}`);
         console.log(
-          `   Started: ${startedAt.toLocaleString()} (UTC: ${startedAt.toISOString()})`,
+          `   Started: ${startedAt.toLocaleString()} (UTC: ${startedAt.toISOString()})`
         );
         console.log(
-          `   Updated: ${updatedAt.toLocaleString()} (UTC: ${updatedAt.toISOString()})`,
+          `   Updated: ${updatedAt.toLocaleString()} (UTC: ${updatedAt.toISOString()})`
         );
         console.log(`   Entry: ${session.entry_page}`);
         console.log(`   Exit: ${session.exit_page || "N/A"}`);
         console.log(
-          `   Location: ${session.city || "N/A"}, ${session.country || "N/A"}`,
+          `   Location: ${session.city || "N/A"}, ${session.country || "N/A"}`
         );
         console.log(`   Project: ${session.project_id}`);
       });
@@ -163,7 +163,7 @@ async function verifyData() {
         console.log(`\n${index + 1}. Page View: ${pv.id}`);
         console.log(`   URL: ${pv.url}`);
         console.log(
-          `   Time: ${timestamp.toLocaleString()} (UTC: ${timestamp.toISOString()})`,
+          `   Time: ${timestamp.toLocaleString()} (UTC: ${timestamp.toISOString()})`
         );
         console.log(`   Session: ${pv.session_id || "N/A"}`);
         console.log(`   Location: ${pv.city || "N/A"}, ${pv.country || "N/A"}`);
@@ -206,7 +206,7 @@ async function verifyData() {
     } else {
       projectStats.forEach((stat) => {
         console.log(
-          `Project ${stat.project_id}: ${stat.unique_sessions} total, ${stat.active_sessions} active`,
+          `Project ${stat.project_id}: ${stat.unique_sessions} total, ${stat.active_sessions} active`
         );
       });
     }

@@ -37,7 +37,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -95,7 +95,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
             Loading chart...
           </div>
         </CardContent>
@@ -113,7 +113,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
             No data available
           </div>
         </CardContent>
@@ -132,21 +132,21 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <div className="flex flex-col sm:grid sm:grid-cols-4 gap-4">
+        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
-              mobile={statsData?.mobileEvents || 0}
               desktop={statsData?.desktopEvents || 0}
+              mobile={statsData?.mobileEvents || 0}
             />
           </div>
-          <div className="col-span-3 ">
+          <div className="col-span-3">
             <ChartContainer
-              config={chartConfig}
               className="aspect-auto h-[250px] w-full"
+              config={chartConfig}
             >
               <AreaChart data={timeSeriesData.timeSeriesData}>
                 <defs>
-                  <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillTotal" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-total)"
@@ -158,7 +158,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
                       stopOpacity={0.1}
                     />
                   </linearGradient>
-                  <linearGradient id="fillViews" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillViews" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-views)"
@@ -170,7 +170,7 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
                       stopOpacity={0.1}
                     />
                   </linearGradient>
-                  <linearGradient id="fillClicks" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillClicks" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-clicks)"
@@ -188,10 +188,8 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
                   strokeDasharray="3 3"
                 />
                 <XAxis
-                  dataKey="date"
-                  tickLine={false}
                   axisLine={false}
-                  tickMargin={8}
+                  dataKey="date"
                   minTickGap={32}
                   tickFormatter={(value) => {
                     const date = new Date(value);
@@ -200,47 +198,49 @@ export function EventsChart({ organizationId, projectId }: EventsChartProps) {
                       day: "numeric",
                     });
                   }}
+                  tickLine={false}
+                  tickMargin={8}
                 />
                 <ChartTooltip
-                  cursor={false}
                   content={
                     <ChartTooltipContent
+                      indicator="dot"
                       labelFormatter={(value) =>
                         new Date(value).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                         })
                       }
-                      indicator="dot"
                     />
                   }
+                  cursor={false}
                 />
 
                 {/* Total events area - dashed line */}
                 <Area
                   dataKey="total"
-                  type="linear"
                   fill="url(#fillTotal)"
+                  fillOpacity={0.3}
                   stroke="var(--color-total)"
                   strokeDasharray="5 5"
-                  fillOpacity={0.3}
+                  type="linear"
                 />
 
                 {/* Views area */}
                 <Area
                   dataKey="views"
-                  type="linear"
                   fill="url(#fillViews)"
-                  stroke="var(--color-views)"
                   fillOpacity={0.6}
+                  stroke="var(--color-views)"
+                  type="linear"
                 />
                 {/* Clicks area */}
                 <Area
                   dataKey="clicks"
-                  type="linear"
                   fill="url(#fillClicks)"
-                  stroke="var(--color-clicks)"
                   fillOpacity={0.6}
+                  stroke="var(--color-clicks)"
+                  type="linear"
                 />
 
                 <ChartLegend content={<ChartLegendContent />} />

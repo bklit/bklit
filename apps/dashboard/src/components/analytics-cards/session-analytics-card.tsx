@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
@@ -13,7 +12,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import {
   getBrowserFromUserAgent,
@@ -48,7 +46,7 @@ export function SessionAnalyticsCard({
       limit: 10,
       startDate,
       endDate: undefined, // No end date - show all recent sessions
-    }),
+    })
   );
 
   const sessions = sessionsData?.sessions || [];
@@ -61,8 +59,8 @@ export function SessionAnalyticsCard({
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -72,8 +70,8 @@ export function SessionAnalyticsCard({
   if (sessions.length === 0) {
     return (
       <NoDataCard
-        title="Recent Sessions"
         description="The most recent sessions."
+        title="Recent Sessions"
       />
     );
   }
@@ -94,7 +92,7 @@ export function SessionAnalyticsCard({
       <CardContent>
         <div className="flex flex-col">
           {sessions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
+            <p className="py-4 text-center text-muted-foreground text-sm">
               No sessions found
             </p>
           ) : (
@@ -103,9 +101,9 @@ export function SessionAnalyticsCard({
               const deviceType = getDeviceTypeFromUserAgent(session.userAgent);
               return (
                 <Link
-                  key={session.id}
+                  className="flex items-center justify-between border-b px-2 py-1.5 transition-colors last-of-type:border-b-0 hover:bg-accent/50"
                   href={`/${organizationId || ""}/${projectId}/sessions/${session.id}`}
-                  className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
+                  key={session.id}
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-3">
@@ -118,12 +116,12 @@ export function SessionAnalyticsCard({
                       </span>
                     </div>
                   </div>
-                  <div className="gap-2 text-xs text-muted-foreground">
+                  <div className="gap-2 text-muted-foreground text-xs">
                     {formatDistanceToNow(
                       session.updatedAt || session.startedAt,
                       {
                         addSuffix: true,
-                      },
+                      }
                     )}
                   </div>
                 </Link>

@@ -68,29 +68,29 @@ function LoginPage() {
     return (
       <div className="flex flex-col gap-6">
         <div className="text-center">
-          <h1 className="text-2xl font-normal">
+          <h1 className="font-normal text-2xl">
             Log in to <span className="font-bold">Bklit</span>
           </h1>
           {invited && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="mt-2 text-muted-foreground text-sm">
               You've been invited to join a team on Bklit
             </p>
           )}
         </div>
         {invited && (
-          <div className="text-center p-4 bg-muted rounded-lg">
-            <p className="text-sm text-foreground">
+          <div className="rounded-lg bg-muted p-4 text-center">
+            <p className="text-foreground text-sm">
               Sign in or create an account to view your invitation
             </p>
           </div>
         )}
 
         <form
+          className="flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="flex flex-col gap-4"
         >
           <FieldGroup className="flex flex-col gap-3">
             <form.Field name="email">
@@ -99,20 +99,20 @@ function LoginPage() {
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name} className="sr-only">
+                    <FieldLabel className="sr-only" htmlFor={field.name}>
                       Email
                     </FieldLabel>
                     <Input
-                      id={field.name}
-                      name={field.name}
-                      type="email"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
-                      placeholder="Email"
                       autoComplete="email"
                       disabled={isLoading}
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Email"
+                      type="email"
+                      value={field.state.value}
                     />
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
@@ -127,20 +127,20 @@ function LoginPage() {
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name} className="sr-only">
+                    <FieldLabel className="sr-only" htmlFor={field.name}>
                       Password
                     </FieldLabel>
                     <Input
-                      id={field.name}
-                      name={field.name}
-                      type="password"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
-                      placeholder="Password"
                       autoComplete="current-password"
                       disabled={isLoading}
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Password"
+                      type="password"
+                      value={field.state.value}
                     />
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
@@ -153,37 +153,37 @@ function LoginPage() {
 
           <div className="text-right">
             <Link
+              className="text-muted-foreground text-sm transition-all hover:text-primary"
               href="/forgot-password"
-              className="text-sm text-muted-foreground hover:text-primary transition-all"
             >
               Forgot password?
             </Link>
           </div>
 
           <Button
-            type="submit"
-            size="lg"
-            variant="secondary"
             className="w-full"
             disabled={isLoading || form.state.isSubmitting}
+            size="lg"
+            type="submit"
+            variant="secondary"
           >
             {isLoading || form.state.isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
         </form>
 
-        <div className="text-center space-y-3">
+        <div className="space-y-3 text-center">
           <button
-            type="button"
+            className="cursor-pointer text-muted-foreground text-sm transition-all hover:text-primary"
             onClick={() => setShowEmailForm(false)}
-            className="text-sm text-muted-foreground hover:text-primary transition-all cursor-pointer"
+            type="button"
           >
             Use another method
           </button>
-          <p className="text-sm font-normal text-muted-foreground">
+          <p className="font-normal text-muted-foreground text-sm">
             Don't have an account?{" "}
             <Link
+              className="text-card-foreground transition-all hover:text-primary"
               href="/signup"
-              className="text-card-foreground hover:text-primary transition-all"
             >
               Sign up
             </Link>
@@ -196,18 +196,18 @@ function LoginPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <h1 className="text-2xl font-normal">
+        <h1 className="font-normal text-2xl">
           Log in to <span className="font-bold">Bklit</span>
         </h1>
         {invited && (
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground text-sm">
             You've been invited to join a team on Bklit
           </p>
         )}
       </div>
       {invited && (
-        <div className="text-center p-4 bg-muted rounded-lg">
-          <p className="text-sm text-foreground">
+        <div className="rounded-lg bg-muted p-4 text-center">
+          <p className="text-foreground text-sm">
             Sign in or create an account to view your invitation
           </p>
         </div>
@@ -215,9 +215,9 @@ function LoginPage() {
 
       <div className="flex flex-col gap-3">
         <Button
+          className="w-full"
           onClick={() => setShowEmailForm(true)}
           size="lg"
-          className="w-full"
           variant="secondary"
         >
           Continue with Email
@@ -236,6 +236,7 @@ function LoginPage() {
 
         <div className="flex flex-col gap-3">
           <Button
+            className="w-full gap-2"
             onClick={() =>
               authClient.signIn.social({
                 provider: "github",
@@ -243,22 +244,21 @@ function LoginPage() {
               })
             }
             size="lg"
-            className="w-full gap-2"
             variant="mono"
           >
             <GitHubIcon className="size-5" />
             Continue with GitHub
           </Button>
           <Button
+            className="w-full gap-2"
             onClick={() =>
               authClient.signIn.social({
                 provider: "google",
                 callbackURL: callbackUrl,
               })
             }
-            variant="outline"
             size="lg"
-            className="w-full gap-2"
+            variant="outline"
           >
             <GoogleIcon className="size-5" />
             Continue with Google
@@ -267,11 +267,11 @@ function LoginPage() {
       </div>
 
       <div className="text-center">
-        <p className="text-sm font-normal text-muted-foreground">
+        <p className="font-normal text-muted-foreground text-sm">
           Don't have an account?{" "}
           <Link
+            className="text-card-foreground transition-all hover:text-primary"
             href="/signup"
-            className="text-card-foreground hover:text-primary transition-all"
           >
             Sign up
           </Link>

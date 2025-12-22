@@ -12,7 +12,7 @@ export const emailRouter = createTRPCRouter({
         text: z.string().optional(),
         from: z.string().email().optional(),
         react: z.any().optional(),
-      }),
+      })
     )
     .mutation(async ({ input }) => {
       const result = await sendEmail({

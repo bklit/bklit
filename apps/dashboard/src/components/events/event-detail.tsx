@@ -72,7 +72,7 @@ export function EventDetail({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -92,7 +92,7 @@ export function EventDetail({
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   const timelineChartConfig = {
@@ -127,13 +127,13 @@ export function EventDetail({
       : "0";
 
   // Show empty state if no event found and not loading
-  if (!event && !isLoading) {
+  if (!(event || isLoading)) {
     return (
       <>
-        <PageHeader title="Event Not Found" description="">
+        <PageHeader description="" title="Event Not Found">
           <div className="flex items-center gap-2">
             <Link href={`/${organizationId}/${projectId}/events`}>
-              <Button variant="ghost" size="lg">
+              <Button size="lg" variant="ghost">
                 <ArrowLeft />
                 Back to Events
               </Button>
@@ -162,12 +162,12 @@ export function EventDetail({
   return (
     <>
       <PageHeader
-        title={event?.name || "Loading..."}
         description={event?.description || "Event analytics and details"}
+        title={event?.name || "Loading..."}
       >
         <div className="flex items-center gap-2">
           <Link href={`/${organizationId}/${projectId}/events`}>
-            <Button variant="ghost" size="lg">
+            <Button size="lg" variant="ghost">
               <ArrowLeft />
               Back to Events
             </Button>
@@ -177,38 +177,38 @@ export function EventDetail({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="secondary" size="lg">
+              <Button size="lg" variant="secondary">
                 <SquareCode className="size-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-fit max-w-[300px]"
               align="end"
+              className="w-fit max-w-[300px]"
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="mt-2 text-muted-foreground text-xs">
                   All interaction types (click, impression, hover) are tracked
                   automatically!
                 </p>
                 <div>
-                  <p className="text-sm font-medium mb-2">Data attribute:</p>
+                  <p className="mb-2 font-medium text-sm">Data attribute:</p>
                   <CopyInput
                     value={`<button data-bklit-event="${trackingId}">Click Me</button>`}
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">ID attribute:</p>
+                  <p className="mb-2 font-medium text-sm">ID attribute:</p>
                   <CopyInput
                     value={`<button id="bklit-event-${trackingId}">Click Me</button>`}
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">Programmatic (JS):</p>
+                  <p className="mb-2 font-medium text-sm">Programmatic (JS):</p>
                   <CopyInput
                     value={`window.trackEvent("${trackingId}", "custom_event");`}
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="mt-2 text-muted-foreground text-xs">
                     Programmatic events are triggered via code (e.g. SDK calls).
                   </p>
                 </div>
@@ -245,7 +245,7 @@ export function EventDetail({
           ]}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Timeline Chart */}
           <Card>
             <CardHeader>
@@ -256,8 +256,8 @@ export function EventDetail({
             </CardHeader>
             <CardContent className="relative">
               {event && event.timeSeriesData.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+                  <p className="text-muted-foreground text-sm">
                     No data available
                   </p>
                 </div>
@@ -268,7 +268,7 @@ export function EventDetail({
                   margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
                 >
                   <defs>
-                    <linearGradient id="fillViews" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="fillViews" x1="0" x2="0" y1="0" y2="1">
                       <stop
                         offset="5%"
                         stopColor="var(--color-views)"
@@ -280,7 +280,7 @@ export function EventDetail({
                         stopOpacity={0.1}
                       />
                     </linearGradient>
-                    <linearGradient id="fillClicks" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="fillClicks" x1="0" x2="0" y1="0" y2="1">
                       <stop
                         offset="5%"
                         stopColor="var(--color-clicks)"
@@ -299,10 +299,9 @@ export function EventDetail({
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <XAxis
-                    dataKey="date"
-                    tickLine={false}
                     axisLine={false}
-                    tickMargin={8}
+                    dataKey="date"
+                    interval="preserveStartEnd"
                     tickFormatter={(value) => {
                       const date = new Date(value);
                       return date.toLocaleDateString("en-US", {
@@ -310,23 +309,24 @@ export function EventDetail({
                         day: "numeric",
                       });
                     }}
-                    interval="preserveStartEnd"
+                    tickLine={false}
+                    tickMargin={8}
                   />
                   <Area
                     dataKey="views"
-                    type="natural"
                     fill="url(#fillViews)"
                     fillOpacity={0.4}
-                    stroke="var(--color-views)"
                     stackId="a"
+                    stroke="var(--color-views)"
+                    type="natural"
                   />
                   <Area
                     dataKey="clicks"
-                    type="natural"
                     fill="url(#fillClicks)"
                     fillOpacity={0.4}
-                    stroke="var(--color-clicks)"
                     stackId="a"
+                    stroke="var(--color-clicks)"
+                    type="natural"
                   />
                   <ChartLegend
                     content={<ChartLegendContent />}
@@ -345,21 +345,21 @@ export function EventDetail({
                 Sessions with vs without this event
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex justify-center relative">
+            <CardContent className="relative flex justify-center">
               {event && event.totalSessions === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+                  <p className="text-muted-foreground text-sm">
                     No session data available
                   </p>
                 </div>
               )}
               <PieDonut
-                data={conversionData}
-                variant="positive-negative"
                 centerLabel={{ showTotal: true, suffix: "sessions" }}
+                className="min-h-[250px] w-full"
+                data={conversionData}
                 innerRadius={46}
                 outerRadius={80}
-                className="min-h-[250px] w-full"
+                variant="positive-negative"
               />
             </CardContent>
           </Card>

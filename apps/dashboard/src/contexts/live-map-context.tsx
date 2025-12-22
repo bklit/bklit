@@ -5,10 +5,10 @@ import { createContext, type ReactNode, useContext, useRef } from "react";
 interface LiveMapContextValue {
   centerOnCountry: (
     countryCode: string | null,
-    countryName?: string | null,
+    countryName?: string | null
   ) => void;
   registerCenterFunction: (
-    fn: (countryCode: string | null, countryName?: string | null) => void,
+    fn: (countryCode: string | null, countryName?: string | null) => void
   ) => void;
 }
 
@@ -20,14 +20,14 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
   >(null);
 
   const registerCenterFunction = (
-    fn: (countryCode: string | null, countryName?: string | null) => void,
+    fn: (countryCode: string | null, countryName?: string | null) => void
   ) => {
     centerFunctionRef.current = fn;
   };
 
   const centerOnCountry = (
     countryCode: string | null,
-    countryName?: string | null,
+    countryName?: string | null
   ) => {
     if (centerFunctionRef.current) {
       centerFunctionRef.current(countryCode, countryName);

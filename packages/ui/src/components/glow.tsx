@@ -29,7 +29,7 @@ export interface GlowAreaProps extends ComponentPropsWithoutRef<"div"> {
 const parseGlowPosition = (
   position: GlowPosition,
   width: number,
-  height: number,
+  height: number
 ): { x: number; y: number } => {
   const [vertical, horizontal] = position.split(" ");
 
@@ -193,6 +193,9 @@ export const GlowArea = (props: GlowAreaProps) => {
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: <It's a static element>
     <div
+      className={cn(className, "")}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
       ref={element}
       style={
         {
@@ -200,9 +203,6 @@ export const GlowArea = (props: GlowAreaProps) => {
           "--glow-size": `${size}px`,
         } as CSSProperties
       }
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={cn(className, "")}
       {...rest}
     />
   );
@@ -221,18 +221,22 @@ export const Glow = (props: GlowProps) => {
   useEffect(() => {
     element.current?.style.setProperty(
       "--glow-top",
-      `${element.current?.offsetTop}px`,
+      `${element.current?.offsetTop}px`
     );
     element.current?.style.setProperty(
       "--glow-left",
-      `${element.current?.offsetLeft}px`,
+      `${element.current?.offsetLeft}px`
     );
   }, []);
 
   return (
-    <div ref={element} className={cn(className, "relative")}>
+    <div className={cn(className, "relative")} ref={element}>
       <div
         {...rest}
+        className={cn(
+          className,
+          "pointer-events-none absolute inset-0 mix-blend-multiply after:absolute after:inset-0.25 after:rounded-[inherit] after:bg-background/90 after:content-[''] dark:mix-blend-lighten"
+        )}
         style={{
           backgroundImage: `radial-gradient(
             var(--glow-size) var(--glow-size) at calc(var(--glow-x, -99999px) - var(--glow-left, 0px))
@@ -241,11 +245,7 @@ export const Glow = (props: GlowProps) => {
             transparent 100%
           )`,
         }}
-        className={cn(
-          className,
-          "absolute pointer-events-none inset-0 dark:mix-blend-lighten mix-blend-multiply after:content-[''] after:absolute after:bg-background/90 after:inset-0.25 after:rounded-[inherit]",
-        )}
-      ></div>
+      />
       {children}
     </div>
   );

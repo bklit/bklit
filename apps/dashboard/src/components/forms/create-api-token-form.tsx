@@ -55,7 +55,7 @@ export function CreateApiTokenForm({
   const [createdToken, setCreatedToken] = useState<string | null>(null);
 
   const { data: organization } = useQuery(
-    trpc.organization.fetch.queryOptions({ id: organizationId }),
+    trpc.organization.fetch.queryOptions({ id: organizationId })
   );
 
   const createToken = useMutation(
@@ -74,7 +74,7 @@ export function CreateApiTokenForm({
       onError: (error) => {
         toast.error(`Failed to create token: ${error.message}`);
       },
-    }),
+    })
   );
 
   const form = useForm({
@@ -128,9 +128,9 @@ export function CreateApiTokenForm({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={isOpen}>
       <DialogContent className="sm:max-w-[600px]">
-        <FormPermissions requiredRole={MemberRole.ADMIN} inModal>
+        <FormPermissions inModal requiredRole={MemberRole.ADMIN}>
           <DialogHeader>
             <DialogTitle>Create API Token</DialogTitle>
             <DialogDescription>
@@ -141,8 +141,8 @@ export function CreateApiTokenForm({
           {createdToken ? (
             <div className="space-y-4 py-4">
               <div className="rounded-lg bg-muted p-4">
-                <p className="mb-2 text-sm font-medium">Your API Token</p>
-                <p className="mb-4 text-xs text-muted-foreground">
+                <p className="mb-2 font-medium text-sm">Your API Token</p>
+                <p className="mb-4 text-muted-foreground text-xs">
                   Copy this token now. You won&apos;t be able to see it again!
                 </p>
                 <CopyInput value={createdToken} />
@@ -153,12 +153,12 @@ export function CreateApiTokenForm({
             </div>
           ) : (
             <form
+              className="space-y-4"
               id="create-api-token-form"
               onSubmit={(e) => {
                 e.preventDefault();
                 form.handleSubmit();
               }}
-              className="space-y-4"
             >
               <FieldGroup>
                 <form.Field name="name">
@@ -169,14 +169,14 @@ export function CreateApiTokenForm({
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>Name</FieldLabel>
                         <Input
+                          aria-invalid={isInvalid}
+                          autoComplete="off"
                           id={field.name}
                           name={field.name}
-                          value={field.state.value}
                           onBlur={field.handleBlur}
                           onChange={(e) => field.handleChange(e.target.value)}
-                          aria-invalid={isInvalid}
                           placeholder="Production Token"
-                          autoComplete="off"
+                          value={field.state.value}
                         />
                         <FieldDescription>
                           A descriptive name for this token.
@@ -199,11 +199,11 @@ export function CreateApiTokenForm({
                         <Textarea
                           id={field.name}
                           name={field.name}
-                          value={field.state.value}
                           onBlur={field.handleBlur}
                           onChange={(e) => field.handleChange(e.target.value)}
                           placeholder="Token for production environment"
                           rows={3}
+                          value={field.state.value}
                         />
                         <FieldDescription>
                           An optional description for this token.
@@ -223,11 +223,11 @@ export function CreateApiTokenForm({
                         <Textarea
                           id={field.name}
                           name={field.name}
-                          value={field.state.value}
                           onBlur={field.handleBlur}
                           onChange={(e) => field.handleChange(e.target.value)}
                           placeholder="example.com&#10;www.example.com&#10;app.example.com"
                           rows={3}
+                          value={field.state.value}
                         />
                         <FieldDescription>
                           Restrict this token to specific domains. Enter one
@@ -252,20 +252,20 @@ export function CreateApiTokenForm({
                         </FieldDescription>
                         <div className="space-y-2 rounded-md border p-4">
                           {organization?.projects?.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-muted-foreground text-sm">
                               No projects available. Create a project first.
                             </p>
                           ) : (
                             organization?.projects?.map((project) => (
                               <label
+                                className="flex cursor-pointer items-center space-x-2"
                                 key={project.id}
-                                className="flex items-center space-x-2 cursor-pointer"
                               >
                                 <input
-                                  type="checkbox"
                                   checked={field.state.value.includes(
-                                    project.id,
+                                    project.id
                                   )}
+                                  className="rounded border-gray-300"
                                   onChange={(e) => {
                                     const current = field.state.value;
                                     if (e.target.checked) {
@@ -276,12 +276,12 @@ export function CreateApiTokenForm({
                                     } else {
                                       field.handleChange(
                                         current.filter(
-                                          (id) => id !== project.id,
-                                        ),
+                                          (id) => id !== project.id
+                                        )
                                       );
                                     }
                                   }}
-                                  className="rounded border-gray-300"
+                                  type="checkbox"
                                 />
                                 <span className="text-sm">{project.name}</span>
                               </label>
@@ -303,16 +303,16 @@ export function CreateApiTokenForm({
             {!createdToken && (
               <>
                 <Button
-                  variant="outline"
-                  onClick={handleClose}
                   disabled={createToken.isPending}
+                  onClick={handleClose}
+                  variant="outline"
                 >
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
-                  form="create-api-token-form"
                   disabled={createToken.isPending}
+                  form="create-api-token-form"
+                  type="submit"
                 >
                   {createToken.isPending ? "Creating..." : "Create Token"}
                 </Button>

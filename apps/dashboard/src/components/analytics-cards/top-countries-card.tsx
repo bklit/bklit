@@ -26,7 +26,7 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -58,8 +58,8 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -69,8 +69,8 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
   if (!topCountries || topCountries.length === 0) {
     return (
       <NoDataCard
-        title="Top Countries"
         description="Top countries by page views."
+        title="Top Countries"
       />
     );
   }
@@ -78,7 +78,7 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
   const top10 = topCountries.slice(0, 10);
   const totalTop10Views = top10.reduce(
     (sum, c) => sum + (Number(c.views) || 0),
-    0,
+    0
   );
 
   return (
@@ -96,16 +96,16 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
                 : 0;
             return (
               <ProgressRow
-                key={country.countryCode}
-                label={country.country || "Unknown"}
-                value={country.views}
-                percentage={percentage}
                 icon={
                   <CircleFlag
-                    countryCode={country.countryCode?.toLowerCase() || "us"}
                     className="size-4"
+                    countryCode={country.countryCode?.toLowerCase() || "us"}
                   />
                 }
+                key={country.countryCode}
+                label={country.country || "Unknown"}
+                percentage={percentage}
+                value={country.views}
               />
             );
           })}

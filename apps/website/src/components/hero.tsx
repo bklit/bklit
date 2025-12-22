@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@bklit/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -31,42 +30,42 @@ export const Hero = () => {
     setIsPlaying(false);
   };
   return (
-    <div className="container mx-auto max-w-6xl flex flex-col px-4">
-      <div className="flex flex-col items-center justify-center text-center w-full space-y-6 pt-26 sm:pt-48">
-        <div className="hidden sm:flex items-center justify-center w-36 aspect-square bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl sm:rounded-[300px] squircle">
+    <div className="container mx-auto flex max-w-6xl flex-col px-4">
+      <div className="flex w-full flex-col items-center justify-center space-y-6 pt-26 text-center sm:pt-48">
+        <div className="squircle hidden aspect-square w-36 items-center justify-center rounded-4xl bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 sm:flex sm:rounded-[300px]">
           <BklitLogo size={90} variant="color" />
         </div>
-        <h1 className="text-3xl md:text-6xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
+        <h1 className="from-amber-100 to-emerald-100 font-regular text-3xl leading-tight md:text-6xl dark:bg-linear-to-b dark:bg-clip-text dark:text-transparent">
           Analytics for everyone
         </h1>
-        <p className="text-xl font-medium dark:text-white dark:text-shadow-sm">
+        <p className="font-medium text-xl dark:text-shadow-sm dark:text-white">
           Track everything with 4 lines of code
         </p>
 
         <div className="flex items-center justify-center">
-          <Dialog open={isPlaying} onOpenChange={setIsPlaying}>
+          <Dialog onOpenChange={setIsPlaying} open={isPlaying}>
             <DialogTrigger asChild>
               <button
-                type="button"
+                className="squircle z-10 flex size-18 cursor-pointer items-center justify-center rounded-3xl bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 shadow-xl transition-all duration-300 hover:scale-110 sm:rounded-[300px]"
                 onClick={handlePlay}
-                className="flex items-center justify-center cursor-pointer size-18 bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-3xl sm:rounded-[300px] squircle transition-all duration-300 z-10 shadow-xl hover:scale-110"
+                type="button"
               >
-                <Play size={32} strokeWidth={1.5} className="text-black" />
+                <Play className="text-black" size={32} strokeWidth={1.5} />
               </button>
             </DialogTrigger>
-            <DialogContent className="p-0 min-w-5xl aspect-video border-t-0">
+            <DialogContent className="aspect-video min-w-5xl border-t-0 p-0">
               <DialogHeader className="sr-only">
                 <DialogTitle>Bklit Demo</DialogTitle>
               </DialogHeader>
               <video
+                autoPlay
+                className="h-full w-full object-cover"
+                loop
+                muted
+                onPause={handlePauseEvent}
+                onPlay={handlePlayEvent}
                 ref={videoRef}
                 src="/demo.mp4"
-                autoPlay
-                muted
-                loop
-                className="w-full h-full object-cover"
-                onPlay={handlePlayEvent}
-                onPause={handlePauseEvent}
               />
             </DialogContent>
           </Dialog>

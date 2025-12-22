@@ -13,7 +13,7 @@ export function calculateDaysUntil(date: Date): number {
   return diffDays;
 }
 
-export function formatPrice(amount: number, currency: string = "usd"): string {
+export function formatPrice(amount: number, currency = "usd"): string {
   // Amount from Polar is in cents, convert to dollars
   const dollars = amount / 100;
 

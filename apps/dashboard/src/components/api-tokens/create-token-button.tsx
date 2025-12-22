@@ -22,12 +22,12 @@ export function CreateTokenButton({ organizationId }: CreateTokenButtonProps) {
       </Button>
 
       <CreateApiTokenForm
-        organizationId={organizationId}
         isOpen={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onSuccess={() => {
           router.refresh();
         }}
+        organizationId={organizationId}
       />
     </>
   );

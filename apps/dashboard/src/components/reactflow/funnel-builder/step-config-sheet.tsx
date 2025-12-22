@@ -18,7 +18,6 @@ import {
   EmptyTitle,
 } from "@bklit/ui/components/empty";
 import {
-  Field,
   FieldDescription,
   FieldError,
   FieldGroup,
@@ -85,7 +84,7 @@ export function StepConfigSheet({
   organizationId,
 }: StepConfigSheetProps) {
   const [activeTab, setActiveTab] = useState<StepType>(
-    initialData?.type || "pageview",
+    initialData?.type || "pageview"
   );
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [copiedEvent, setCopiedEvent] = useState<string | null>(null);
@@ -97,7 +96,7 @@ export function StepConfigSheet({
     trpc.event.list.queryOptions({
       projectId,
       organizationId,
-    }),
+    })
   );
 
   const form = useForm({
@@ -119,7 +118,7 @@ export function StepConfigSheet({
         });
       } else {
         const selectedEvent = events?.find(
-          (e) => e.trackingId === value.eventName,
+          (e) => e.trackingId === value.eventName
         );
         if (!selectedEvent) {
           form.setFieldMeta("eventName", (prev) => ({
@@ -156,7 +155,7 @@ export function StepConfigSheet({
   useEffect(() => {
     const subscription = form.store.subscribe((state) => {
       const values = state.values;
-      if (!values || !values.type) return;
+      if (!(values && values.type)) return;
 
       if (values.type === "pageview") {
         onLiveUpdate?.({
@@ -166,7 +165,7 @@ export function StepConfigSheet({
         });
       } else if (values.type === "event" && values.eventName) {
         const selectedEvent = events?.find(
-          (e) => e.trackingId === values.eventName,
+          (e) => e.trackingId === values.eventName
         );
         if (selectedEvent) {
           onLiveUpdate?.({
@@ -185,7 +184,7 @@ export function StepConfigSheet({
     form.setFieldValue("type", value);
     if (value === "event" && form.state.values.eventName) {
       const selectedEvent = events?.find(
-        (e) => e.trackingId === form.state.values.eventName,
+        (e) => e.trackingId === form.state.values.eventName
       );
       if (selectedEvent) {
         onLiveUpdate?.({
@@ -234,8 +233,8 @@ export function StepConfigSheet({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+      <Sheet onOpenChange={onOpenChange} open={open}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
           <SheetHeader>
             <SheetTitle>Configure Funnel Step</SheetTitle>
             <SheetDescription>
@@ -244,31 +243,31 @@ export function StepConfigSheet({
           </SheetHeader>
 
           <form
+            className="px-4"
             onSubmit={(e) => {
               e.preventDefault();
               form.handleSubmit();
             }}
-            className="px-4"
           >
             <Tabs
-              value={activeTab}
               onValueChange={(v) => handleTabChange(v as StepType)}
+              value={activeTab}
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="pageview">Pageview</TabsTrigger>
                 <TabsTrigger value="event">Event</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="pageview" className="mt-6 space-y-4">
+              <TabsContent className="mt-6 space-y-4" value="pageview">
                 <form.Field name="name">
                   {(field) => (
                     <FieldGroup>
                       <FieldLabel>Step Name</FieldLabel>
                       <Input
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="e.g., Homepage Visit"
+                        value={field.state.value}
                       />
                       <FieldError>{field.state.meta.errors[0]}</FieldError>
                     </FieldGroup>
@@ -280,10 +279,10 @@ export function StepConfigSheet({
                     <FieldGroup>
                       <FieldLabel>Page URL</FieldLabel>
                       <Input
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="e.g., / or /pricing"
+                        value={field.state.value}
                       />
                       <FieldDescription>
                         Enter the full URL or a path pattern to match (e.g., "/"
@@ -295,8 +294,8 @@ export function StepConfigSheet({
                 </form.Field>
               </TabsContent>
 
-              <TabsContent value="event" className="mt-6">
-                <div className="space-y-2 mb-4">
+              <TabsContent className="mt-6" value="event">
+                <div className="mb-4 space-y-2">
                   <FieldLabel>Select an Event</FieldLabel>
                   <FieldDescription>
                     Choose from your tracked events below
@@ -306,7 +305,7 @@ export function StepConfigSheet({
                 {eventsLoading ? (
                   <div className="space-y-2">
                     {Array.from({ length: 3 }, (_, i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
+                      <Skeleton className="h-16 w-full" key={i} />
                     ))}
                   </div>
                 ) : !events || events.length === 0 ? (
@@ -328,44 +327,44 @@ export function StepConfigSheet({
                   <form.Field name="eventName">
                     {(field) => (
                       <>
-                        <div className="grid gap-2 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="grid max-h-[400px] gap-2 overflow-y-auto pr-1">
                           {events.map((event) => (
                             <button
-                              type="button"
-                              key={event.id}
                               className={cn(
-                                "flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all",
+                                "flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-all",
                                 field.state.value === event.trackingId
                                   ? "border-primary bg-primary/5"
-                                  : "border-border hover:border-primary/50 hover:bg-secondary/50",
+                                  : "border-border hover:border-primary/50 hover:bg-secondary/50"
                               )}
+                              key={event.id}
                               onClick={() => {
                                 field.handleChange(event.trackingId);
                                 handleEventSelect(event.trackingId);
                               }}
+                              type="button"
                             >
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm text-foreground">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-foreground text-sm">
                                   {event.name}
                                 </p>
-                                <code className="text-xs text-muted-foreground font-mono">
+                                <code className="font-mono text-muted-foreground text-xs">
                                   {event.trackingId}
                                 </code>
                               </div>
                               <Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
                                 className="h-8 w-8 shrink-0"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleCopyCode(event.trackingId);
                                 }}
+                                size="icon"
+                                type="button"
+                                variant="ghost"
                               >
                                 {copiedEvent === event.trackingId ? (
-                                  <Check className="w-4 h-4 text-green-500" />
+                                  <Check className="h-4 w-4 text-green-500" />
                                 ) : (
-                                  <Copy className="w-4 h-4" />
+                                  <Copy className="h-4 w-4" />
                                 )}
                               </Button>
                             </button>
@@ -383,23 +382,23 @@ export function StepConfigSheet({
           </form>
 
           <SheetFooter>
-            <div className="flex justify-between w-full">
+            <div className="flex w-full justify-between">
               {onDelete && (
                 <Button
+                  onClick={() => setOpenDeleteDialog(true)}
                   type="button"
                   variant="destructive"
-                  onClick={() => setOpenDeleteDialog(true)}
                 >
                   Delete Step
                 </Button>
               )}
               <Button
-                type="submit"
+                disabled={!canSubmit}
                 onClick={(e) => {
                   e.preventDefault();
                   form.handleSubmit();
                 }}
-                disabled={!canSubmit}
+                type="submit"
               >
                 Save Step
               </Button>
@@ -408,7 +407,7 @@ export function StepConfigSheet({
         </SheetContent>
       </Sheet>
 
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+      <Dialog onOpenChange={setOpenDeleteDialog} open={openDeleteDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Delete Step</DialogTitle>
@@ -419,13 +418,13 @@ export function StepConfigSheet({
           </DialogHeader>
           <DialogFooter>
             <Button
+              onClick={() => setOpenDeleteDialog(false)}
               type="button"
               variant="outline"
-              onClick={() => setOpenDeleteDialog(false)}
             >
               Cancel
             </Button>
-            <Button type="button" variant="destructive" onClick={handleDelete}>
+            <Button onClick={handleDelete} type="button" variant="destructive">
               Delete Step
             </Button>
           </DialogFooter>

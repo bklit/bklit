@@ -15,18 +15,18 @@ export const SectionBasic = ({
 }: SectionBasicProps) => {
   return (
     <section>
-      <div className="container mx-auto max-w-6xl flex flex-col px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-bklit-100 dark:bg-zinc-900 rounded-4xl">
-          <div className="col-span-1 p-14 space-y-4">
-            <h2 className="text-3xl font-regular dark:text-white text-black">
+      <div className="container mx-auto flex max-w-6xl flex-col px-4">
+        <div className="grid grid-cols-1 gap-8 rounded-4xl bg-bklit-100 md:grid-cols-2 dark:bg-zinc-900">
+          <div className="col-span-1 space-y-4 p-14">
+            <h2 className="font-regular text-3xl text-black dark:text-white">
               {title}
             </h2>
             {children}
           </div>
           <div
             className={cn(
-              "flex items-center justify-center col-span-1 bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl rounded-t-none sm:rounded-l-none sm:rounded-r-4xl overflow-hidden",
-              variant === "mono" && "from-zinc-800 to-zinc-900",
+              "col-span-1 flex items-center justify-center overflow-hidden rounded-4xl rounded-t-none bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 sm:rounded-r-4xl sm:rounded-l-none",
+              variant === "mono" && "from-zinc-800 to-zinc-900"
             )}
           >
             {artwork && artwork}

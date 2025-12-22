@@ -26,11 +26,11 @@ export function InvitationAcceptedModal({
 
   // Fetch organizations client-side
   const { data: organizations = [] } = useQuery(
-    trpc.organization.list.queryOptions(),
+    trpc.organization.list.queryOptions()
   );
 
   const newOrganization = organizations.find(
-    (org) => org.id === organizationId,
+    (org) => org.id === organizationId
   );
   const open = invited === true && !!organizationId && !!newOrganization;
 
@@ -52,13 +52,13 @@ export function InvitationAcceptedModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={open}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center space-y-3">
-          <div className="mx-auto size-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+        <DialogHeader className="space-y-3 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
             <CheckCircle className="size-6 text-green-600 dark:text-green-400" />
           </div>
-          <DialogTitle className="text-xl text-center">
+          <DialogTitle className="text-center text-xl">
             Welcome to {newOrganization?.name}!
           </DialogTitle>
           <DialogDescription className="text-center">
@@ -66,8 +66,8 @@ export function InvitationAcceptedModal({
             and collaborating with your team.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="sm:justify-center gap-2">
-          <Button variant="ghost" onClick={handleClose}>
+        <DialogFooter className="gap-2 sm:justify-center">
+          <Button onClick={handleClose} variant="ghost">
             Stay Here
           </Button>
           <Button onClick={handleNavigate}>Go to Workspace</Button>

@@ -22,7 +22,7 @@ function FunnelTooltip(props: PartTooltipProps<FunnelPart<any>>) {
   const displayLabel = label || data?.label || id || "Step";
 
   return (
-    <div className="border-border/50 bg-background grid min-w-32 items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
+    <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
       <div className="font-medium">{displayLabel}</div>
       <div className="flex items-center gap-2">
         {color && (
@@ -31,9 +31,9 @@ function FunnelTooltip(props: PartTooltipProps<FunnelPart<any>>) {
             style={{ backgroundColor: color }}
           />
         )}
-        <div className="flex flex-1 justify-between leading-none items-center">
+        <div className="flex flex-1 items-center justify-between leading-none">
           <span className="text-muted-foreground">Conversions</span>
-          <span className="text-foreground font-mono font-medium tabular-nums">
+          <span className="font-medium font-mono text-foreground tabular-nums">
             {displayValue || "0"}
           </span>
         </div>
@@ -54,25 +54,23 @@ export function Funnel({ data }: FunnelProps) {
   return (
     <div className="h-[400px] w-full">
       <ResponsiveFunnel
-        data={data}
-        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-        shapeBlending={0.66}
-        valueFormat=">-,.0f"
-        colors={stageColors}
+        afterSeparatorLength={20}
+        afterSeparatorOffset={10}
+        beforeSeparatorLength={20}
+        beforeSeparatorOffset={10}
         borderWidth={0}
+        colors={stageColors}
+        currentBorderWidth={40}
+        currentPartSizeExtension={10}
+        data={data}
+        enableLabel={true}
         labelColor={{
           from: "color",
           modifiers: [["brighter", 3]],
         }}
-        beforeSeparatorLength={20}
-        beforeSeparatorOffset={10}
-        afterSeparatorLength={20}
-        afterSeparatorOffset={10}
-        currentPartSizeExtension={10}
-        currentBorderWidth={40}
-        enableLabel={true}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
         motionConfig="gentle"
-        tooltip={FunnelTooltip}
+        shapeBlending={0.66}
         theme={{
           text: {
             fill: "hsl(0, 0%, 85%)",
@@ -95,6 +93,8 @@ export function Funnel({ data }: FunnelProps) {
             },
           },
         }}
+        tooltip={FunnelTooltip}
+        valueFormat=">-,.0f"
       />
     </div>
   );

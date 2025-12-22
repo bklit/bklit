@@ -9,7 +9,7 @@ export const apiTokenRouter = {
     .input(
       z.object({
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Verify user is member of organization
@@ -76,7 +76,7 @@ export const apiTokenRouter = {
         description: z.string().max(500).optional(),
         allowedDomains: z.array(z.string()).optional(),
         projectIds: z.array(z.string()),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user is admin or owner of organization
@@ -107,7 +107,7 @@ export const apiTokenRouter = {
 
       // Verify all projectIds belong to the organization
       const invalidProjectIds = input.projectIds.filter(
-        (projectId) => !organization.projects.some((p) => p.id === projectId),
+        (projectId) => !organization.projects.some((p) => p.id === projectId)
       );
 
       if (invalidProjectIds.length > 0) {
@@ -174,7 +174,7 @@ export const apiTokenRouter = {
         description: z.string().max(500).optional().nullable(),
         allowedDomains: z.array(z.string()).optional(),
         projectIds: z.array(z.string()).optional(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user is admin or owner of organization
@@ -221,7 +221,7 @@ export const apiTokenRouter = {
       // If projectIds provided, verify they belong to organization
       if (input.projectIds) {
         const invalidProjectIds = input.projectIds.filter(
-          (projectId) => !organization.projects.some((p) => p.id === projectId),
+          (projectId) => !organization.projects.some((p) => p.id === projectId)
         );
 
         if (invalidProjectIds.length > 0) {
@@ -332,7 +332,7 @@ export const apiTokenRouter = {
       z.object({
         id: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user is admin or owner of organization

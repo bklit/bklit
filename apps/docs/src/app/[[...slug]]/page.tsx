@@ -26,7 +26,7 @@ export default async function Page(props: {
     iconName && Icons[iconName] ? (Icons[iconName] as LucideIcon) : null;
 
   return (
-    <DocsPage toc={page.data.toc} full={page.data.full}>
+    <DocsPage full={page.data.full} toc={page.data.toc}>
       <DocsTitle className="flex items-center gap-2">
         {Icon && <Icon className="size-6" />}
         {page.data.title}

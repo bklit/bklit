@@ -33,12 +33,12 @@ export default function ProductDetails() {
   return (
     <>
       <title>{`Product ${productId}`}</title>
-      <div className="flex flex-col min-h-screen gap-16">
+      <div className="flex min-h-screen flex-col gap-16">
         <Header />
 
         <div className="space-y-4">
           <section className="container mx-auto max-w-6xl px-4">
-            <div className="flex gap-2 justify-between">
+            <div className="flex justify-between gap-2">
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
@@ -61,14 +61,14 @@ export default function ProductDetails() {
             </div>
           </section>
           <section className="container mx-auto max-w-6xl px-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2 group flex h-full w-full items-center justify-center overflow-hidden rounded-lg border bg-white hover:border-blue-600 dark:bg-black relative border-neutral-200 dark:border-border">
-                <img src={product?.image} alt={product?.alt} />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white hover:border-blue-600 md:col-span-2 dark:border-border dark:bg-black">
+                <img alt={product?.alt} src={product?.image} />
               </div>
               <Card className="md:col-span-2">
                 <CardHeader>
                   <CardTitle>
-                    <h2 className="text-2xl font-bold">{product?.name}</h2>
+                    <h2 className="font-bold text-2xl">{product?.name}</h2>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -81,36 +81,36 @@ export default function ProductDetails() {
                   </p>
                   <ul className="text-muted-foreground">
                     <li className="flex items-center gap-2">
-                      <span className="px-2 py-1 text-sm bg-muted rounded-md text-brand-400 border border-brand-400/10">
+                      <span className="rounded-md border border-brand-400/10 bg-muted px-2 py-1 text-brand-400 text-sm">
                         data-attr
                       </span>
                       or
-                      <span className="px-2 py-1 text-sm bg-muted rounded-md text-brand-400 border border-brand-400/10">
+                      <span className="rounded-md border border-brand-400/10 bg-muted px-2 py-1 text-brand-400 text-sm">
                         id
                       </span>
                     </li>
                   </ul>
                   <Separator orientation="horizontal" />
-                  <p className="text-foreground text-2xl font-bold">
+                  <p className="font-bold text-2xl text-foreground">
                     {product?.price}
-                    <span className="ml-1 hidden @[275px]/label:inline">
+                    <span className="ml-1 @[275px]/label:inline hidden">
                       USD
                     </span>
                   </p>
                   <Separator orientation="horizontal" />
                   <Button
-                    data-bklit-event="add-to-cart"
-                    variant="mono"
-                    size="lg"
                     className="cursor-pointer"
+                    data-bklit-event="add-to-cart"
                     onClick={handleAddToCart}
+                    size="lg"
+                    variant="mono"
                   >
                     Add to Cart
                   </Button>
-                  <div className="container mx-auto max-w-6xl px-4 flex flex-col space-y-3 items-center justify-center bg-blue-600/90 backdrop-blur-sm p-4 rounded-xl text-white">
-                    <p className="text-base font-normal m-0">
+                  <div className="container mx-auto flex max-w-6xl flex-col items-center justify-center space-y-3 rounded-xl bg-blue-600/90 p-4 px-4 text-white backdrop-blur-sm">
+                    <p className="m-0 font-normal text-base">
                       Clicking &quot;Add to Cart&quot; will track an{" "}
-                      <code className="text-sm text-blue-300 px-2 py-1 bg-background/30 rounded-md">
+                      <code className="rounded-md bg-background/30 px-2 py-1 text-blue-300 text-sm">
                         add-to-cart
                       </code>{" "}
                       event in the Bklit Playground dashboard.
@@ -124,7 +124,7 @@ export default function ProductDetails() {
 
         <div className="space-y-4">
           <section className="container mx-auto max-w-6xl px-4">
-            <h3 className="text-xl font-semibold text-muted-foreground">
+            <h3 className="font-semibold text-muted-foreground text-xl">
               You may also like
             </h3>
           </section>

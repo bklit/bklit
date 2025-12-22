@@ -76,7 +76,7 @@
       const data = {
         url: window.location.href,
         timestamp: new Date().toISOString(),
-        projectId: projectId,
+        projectId,
         sessionId: getSessionId(),
         userAgent: navigator.userAgent,
         referrer: document.referrer || undefined,
@@ -130,7 +130,7 @@
   ["mousemove", "keydown", "scroll", "touchstart", "visibilitychange"].forEach(
     (event) => {
       window.addEventListener(event, resetInactivityTimer, { passive: true });
-    },
+    }
   );
 
   // End session on tab close

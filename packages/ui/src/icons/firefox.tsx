@@ -8,10 +8,10 @@ interface IconProps {
 export function FirefoxIcon({ className, size = 16 }: IconProps) {
   return (
     <svg
+      className={cn("icon", className)}
       height={size}
       viewBox="0 0 512 512"
       width={size}
-      className={cn("icon", className)}
     >
       <title>Firefox Icon</title>
       <g id="_x31_14-firefox_x2C__browser">

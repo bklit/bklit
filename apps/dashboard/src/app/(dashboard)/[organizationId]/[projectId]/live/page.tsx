@@ -20,5 +20,5 @@ export default async function LivePage({
     redirect(`/${organizationId}/${projectId}`);
   }
 
-  return <LiveWrapper projectId={projectId} organizationId={organizationId} />;
+  return <LiveWrapper organizationId={organizationId} projectId={projectId} />;
 }

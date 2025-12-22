@@ -28,7 +28,7 @@ export function getRolePermissionLevel(role?: string | null): PermissionLevel {
 
 export function hasPermission(
   userRole: string | undefined | null,
-  requiredRole: MemberRole,
+  requiredRole: MemberRole
 ): boolean {
   const userLevel = getRolePermissionLevel(userRole);
   const requiredLevel = getRolePermissionLevel(requiredRole);
@@ -37,9 +37,9 @@ export function hasPermission(
 
 export function getUserRole<T extends { userId: string; role: string }>(
   members: T[] | undefined,
-  userId: string | undefined,
+  userId: string | undefined
 ): string | undefined {
-  if (!members || !userId) {
+  if (!(members && userId)) {
     return undefined;
   }
   return members.find((member) => member.userId === userId)?.role;

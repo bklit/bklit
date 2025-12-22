@@ -16,7 +16,7 @@ export const invitationRouter = {
         email: z.string().email(),
         organizationId: z.string(),
         role: z.enum(["member", "admin", "owner"]).default("member"),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user is owner or admin of organization
@@ -111,7 +111,7 @@ export const invitationRouter = {
           organizationName: organization.name,
           inviteLink,
           role: input.role,
-        }),
+        })
       );
 
       try {
@@ -170,7 +170,7 @@ export const invitationRouter = {
     .input(
       z.object({
         invitationId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Find the invitation
@@ -294,7 +294,7 @@ export const invitationRouter = {
     .input(
       z.object({
         invitationId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Find the invitation

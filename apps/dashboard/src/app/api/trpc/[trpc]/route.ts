@@ -30,7 +30,7 @@ const handler = async (req: NextRequest) => {
     req,
     createContext: () =>
       createTRPCContext({
-        auth: auth,
+        auth,
         headers: req.headers,
       }),
     onError({ error, path }) {

@@ -36,7 +36,7 @@ export default async function UserPage({
 
   const organizationMemberships = organizations.map((org) => {
     const userMembership = org.members.find(
-      (member) => member.userId === session.user.id,
+      (member) => member.userId === session.user.id
     );
     return {
       organization: org,
@@ -48,8 +48,8 @@ export default async function UserPage({
   return (
     <>
       <PageHeader
-        title="My Workspaces"
         description="Manage your organizations and projects."
+        title="My Workspaces"
       >
         <Button asChild>
           <Link href="/organizations/create">
@@ -63,7 +63,7 @@ export default async function UserPage({
         {organizationMemberships.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
-              <p className="text-muted-foreground text-center py-8">
+              <p className="py-8 text-center text-muted-foreground">
                 You haven&apos;t joined any organizations yet.
               </p>
             </CardContent>
@@ -72,12 +72,12 @@ export default async function UserPage({
           <div className="grid w-full gap-4 md:grid-cols-2 lg:grid-cols-3">
             {organizationMemberships.map((membership) => (
               <Card
+                className="transition-shadow hover:shadow-md"
                 key={membership.organization.id}
-                className="hover:shadow-md transition-shadow"
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
                       {membership.organization.name}
                       <Badge variant="secondary">
                         {membership.organization.projects.length} projects
@@ -93,7 +93,7 @@ export default async function UserPage({
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex justify-end gap-2">
                     <Button asChild variant="outline">
                       <Link href={`/${membership.organization.id}`}>
                         View Organization
@@ -114,10 +114,10 @@ export default async function UserPage({
                           .slice(0, 3)
                           .map((project) => (
                             <Item
+                              asChild
                               key={project.id}
                               size="sm"
                               variant="outline"
-                              asChild
                             >
                               <Link
                                 href={`/${membership.organization.id}/${project.id}`}
@@ -132,7 +132,7 @@ export default async function UserPage({
                             </Item>
                           ))}
                         {membership.organization.projects.length > 3 && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             +{membership.organization.projects.length - 3} more
                           </p>
                         )}

@@ -16,9 +16,9 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     eventLimit: 4000,
   },
   [PlanType.PRO]: {
-    projectLimit: 999999,
-    teamMemberLimit: 999999,
-    eventLimit: 100000,
+    projectLimit: 999_999,
+    teamMemberLimit: 999_999,
+    eventLimit: 100_000,
   },
 };
 

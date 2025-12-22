@@ -13,8 +13,8 @@ export default async function FunnelsBuilderPage({ params }: PageProps) {
   const { organizationId, projectId } = await params;
 
   return (
-    <div className="w-full flex-1 flex flex-col gap-4 h-full">
-      <PageHeader title="Funnels" description="Build your funnels with ease.">
+    <div className="flex h-full w-full flex-1 flex-col gap-4">
+      <PageHeader description="Build your funnels with ease." title="Funnels">
         <SubNavigation
           configKey="funnelNavigation"
           organizationId={organizationId}

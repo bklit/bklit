@@ -26,13 +26,13 @@ export async function CodeBlock(props: Props) {
     components: {
       pre: (preProps) => (
         <div
-          className="rounded-lg overflow-clip"
+          className="overflow-clip rounded-lg"
           data-line-numbers={showLineNumbers ? "true" : "false"}
         >
           <pre
             data-custom-codeblock
             {...preProps}
-            className="dark:!bg-input/30 border-input w-full min-w-0 rounded-md border p-3 text-sm shadow-xs"
+            className="dark:!bg-input/30 w-full min-w-0 rounded-md border border-input p-3 text-sm shadow-xs"
           />
         </div>
       ),

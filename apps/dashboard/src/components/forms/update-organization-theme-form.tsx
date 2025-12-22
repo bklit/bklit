@@ -77,7 +77,7 @@ export function UpdateOrganizationThemeForm({
     onSubmit: async ({ value }) => {
       const result = await updateOrganizationThemeAction(
         organizationId,
-        value.theme,
+        value.theme
       );
 
       if (result.success) {
@@ -117,8 +117,8 @@ export function UpdateOrganizationThemeForm({
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Theme</FieldLabel>
                     <Select
-                      value={field.state.value}
                       onValueChange={(value) => field.handleChange(value)}
+                      value={field.state.value}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select theme" />
@@ -126,12 +126,12 @@ export function UpdateOrganizationThemeForm({
                       <SelectContent>
                         {themes.map((theme) => (
                           <SelectItem
+                            className="flex items-center gap-2"
                             key={theme.value}
                             value={theme.value}
-                            className="flex items-center gap-2"
                           >
                             <div
-                              className={`w-4 h-4 bg-gradient-to-br ${theme.gradient} rounded-full`}
+                              className={`h-4 w-4 bg-gradient-to-br ${theme.gradient} rounded-full`}
                             />
                             <span>{theme.label}</span>
                           </SelectItem>
@@ -153,8 +153,8 @@ export function UpdateOrganizationThemeForm({
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal" className="justify-between">
-          <Button type="submit" form="update-organization-theme-form">
+        <Field className="justify-between" orientation="horizontal">
+          <Button form="update-organization-theme-form" type="submit">
             Update theme
           </Button>
         </Field>

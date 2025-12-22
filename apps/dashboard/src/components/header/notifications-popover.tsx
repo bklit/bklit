@@ -54,7 +54,7 @@ export function NotificationsPopover() {
   const [acceptedOrgId, setAcceptedOrgId] = useState<string | null>(null);
 
   const { data: invitations = [] } = useQuery(
-    trpc.invitation.list.queryOptions(),
+    trpc.invitation.list.queryOptions()
   );
 
   const acceptInvite = useMutation(
@@ -84,7 +84,7 @@ export function NotificationsPopover() {
         if (data.isDemoProject && data.organizationId) {
           // For demo project, fetch the organization to get project info
           const orgQueryResult = await queryClient.fetchQuery(
-            trpc.organization.fetch.queryOptions({ id: data.organizationId }),
+            trpc.organization.fetch.queryOptions({ id: data.organizationId })
           );
 
           const demoProject = orgQueryResult?.projects[0];
@@ -104,7 +104,7 @@ export function NotificationsPopover() {
       onError: (error) => {
         toast.error(`Failed to accept invitation: ${error.message}`);
       },
-    }),
+    })
   );
 
   const declineInvite = useMutation(
@@ -125,7 +125,7 @@ export function NotificationsPopover() {
       onError: (error) => {
         toast.error(`Failed to decline invitation: ${error.message}`);
       },
-    }),
+    })
   );
 
   const hasNotifications = invitations.length > 0;
@@ -133,18 +133,18 @@ export function NotificationsPopover() {
   if (isDesktop) {
     return (
       <>
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Popover onOpenChange={setIsOpen} open={isOpen}>
           <PopoverTrigger asChild>
             <Button
+              className="relative cursor-pointer"
               size="icon"
               variant="outline"
-              className="relative cursor-pointer"
             >
               <Bell size={14} />
               {hasNotifications && (
                 <span
+                  className="absolute -top-1.5 -right-1.5 block size-3 rounded-full bg-primary text-[10px] text-white"
                   data-count={invitations.length}
-                  className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-primary text-white rounded-full "
                 />
               )}
             </Button>
@@ -153,7 +153,7 @@ export function NotificationsPopover() {
             {hasNotifications && (
               <div className="border-b px-4 py-3">
                 <h3 className="font-semibold text-sm">Notifications</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="mt-0.5 text-muted-foreground text-xs">
                   You have {invitations.length} pending invitation
                   {invitations.length > 1 ? "s" : ""}
                 </p>
@@ -166,7 +166,7 @@ export function NotificationsPopover() {
                   <EmptyMedia>
                     <Bell size={16} />
                   </EmptyMedia>
-                  <EmptyTitle className="text-sm text-muted-foreground">
+                  <EmptyTitle className="text-muted-foreground text-sm">
                     No new notifications
                   </EmptyTitle>
                 </EmptyHeader>
@@ -174,7 +174,7 @@ export function NotificationsPopover() {
             ) : (
               <ItemGroup className="max-h-[400px] overflow-y-auto">
                 {invitations.map((invitation) => (
-                  <Item key={invitation.id} variant="outline" size="sm">
+                  <Item key={invitation.id} size="sm" variant="outline">
                     <ItemContent>
                       <ItemTitle>
                         Invitation to {invitation.organization.name}
@@ -186,29 +186,29 @@ export function NotificationsPopover() {
                     </ItemContent>
                     <ItemActions>
                       <Button
-                        size="sm"
-                        variant="outline"
+                        disabled={
+                          declineInvite.isPending || acceptInvite.isPending
+                        }
                         onClick={() =>
                           declineInvite.mutate({
                             invitationId: invitation.id,
                           })
                         }
-                        disabled={
-                          declineInvite.isPending || acceptInvite.isPending
-                        }
+                        size="sm"
+                        variant="outline"
                       >
                         Decline
                       </Button>
                       <Button
-                        size="sm"
+                        disabled={
+                          acceptInvite.isPending || declineInvite.isPending
+                        }
                         onClick={() =>
                           acceptInvite.mutate({
                             invitationId: invitation.id,
                           })
                         }
-                        disabled={
-                          acceptInvite.isPending || declineInvite.isPending
-                        }
+                        size="sm"
                       >
                         Accept
                       </Button>
@@ -226,18 +226,18 @@ export function NotificationsPopover() {
 
   return (
     <>
-      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+      <Drawer onOpenChange={setIsOpen} open={isOpen}>
         <DrawerTrigger asChild>
           <Button
+            className="relative cursor-pointer"
             size="icon"
             variant="ghost"
-            className="relative cursor-pointer"
           >
             <Bell size={14} />
             {hasNotifications && (
               <span
+                className="absolute -top-1.5 -right-1.5 block size-3 rounded-full bg-primary text-[10px] text-white"
                 data-count={invitations.length}
-                className="absolute -top-1.5 -right-1.5 size-3 block text-[10px] bg-primary text-white rounded-full "
               />
             )}
           </Button>
@@ -249,7 +249,7 @@ export function NotificationsPopover() {
           {hasNotifications && (
             <div className="border-b px-4 py-3">
               <h3 className="font-semibold text-sm">Notifications</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="mt-0.5 text-muted-foreground text-xs">
                 You have {invitations.length} pending invitation
                 {invitations.length > 1 ? "s" : ""}
               </p>
@@ -261,7 +261,7 @@ export function NotificationsPopover() {
                 <EmptyMedia>
                   <Bell size={16} />
                 </EmptyMedia>
-                <EmptyTitle className="text-sm text-muted-foreground">
+                <EmptyTitle className="text-muted-foreground text-sm">
                   No new notifications
                 </EmptyTitle>
               </EmptyHeader>
@@ -269,7 +269,7 @@ export function NotificationsPopover() {
           ) : (
             <ItemGroup className="max-h-[400px] overflow-y-auto">
               {invitations.map((invitation) => (
-                <Item key={invitation.id} variant="outline" size="sm">
+                <Item key={invitation.id} size="sm" variant="outline">
                   <ItemContent>
                     <ItemTitle>
                       Invitation to {invitation.organization.name}
@@ -280,29 +280,29 @@ export function NotificationsPopover() {
                   </ItemContent>
                   <ItemActions>
                     <Button
-                      size="sm"
-                      variant="outline"
+                      disabled={
+                        declineInvite.isPending || acceptInvite.isPending
+                      }
                       onClick={() =>
                         declineInvite.mutate({
                           invitationId: invitation.id,
                         })
                       }
-                      disabled={
-                        declineInvite.isPending || acceptInvite.isPending
-                      }
+                      size="sm"
+                      variant="outline"
                     >
                       Decline
                     </Button>
                     <Button
-                      size="sm"
+                      disabled={
+                        acceptInvite.isPending || declineInvite.isPending
+                      }
                       onClick={() =>
                         acceptInvite.mutate({
                           invitationId: invitation.id,
                         })
                       }
-                      disabled={
-                        acceptInvite.isPending || declineInvite.isPending
-                      }
+                      size="sm"
                     >
                       Accept
                     </Button>

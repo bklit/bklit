@@ -38,7 +38,7 @@ export function PieDonut({
 
   const total = useMemo(
     () => data.reduce((acc, d) => acc + (Number(d.value) || 0), 0),
-    [data],
+    [data]
   );
 
   // Initialize displayValue with total
@@ -104,28 +104,28 @@ export function PieDonut({
   }, [hoverKey]);
 
   return (
-    <div className="grid grid-cols-1 grid-rows-1 mx-auto justify-center items-center">
-      <div className="col-start-1 row-start-1 flex justify-center items-center">
+    <div className="mx-auto grid grid-cols-1 grid-rows-1 items-center justify-center">
+      <div className="col-start-1 row-start-1 flex items-center justify-center">
         <ChartContainer
-          id={chartId}
-          config={chartConfig}
           className={cn(
-            "mx-auto aspect-square min-h-[250px] max-h-[250px]",
-            className,
+            "mx-auto aspect-square max-h-[250px] min-h-[250px]",
+            className
           )}
+          config={chartConfig}
+          id={chartId}
         >
           <PieChart accessibilityLayer>
             <Pie
+              activeShape={({
+                outerRadius = 0,
+                ...props
+              }: PieSectorDataItem) => (
+                <Sector {...props} outerRadius={outerRadius + 10} />
+              )}
               data={data}
               dataKey="value"
-              nameKey="name"
               innerRadius={innerRadius}
-              outerRadius={outerRadius}
-              strokeWidth={5}
-              onMouseLeave={() => {
-                setHoverKey(undefined);
-                setDisplayValue(total);
-              }}
+              nameKey="name"
               onMouseEnter={(payload: { name?: string }) => {
                 const name = payload?.name;
                 if (name) {
@@ -136,6 +136,10 @@ export function PieDonut({
                   }
                 }
               }}
+              onMouseLeave={() => {
+                setHoverKey(undefined);
+                setDisplayValue(total);
+              }}
               onMouseMove={(_: unknown, index: number) => {
                 const d = data[index];
                 if (d?.name) {
@@ -145,19 +149,15 @@ export function PieDonut({
                   }
                 }
               }}
-              activeShape={({
-                outerRadius = 0,
-                ...props
-              }: PieSectorDataItem) => (
-                <Sector {...props} outerRadius={outerRadius + 10} />
-              )}
+              outerRadius={outerRadius}
+              strokeWidth={5}
             >
               {data.map((d) => (
                 <Cell
-                  key={`cell-${d.name}`}
+                  className="transition"
                   fill={`var(--color-${d.name})`}
                   fillOpacity={hoverKey ? (d.name === hoverKey ? 1 : 0.4) : 1}
-                  className="transition"
+                  key={`cell-${d.name}`}
                 />
               ))}
             </Pie>
@@ -174,18 +174,18 @@ export function PieDonut({
                     }
                   ).payload;
                   return (
-                    <div className="flex items-center justify-center gap-4 pt-3 flex-wrap">
+                    <div className="flex flex-wrap items-center justify-center gap-4 pt-3">
                       {payload?.map((item) => {
                         const key = item.value || item.dataKey || "";
                         const label =
                           chartConfig[key]?.label || item.value || "";
                         return (
                           <button
-                            key={key}
-                            type="button"
                             className="flex items-center gap-1.5"
+                            key={key}
                             onMouseEnter={() => onLegendEnter(key)}
                             onMouseLeave={onLegendLeave}
+                            type="button"
                           >
                             <div
                               className="h-2 w-2 shrink-0 rounded-[2px]"
@@ -203,13 +203,13 @@ export function PieDonut({
           </PieChart>
         </ChartContainer>
       </div>
-      <div className="col-start-1 row-start-1 flex flex-col justify-center items-center text-2xl font-bold pb-3">
+      <div className="col-start-1 row-start-1 flex flex-col items-center justify-center pb-3 font-bold text-2xl">
         <NumberFlow
           format={{ notation: "compact" }}
-          value={displayValue}
           suffix={displaySuffix}
+          value={displayValue}
         />
-        <div className="text-muted-foreground pb-4.5 font-normal text-xs">
+        <div className="pb-4.5 font-normal text-muted-foreground text-xs">
           {centerLabel.suffix}
         </div>
       </div>

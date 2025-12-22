@@ -23,7 +23,7 @@ interface WorkspaceContextType {
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
-  undefined,
+  undefined
 );
 
 export const WorkspaceProvider: React.FC<{
@@ -35,11 +35,11 @@ export const WorkspaceProvider: React.FC<{
   const router = useRouter();
 
   const activeOrganization = organizations.find(
-    (organization) => organization.id === organizationId,
+    (organization) => organization.id === organizationId
   );
 
   const activeProject = activeOrganization?.projects.find(
-    (project) => project.id === projectId,
+    (project) => project.id === projectId
   );
 
   const onChangeOrganization = (organizationId: string) => {

@@ -39,7 +39,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Failed to fetch Pro product" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

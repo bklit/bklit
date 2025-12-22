@@ -31,11 +31,11 @@ export async function hashToken(token: string): Promise<string> {
  */
 export async function verifyToken(
   token: string,
-  storedHash: string,
+  storedHash: string
 ): Promise<boolean> {
   try {
     const [salt, hash] = storedHash.split(":");
-    if (!salt || !hash) {
+    if (!(salt && hash)) {
       return false;
     }
 

@@ -21,7 +21,7 @@ interface LocationData extends GeoLocation {
  */
 function getLocationFromCloudflareHeaders(
   request: Request,
-  ip: string,
+  ip: string
 ): LocationData | null {
   const headers = request.headers;
 
@@ -43,8 +43,8 @@ function getLocationFromCloudflareHeaders(
   const timezone = headers.get("cf-timezone") || undefined;
 
   // Parse coordinates - use null if not available, then convert to 0 for database
-  const lat = latitude ? parseFloat(latitude) : null;
-  const lon = longitude ? parseFloat(longitude) : null;
+  const lat = latitude ? Number.parseFloat(latitude) : null;
+  const lon = longitude ? Number.parseFloat(longitude) : null;
 
   // Map Cloudflare's 2-letter country code to full country name
   // Cloudflare provides CF-IPCountry as a 2-letter ISO 3166-1 alpha-2 code
@@ -68,16 +68,16 @@ function getLocationFromCloudflareHeaders(
   }
 
   return {
-    ip: ip,
-    country: country, // Full country name mapped from code
-    countryCode: countryCode, // 2-letter ISO country code from Cloudflare
+    ip,
+    country, // Full country name mapped from code
+    countryCode, // 2-letter ISO country code from Cloudflare
     region: regionCode || region, // Prefer regionCode if available, fallback to region
     regionName: region, // Full region name
-    city: city,
+    city,
     zip: postalCode, // Use postal code if available
     lat: lat ?? 0, // Convert null to 0 for database (schema expects number)
     lon: lon ?? 0, // Convert null to 0 for database (schema expects number)
-    timezone: timezone,
+    timezone,
     // ISP and mobile not available from Cloudflare
     isp: undefined,
     mobile: undefined,
@@ -86,7 +86,7 @@ function getLocationFromCloudflareHeaders(
 
 export async function getLocationFromIP(
   ip: string,
-  request?: Request,
+  request?: Request
 ): Promise<LocationData | null> {
   try {
     // Skip localhost and private IPs
@@ -118,7 +118,7 @@ export async function getLocationFromIP(
     // In production, if CF headers are missing, return null
     // This shouldn't happen if Cloudflare is properly configured
     console.warn(
-      "Cloudflare geolocation headers not found. Ensure Cloudflare is configured as proxy.",
+      "Cloudflare geolocation headers not found. Ensure Cloudflare is configured as proxy."
     );
     return null;
   } catch (error) {
@@ -162,14 +162,13 @@ async function getLocationFromIPApi(ip: string): Promise<LocationData | null> {
         isp: data.isp,
         mobile: data.mobile,
       };
-    } else {
-      console.warn(`IP-API returned error for IP ${ip}: ${data.message}`);
-      return null;
     }
+    console.warn(`IP-API returned error for IP ${ip}: ${data.message}`);
+    return null;
   } catch (error) {
     console.error(
       `Error fetching location data from ip-api for IP ${ip}:`,
-      error,
+      error
     );
     return null;
   }

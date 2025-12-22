@@ -28,7 +28,7 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -60,8 +60,8 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
           <CardDescription>Loading browser statistics...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -71,9 +71,9 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
   if (!browserStats) {
     return (
       <NoDataCard
-        title="Browser Usage"
         description="Page visits by browser"
         icon={<Compass size={16} />}
+        title="Browser Usage"
       />
     );
   }
@@ -83,9 +83,9 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
   if (totalVisits === 0) {
     return (
       <NoDataCard
-        title="Browser Usage"
         description="Page visits by browser"
         icon={<Compass size={16} />}
+        title="Browser Usage"
       />
     );
   }
@@ -108,9 +108,9 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
       </CardHeader>
       <CardContent>
         <PieDonut
-          data={chartData}
           centerLabel={{ showTotal: true, suffix: "page views" }}
           className="w-full"
+          data={chartData}
         />
       </CardContent>
     </Card>

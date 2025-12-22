@@ -16,7 +16,7 @@ export default function CreateProjectPage({ params }: CreateProjectPageProps) {
 
   console.log(
     "🔍 Create Project Page - organizationId from params:",
-    organizationId,
+    organizationId
   );
 
   const handleSuccess = (newProjectId?: string) => {
@@ -28,15 +28,15 @@ export default function CreateProjectPage({ params }: CreateProjectPageProps) {
   return (
     <>
       <PageHeader
-        title="Create Project"
         description="Create a new project for your organization."
+        title="Create Project"
       />
       <div className="container mx-auto flex gap-4">
         <Card className="w-full max-w-2xl">
           <CardContent>
             <AddProjectForm
-              organizationId={organizationId}
               onSuccess={handleSuccess}
+              organizationId={organizationId}
             />
           </CardContent>
         </Card>

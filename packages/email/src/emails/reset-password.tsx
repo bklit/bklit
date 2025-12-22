@@ -30,19 +30,19 @@ export const BklitResetPassword = ({
       <Head />
       <Body style={main}>
         <Preview>Reset your Bklit password</Preview>
-        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
-          <div className="bg-black flex items-center justify-center rounded-lg overflow-clip">
+        <Container className="mx-auto max-w-480px px-8 pt-12 pb-12">
+          <div className="flex items-center justify-center overflow-clip rounded-lg bg-black">
             <Img
-              src={`${baseUrl}/react-email-header.jpg`}
               alt="Bklit"
-              width="100%"
               height="auto"
+              src={`${baseUrl}/react-email-header.jpg`}
+              width="100%"
             />
           </div>
 
-          <Text className="text-2xl font-semibold">Reset your password</Text>
+          <Text className="font-semibold text-2xl">Reset your password</Text>
 
-          <Section className="p-4 border border-gray-200 rounded-md bg-white">
+          <Section className="rounded-md border border-gray-200 bg-white p-4">
             <Text className="text-left text-lg">
               Hi <strong>{username}</strong>,
             </Text>
@@ -52,26 +52,26 @@ export const BklitResetPassword = ({
             </Text>
 
             <Button
-              className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+              className="inline-block rounded-md bg-lime-500 px-5 py-3 text-center font-bold text-base text-white"
               href={resetLink}
             >
               Reset Password
             </Button>
 
-            <Text className="text-left text-sm text-gray-600 mt-4">
+            <Text className="mt-4 text-left text-gray-600 text-sm">
               This link will expire in 1 hour for security reasons.
             </Text>
 
-            <Text className="text-left text-sm text-gray-600">
+            <Text className="text-left text-gray-600 text-sm">
               If the button doesn't work, copy and paste this link into your
               browser:
             </Text>
-            <Text className="text-left text-xs text-gray-500 break-all">
+            <Text className="break-all text-left text-gray-500 text-xs">
               {resetLink}
             </Text>
           </Section>
 
-          <Text className="text-sm text-gray-600 text-center mt-4">
+          <Text className="mt-4 text-center text-gray-600 text-sm">
             If you didn't request a password reset, you can safely ignore this
             email. Your password will remain unchanged.
           </Text>

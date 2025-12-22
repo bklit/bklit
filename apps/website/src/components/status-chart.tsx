@@ -40,37 +40,37 @@ export function StatusChart({ data }: StatusChartProps) {
       }),
       healthy: day.isHealthy === true ? 1 : 0,
       unhealthy: day.isHealthy === false ? 1 : 0,
-      unknown: !hasData ? 1 : 0,
+      unknown: hasData ? 0 : 1,
     };
   });
 
   return (
-    <ChartContainer config={chartConfig} className="h-[120px] w-full">
+    <ChartContainer className="h-[120px] w-full" config={chartConfig}>
       <BarChart data={chartData}>
         <XAxis
+          axisLine={false}
           dataKey="date"
           tickLine={false}
-          axisLine={false}
           tickMargin={8}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
         <Bar
           dataKey="healthy"
-          stackId="a"
           fill="var(--color-teal-700)"
           radius={[5, 5, 5, 5]}
+          stackId="a"
         />
         <Bar
           dataKey="unhealthy"
-          stackId="a"
           fill="var(--color-destructive)"
           radius={[5, 5, 5, 5]}
+          stackId="a"
         />
         <Bar
           dataKey="unknown"
-          stackId="a"
           fill="var(--color-muted)"
           radius={[5, 5, 5, 5]}
+          stackId="a"
         />
       </BarChart>
     </ChartContainer>

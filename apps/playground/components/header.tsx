@@ -6,13 +6,13 @@ export const Header = () => {
     <header className="p-4 pt-8">
       <div className="container mx-auto max-w-6xl">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+          <Link className="flex items-center gap-2" to="/">
             <BklitLogo
+              className="hidden text-black sm:inline-flex dark:text-white"
               size={32}
               theme="dark"
-              className="dark:text-white text-black hidden sm:inline-flex"
             />
-            <span className="text-2xl font-semibold">Bklit Store</span>
+            <span className="font-semibold text-2xl">Bklit Store</span>
           </Link>
         </div>
       </div>

@@ -69,11 +69,11 @@ export interface OrganizationFormState {
 
 export async function createOrganizationAction(
   _prevState: OrganizationFormState,
-  formData: FormData,
+  formData: FormData
 ): Promise<OrganizationFormState> {
   const session = await authenticated();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!(session && session.user && session.user.id)) {
     return {
       success: false,
       message: "User not authenticated.",
@@ -108,8 +108,8 @@ export async function createOrganizationAction(
       const ownedOrganizations = existingOrganizations.filter((org) =>
         org.members.some(
           (member) =>
-            member.userId === session.user.id && member.role === "owner",
-        ),
+            member.userId === session.user.id && member.role === "owner"
+        )
       );
 
       if (ownedOrganizations.length >= 1) {
@@ -138,8 +138,8 @@ export async function createOrganizationAction(
       const doubleCheckOwned = doubleCheck.filter((org) =>
         org.members.some(
           (member) =>
-            member.userId === session.user.id && member.role === "owner",
-        ),
+            member.userId === session.user.id && member.role === "owner"
+        )
       );
 
       if (doubleCheckOwned.length >= 1) {
@@ -156,7 +156,7 @@ export async function createOrganizationAction(
     const organization = await auth.api.createOrganization({
       body: {
         name: validatedFields.data.name,
-        slug: slug,
+        slug,
         metadata: {
           description: validatedFields.data.description || null,
         },
@@ -207,11 +207,11 @@ export async function createOrganizationAction(
 // Action to update organization name
 export async function updateOrganizationNameAction(
   organizationId: string,
-  name: string,
+  name: string
 ): Promise<{ success: boolean; message: string }> {
   const session = await authenticated();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!(session && session.user && session.user.id)) {
     return {
       success: false,
       message: "User not authenticated.",
@@ -260,13 +260,13 @@ export async function updateOrganizationNameAction(
         organizationId,
         data: {
           name: nameValidation.data,
-          slug: slug,
+          slug,
         },
       },
       headers: await headers(),
     });
 
-    revalidatePath(`/[organizationId]`, "page");
+    revalidatePath("/[organizationId]", "page");
     return {
       success: true,
       message: "Organization name updated successfully!",
@@ -283,11 +283,11 @@ export async function updateOrganizationNameAction(
 // Action to update organization theme
 export async function updateOrganizationThemeAction(
   organizationId: string,
-  theme: string,
+  theme: string
 ): Promise<{ success: boolean; message: string }> {
   const session = await authenticated();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!(session && session.user && session.user.id)) {
     return {
       success: false,
       message: "User not authenticated.",
@@ -310,7 +310,7 @@ export async function updateOrganizationThemeAction(
       theme,
     });
 
-    revalidatePath(`/[organizationId]`, "page");
+    revalidatePath("/[organizationId]", "page");
     return {
       success: true,
       message: "Organization theme updated successfully!",
@@ -327,11 +327,11 @@ export async function updateOrganizationThemeAction(
 // Action to delete an organization
 export async function deleteOrganizationAction(
   _prevState: OrganizationFormState,
-  formData: FormData,
+  formData: FormData
 ): Promise<OrganizationFormState> {
   const session = await authenticated();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!(session && session.user && session.user.id)) {
     return {
       success: false,
       message: "User not authenticated.",
@@ -340,10 +340,10 @@ export async function deleteOrganizationAction(
 
   const organizationId = formData.get("organizationId") as string;
   const confirmedOrganizationName = formData.get(
-    "confirmedOrganizationName",
+    "confirmedOrganizationName"
   ) as string;
 
-  if (!organizationId || !confirmedOrganizationName) {
+  if (!(organizationId && confirmedOrganizationName)) {
     return {
       success: false,
       message: "Missing organization ID or organization name for confirmation.",
@@ -353,7 +353,7 @@ export async function deleteOrganizationAction(
   try {
     await auth.api.deleteOrganization({
       body: {
-        organizationId: organizationId,
+        organizationId,
       },
       headers: await headers(),
     });

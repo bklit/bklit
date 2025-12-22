@@ -105,7 +105,7 @@ export default async function StatusPage() {
       // Only count days with actual data for uptime calculation
       const daysWithData = dailyData.filter((day) => day.isHealthy !== null);
       const healthyDays = dailyData.filter(
-        (day) => day.isHealthy === true,
+        (day) => day.isHealthy === true
       ).length;
       const uptimePercentage =
         daysWithData.length > 0
@@ -114,10 +114,10 @@ export default async function StatusPage() {
 
       // Count total checks for stats
       const totalChecks = healthChecks.filter(
-        (c) => c.endpoint === endpoint,
+        (c) => c.endpoint === endpoint
       ).length;
       const healthyChecks = healthChecks.filter(
-        (c) => c.endpoint === endpoint && c.isHealthy,
+        (c) => c.endpoint === endpoint && c.isHealthy
       ).length;
       const unhealthyChecks = totalChecks - healthyChecks;
 
@@ -150,27 +150,27 @@ export default async function StatusPage() {
   }
 
   return (
-    <main className="w-full min-h-screen flex flex-col gap-32">
+    <main className="flex min-h-screen w-full flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-3xl flex flex-col px-4 py-26 space-y-12">
+      <div className="container mx-auto flex max-w-3xl flex-col space-y-12 px-4 py-26">
         <SectionHeader
-          title="API Status"
           description="Real-time health monitoring for our tracking APIs"
+          title="API Status"
         >
-          <div className="flex items-center justify-center w-full">
+          <div className="flex w-full items-center justify-center">
             {statusData &&
             typeof statusData === "object" &&
             !("error" in statusData) ? (
               (() => {
                 const allHealthy = Object.values(statusData).every(
-                  (data) => data.isCurrentlyHealthy,
+                  (data) => data.isCurrentlyHealthy
                 );
                 return (
-                  <Badge variant="outline" size="lg" className="gap-2">
+                  <Badge className="gap-2" size="lg" variant="outline">
                     <span
                       className={cn(
                         "inline-flex size-2 rounded-full",
-                        allHealthy ? "bg-teal-700" : "bg-destructive",
+                        allHealthy ? "bg-teal-700" : "bg-destructive"
                       )}
                     />
                     {allHealthy
@@ -180,7 +180,7 @@ export default async function StatusPage() {
                 );
               })()
             ) : (
-              <Badge variant="secondary" size="lg">
+              <Badge size="lg" variant="secondary">
                 Status unknown
               </Badge>
             )}
@@ -191,19 +191,19 @@ export default async function StatusPage() {
         typeof statusData === "object" &&
         !("error" in statusData) ? (
           Object.entries(statusData).map(([endpoint, data]) => (
-            <Card key={endpoint} className="space-y-4">
+            <Card className="space-y-4" key={endpoint}>
               <CardHeader>
                 <CardTitle>
                   <code>{endpoint}</code>
                 </CardTitle>
                 <CardAction>
-                  <Badge variant="outline" size="lg" className="gap-2">
+                  <Badge className="gap-2" size="lg" variant="outline">
                     <span
                       className={cn(
                         "inline-flex size-2 rounded-full",
                         data.isCurrentlyHealthy
                           ? "bg-teal-700"
-                          : "bg-destructive",
+                          : "bg-destructive"
                       )}
                     />
                     <span className="text-sm">
@@ -212,7 +212,7 @@ export default async function StatusPage() {
                   </Badge>
                 </CardAction>
                 <CardDescription>
-                  <div className="grid grid-cols-2 sm:flex gap-4 text-sm text-muted-foreground">
+                  <div className="grid grid-cols-2 gap-4 text-muted-foreground text-sm sm:flex">
                     <Badge
                       variant={
                         data.uptimePercentage >= 90 ? "success" : "destructive"
@@ -246,7 +246,7 @@ export default async function StatusPage() {
             </Card>
           ))
         ) : (
-          <div className="text-center py-12">
+          <div className="py-12 text-center">
             <p className="text-muted-foreground">
               {statusData &&
               typeof statusData === "object" &&

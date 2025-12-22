@@ -32,9 +32,9 @@ export function LiveStatsCard({
     ...trpc.session.liveTopCountries.queryOptions(
       { projectId, organizationId },
       {
-        refetchInterval: 15000,
-        staleTime: 10000,
-      },
+        refetchInterval: 15_000,
+        staleTime: 10_000,
+      }
     ),
   });
 
@@ -42,9 +42,9 @@ export function LiveStatsCard({
     ...trpc.session.liveTopPages.queryOptions(
       { projectId, organizationId, limit: 5 },
       {
-        refetchInterval: 15000,
-        staleTime: 10000,
-      },
+        refetchInterval: 15_000,
+        staleTime: 10_000,
+      }
     ),
   });
 
@@ -52,9 +52,9 @@ export function LiveStatsCard({
     ...trpc.session.liveUsers.queryOptions(
       { projectId, organizationId },
       {
-        refetchInterval: 15000,
-        staleTime: 10000,
-      },
+        refetchInterval: 15_000,
+        staleTime: 10_000,
+      }
     ),
   });
 
@@ -71,7 +71,7 @@ export function LiveStatsCard({
         <CardDescription>
           Top countries and pages by live users.
         </CardDescription>
-        <CardAction className="text-2xl font-semibold">
+        <CardAction className="font-semibold text-2xl">
           <NumberFlow value={liveUsers} />
         </CardAction>
       </CardHeader>
@@ -80,15 +80,15 @@ export function LiveStatsCard({
           <div className="flex flex-col gap-3">
             <Skeleton className="h-4 w-24" />
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" key={i} />
             ))}
           </div>
         ) : (
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium mb-1">Countries</h3>
+              <h3 className="mb-1 font-medium text-sm">Countries</h3>
               {!topCountries || topCountries.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4">
+                <div className="py-4 text-muted-foreground text-sm">
                   No live users
                 </div>
               ) : (
@@ -100,26 +100,26 @@ export function LiveStatsCard({
                   return (
                     <button
                       key={country.countryCode || country.country}
-                      type="button"
                       onClick={() => {
                         centerOnCountry(
                           country.countryCode || null,
-                          country.country || null,
+                          country.country || null
                         );
                       }}
+                      type="button"
                     >
                       <ProgressRow
-                        label={country.country || "Unknown"}
-                        value={country.views}
-                        percentage={percentage}
                         icon={
                           <CircleFlag
+                            className="size-4"
                             countryCode={
                               country.countryCode?.toLowerCase() || "us"
                             }
-                            className="size-4"
                           />
                         }
+                        label={country.country || "Unknown"}
+                        percentage={percentage}
+                        value={country.views}
                       />
                     </button>
                   );
@@ -128,19 +128,19 @@ export function LiveStatsCard({
             </div>
 
             <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium mb-1">Pages</h3>
+              <h3 className="mb-1 font-medium text-sm">Pages</h3>
               {!topPages || topPages.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4">
+                <div className="py-4 text-muted-foreground text-sm">
                   No live users
                 </div>
               ) : (
                 topPages.map((page) => (
                   <ProgressRow
                     key={page.path}
-                    variant="secondary"
                     label={page.path}
-                    value={page.count}
                     percentage={(page.count / totalPageViews) * 100}
+                    value={page.count}
+                    variant="secondary"
                   />
                 ))
               )}

@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
 
     const { subscriptionId, productId, organizationId } = await request.json();
 
-    if (!subscriptionId || !productId || !organizationId) {
+    if (!(subscriptionId && productId && organizationId)) {
       return NextResponse.json(
         { error: "Missing required parameters" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found or insufficient permissions" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -60,13 +60,13 @@ export async function POST(request: NextRequest) {
     });
 
     const subscription = subscriptions?.result?.items?.find(
-      (sub) => sub.id === subscriptionId,
+      (sub) => sub.id === subscriptionId
     );
 
     if (!subscription) {
       return NextResponse.json(
         { error: "Subscription not found for this organization" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         error: "Failed to update subscription",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

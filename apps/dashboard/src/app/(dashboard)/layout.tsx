@@ -19,14 +19,14 @@ export default async function DashboardLayout({
   const organizations = await api.organization.list();
 
   return (
-    <WorkspaceProvider session={session} organizations={organizations}>
+    <WorkspaceProvider organizations={organizations} session={session}>
       <SidebarProvider className="flex flex-col sm:overflow-hidden">
         <SiteHeader />
         <div className="flex flex-1 pt-(--header-height)">
           <AppSidebar />
 
           <SidebarInset>
-            <main className="flex flex-col bg-background dark:sm:bg-bklit-800 sm:bg-zinc-50 sm:border border-border rounded-xl sm:overflow-auto sm:h-0 sm:min-h-full relative pb-4 sm:p-8">
+            <main className="relative flex flex-col rounded-xl border-border bg-background pb-4 sm:h-0 sm:min-h-full sm:overflow-auto sm:border sm:bg-zinc-50 sm:p-8 dark:sm:bg-bklit-800">
               {children}
             </main>
             {modal}

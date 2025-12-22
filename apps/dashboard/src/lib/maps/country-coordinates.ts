@@ -41,7 +41,7 @@ export function getCountryCoordinates(): CountryCoordinate[] {
 }
 
 export function findCountryCoordinates(
-  countryCode: string,
+  countryCode: string
 ): CountryCoordinate | null {
   const coordinates = getCountryCoordinates();
   const normalizedCode = countryCode.toUpperCase().trim();
@@ -65,7 +65,7 @@ export function findCountryCoordinates(
     found = coordinates.find(
       (coord) =>
         coord.alpha2Code.includes(normalizedCode) ||
-        coord.alpha3Code.includes(normalizedCode),
+        coord.alpha3Code.includes(normalizedCode)
     );
   }
 
@@ -81,14 +81,14 @@ export function getCountryCodeForFlag(countryName: string): string {
   const normalizedName = countryName.toLowerCase().trim();
 
   let found = coordinates.find(
-    (coord) => coord.country.toLowerCase() === normalizedName,
+    (coord) => coord.country.toLowerCase() === normalizedName
   );
 
   if (!found) {
     found = coordinates.find(
       (coord) =>
         coord.country.toLowerCase().includes(normalizedName) ||
-        normalizedName.includes(coord.country.toLowerCase()),
+        normalizedName.includes(coord.country.toLowerCase())
     );
   }
 

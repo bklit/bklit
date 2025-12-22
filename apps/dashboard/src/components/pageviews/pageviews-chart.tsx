@@ -43,7 +43,7 @@ export function PageviewsChart({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -116,14 +116,15 @@ export function PageviewsChart({
       // For entry points, sum up mobile/desktop sessions from all entry points
       const totalMobile = entryPointsData.entryPages.reduce(
         (sum, page) => sum + (page.mobileSessions || 0),
-        0,
+        0
       );
       const totalDesktop = entryPointsData.entryPages.reduce(
         (sum, page) => sum + (page.desktopSessions || 0),
-        0,
+        0
       );
       return { mobile: totalMobile, desktop: totalDesktop };
-    } else if (viewMode === "all" && statsData) {
+    }
+    if (viewMode === "all" && statsData) {
       // For all pageviews, use the stats data
       return {
         mobile: statsData.mobileViews || 0,
@@ -179,8 +180,8 @@ export function PageviewsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">
               Loading chart...
             </div>
           </div>
@@ -203,8 +204,8 @@ export function PageviewsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">
               No data available
             </div>
           </div>
@@ -234,21 +235,21 @@ export function PageviewsChart({
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <div className="flex flex-col sm:grid grid-cols-4 gap-4">
+        <div className="flex grid-cols-4 flex-col gap-4 sm:grid">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
-              mobile={mobileDesktopData.mobile}
               desktop={mobileDesktopData.desktop}
+              mobile={mobileDesktopData.mobile}
             />
           </div>
           <div className="col-span-3">
             <ChartContainer
-              config={chartConfig}
               className="aspect-auto h-[250px] w-full"
+              config={chartConfig}
             >
               <AreaChart data={chartData.timeSeriesData}>
                 <defs>
-                  <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillTotal" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-total)"
@@ -265,11 +266,11 @@ export function PageviewsChart({
                     : (chartData as any)?.topPages
                   )?.map((page: any) => (
                     <linearGradient
-                      key={`fill${page.dataKey}`}
                       id={`fill${page.dataKey}`}
+                      key={`fill${page.dataKey}`}
                       x1="0"
-                      y1="0"
                       x2="0"
+                      y1="0"
                       y2="1"
                     >
                       <stop
@@ -290,10 +291,8 @@ export function PageviewsChart({
                   strokeDasharray="5 5"
                 />
                 <XAxis
-                  dataKey="date"
-                  tickLine={false}
                   axisLine={false}
-                  tickMargin={8}
+                  dataKey="date"
                   minTickGap={32}
                   tickFormatter={(value) => {
                     const date = new Date(value);
@@ -302,30 +301,32 @@ export function PageviewsChart({
                       day: "numeric",
                     });
                   }}
+                  tickLine={false}
+                  tickMargin={8}
                 />
                 <ChartTooltip
-                  cursor={false}
                   content={
                     <ChartTooltipContent
+                      indicator="dot"
                       labelFormatter={(value) => {
                         return new Date(value).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                         });
                       }}
-                      indicator="dot"
                     />
                   }
+                  cursor={false}
                 />
 
                 {/* Total views area - dashed line */}
                 <Area
                   dataKey="total"
-                  type="linear"
                   fill="url(#fillTotal)"
+                  fillOpacity={0.3}
                   stroke="var(--color-total)"
                   strokeDasharray="5 5"
-                  fillOpacity={0.3}
+                  type="linear"
                 />
 
                 {/* Individual page areas - overlapping */}
@@ -334,12 +335,12 @@ export function PageviewsChart({
                   : (chartData as any)?.topPages
                 )?.map((page: any) => (
                   <Area
-                    key={page.dataKey}
                     dataKey={page.dataKey}
-                    type="linear"
                     fill={`url(#fill${page.dataKey})`}
-                    stroke={`var(--color-${page.dataKey})`}
                     fillOpacity={0.6}
+                    key={page.dataKey}
+                    stroke={`var(--color-${page.dataKey})`}
+                    type="linear"
                   />
                 ))}
 

@@ -63,7 +63,7 @@ function getCooldownRemaining(): number {
   const cooldownStart = localStorage.getItem(COOLDOWN_KEY);
   if (!cooldownStart) return 0;
 
-  const elapsed = Date.now() - parseInt(cooldownStart, 10);
+  const elapsed = Date.now() - Number.parseInt(cooldownStart, 10);
   const remaining = COOLDOWN_SECONDS * 1000 - elapsed;
 
   return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(
-    getCooldownRemaining(),
+    getCooldownRemaining()
   );
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
       const attemptsInLastHour = getAttemptsInLastHour();
       if (attemptsInLastHour >= MAX_ATTEMPTS_PER_HOUR) {
         toast.error(
-          `Too many attempts. Please try again later. (Max ${MAX_ATTEMPTS_PER_HOUR} per hour)`,
+          `Too many attempts. Please try again later. (Max ${MAX_ATTEMPTS_PER_HOUR} per hour)`
         );
         return;
       }
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
           setIsLoading(false);
         } else {
           toast.success(
-            "If an account exists with this email, you'll receive a password reset link.",
+            "If an account exists with this email, you'll receive a password reset link."
           );
           form.reset();
           setIsLoading(false);
@@ -146,20 +146,20 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <h1 className="text-2xl font-normal">
+        <h1 className="font-normal text-2xl">
           Forgot your <span className="font-bold">password?</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="mt-2 text-muted-foreground text-sm">
           Enter your email and we'll send you a link to reset your password
         </p>
       </div>
 
       <form
+        className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-4"
       >
         <FieldGroup>
           <form.Field name="email">
@@ -170,16 +170,16 @@ export default function ForgotPasswordPage() {
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                   <Input
-                    id={field.name}
-                    name={field.name}
-                    type="email"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
                     aria-invalid={isInvalid}
-                    placeholder="you@example.com"
                     autoComplete="email"
                     disabled={isLoading}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="you@example.com"
+                    type="email"
+                    value={field.state.value}
                   />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
@@ -189,8 +189,6 @@ export default function ForgotPasswordPage() {
         </FieldGroup>
 
         <Button
-          type="submit"
-          size="lg"
           className="w-full"
           disabled={
             isLoading ||
@@ -198,13 +196,15 @@ export default function ForgotPasswordPage() {
             cooldownSeconds > 0 ||
             getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR
           }
+          size="lg"
+          type="submit"
         >
           {isLoading || form.state.isSubmitting ? (
             "Sending..."
           ) : cooldownSeconds > 0 ? (
             <span className="flex items-center gap-1.5">
               Wait{" "}
-              <NumberFlow value={cooldownSeconds} className="tabular-nums" />s
+              <NumberFlow className="tabular-nums" value={cooldownSeconds} />s
             </span>
           ) : getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR ? (
             "Too many attempts"
@@ -215,26 +215,26 @@ export default function ForgotPasswordPage() {
       </form>
 
       {cooldownSeconds > 0 && (
-        <p className="text-sm text-center text-muted-foreground flex items-center justify-center gap-1">
+        <p className="flex items-center justify-center gap-1 text-center text-muted-foreground text-sm">
           Please wait{" "}
-          <NumberFlow value={cooldownSeconds} className="tabular-nums" />{" "}
+          <NumberFlow className="tabular-nums" value={cooldownSeconds} />{" "}
           seconds before trying again
         </p>
       )}
 
       {getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR && (
-        <p className="text-sm text-center text-destructive">
+        <p className="text-center text-destructive text-sm">
           Maximum attempts reached ({MAX_ATTEMPTS_PER_HOUR} per hour). Please
           try again later.
         </p>
       )}
 
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Remember your password?{" "}
           <Link
+            className="text-card-foreground transition-all hover:text-primary"
             href="/signin"
-            className="text-card-foreground hover:text-primary transition-all"
           >
             Sign in
           </Link>

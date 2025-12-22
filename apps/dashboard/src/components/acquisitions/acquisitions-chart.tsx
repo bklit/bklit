@@ -40,7 +40,7 @@ export function AcquisitionsChart({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
@@ -60,7 +60,7 @@ export function AcquisitionsChart({
       startDate,
       endDate,
       limit: 5,
-    }),
+    })
   );
 
   // Get stats data for mobile/desktop breakdown
@@ -120,8 +120,8 @@ export function AcquisitionsChart({
             Top 5 traffic sources over the last 30 days
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[250px] flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Loading chart data...</p>
+        <CardContent className="flex h-[250px] items-center justify-center">
+          <p className="text-muted-foreground text-sm">Loading chart data...</p>
         </CardContent>
       </Card>
     );
@@ -136,8 +136,8 @@ export function AcquisitionsChart({
             Top 5 traffic sources over the last 30 days
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[250px] flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">
+        <CardContent className="flex h-[250px] items-center justify-center">
+          <p className="text-muted-foreground text-sm">
             No data available for this period.
           </p>
         </CardContent>
@@ -157,21 +157,21 @@ export function AcquisitionsChart({
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <div className="flex flex-col sm:grid sm:grid-cols-4 gap-4">
+        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
-              mobile={mobileDesktopData.mobile}
               desktop={mobileDesktopData.desktop}
+              mobile={mobileDesktopData.mobile}
             />
           </div>
           <div className="col-span-3">
             <ChartContainer
-              config={chartConfig}
               className="aspect-auto h-[250px] w-full"
+              config={chartConfig}
             >
               <AreaChart data={chartData.timeSeriesData}>
                 <defs>
-                  <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillTotal" x1="0" x2="0" y1="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor="var(--color-total)"
@@ -185,11 +185,11 @@ export function AcquisitionsChart({
                   </linearGradient>
                   {chartData.topSources.map((source) => (
                     <linearGradient
-                      key={`fill${source.dataKey}`}
                       id={`fill${source.dataKey}`}
+                      key={`fill${source.dataKey}`}
                       x1="0"
-                      y1="0"
                       x2="0"
+                      y1="0"
                       y2="1"
                     >
                       <stop
@@ -210,10 +210,8 @@ export function AcquisitionsChart({
                   strokeDasharray="3 3"
                 />
                 <XAxis
-                  dataKey="date"
-                  tickLine={false}
                   axisLine={false}
-                  tickMargin={8}
+                  dataKey="date"
                   minTickGap={32}
                   tickFormatter={(value) => {
                     const date = new Date(value);
@@ -222,41 +220,43 @@ export function AcquisitionsChart({
                       day: "numeric",
                     });
                   }}
+                  tickLine={false}
+                  tickMargin={8}
                 />
                 <ChartTooltip
-                  cursor={false}
                   content={
                     <ChartTooltipContent
+                      indicator="dot"
                       labelFormatter={(value) => {
                         return new Date(value).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                         });
                       }}
-                      indicator="dot"
                     />
                   }
+                  cursor={false}
                 />
 
                 {/* Total views area - dashed line */}
                 <Area
                   dataKey="total"
-                  type="linear"
                   fill="url(#fillTotal)"
+                  fillOpacity={0.3}
                   stroke="var(--color-total)"
                   strokeDasharray="5 5"
-                  fillOpacity={0.3}
+                  type="linear"
                 />
 
                 {/* Individual source areas - overlapping */}
                 {chartData.topSources.map((source) => (
                   <Area
-                    key={source.dataKey}
                     dataKey={source.dataKey}
-                    type="linear"
                     fill={`url(#fill${source.dataKey})`}
-                    stroke={`var(--color-${source.dataKey})`}
                     fillOpacity={0.6}
+                    key={source.dataKey}
+                    stroke={`var(--color-${source.dataKey})`}
+                    type="linear"
                   />
                 ))}
 

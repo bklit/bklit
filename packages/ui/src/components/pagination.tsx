@@ -11,8 +11,8 @@ function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
       aria-label="pagination"
-      data-slot="pagination"
       className={cn("flex w-full", className)}
+      data-slot="pagination"
       {...props}
     />
   );
@@ -24,8 +24,8 @@ function PaginationContent({
 }: React.ComponentProps<"ul">) {
   return (
     <ul
-      data-slot="pagination-content"
       className={cn("flex flex-row items-center gap-1", className)}
+      data-slot="pagination-content"
       {...props}
     />
   );
@@ -49,15 +49,15 @@ function PaginationLink({
   return (
     <a
       aria-current={isActive ? "page" : undefined}
-      data-slot="pagination-link"
-      data-active={isActive}
       className={cn(
         buttonVariants({
           variant: isActive ? "outline" : "ghost",
           size,
         }),
-        className,
+        className
       )}
+      data-active={isActive}
+      data-slot="pagination-link"
       {...props}
     />
   );
@@ -70,8 +70,8 @@ function PaginationPrevious({
   return (
     <PaginationLink
       aria-label="Go to previous page"
-      size="default"
       className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
+      size="default"
       {...props}
     >
       <ChevronLeftIcon />
@@ -87,8 +87,8 @@ function PaginationNext({
   return (
     <PaginationLink
       aria-label="Go to next page"
-      size="default"
       className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
+      size="default"
       {...props}
     >
       <span className="hidden sm:block">Next</span>
@@ -104,8 +104,8 @@ function PaginationEllipsis({
   return (
     <span
       aria-hidden
-      data-slot="pagination-ellipsis"
       className={cn("flex size-9 items-center justify-center", className)}
+      data-slot="pagination-ellipsis"
       {...props}
     >
       <MoreHorizontalIcon className="size-4" />

@@ -1,5 +1,8 @@
 {
   "extends": "@bklit/tsconfig/internal-package.json",
   "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "strictNullChecks": true
+  }
 }

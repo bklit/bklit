@@ -52,7 +52,7 @@ export const Team = ({ organizationId }: TeamProps) => {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<MemberToDelete | null>(
-    null,
+    null
   );
 
   const { data: membersData } = useSuspenseQuery(
@@ -60,13 +60,13 @@ export const Team = ({ organizationId }: TeamProps) => {
       organizationId,
       page,
       limit: 15,
-    }),
+    })
   );
 
   const { data: organization } = useSuspenseQuery(
     trpc.organization.fetch.queryOptions({
       id: organizationId,
-    }),
+    })
   );
 
   const updateRole = useMutation(
@@ -83,7 +83,7 @@ export const Team = ({ organizationId }: TeamProps) => {
       onError: (error) => {
         toast.error(`Failed to update role: ${error.message}`);
       },
-    }),
+    })
   );
 
   const handleRoleUpdate = async (memberId: string, newRole: string) => {
@@ -108,7 +108,7 @@ export const Team = ({ organizationId }: TeamProps) => {
 
   const canManageMembers = hasPermission(
     organization.userMembership.role,
-    MemberRole.ADMIN,
+    MemberRole.ADMIN
   );
 
   const startIndex = (page - 1) * 15 + 1;
@@ -116,7 +116,7 @@ export const Team = ({ organizationId }: TeamProps) => {
 
   return (
     <>
-      <PageHeader title="Team" description="Manage your team members.">
+      <PageHeader description="Manage your team members." title="Team">
         {canManageMembers && (
           <Button onClick={() => setInviteDialogOpen(true)}>
             <Plus size={16} />
@@ -125,7 +125,7 @@ export const Team = ({ organizationId }: TeamProps) => {
         )}
       </PageHeader>
 
-      <div className="w-full flex flex-col gap-4">
+      <div className="flex w-full flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Members</CardTitle>
@@ -138,10 +138,10 @@ export const Team = ({ organizationId }: TeamProps) => {
             <div className="space-y-4">
               {membersData.members.map((member) => (
                 <div
-                  key={member.id}
                   className="flex items-center justify-between gap-4"
+                  key={member.id}
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     <Avatar>
                       <AvatarImage src={member.user.image || ""} />
                       <AvatarFallback>
@@ -149,22 +149,22 @@ export const Team = ({ organizationId }: TeamProps) => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{member.user.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="font-medium text-sm">{member.user.name}</p>
+                      <p className="truncate text-muted-foreground text-sm">
                         {member.user.email}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex shrink-0 items-center gap-2">
                     {canManageMembers ? (
                       <Select
-                        value={member.role}
+                        disabled={updateRole.isPending}
                         onValueChange={(role) =>
                           handleRoleUpdate(member.id, role)
                         }
-                        disabled={updateRole.isPending}
+                        value={member.role}
                       >
-                        <SelectTrigger size="sm" className="w-[120px]">
+                        <SelectTrigger className="w-[120px]" size="sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -184,10 +184,10 @@ export const Team = ({ organizationId }: TeamProps) => {
                     )}
                     {canManageMembers && (
                       <Button
+                        aria-label="Remove member"
+                        onClick={() => handleDeleteClick(member)}
                         size="icon"
                         variant="ghost"
-                        onClick={() => handleDeleteClick(member)}
-                        aria-label="Remove member"
                       >
                         <Trash size={16} />
                       </Button>
@@ -198,26 +198,26 @@ export const Team = ({ organizationId }: TeamProps) => {
             </div>
 
             {membersData.totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4 mt-4 border-t">
-                <p className="text-sm text-muted-foreground">
+              <div className="mt-4 flex items-center justify-between border-t pt-4">
+                <p className="text-muted-foreground text-sm">
                   Showing {startIndex}-{endIndex} of {membersData.totalCount}{" "}
                   members
                 </p>
                 <div className="flex gap-2">
                   <Button
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
                     size="sm"
                     variant="outline"
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
                   >
                     <ChevronLeft size={16} />
                     Previous
                   </Button>
                   <Button
+                    disabled={page === membersData.totalPages}
+                    onClick={() => setPage(page + 1)}
                     size="sm"
                     variant="outline"
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === membersData.totalPages}
                   >
                     Next
                     <ChevronRight size={16} />
@@ -230,22 +230,21 @@ export const Team = ({ organizationId }: TeamProps) => {
       </div>
 
       <InviteMemberForm
-        organizationId={organizationId}
         isOpen={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
         onSuccess={() => {
           // Refresh the members list after successful invite
           setPage(1);
         }}
+        organizationId={organizationId}
       />
 
       {memberToDelete && (
         <DeleteMemberForm
-          organizationId={organizationId}
+          isOpen={deleteDialogOpen}
+          memberEmail={memberToDelete.email}
           memberId={memberToDelete.id}
           memberName={memberToDelete.name}
-          memberEmail={memberToDelete.email}
-          isOpen={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           onSuccess={() => {
             // If the current page is now empty, go to previous page
@@ -253,6 +252,7 @@ export const Team = ({ organizationId }: TeamProps) => {
               setPage(page - 1);
             }
           }}
+          organizationId={organizationId}
         />
       )}
     </>
