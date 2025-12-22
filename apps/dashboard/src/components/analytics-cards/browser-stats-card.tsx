@@ -110,7 +110,7 @@ export function BrowserStatsCard({ projectId, userId }: BrowserStatsCardProps) {
         <PieDonut
           data={chartData}
           centerLabel={{ showTotal: true, suffix: "page views" }}
-          className="w-full"
+          className=""
         />
       </CardContent>
     </Card>
