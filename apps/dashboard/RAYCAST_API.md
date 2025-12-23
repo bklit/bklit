@@ -140,9 +140,131 @@ Content-Type: application/json
 }
 ```
 
+### Get Device Usage (Last 24 Hours)
+
+Retrieves mobile vs desktop breakdown from the last 24 hours.
+
+**Endpoint**: `POST /api/raycast/device-usage`
+
+**Request Headers & Body**: Same as top-countries endpoint
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "data": {
+    "mobile": {
+      "views": 1234,
+      "percentage": 45.2
+    },
+    "desktop": {
+      "views": 1500,
+      "percentage": 54.8
+    },
+    "total": 2734
+  },
+  "period": {
+    "startDate": "2025-12-22T00:00:00.000Z",
+    "endDate": "2025-12-23T00:00:00.000Z"
+  }
+}
+```
+
+### Get Top Referrers (Last 24 Hours)
+
+Retrieves the top 5 referrers by page views from the last 24 hours.
+
+**Endpoint**: `POST /api/raycast/top-referrers`
+
+**Request Headers & Body**: Same as top-countries endpoint
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "referrer": "google.com",
+      "views": 456,
+      "percentage": 35.2
+    },
+    {
+      "referrer": "Direct / None",
+      "views": 234,
+      "percentage": 18.1
+    }
+  ],
+  "period": {
+    "startDate": "2025-12-22T00:00:00.000Z",
+    "endDate": "2025-12-23T00:00:00.000Z"
+  }
+}
+```
+
+### Get Top Pages (Last 24 Hours)
+
+Retrieves the top 5 pages by page views from the last 24 hours.
+
+**Endpoint**: `POST /api/raycast/top-pages`
+
+**Request Headers & Body**: Same as top-countries endpoint
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "path": "/",
+      "views": 1234
+    },
+    {
+      "path": "/about",
+      "views": 567
+    }
+  ],
+  "period": {
+    "startDate": "2025-12-22T00:00:00.000Z",
+    "endDate": "2025-12-23T00:00:00.000Z"
+  }
+}
+```
+
+### Get Browser Usage (Last 24 Hours)
+
+Retrieves the top 5 browsers by page views from the last 24 hours.
+
+**Endpoint**: `POST /api/raycast/browser-usage`
+
+**Request Headers & Body**: Same as top-countries endpoint
+
+**Success Response** (200 OK):
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "browser": "Chrome",
+      "views": 1234,
+      "percentage": 52.3
+    },
+    {
+      "browser": "Safari",
+      "views": 567,
+      "percentage": 24.0
+    }
+  ],
+  "period": {
+    "startDate": "2025-12-22T00:00:00.000Z",
+    "endDate": "2025-12-23T00:00:00.000Z"
+  }
+}
+```
+
 ## TypeScript Types
 
 ```typescript
+// Top Countries
 export interface RaycastTopCountriesRequest {
   projectId: string;
 }
@@ -157,6 +279,77 @@ export interface RaycastTopCountryData {
 export interface RaycastTopCountriesResponse {
   success: boolean;
   data?: RaycastTopCountryData[];
+  error?: string;
+  period?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+// Device Usage
+export interface RaycastDeviceUsageResponse {
+  success: boolean;
+  data?: {
+    mobile: {
+      views: number;
+      percentage: number;
+    };
+    desktop: {
+      views: number;
+      percentage: number;
+    };
+    total: number;
+  };
+  error?: string;
+  period?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+// Top Referrers
+export interface RaycastReferrerData {
+  referrer: string;
+  views: number;
+  percentage: number;
+}
+
+export interface RaycastTopReferrersResponse {
+  success: boolean;
+  data?: RaycastReferrerData[];
+  error?: string;
+  period?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+// Top Pages
+export interface RaycastPageData {
+  path: string;
+  views: number;
+}
+
+export interface RaycastTopPagesResponse {
+  success: boolean;
+  data?: RaycastPageData[];
+  error?: string;
+  period?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+// Browser Usage
+export interface RaycastBrowserData {
+  browser: string;
+  views: number;
+  percentage: number;
+}
+
+export interface RaycastBrowserUsageResponse {
+  success: boolean;
+  data?: RaycastBrowserData[];
   error?: string;
   period?: {
     startDate: string;
@@ -217,6 +410,12 @@ For issues or questions:
 - Report bugs via GitHub issues (if applicable)
 
 ## Changelog
+
+### v1.1.0 (2025-12-23)
+- Added `/api/raycast/device-usage` endpoint - Mobile vs desktop breakdown
+- Added `/api/raycast/top-referrers` endpoint - Top 5 referrers
+- Added `/api/raycast/top-pages` endpoint - Top 5 pages
+- Added `/api/raycast/browser-usage` endpoint - Top 5 browsers
 
 ### v1.0.0 (2025-12-23)
 - Initial release

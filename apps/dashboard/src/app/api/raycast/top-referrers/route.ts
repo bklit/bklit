@@ -1,0 +1,116 @@
+import { type NextRequest, NextResponse } from "next/server";
+import {
+  extractTokenFromHeader,
+  validateApiToken,
+} from "@/lib/api-token-auth";
+import {
+  calculateLast24Hours,
+  calculatePercentage,
+  formatPeriod,
+} from "@/lib/raycast-helpers";
+import { getTopReferrers } from "@/actions/analytics-actions";
+import type {
+  RaycastTopCountriesRequest,
+  RaycastTopReferrersResponse,
+} from "@/types/raycast-api";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function POST(request: NextRequest) {
+  try {
+    // Parse request body
+    const body: RaycastTopCountriesRequest = await request.json();
+
+    if (!body.projectId) {
+      return NextResponse.json<RaycastTopReferrersResponse>(
+        {
+          success: false,
+          error: "projectId is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate API token
+    const authHeader = request.headers.get("authorization");
+    const token = extractTokenFromHeader(authHeader);
+
+    if (!token) {
+      return NextResponse.json<RaycastTopReferrersResponse>(
+        {
+          success: false,
+          error: "Authorization token is required",
+        },
+        { status: 401 },
+      );
+    }
+
+    const tokenValidation = await validateApiToken(token, body.projectId);
+    if (!tokenValidation.valid) {
+      return NextResponse.json<RaycastTopReferrersResponse>(
+        {
+          success: false,
+          error: tokenValidation.error || "Invalid token",
+        },
+        { status: 401 },
+      );
+    }
+
+    // Calculate last 24 hours
+    const { startDate, endDate } = calculateLast24Hours();
+
+    // Fetch top referrers
+    const topReferrers = await getTopReferrers({
+      projectId: body.projectId,
+      userId: "raycast-api", // API doesn't need real userId for server actions
+      limit: 5,
+      startDate,
+      endDate,
+    });
+
+    // Calculate total for percentages
+    const total = topReferrers.reduce((sum, ref) => sum + ref.count, 0);
+
+    // Format response
+    const response: RaycastTopReferrersResponse = {
+      success: true,
+      data: topReferrers.map((ref) => ({
+        referrer: ref.referrer,
+        views: ref.count,
+        percentage: calculatePercentage(ref.count, total),
+      })),
+      period: formatPeriod(startDate, endDate),
+    };
+
+    return NextResponse.json<RaycastTopReferrersResponse>(response, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      },
+    });
+  } catch (error) {
+    console.error("Error in Raycast top referrers API:", error);
+    return NextResponse.json<RaycastTopReferrersResponse>(
+      {
+        success: false,
+        error: "Internal server error",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+// OPTIONS handler for CORS preflight (if needed in future)
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+}
+
