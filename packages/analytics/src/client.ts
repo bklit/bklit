@@ -10,6 +10,8 @@ export function getClickHouseClient(): ClickHouseClient {
       host: env.CLICKHOUSE_HOST,
       username: env.CLICKHOUSE_USERNAME,
       password: env.CLICKHOUSE_PASSWORD,
+      database: "default",
+      request_timeout: 30000,
     });
   }
   return clickhouseClient;
