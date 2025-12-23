@@ -18,7 +18,6 @@ import {
   EmptyTitle,
 } from "@bklit/ui/components/empty";
 import {
-  Field,
   FieldDescription,
   FieldError,
   FieldGroup,
@@ -326,6 +325,7 @@ export function StepConfigSheet({
                       <>
                         <div className="grid gap-2 max-h-[370px] overflow-y-auto pr-1">
                           {events.map((event) => (
+                            // biome-ignore lint/a11y/useSemanticElements: Using div with role="button" to avoid nested buttons (copy button inside)
                             <div
                               role="button"
                               tabIndex={0}

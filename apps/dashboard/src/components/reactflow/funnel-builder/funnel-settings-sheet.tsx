@@ -149,10 +149,10 @@ export function FunnelSettingsSheet({
                         }
                       }}
                     />
-                </div>
-              </FieldGroup>
-            )}
-          </form.Field>
+                  </div>
+                </FieldGroup>
+              )}
+            </form.Field>
 
             {form.state.values.hasExpirationDate && (
               <form.Field name="endDate">
@@ -173,7 +173,7 @@ export function FunnelSettingsSheet({
                             <span>Pick a date</span>
                           )}
                         </Button>
-                    </PopoverTrigger>
+                      </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <CalendarComponent
                           mode="single"
