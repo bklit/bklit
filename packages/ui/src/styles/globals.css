@@ -30,9 +30,13 @@
 
   --chart-1: oklch(0.93 0.1421 124.85);
   --chart-2: oklch(0.79 0.1287 184.79);
-  --chart-3: oklch(0.73 0.1749 305.37);
-  --chart-4: oklch(0.71 0.2007 357.57);
-  --chart-5: oklch(0.43 0.1017 284.94);
+  --chart-3: oklch(0.69 0.1763 246.45);
+  --chart-4: oklch(0.49 0.2229 281.04);
+  --chart-5: oklch(0.78 0.193 322.07);
+  --chart-6: oklch(0.71 0.2007 357.57);
+  --chart-7: oklch(0.83 0.1475 83);
+  --chart-8: oklch(0.41 0.1227 263.12);
+  --chart-9: oklch(0.03 0.001 286.32);
 
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
@@ -90,9 +94,13 @@
 
   --chart-1: oklch(0.93 0.1421 124.85);
   --chart-2: oklch(0.79 0.1287 184.79);
-  --chart-3: oklch(0.73 0.1749 305.37);
-  --chart-4: oklch(0.71 0.2007 357.57);
-  --chart-5: oklch(0.43 0.1017 284.94);
+  --chart-3: oklch(0.69 0.1763 246.45);
+  --chart-4: oklch(0.49 0.2229 281.04);
+  --chart-5: oklch(0.78 0.193 322.07);
+  --chart-6: oklch(0.71 0.2007 357.57);
+  --chart-7: oklch(0.83 0.1475 83);
+  --chart-8: oklch(0.41 0.1227 263.12);
+  --chart-9: oklch(0.03 0.001 286.32);
 
   --sidebar: var(--bklit-900);
   --sidebar-foreground: var(--bklit-200);
@@ -145,6 +153,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-9: var(--chart-9);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -202,4 +214,24 @@
 .squircle {
   /* biome-ignore lint/correctness/noUnknownProperty: corner-shape is experimental */
   corner-shape: squircle;
+}
+
+.page-content {
+  @apply text-muted-foreground space-y-4;
+
+  & h2 {
+    @apply text-2xl font-bold text-card-foreground;
+  }
+
+  & h3 {
+    @apply text-lg font-semibold mb-2 text-card-foreground;
+  }
+
+  & p {
+    @apply text-lg mb-4;
+  }
+
+  & ul {
+    @apply list-disc pl-4 space-y-2;
+  }
 }

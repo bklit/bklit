@@ -20,7 +20,7 @@ export default async function DashboardLayout({
 
   return (
     <WorkspaceProvider session={session} organizations={organizations}>
-      <SidebarProvider className="flex flex-col">
+      <SidebarProvider className="flex flex-col sm:overflow-hidden">
         <SiteHeader />
         <div className="flex flex-1 pt-(--header-height)">
           <AppSidebar />

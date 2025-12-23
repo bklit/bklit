@@ -210,26 +210,12 @@ function removeCyclesSmart(
 
   // For bidirectional links, keep only the one with higher value
   const linksToRemove = new Set<string>();
-  bidirectionalPairs.forEach((pair, pairKey) => {
+  bidirectionalPairs.forEach((pair) => {
     if (pair.forward && pair.backward) {
       if (pair.forward.value >= pair.backward.value) {
         linksToRemove.add(`${pair.backward.source}->${pair.backward.target}`);
-        console.log(
-          `NivoSankey: Bidirectional link detected, keeping forward (${pair.forward.value} >= ${pair.backward.value}):`,
-          {
-            keeping: `${pair.forward.source}->${pair.forward.target}`,
-            removing: `${pair.backward.source}->${pair.backward.target}`,
-          },
-        );
       } else {
         linksToRemove.add(`${pair.forward.source}->${pair.forward.target}`);
-        console.log(
-          `NivoSankey: Bidirectional link detected, keeping backward (${pair.backward.value} > ${pair.forward.value}):`,
-          {
-            keeping: `${pair.backward.source}->${pair.backward.target}`,
-            removing: `${pair.forward.source}->${pair.forward.target}`,
-          },
-        );
       }
     }
   });
@@ -240,99 +226,109 @@ function removeCyclesSmart(
     return !linksToRemove.has(linkKey);
   });
 
-  // Now detect remaining cycles and break them by removing the weakest link in each cycle
-  const graph = new Map<
-    string,
-    Array<{ target: string; value: number; linkKey: string }>
-  >();
-  nodes.forEach((node) => {
-    graph.set(node, []);
-  });
+  // Iteratively detect and remove cycles using DFS until graph is acyclic
+  const MAX_ITERATIONS = 100;
+  let iteration = 0;
+  let cyclesFound = true;
 
-  filteredLinks.forEach((link) => {
-    const linkKey = `${link.source}->${link.target}`;
-    const neighbors = graph.get(link.source) || [];
-    neighbors.push({ target: link.target, value: link.value, linkKey });
-    graph.set(link.source, neighbors);
-  });
+  while (cyclesFound && iteration < MAX_ITERATIONS) {
+    iteration++;
+    cyclesFound = false;
 
-  const cycleLinks = new Set<string>();
-  const visited = new Set<string>();
-  const recStack = new Set<string>();
+    const graph = new Map<string, string[]>();
+    const linkValueMap = new Map<string, number>();
 
-  function findCycles(
-    node: string,
-    path: Array<{ node: string; linkKey?: string }>,
-  ): void {
-    if (recStack.has(node)) {
-      const cycleStart = path.findIndex((p) => p.node === node);
-      if (cycleStart >= 0) {
-        const cycle = path.slice(cycleStart);
-        cycle.push({ node, linkKey: undefined });
+    nodes.forEach((node) => {
+      graph.set(node, []);
+    });
 
-        // Find the weakest link in the cycle
-        let weakestLink: string | null = null;
-        let weakestValue = Infinity;
+    filteredLinks.forEach((link) => {
+      const neighbors = graph.get(link.source) || [];
+      neighbors.push(link.target);
+      graph.set(link.source, neighbors);
+      linkValueMap.set(`${link.source}->${link.target}`, link.value);
+    });
 
-        for (let i = 0; i < cycle.length - 1; i++) {
-          const linkKey = cycle[i].linkKey;
-          if (linkKey) {
-            const link = filteredLinks.find(
-              (l) => `${l.source}->${l.target}` === linkKey,
-            );
-            if (link && link.value < weakestValue) {
-              weakestValue = link.value;
+    const cycleLinks = new Set<string>();
+
+    function detectCycle(
+      node: string,
+      visited: Set<string>,
+      recStack: Set<string>,
+      path: string[],
+    ): boolean {
+      visited.add(node);
+      recStack.add(node);
+      path.push(node);
+
+      const neighbors = graph.get(node) || [];
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          if (detectCycle(neighbor, visited, recStack, path)) {
+            return true;
+          }
+        } else if (recStack.has(neighbor)) {
+          const cycleStartIndex = path.indexOf(neighbor);
+          const cyclePath = path.slice(cycleStartIndex);
+          cyclePath.push(neighbor);
+
+          let weakestLink: string | null = null;
+          let weakestValue = Infinity;
+
+          for (let i = 0; i < cyclePath.length - 1; i++) {
+            const linkKey = `${cyclePath[i]}->${cyclePath[i + 1]}`;
+            const value = linkValueMap.get(linkKey) || Infinity;
+            if (value < weakestValue) {
+              weakestValue = value;
               weakestLink = linkKey;
             }
           }
-        }
 
-        if (weakestLink) {
-          cycleLinks.add(weakestLink);
-          console.log(
-            `NivoSankey: Breaking cycle by removing weakest link: ${weakestLink} (value: ${weakestValue})`,
-          );
+          if (weakestLink) {
+            cycleLinks.add(weakestLink);
+            console.log(
+              `NivoSankey: Cycle detected, removing weakest link: ${weakestLink} (value: ${weakestValue})`,
+            );
+          }
+
+          return true;
         }
       }
-      return;
+
+      recStack.delete(node);
+      return false;
     }
 
-    if (visited.has(node)) {
-      return;
+    for (const node of nodes) {
+      const visited = new Set<string>();
+      const recStack = new Set<string>();
+      const path: string[] = [];
+
+      if (detectCycle(node, visited, recStack, path)) {
+        cyclesFound = true;
+        break;
+      }
     }
 
-    visited.add(node);
-    recStack.add(node);
-
-    const neighbors = graph.get(node) || [];
-    for (const neighbor of neighbors) {
-      findCycles(neighbor.target, [
-        ...path,
-        { node, linkKey: neighbor.linkKey },
-      ]);
+    if (cycleLinks.size > 0) {
+      filteredLinks = filteredLinks.filter((link) => {
+        const linkKey = `${link.source}->${link.target}`;
+        return !cycleLinks.has(linkKey);
+      });
     }
-
-    recStack.delete(node);
   }
 
-  nodes.forEach((node) => {
-    if (!visited.has(node)) {
-      findCycles(node, []);
-    }
-  });
+  if (iteration >= MAX_ITERATIONS) {
+    console.warn(
+      "NivoSankey: Maximum iterations reached while removing cycles. Some cycles may remain.",
+    );
+  }
 
-  // Remove cycle-breaking links
-  filteredLinks = filteredLinks.filter((link) => {
-    const linkKey = `${link.source}->${link.target}`;
-    return !cycleLinks.has(linkKey);
-  });
-
-  if (linksToRemove.size > 0 || cycleLinks.size > 0) {
-    console.warn("NivoSankey: Removed links:", {
-      bidirectional: linksToRemove.size,
-      cycleBreaking: cycleLinks.size,
-      totalRemoved: linksToRemove.size + cycleLinks.size,
-      remaining: filteredLinks.length,
+  if (linksToRemove.size > 0 || iteration > 1) {
+    console.log("NivoSankey: Cycle removal complete:", {
+      bidirectionalRemoved: linksToRemove.size,
+      cycleIterations: iteration - 1,
+      remainingLinks: filteredLinks.length,
     });
   }
 

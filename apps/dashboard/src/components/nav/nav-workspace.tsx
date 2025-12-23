@@ -55,9 +55,7 @@ export function NavWorkspace({ user }: { user: User }) {
     (project) => project.id === projectId,
   );
 
-  // Use organization plan from database
   const isPro = activeOrganization?.plan === "pro";
-  const planName = isPro ? "Pro" : "Free";
 
   return (
     <Breadcrumb>
@@ -125,7 +123,7 @@ export function NavWorkspace({ user }: { user: User }) {
                     variant={isPro ? "default" : "secondary"}
                     className="hidden sm:inline-flex"
                   >
-                    {planName}
+                    {isPro ? "Pro" : "Free"}
                   </Badge>
                 </Link>
               </BreadcrumbLink>
@@ -163,8 +161,10 @@ export function NavWorkspace({ user }: { user: User }) {
         {activeProject && (
           <>
             <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{activeProject.name}</BreadcrumbPage>
+            <BreadcrumbItem className="min-w-0 flex-1">
+              <BreadcrumbPage className="truncate">
+                {activeProject.name}
+              </BreadcrumbPage>
             </BreadcrumbItem>
 
             {isDesktop ? (

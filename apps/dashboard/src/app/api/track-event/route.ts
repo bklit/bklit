@@ -1,6 +1,6 @@
-import { AnalyticsService } from "@bklit/analytics/service";
+import { randomBytes } from "node:crypto";
+import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
-import { randomBytes } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { checkEventLimit } from "@/lib/usage-limits";
@@ -187,6 +187,39 @@ export async function POST(request: NextRequest) {
       eventDefinitionId: eventDefinition.id,
       sessionLinked: !!payload.sessionId,
     });
+
+    const orgId = tokenValidation.organizationId;
+    if (orgId) {
+      // Fire and forget - send to Polar async without blocking response
+      Promise.resolve()
+        .then(async () => {
+          try {
+            const org = await prisma.organization.findUnique({
+              where: { id: orgId },
+              select: { polarCustomerId: true },
+            });
+
+            if (org?.polarCustomerId) {
+              await sendEventToPolar({
+                organizationId: orgId,
+                polarCustomerId: org.polarCustomerId,
+                eventType: "custom_event",
+                metadata: {
+                  trackingId: payload.trackingId,
+                  eventType: payload.eventType,
+                  projectId: payload.projectId,
+                  ...payload.metadata,
+                },
+              }).catch((err) => {
+                console.error("Failed to send custom event to Polar:", err);
+              });
+            }
+          } catch (err) {
+            console.error("Failed to fetch organization for Polar:", err);
+          }
+        })
+        .catch(() => {}); // Silently fail
+    }
 
     return createCorsResponse({ message: "Event tracked successfully" }, 200);
   } catch (error) {

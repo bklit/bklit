@@ -1,3 +1,6 @@
+import { DiscordIcon } from "@bklit/ui/icons/discord";
+import { GitHubIcon } from "@bklit/ui/icons/github";
+import { XIcon } from "@bklit/ui/icons/x";
 import Link from "next/link";
 import { ButtonHealth } from "./button-health";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -14,8 +17,8 @@ export const Footer = () => {
               <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <li>
                   <Link
-                    href="#"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                    href="/terms"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
@@ -27,8 +30,8 @@ export const Footer = () => {
                 </li>
                 <li>
                   <Link
-                    href="#"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                    href="/privacy"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
@@ -52,9 +55,9 @@ export const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="#"
-                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                  <a
+                    href="mailto:support@bklit.com?subject=Support%20Request"
+                    className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                   >
                     <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                       ◑
@@ -62,7 +65,7 @@ export const Footer = () => {
                     <span className="transition-all duration-200 group-hover:translate-x-[20px]">
                       Contact
                     </span>
-                  </Link>
+                  </a>
                 </li>
                 <li>
                   <a
@@ -99,15 +102,16 @@ export const Footer = () => {
               <p className="text-xs md:text-sm text-muted-foreground font-normal">
                 169 Madison Avenue, New York, NY 10016 US
               </p>
-              <ul className="flex items-center gap-2 text-sm">
+              <ul className="flex items-center gap-4">
                 <li>
                   <a
                     href="https://github.com/bklit/bklit"
                     title="Github"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Github
+                    <GitHubIcon className="size-5" />
                   </a>
                 </li>
                 <li>
@@ -116,8 +120,9 @@ export const Footer = () => {
                     title="X"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    X
+                    <XIcon className="size-5" />
                   </a>
                 </li>
                 <li>
@@ -126,8 +131,9 @@ export const Footer = () => {
                     title="Discord"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Discord
+                    <DiscordIcon className="size-5" />
                   </a>
                 </li>
               </ul>

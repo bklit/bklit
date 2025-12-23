@@ -23,6 +23,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@bklit/ui/components/empty";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
+} from "@bklit/ui/components/item";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Layers2, Plus, Settings } from "lucide-react";
 import Link from "next/link";
@@ -71,39 +78,39 @@ export const Organization = ({
               <CardDescription>Manage your team.</CardDescription>
               <CardAction>
                 <Button
-                  size="icon"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setInviteDialogOpen(true)}
                   aria-label="Invite member"
                 >
-                  <Plus size={16} />
+                  Invite member
                 </Button>
               </CardAction>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="bg-bklit-600/30 rounded-md p-4 space-y-px border">
                 {organization.members.slice(0, 5).map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2">
+                  <Item key={member.id} size="sm">
+                    <ItemMedia>
                       <Avatar>
                         <AvatarImage src={member.user.image || ""} />
                         <AvatarFallback>
                           {member.user.name?.[0]?.toUpperCase() || "?"}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">
-                        {member.user.name}
-                      </span>
-                    </div>
-                    <Badge
-                      variant={member.role === "owner" ? "default" : "outline"}
-                    >
-                      {member.role}
-                    </Badge>
-                  </div>
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>{member.user.name}</ItemTitle>
+                    </ItemContent>
+                    <ItemActions>
+                      <Badge
+                        variant={
+                          member.role === "owner" ? "default" : "outline"
+                        }
+                      >
+                        {member.role}
+                      </Badge>
+                    </ItemActions>
+                  </Item>
                 ))}
               </div>
             </CardContent>

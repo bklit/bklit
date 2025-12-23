@@ -1,28 +1,14 @@
-/**
- * Plan Types and Business Logic
- *
- * This file contains only business rules and limits for plans.
- * Display information (name, description, price, features) comes from Polar.
- */
-
 export enum PlanType {
   FREE = "free",
   PRO = "pro",
 }
 
-/**
- * Business limits for each plan
- */
 export interface PlanLimits {
   projectLimit: number;
   teamMemberLimit: number;
   eventLimit: number;
 }
 
-/**
- * Plan limits configuration
- * These are used for feature gating and access control
- */
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   [PlanType.FREE]: {
     projectLimit: 1,
@@ -30,15 +16,12 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     eventLimit: 4000,
   },
   [PlanType.PRO]: {
-    projectLimit: 5,
-    teamMemberLimit: 5,
-    eventLimit: 10000,
+    projectLimit: 999999,
+    teamMemberLimit: 999999,
+    eventLimit: 100000,
   },
 };
 
-/**
- * Get plan limits by plan type
- */
 export function getPlanLimits(planType: PlanType): PlanLimits {
-  return PLAN_LIMITS[planType];
+  return PLAN_LIMITS[planType] || PLAN_LIMITS[PlanType.FREE];
 }

@@ -202,11 +202,10 @@ export default function MarketingHomePage() {
             title="Pricing"
             description="Simple, transparent pricing for teams of all sizes."
           >
-            <div className="flex items-center w-full justify-center">
-              <Badge variant="success" size="lg">
-                🫶 Bklit is currently in beta and free
-              </Badge>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              All prices exclude applicable taxes. Tax will be calculated at
+              checkout based on your location.
+            </p>
           </SectionHeader>
           <Pricing />
         </div>

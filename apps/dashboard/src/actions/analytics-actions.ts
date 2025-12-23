@@ -1153,6 +1153,91 @@ export async function getSessionAnalytics(
   )();
 }
 
+const getTopReferrersSchema = z.object({
+  projectId: z.string(),
+  userId: z.string(),
+  limit: z.number().default(5),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+});
+
+export async function getTopReferrers(
+  params: z.input<typeof getTopReferrersSchema>,
+) {
+  const validation = getTopReferrersSchema.safeParse(params);
+
+  if (!validation.success) {
+    throw new Error(validation.error.message);
+  }
+
+  const { projectId, limit, startDate, endDate } = validation.data;
+
+  const defaultStartDate = startDate
+    ? startOfDay(startDate)
+    : (() => {
+        const date = startOfDay(new Date());
+        date.setDate(date.getDate() - 30);
+        return date;
+      })();
+
+  const normalizedEndDate = endDate ? endOfDay(endDate) : endOfDay(new Date());
+
+  return await cache(
+    async () => {
+      const site = await prisma.project.findFirst({
+        where: {
+          id: projectId,
+        },
+      });
+
+      if (!site) {
+        throw new Error("Site not found or access denied");
+      }
+
+      const analytics = new AnalyticsService();
+      const pageViews = await analytics.getPageViews({
+        projectId,
+        startDate: defaultStartDate,
+        endDate: normalizedEndDate,
+        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      });
+
+      const referrerCounts: Record<string, number> = {};
+
+      for (const view of pageViews) {
+        let referrer = "Direct / None";
+
+        if (view.referrer) {
+          try {
+            const url = new URL(view.referrer);
+            referrer = url.hostname.replace(/^www\./, "");
+          } catch {
+            referrer = view.referrer;
+          }
+        }
+
+        referrerCounts[referrer] = (referrerCounts[referrer] || 0) + 1;
+      }
+
+      const topReferrers = Object.entries(referrerCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([referrer, count]) => ({ referrer, count }));
+
+      return topReferrers;
+    },
+    [
+      `${projectId}-top-referrers`,
+      defaultStartDate.toISOString(),
+      normalizedEndDate.toISOString(),
+    ],
+    {
+      revalidate: 300,
+      tags: [`${projectId}-analytics`],
+    },
+  )();
+}
+
 const getLiveUsersSchema = z.object({
   projectId: z.string(),
   userId: z.string(),

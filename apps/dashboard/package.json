@@ -46,6 +46,7 @@
     "react": "catalog:react19",
     "react-circle-flags": "^0.0.23",
     "react-dom": "catalog:react19",
+    "react-error-boundary": "^6.0.0",
     "reactflow": "^11.11.4",
     "recharts": "^3.3.0",
     "sonner": "^1.7.4",

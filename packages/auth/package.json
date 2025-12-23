@@ -7,7 +7,6 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./server": "./src/server.ts",
-    "./pricing-plans.json": "./src/pricing-plans.json",
     "./pricing": "./src/pricing.ts",
     "./env": "./env.ts"
   },

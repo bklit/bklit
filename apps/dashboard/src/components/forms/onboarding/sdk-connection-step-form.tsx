@@ -9,7 +9,7 @@ import {
 } from "@bklit/ui/components/popover";
 import { useMutation } from "@tanstack/react-query";
 import { Info } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useTRPC } from "@/trpc/react";
 
@@ -30,6 +30,7 @@ export function SDKConnectionStepForm({
 }: SDKConnectionStepFormProps) {
   const trpc = useTRPC();
   const [createdToken, setCreatedToken] = useState<string | null>(null);
+  const hasCreatedToken = useRef(false);
 
   // Determine API host based on current dashboard location
   const getApiHost = () => {
@@ -71,9 +72,10 @@ export function SDKConnectionStepForm({
     }),
   );
 
-  // Auto-create token on mount
+  // Auto-create token on mount (only once)
   useEffect(() => {
-    if (!createdToken && !createToken.isPending) {
+    if (!hasCreatedToken.current && !createdToken && !createToken.isPending) {
+      hasCreatedToken.current = true;
       createToken.mutate({
         organizationId,
         name: `${projectName} Token`,
@@ -81,7 +83,8 @@ export function SDKConnectionStepForm({
         projectIds: [projectId],
       });
     }
-  }, [organizationId, projectName, projectId, createdToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   if (createToken.isPending || !createdToken) {
     return (

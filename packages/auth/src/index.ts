@@ -2,6 +2,8 @@ import { expo } from "@better-auth/expo";
 import { prisma } from "@bklit/db/client";
 import { sendEmail } from "@bklit/email/client";
 import { BklitInvitationEmail } from "@bklit/email/emails/invitation";
+import { BklitResetPassword } from "@bklit/email/emails/reset-password";
+import { BklitVerifyEmail } from "@bklit/email/emails/verify-email";
 import { BklitWelcomeEmail } from "@bklit/email/emails/welcome";
 import {
   checkout,
@@ -16,9 +18,8 @@ import type { BetterAuthOptions } from "better-auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
-import { oAuthProxy, organization } from "better-auth/plugins";
+import { emailOTP, oAuthProxy, organization } from "better-auth/plugins";
 import { authEnv } from "../env";
-import plansTemplate from "./pricing-plans.json";
 import {
   logWebhookPayload,
   type PolarWebhookPayload,
@@ -27,23 +28,8 @@ import {
 
 const env = authEnv();
 
-// Inject env vars into plans
-const plans = plansTemplate.map((plan) => {
-  if (plan.name === "Free") {
-    return {
-      ...plan,
-      // Free plan may not have a Polar product (users are on free by default)
-      polarProductId: env.POLAR_FREE_PRODUCT_ID || null,
-    };
-  }
-  if (plan.name === "Pro") {
-    return {
-      ...plan,
-      polarProductId: env.POLAR_PRO_PRODUCT_ID,
-    };
-  }
-  return plan;
-});
+// No static plans - all pricing fetched from Polar API
+const plans: any[] = [];
 
 const polarClient = new Polar({
   accessToken: env.POLAR_ACCESS_TOKEN,
@@ -66,6 +52,64 @@ export function initAuth(options: {
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["google", "github"],
+      },
+    },
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: true,
+      minPasswordLength: 8,
+      maxPasswordLength: 128,
+      // In development, allow +aliases for testing. In production, normalize to prevent duplicates.
+      emailNormalization: (email: string) => {
+        const isDevelopment = process.env.NODE_ENV === "development";
+        if (isDevelopment) {
+          // In dev: keep aliases like foo+1@gmail.com separate for testing
+          return email.toLowerCase();
+        }
+        // In production: normalize Gmail aliases to prevent duplicate accounts
+        // foo+1@gmail.com -> foo@gmail.com
+        return email.toLowerCase().replace(/\+.*@/, "@");
+      },
+      password: {
+        // Require: 8+ chars, uppercase, lowercase, special character
+        customValidation: (password: string) => {
+          if (!/[A-Z]/.test(password)) {
+            return {
+              valid: false,
+              message: "Password must contain at least one uppercase letter",
+            };
+          }
+          if (!/[a-z]/.test(password)) {
+            return {
+              valid: false,
+              message: "Password must contain at least one lowercase letter",
+            };
+          }
+          if (!/[^A-Za-z0-9]/.test(password)) {
+            return {
+              valid: false,
+              message: "Password must contain at least one special character",
+            };
+          }
+          return { valid: true };
+        },
+      },
+      sendResetPassword: async ({ user, url }) => {
+        await sendEmail({
+          to: user.email,
+          from: "noreply@bklit.com",
+          subject: "Reset your Bklit password",
+          react: BklitResetPassword({
+            resetLink: url,
+            username: user.name || user.email.split("@")[0] || "there",
+          }),
+        });
+      },
+    },
     hooks: {
       after: createAuthMiddleware(async (ctx) => {
         const newSession = ctx.context.newSession;
@@ -199,9 +243,50 @@ export function initAuth(options: {
         productionURL: options.productionUrl,
       }),
       organization(),
+      emailOTP({
+        async sendVerificationOTP({ email, otp, type }) {
+          // In development, log OTP to console for easy testing
+          if (process.env.NODE_ENV === "development") {
+            console.log("\n🔐 ==========================================");
+            console.log(`📧 Email: ${email}`);
+            console.log(`🔑 OTP Code: ${otp}`);
+            console.log(`📝 Type: ${type}`);
+            console.log("==========================================\n");
+          }
+
+          if (type === "email-verification") {
+            await sendEmail({
+              to: email,
+              from: "noreply@bklit.com",
+              subject: "Verify your Bklit email",
+              react: BklitVerifyEmail({
+                verificationCode: otp,
+              }),
+            });
+          } else {
+            // For password reset, look up the user to get their name
+            const user = await prisma.user.findUnique({
+              where: { email },
+              select: { name: true },
+            });
+
+            // For password reset, we'll use the reset password template
+            await sendEmail({
+              to: email,
+              from: "noreply@bklit.com",
+              subject: "Reset your Bklit password",
+              react: BklitResetPassword({
+                resetLink: `${options.baseUrl}/reset-password?token=${otp}`,
+                username: user?.name || email.split("@")[0] || "there",
+              }),
+            });
+          }
+        },
+      }),
       polar({
         client: polarClient,
-        createCustomerOnSignUp: true,
+        // In development, allow +aliases without Polar customer creation
+        createCustomerOnSignUp: process.env.NODE_ENV !== "development",
         use: [
           checkout({
             // Only include plans that have a Polar product ID
@@ -286,9 +371,8 @@ export { polarClient };
 // Export Polar configuration
 export const polarConfig = {
   organizationId: env.POLAR_ORGANIZATION_ID,
-  freeProductId: env.POLAR_FREE_PRODUCT_ID || null,
-  proProductId: env.POLAR_PRO_PRODUCT_ID,
   serverMode: env.POLAR_SERVER_MODE,
+  meterIdEvents: env.POLAR_METER_ID_EVENTS || null,
 } as const;
 
 // Export plans with injected IDs

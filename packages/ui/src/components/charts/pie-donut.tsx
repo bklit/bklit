@@ -5,7 +5,7 @@ import NumberFlow from "@number-flow/react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Cell, Pie, PieChart, Sector } from "recharts";
 import type { PieSectorDataItem } from "recharts/types/polar/Pie";
-import { type ChartConfig, ChartContainer, ChartLegend } from "../chart";
+import { type ChartConfig, ChartContainer } from "../chart";
 
 type PieDatum = { name: string; value: number; label?: string };
 
@@ -24,8 +24,8 @@ interface PieDonutProps {
 
 export function PieDonut({
   data,
-  innerRadius = 54,
-  outerRadius = 80,
+  innerRadius = 70,
+  outerRadius = 100,
   showLegend = true,
   variant = "default",
   colors,
@@ -41,6 +41,13 @@ export function PieDonut({
     [data],
   );
 
+  // Calculate active index based on hoverKey
+  const activeIndex = useMemo(() => {
+    if (!hoverKey) return undefined;
+    const index = data.findIndex((d) => d.name === hoverKey);
+    return index >= 0 ? index : undefined;
+  }, [hoverKey, data]);
+
   // Initialize displayValue with total
   useEffect(() => {
     setDisplayValue(total);
@@ -48,7 +55,7 @@ export function PieDonut({
 
   const resolvedColors = useMemo(() => {
     if (colors) return colors;
-    // Assign shadcn chart-1..5 by order; for positive-negative, use --chart-1 and --chart-negative
+    // Assign shadcn chart-1..9 by order; for positive-negative, use --chart-1 and --chart-negative
     const map: Record<string, string> = {};
     if (variant === "positive-negative" && data.length >= 2) {
       const first = data[0]?.name;
@@ -57,12 +64,12 @@ export function PieDonut({
       if (second) map[second] = "var(--chart-negative)";
       for (let i = 2; i < data.length; i++) {
         const key = data[i]?.name;
-        if (key) map[key] = `var(--chart-${((i % 5) + 1) as number})`;
+        if (key) map[key] = `var(--chart-${((i % 9) + 1) as number})`;
       }
       return map;
     }
     data.forEach((d, idx) => {
-      map[d.name] = `var(--chart-${((idx % 5) + 1) as number})`;
+      map[d.name] = `var(--chart-${((idx % 9) + 1) as number})`;
     });
     return map;
   }, [colors, data, variant]);
@@ -104,114 +111,116 @@ export function PieDonut({
   }, [hoverKey]);
 
   return (
-    <div className="grid grid-cols-1 grid-rows-1 mx-auto justify-center items-center">
-      <div className="col-start-1 row-start-1 flex justify-center items-center">
-        <ChartContainer
-          id={chartId}
-          config={chartConfig}
-          className={cn(
-            "mx-auto aspect-square min-h-[250px] max-h-[250px]",
-            className,
-          )}
-        >
-          <PieChart accessibilityLayer>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={innerRadius}
-              outerRadius={outerRadius}
-              strokeWidth={5}
-              onMouseLeave={() => {
-                setHoverKey(undefined);
-                setDisplayValue(total);
-              }}
-              onMouseEnter={(payload: { name?: string }) => {
-                const name = payload?.name;
-                if (name) {
-                  setHoverKey(name);
-                  const hovered = data.find((d) => d.name === name);
-                  if (hovered && total > 0) {
-                    setDisplayValue(Math.round((hovered.value / total) * 100));
-                  }
-                }
-              }}
-              onMouseMove={(_: unknown, index: number) => {
-                const d = data[index];
-                if (d?.name) {
-                  setHoverKey(d.name);
-                  if (d && total > 0) {
-                    setDisplayValue(Math.round((d.value / total) * 100));
-                  }
-                }
-              }}
-              activeShape={({
-                outerRadius = 0,
-                ...props
-              }: PieSectorDataItem) => (
-                <Sector {...props} outerRadius={outerRadius + 10} />
-              )}
-            >
-              {data.map((d) => (
-                <Cell
-                  key={`cell-${d.name}`}
-                  fill={`var(--color-${d.name})`}
-                  fillOpacity={hoverKey ? (d.name === hoverKey ? 1 : 0.4) : 1}
-                  className="transition"
-                />
-              ))}
-            </Pie>
-            {showLegend ? (
-              <ChartLegend
-                content={(legendProps: unknown) => {
-                  const payload = (
-                    legendProps as {
-                      payload?: ReadonlyArray<{
-                        value?: string;
-                        dataKey?: string;
-                        color?: string;
-                      }>;
-                    }
-                  ).payload;
-                  return (
-                    <div className="flex items-center justify-center gap-4 pt-3 flex-wrap">
-                      {payload?.map((item) => {
-                        const key = item.value || item.dataKey || "";
-                        const label =
-                          chartConfig[key]?.label || item.value || "";
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            className="flex items-center gap-1.5"
-                            onMouseEnter={() => onLegendEnter(key)}
-                            onMouseLeave={onLegendLeave}
-                          >
-                            <div
-                              className="h-2 w-2 shrink-0 rounded-[2px]"
-                              style={{ backgroundColor: item.color }}
-                            />
-                            <span className="capitalize">{label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  );
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 grid-rows-1 mx-auto justify-center items-center">
+        {/* Chart */}
+        <div className="col-start-1 row-start-1 flex justify-center items-center">
+          <ChartContainer
+            id={chartId}
+            config={chartConfig}
+            className={cn("w-full h-[220px]", className)}
+          >
+            <PieChart accessibilityLayer>
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={innerRadius}
+                outerRadius={outerRadius}
+                strokeWidth={0}
+                {...({
+                  activeIndex: activeIndex ?? -1,
+                  shape: (
+                    props: PieSectorDataItem & { isActive?: boolean },
+                  ) => {
+                    const radius = props.isActive
+                      ? (props.outerRadius ?? outerRadius) + 10
+                      : (props.outerRadius ?? outerRadius);
+                    return <Sector {...props} outerRadius={radius} />;
+                  },
+                } as Record<string, unknown>)}
+                onMouseLeave={() => {
+                  setHoverKey(undefined);
+                  setDisplayValue(total);
                 }}
-              />
-            ) : null}
-          </PieChart>
-        </ChartContainer>
-      </div>
-      <div className="col-start-1 row-start-1 flex flex-col justify-center items-center text-2xl font-bold pb-3">
-        <NumberFlow
-          format={{ notation: "compact" }}
-          value={displayValue}
-          suffix={displaySuffix}
-        />
-        <div className="text-muted-foreground pb-4.5 font-normal text-xs">
-          {centerLabel.suffix}
+                onMouseEnter={(payload: { name?: string }) => {
+                  const name = payload?.name;
+                  if (name) {
+                    setHoverKey(name);
+                    const hovered = data.find((d) => d.name === name);
+                    if (hovered && total > 0) {
+                      setDisplayValue(
+                        Math.round((hovered.value / total) * 100),
+                      );
+                    }
+                  }
+                }}
+                onMouseMove={(_: unknown, index: number) => {
+                  const d = data[index];
+                  if (d?.name) {
+                    setHoverKey(d.name);
+                    if (d && total > 0) {
+                      setDisplayValue(Math.round((d.value / total) * 100));
+                    }
+                  }
+                }}
+              >
+                {data.map((d) => (
+                  <Cell
+                    key={`cell-${d.name}`}
+                    fill={`var(--color-${d.name})`}
+                    fillOpacity={hoverKey ? (d.name === hoverKey ? 1 : 0.4) : 1}
+                    className="transition"
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          </ChartContainer>
         </div>
+        {/* Center Label */}
+        <div className="col-start-1 row-start-1 flex flex-col justify-center items-center text-2xl font-bold">
+          <NumberFlow
+            format={{ notation: "compact" }}
+            value={displayValue}
+            suffix={displaySuffix}
+          />
+          <div className="text-muted-foreground pb-4.5 font-normal text-xs">
+            {centerLabel.suffix}
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-center items-start">
+        {showLegend ? (
+          <div className="group flex items-center justify-center gap-0 pt-3 flex-wrap">
+            {data.map((item) => {
+              const key = item.name;
+              const label = chartConfig[key]?.label || item.name;
+              const color = resolvedColors[key];
+              const isHovered = hoverKey === key;
+              const shouldDim = hoverKey && !isHovered;
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={cn(
+                    "flex items-center py-1 px-1.5 gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-all duration-100 group-has-[button:hover]:opacity-50 hover:opacity-100!",
+                    shouldDim && "opacity-50",
+                    isHovered && "opacity-100! text-foreground",
+                  )}
+                  onMouseEnter={() => onLegendEnter(key)}
+                  onMouseLeave={onLegendLeave}
+                >
+                  <div
+                    className="size-2 shrink-0 rounded-[2px]"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="capitalize">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </div>
   );

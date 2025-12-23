@@ -19,6 +19,11 @@ function formatDateForClickHouse(date: Date): string {
   return date.toISOString().replace("T", " ").replace("Z", "").slice(0, 19);
 }
 
+// Helper to format Date for insert (Unix timestamp)
+function formatDateForInsert(date: Date): number {
+  return Math.floor(date.getTime() / 1000);
+}
+
 export class AnalyticsService {
   private client = getClickHouseClient();
 
@@ -30,8 +35,8 @@ export class AnalyticsService {
           {
             id: data.id,
             url: data.url,
-            timestamp: formatDateForClickHouse(data.timestamp),
-            created_at: formatDateForClickHouse(data.createdAt || new Date()),
+            timestamp: formatDateForInsert(data.timestamp),
+            created_at: formatDateForInsert(data.createdAt || new Date()),
             city: data.city,
             country: data.country,
             country_code: data.countryCode,
@@ -75,9 +80,9 @@ export class AnalyticsService {
       values: [
         {
           id: data.id,
-          timestamp: formatDateForClickHouse(data.timestamp),
+          timestamp: formatDateForInsert(data.timestamp),
           metadata: data.metadata ? JSON.stringify(data.metadata) : null,
-          created_at: formatDateForClickHouse(data.createdAt || new Date()),
+          created_at: formatDateForInsert(data.createdAt || new Date()),
           event_definition_id: data.eventDefinitionId,
           project_id: data.projectId,
           session_id: data.sessionId,
@@ -115,8 +120,8 @@ export class AnalyticsService {
           {
             id: data.id,
             session_id: data.sessionId,
-            started_at: formatDateForClickHouse(data.startedAt),
-            ended_at: data.endedAt ? formatDateForClickHouse(data.endedAt) : null,
+            started_at: formatDateForInsert(data.startedAt),
+            ended_at: data.endedAt ? formatDateForInsert(data.endedAt) : null,
             duration: data.duration,
             did_bounce: data.didBounce ?? false,
             visitor_id: data.visitorId,
@@ -126,7 +131,7 @@ export class AnalyticsService {
             country: data.country,
             city: data.city,
             project_id: data.projectId,
-            updated_at: formatDateForClickHouse(new Date()), // Set updated_at to current time
+            updated_at: formatDateForInsert(new Date()), // Set updated_at to current time
           },
         ],
         format: "JSONEachRow",

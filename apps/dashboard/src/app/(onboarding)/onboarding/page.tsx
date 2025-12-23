@@ -2,8 +2,10 @@
 
 import { Button } from "@bklit/ui/components/button";
 import NumberFlow from "@number-flow/react";
+import { useRouter } from "next/navigation";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { Suspense, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { CreateProjectStepForm } from "@/components/forms/onboarding/create-project-step-form";
 import { CreateWorkspaceStepForm } from "@/components/forms/onboarding/create-workspace-step-form";
 import { SDKConnectionStepForm } from "@/components/forms/onboarding/sdk-connection-step-form";
@@ -97,9 +99,25 @@ function SDKConnectionStep({
   onTokenCreated: () => void;
 }) {
   const { goToNextStep } = useStepper();
+  const router = useRouter();
 
   const handleTokenCreated = () => {
     onTokenCreated();
+  };
+
+  const handleSkip = () => {
+    // Validate IDs before navigation
+    if (!organizationId || organizationId.trim() === "") {
+      toast.error("Organization ID is missing. Please complete step 1 first.");
+      return;
+    }
+    if (!projectId || projectId.trim() === "") {
+      toast.error("Project ID is missing. Please complete step 2 first.");
+      return;
+    }
+
+    // Skip testing and go straight to dashboard with onboarding param
+    router.push(`/${organizationId}/${projectId}?onboarding=new`);
   };
 
   return (
@@ -114,7 +132,9 @@ function SDKConnectionStep({
         />
       </Stepper.Content>
       <Stepper.Footer>
-        <div />
+        <Button variant="ghost" onClick={handleSkip}>
+          Skip for now
+        </Button>
         <Button onClick={goToNextStep}>Next</Button>
       </Stepper.Footer>
     </>
