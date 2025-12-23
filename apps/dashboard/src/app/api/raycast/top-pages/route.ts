@@ -1,10 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  extractTokenFromHeader,
-  validateApiToken,
-} from "@/lib/api-token-auth";
-import { calculateLast24Hours, formatPeriod } from "@/lib/raycast-helpers";
 import { getTopPages } from "@/actions/analytics-actions";
+import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
+import { calculateLast24Hours, formatPeriod } from "@/lib/raycast-helpers";
 import type {
   RaycastTopCountriesRequest,
   RaycastTopPagesResponse,
@@ -105,4 +102,3 @@ export async function OPTIONS() {
     },
   });
 }
-

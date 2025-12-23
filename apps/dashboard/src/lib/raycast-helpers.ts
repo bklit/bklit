@@ -17,4 +17,3 @@ export function formatPeriod(startDate: Date, endDate: Date) {
     endDate: endDate.toISOString(),
   };
 }
-

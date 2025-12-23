@@ -38,12 +38,14 @@ Retrieves the top 5 countries by page views from the last 24 hours.
 **Endpoint**: `POST /api/raycast/top-countries`
 
 **Request Headers**:
+
 ```
 Authorization: Bearer bk_live_your_token_here
 Content-Type: application/json
 ```
 
 **Request Body**:
+
 ```json
 {
   "projectId": "clxxxx..."
@@ -51,6 +53,7 @@ Content-Type: application/json
 ```
 
 **Success Response** (200 OK):
+
 ```json
 {
   "success": true,
@@ -96,6 +99,7 @@ Content-Type: application/json
 **Error Responses**:
 
 **400 Bad Request** - Missing or invalid project ID:
+
 ```json
 {
   "success": false,
@@ -104,6 +108,7 @@ Content-Type: application/json
 ```
 
 **401 Unauthorized** - Missing or invalid token:
+
 ```json
 {
   "success": false,
@@ -133,6 +138,7 @@ Content-Type: application/json
 ```
 
 **500 Internal Server Error**:
+
 ```json
 {
   "success": false,
@@ -149,6 +155,7 @@ Retrieves mobile vs desktop breakdown from the last 24 hours.
 **Request Headers & Body**: Same as top-countries endpoint
 
 **Success Response** (200 OK):
+
 ```json
 {
   "success": true,
@@ -179,6 +186,7 @@ Retrieves the top 5 referrers by page views from the last 24 hours.
 **Request Headers & Body**: Same as top-countries endpoint
 
 **Success Response** (200 OK):
+
 ```json
 {
   "success": true,
@@ -210,6 +218,7 @@ Retrieves the top 5 pages by page views from the last 24 hours.
 **Request Headers & Body**: Same as top-countries endpoint
 
 **Success Response** (200 OK):
+
 ```json
 {
   "success": true,
@@ -239,6 +248,7 @@ Retrieves the top 5 browsers by page views from the last 24 hours.
 **Request Headers & Body**: Same as top-countries endpoint
 
 **Success Response** (200 OK):
+
 ```json
 {
   "success": true,
@@ -405,6 +415,7 @@ A successful request should return a 200 status code with the JSON response cont
 ## Support
 
 For issues or questions:
+
 - Check the [Bklit Documentation](https://docs.bklit.co)
 - Contact support through the dashboard
 - Report bugs via GitHub issues (if applicable)
@@ -412,13 +423,14 @@ For issues or questions:
 ## Changelog
 
 ### v1.1.0 (2025-12-23)
+
 - Added `/api/raycast/device-usage` endpoint - Mobile vs desktop breakdown
 - Added `/api/raycast/top-referrers` endpoint - Top 5 referrers
 - Added `/api/raycast/top-pages` endpoint - Top 5 pages
 - Added `/api/raycast/browser-usage` endpoint - Top 5 browsers
 
 ### v1.0.0 (2025-12-23)
+
 - Initial release
 - Added `/api/raycast/top-countries` endpoint
 - Returns top 5 countries from last 24 hours
-

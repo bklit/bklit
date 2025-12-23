@@ -1,17 +1,14 @@
 import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  extractTokenFromHeader,
-  validateApiToken,
-} from "@/lib/api-token-auth";
+import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import {
   calculateLast24Hours,
   calculatePercentage,
   formatPeriod,
 } from "@/lib/raycast-helpers";
 import type {
-  RaycastTopCountriesRequest,
   RaycastDeviceUsageResponse,
+  RaycastTopCountriesRequest,
 } from "@/types/raycast-api";
 
 export const runtime = "nodejs";
@@ -119,4 +116,3 @@ export async function OPTIONS() {
     },
   });
 }
-
