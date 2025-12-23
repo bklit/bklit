@@ -55,3 +55,6 @@ dist/
 
 # trigger.dev
 .trigger/
+
+# cursor
+.cursor/plans/
