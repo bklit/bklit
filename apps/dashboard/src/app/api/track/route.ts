@@ -1,11 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
-import {
-  unstable_after as after,
-  type NextRequest,
-  NextResponse,
-} from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
 import { checkEventLimit } from "@/lib/usage-limits";
@@ -334,30 +330,33 @@ export async function POST(request: NextRequest) {
 
     const orgId = tokenValidation.organizationId;
     if (orgId) {
-      after(async () => {
-        try {
-          const org = await prisma.organization.findUnique({
-            where: { id: orgId },
-            select: { polarCustomerId: true },
-          });
-
-          if (org?.polarCustomerId) {
-            await sendEventToPolar({
-              organizationId: orgId,
-              polarCustomerId: org.polarCustomerId,
-              eventType: "pageview",
-              metadata: {
-                url: payload.url,
-                projectId: payload.projectId,
-              },
-            }).catch((err) => {
-              console.error("Failed to send pageview to Polar:", err);
+      // Fire and forget - send to Polar async without blocking response
+      Promise.resolve()
+        .then(async () => {
+          try {
+            const org = await prisma.organization.findUnique({
+              where: { id: orgId },
+              select: { polarCustomerId: true },
             });
+
+            if (org?.polarCustomerId) {
+              await sendEventToPolar({
+                organizationId: orgId,
+                polarCustomerId: org.polarCustomerId,
+                eventType: "pageview",
+                metadata: {
+                  url: payload.url,
+                  projectId: payload.projectId,
+                },
+              }).catch((err) => {
+                console.error("Failed to send pageview to Polar:", err);
+              });
+            }
+          } catch (err) {
+            console.error("Failed to fetch organization for Polar:", err);
           }
-        } catch (err) {
-          console.error("Failed to fetch organization for Polar:", err);
-        }
-      });
+        })
+        .catch(() => {}); // Silently fail
     }
 
     return createCorsResponse({ message: "Data received and stored" }, 200);
