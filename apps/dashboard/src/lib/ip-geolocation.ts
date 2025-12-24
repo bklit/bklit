@@ -1,5 +1,5 @@
 import { getCountryNameFromCode } from "@/lib/maps/country-coordinates";
-import type { GeoLocation, IpGeoResponse } from "@/types/geo";
+import type { GeoLocation } from "@/types/geo";
 
 interface LocationData extends GeoLocation {
   ip: string;
