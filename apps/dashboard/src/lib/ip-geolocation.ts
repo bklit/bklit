@@ -100,8 +100,6 @@ export async function getLocationFromIP(
       return null;
     }
 
-    const isDevelopment = process.env.NODE_ENV === "development";
-
     // First, try to get geolocation from Cloudflare headers (if request is provided)
     if (request) {
       const cfLocation = getLocationFromCloudflareHeaders(request, ip);
@@ -110,17 +108,9 @@ export async function getLocationFromIP(
       }
     }
 
-    // Cloudflare headers not available - fallback to ip-api only in development
-    if (isDevelopment) {
-      return await getLocationFromIPApi(ip);
-    }
-
-    // In production, if CF headers are missing, return null
-    // This shouldn't happen if Cloudflare is properly configured
-    console.warn(
-      "Cloudflare geolocation headers not found. Ensure Cloudflare is configured as proxy.",
-    );
-    return null;
+    // Cloudflare headers not available - fallback to ip-api.com
+    // Note: ip-api.com free tier has 45 requests/minute limit
+    return await getLocationFromIPApi(ip);
   } catch (error) {
     console.error(`Error fetching location data for IP ${ip}:`, error);
     return null;
@@ -188,7 +178,7 @@ export function extractClientIP(request: Request): string | null {
   const forwardedFor = headers.get("x-forwarded-for");
   if (forwardedFor) {
     // x-forwarded-for can contain multiple IPs, take the first one
-    return forwardedFor.split(",")[0].trim();
+    return forwardedFor.split(",")[0]?.trim() ?? forwardedFor;
   }
 
   const realIP = headers.get("x-real-ip");
