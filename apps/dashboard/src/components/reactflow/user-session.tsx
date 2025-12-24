@@ -260,11 +260,21 @@ const edgeTypes = {
 
 function formatDuration(seconds: number | null): string {
   if (!seconds) return "0s";
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
+
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = seconds % 60;
-  if (remainingSeconds === 0) return `${minutes}m`;
-  return `${minutes}m ${remainingSeconds}s`;
+
+  const parts: string[] = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (remainingSeconds > 0 && hours === 0) parts.push(`${remainingSeconds}s`);
+
+  return parts.join(" ") || "0s";
 }
 
 function generateNodesFromSession(session: SessionData): Node[] {
