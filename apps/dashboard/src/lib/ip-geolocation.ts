@@ -119,48 +119,45 @@ export async function getLocationFromIP(
 
 async function getLocationFromIPApi(ip: string): Promise<LocationData | null> {
   try {
-    const fields =
-      "status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query";
-    const url = `http://ip-api.com/json/${ip}?fields=${fields}`;
+    // Use ipapi.co - supports HTTPS on free tier (1000 requests/day)
+    const url = `https://ipapi.co/${ip}/json/`;
 
     const response = await fetch(url, {
       method: "GET",
       headers: {
         Accept: "application/json",
+        "User-Agent": "bklit-analytics",
       },
     });
 
     if (!response.ok) {
-      console.warn(`IP-API request failed for IP ${ip}: ${response.status}`);
+      console.warn(`ipapi.co request failed for IP ${ip}: ${response.status}`);
       return null;
     }
 
-    const data: IpGeoResponse = await response.json();
+    const data = await response.json();
 
-    if (data.status === "success") {
-      return {
-        ip: data.query,
-        country: data.country,
-        countryCode: data.countryCode,
-        region: data.region,
-        regionName: data.regionName,
-        city: data.city,
-        zip: data.zip,
-        lat: data.lat,
-        lon: data.lon,
-        timezone: data.timezone,
-        isp: data.isp,
-        mobile: data.mobile,
-      };
-    } else {
-      console.warn(`IP-API returned error for IP ${ip}: ${data.message}`);
+    if (data.error) {
+      console.warn(`ipapi.co returned error for IP ${ip}: ${data.reason}`);
       return null;
     }
+
+    return {
+      ip: data.ip,
+      country: data.country_name,
+      countryCode: data.country_code,
+      region: data.region_code,
+      regionName: data.region,
+      city: data.city,
+      zip: data.postal,
+      lat: data.latitude,
+      lon: data.longitude,
+      timezone: data.timezone,
+      isp: data.org,
+      mobile: undefined,
+    };
   } catch (error) {
-    console.error(
-      `Error fetching location data from ip-api for IP ${ip}:`,
-      error,
-    );
+    console.error(`Error fetching geolocation for IP ${ip}:`, error);
     return null;
   }
 }
