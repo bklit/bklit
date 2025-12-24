@@ -6,7 +6,7 @@ packages:
 catalog:
   dotenv-cli: ^10.0.0
   lucide-react: ^0.511.0
-  next: ^16.0.10
+  next: ^16.1.1
   resend: ^4.0.0
   superjson: ^2.2.2
   typescript: ^5.8.3
