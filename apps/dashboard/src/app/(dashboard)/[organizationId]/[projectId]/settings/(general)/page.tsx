@@ -15,6 +15,7 @@ import { DeleteProjectForm } from "@/components/forms/delete-project-form";
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { FormPermissions } from "@/components/permissions/form-permissions";
+import { IpBlacklistSettings } from "@/components/project/ip-blacklist-settings";
 import { authenticated } from "@/lib/auth";
 
 async function getSiteData(
@@ -115,6 +116,11 @@ initBklit({
             </div>
           </CardContent>
         </Card>
+
+        <IpBlacklistSettings
+          projectId={site.id}
+          organizationId={organizationId}
+        />
 
         <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
           <Card variant="destructive">

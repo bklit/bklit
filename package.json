@@ -20,6 +20,7 @@
     "db:migrate": "pnpm run -F @bklit/db migrate",
     "db:studio": "pnpm run -F @bklit/db studio",
     "dev": "pnpm dev:services && turbo watch dev --filter=@bklit/dashboard --filter=@bklit/playground --continue",
+    "dev:dashboard": "turbo watch dev --filter=@bklit/dashboard",
     "dev:services": "docker-compose up -d clickhouse",
     "dev:services:stop": "docker-compose down",
     "dev:full": "turbo watch dev dev:trigger --continue",
