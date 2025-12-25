@@ -16,7 +16,7 @@ interface FunnelStepNodeData {
 }
 
 export const FunnelStepNode = memo(function FunnelStepNode({
-  id,
+  id: _id,
   data,
 }: NodeProps) {
   const nodeData = data as FunnelStepNodeData;

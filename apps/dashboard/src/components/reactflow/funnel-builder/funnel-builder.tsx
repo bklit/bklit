@@ -85,7 +85,9 @@ function FunnelBuilderInner({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [editingStepData, setEditingStepData] = useState<Partial<StepData>>({});
+  const [_editingStepData, setEditingStepData] = useState<Partial<StepData>>(
+    {},
+  );
   const [showMiniMap, setShowMiniMap] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isEditingFunnel, setIsEditingFunnel] = useState(false);
