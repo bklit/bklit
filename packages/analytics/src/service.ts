@@ -469,11 +469,11 @@ export class AnalyticsService {
     const result = await this.client.query({
       query: `
         SELECT 
-          count() as total_views,
+          uniq(id) as total_views,
           uniq(ip) as unique_visits,
           uniq(url) as unique_pages,
-          countIf(mobile = true) as mobile_visits,
-          countIf(mobile = false) as desktop_visits
+          uniqIf(id, mobile = true) as mobile_visits,
+          uniqIf(id, mobile = false) as desktop_visits
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
       `,
@@ -523,7 +523,7 @@ export class AnalyticsService {
         SELECT 
           country,
           country_code,
-          count() as visits,
+          uniq(id) as visits,
           uniq(ip) as unique_visitors
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
