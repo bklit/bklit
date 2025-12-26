@@ -124,6 +124,7 @@ model Project {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   organizationId   String?
+  blacklistedIps   String[]          @default([])
   eventDefinitions EventDefinition[]
   pageViewEvents   PageViewEvent[]
   organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)

@@ -5,6 +5,7 @@ import { emailRouter } from "./router/email";
 import { eventRouter } from "./router/event";
 import { funnelRouter } from "./router/funnel";
 import { invitationRouter } from "./router/invitation";
+import { ipBlacklistRouter } from "./router/ip-blacklist";
 import { notificationRouter } from "./router/notification";
 import { organizationRouter } from "./router/organization";
 import { pageviewRouter } from "./router/pageview";
@@ -25,6 +26,7 @@ export const appRouter = createTRPCRouter({
   email: emailRouter,
   apiToken: apiTokenRouter,
   invitation: invitationRouter,
+  ipBlacklist: ipBlacklistRouter,
 }) as const;
 
 // export type definition of API
