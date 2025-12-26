@@ -316,6 +316,30 @@ npx prisma dev
 pnpm db:migrate
 ```
 
+**Error:** Migration fails with "relation does not exist" or database state issues
+
+This commonly happens on first-time setup when migrations can't apply cleanly. Since you're starting fresh, you can bypass migrations entirely:
+
+**Solution (Fresh Setup Only):**
+```bash
+# Navigate to the db package
+cd packages/db
+
+# Force reset and push schema directly (skips migration history)
+pnpm with-env-dev prisma db push --force-reset --schema=./prisma/schema.prisma
+
+# Generate Prisma client
+pnpm generate
+
+# Return to project root
+cd ../..
+```
+
+This approach:
+- Drops all tables and recreates them from your schema
+- Bypasses migration history (ideal for fresh local setup)
+- Accepts data loss (not a problem for new local environments)
+
 ### Still Seeing Production Data
 
 If you're seeing production data or `accelerate.prisma-data.net` in logs:
