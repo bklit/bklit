@@ -14,6 +14,7 @@ const competitors = [
 
 export const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [widthIndex, setWidthIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -22,6 +23,14 @@ export const Hero = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setWidthIndex(currentIndex);
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [currentIndex]);
 
   return (
     <div className="container mx-auto max-w-6xl flex flex-col px-4">
@@ -32,9 +41,6 @@ export const Hero = () => {
         <h1 className="text-3xl md:text-4xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
           Purpose built Analytics
         </h1>
-        {/* <p className="text-lg font-medium dark:text-white dark:text-shadow-sm">
-          Track everything with 4 lines of code
-        </p> */}
         <motion.div
           className="flex items-center gap-2 text-base font-medium dark:text-muted-foreground"
           layout="position"
@@ -46,7 +52,7 @@ export const Hero = () => {
             layout
             transition={{ duration: 0.5, ease: "easeInOut" }}
           >
-            <span className="invisible">{competitors[currentIndex]}</span>
+            <span className="invisible">{competitors[widthIndex]}</span>
             <AnimatePresence mode="wait">
               <motion.span
                 key={currentIndex}
