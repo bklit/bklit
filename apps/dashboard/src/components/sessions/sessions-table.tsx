@@ -38,14 +38,16 @@ function formatDuration(seconds: number | null): string {
     return `${seconds}s`;
   }
 
-  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = seconds % 60;
 
-  if (remainingSeconds === 0) {
-    return `${minutes}m`;
-  }
+  const parts: string[] = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (remainingSeconds > 0 && hours === 0) parts.push(`${remainingSeconds}s`);
 
-  return `${minutes}m ${remainingSeconds}s`;
+  return parts.join(" ") || "0s";
 }
 
 function getBrowserFromUserAgent(userAgent: string | null): string {
