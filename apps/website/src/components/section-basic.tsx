@@ -16,8 +16,9 @@ export const SectionBasic = ({
   return (
     <section>
       <div className="container mx-auto max-w-6xl flex flex-col px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-bklit-100 dark:bg-zinc-900 rounded-4xl">
-          <div className="col-span-1 p-14 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-linear-to-b from-bklit-500 to-bklit-800 rounded-4xl p-px">
+          <div className="flex col-span-2 col-start-1 row-start-1 bg-bklit-800 rounded-[31px]" />
+          <div className="col-span-1 row-start-1 col-start-1 p-14 space-y-4">
             <h2 className="text-3xl font-regular dark:text-white text-black">
               {title}
             </h2>
@@ -25,8 +26,8 @@ export const SectionBasic = ({
           </div>
           <div
             className={cn(
-              "flex items-center justify-center col-span-1 bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl rounded-t-none sm:rounded-l-none sm:rounded-r-4xl overflow-hidden",
-              variant === "mono" && "from-zinc-800 to-zinc-900",
+              "flex items-center justify-center col-span-1 col-start-2 row-start-1 rounded-4xl rounded-t-none sm:rounded-l-none sm:rounded-r-4xl",
+              // variant === "mono" && "from-zinc-800 to-zinc-900",
             )}
           >
             {artwork && artwork}

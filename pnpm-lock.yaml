@@ -374,6 +374,9 @@ importers:
 
   apps/website:
     dependencies:
+      '@bklit/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
       '@bklit/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -389,6 +392,12 @@ importers:
       '@bklit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@number-flow/react':
+        specifier: ^0.5.10
+        version: 0.5.10(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      motion:
+        specifier: ^12.23.24
+        version: 12.23.24(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next:
         specifier: 'catalog:'
         version: 16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)

@@ -1,8 +1,9 @@
-import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
 import { ArrowRight, Check, Github } from "lucide-react";
 import type { Metadata } from "next";
+import { AnimatedGlobalStats } from "@/components/animated-global-stats";
+import { AnimatedHeroVisual } from "@/components/animated-hero-visual";
 import { BrandTiles } from "@/components/artworks/brand-tiles";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
 import { SankeyDemo } from "@/components/artworks/sankey-demo";
@@ -17,7 +18,6 @@ import { PageHeader } from "@/components/page-header";
 import { Pricing } from "@/components/pricing";
 import { SectionBasic } from "@/components/section-basic";
 import { SectionHeader } from "@/components/section-header";
-import { ThemeImage } from "@/components/theme-image";
 
 export const metadata: Metadata = {
   title: "Bklit Analytics",
@@ -32,30 +32,20 @@ export default function MarketingHomePage() {
       <Hero />
 
       <div className="space-y-16">
-        <div
-          className={cn(
-            "relative w-full sm:min-h-[400px]",
-            "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
-          )}
-        >
-          <div className="container mx-auto max-w-full sm:max-w-6xl px-4">
-            <div className="relative grid grid-cols-1 grid-rows-1 -z-10">
-              <div className="sm:perspective-[4000px] col-start-1 row-start-1">
-                <div
-                  className={cn(
-                    "relative sm:-translate-y-50 sm:translate-x-35 sm:rotate-x-45 sm:rotate-y-30 sm:rotate-z-320 sm:scale-150 -z-1 opacity-60",
-                    "after:content-[''] after:absolute after:inset-0 after:bg-linear-to-b after:from-transparent after:via-transparent after:to-background after:pointer-events-none",
-                    "sm:before:content-[''] before:absolute before:inset-0 before:bg-linear-to-r before:from-transparent before:via-transparent before:to-background before:pointer-events-none",
-                  )}
-                >
-                  <ThemeImage
-                    srcLight="/bklit-analytics-light.png"
-                    srcDark="/bklit-analytics.png"
-                    alt="Bklit Analytics"
-                    width={1000}
-                    height={1000}
-                  />
-                </div>
+        <div className={cn("relative w-full sm:min-h-[400px]")}>
+          <div className="container mx-auto max-w-full sm:max-w-[1600px] px-4">
+            <div className="grid grid-cols-1 grid-rows-1">
+              <div className="col-start-1 row-start-1">
+                <AnimatedHeroVisual />
+              </div>
+              <div className="col-start-1 row-start-1 flex items-center justify-center relative bg-linear-to-b from-transparent via-background/10 to-background" />
+              <div className="col-start-1 row-start-1 flex items-end justify-center relative">
+                <AnimatedGlobalStats />
+              </div>
+              <div className="col-start-1 row-start-1 flex items-start justify-center relative">
+                <Button variant="default" size="lg">
+                  Get started
+                </Button>
               </div>
             </div>
           </div>
