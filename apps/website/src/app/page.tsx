@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { AnimatedGlobalStats } from "@/components/animated-global-stats";
 import { AnimatedHeroVisual } from "@/components/animated-hero-visual";
 import { BrandTiles } from "@/components/artworks/brand-tiles";
+import { DetectEverything } from "@/components/artworks/detect-everything";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
 import { SankeyDemo } from "@/components/artworks/sankey-demo";
 import { SDKs } from "@/components/artworks/sdks";
@@ -31,7 +32,7 @@ export default function MarketingHomePage() {
       <PageHeader />
       <Hero />
 
-      <div className="space-y-16">
+      <div className="space-y-64">
         <div className={cn("relative w-full sm:min-h-[400px]")}>
           <div className="container mx-auto max-w-full sm:max-w-[1600px] px-4">
             <div className="grid grid-cols-1 grid-rows-1">
@@ -42,48 +43,26 @@ export default function MarketingHomePage() {
               <div className="col-start-1 row-start-1 flex items-end justify-center relative">
                 <AnimatedGlobalStats />
               </div>
-              <div className="col-start-1 row-start-1 flex items-start justify-center relative">
-                <Button variant="default" size="lg">
-                  Get started
-                </Button>
-              </div>
             </div>
           </div>
         </div>
 
-        <SectionBasic title="Stacked" artwork={<BrandTiles />}>
-          <p className="text-lg text-muted-foreground">
-            Bklit is built with the best development tools in the industry, to
-            help you build your next big thing.
-          </p>
-          <ul className="space-y-1 text-lg">
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <Check size={16} className="text-emerald-500" /> Typescript
-            </li>
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <Check size={16} className="text-emerald-500" /> tRPC
-            </li>
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <Check size={16} className="text-emerald-500" /> Shadcn
-            </li>
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <Check size={16} className="text-emerald-500" /> Nuqs
-            </li>
-          </ul>
-          <Button variant="outline" size="lg" asChild>
-            <a
-              href="https://github.com/bklit/bklit"
-              target="_blank"
-              title="Bklit on Github"
-              rel="noopener noreferrer"
-            >
-              <Github size={16} /> See on Github
-              <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
-                <GithubStarCount />
-              </span>
-            </a>
-          </Button>
-        </SectionBasic>
+        <div className="space-y-16 px-4">
+          <SectionHeader
+            title="Detect everything, everywhere"
+            description="Countries, Browsers &amp; Devices"
+          />
+          <div className="relative w-full min-h-[400px]">
+            <div className="container mx-auto max-w-6xl px-4">
+              <div className="perspective-normal">
+                <div className="">
+                  <DetectEverything />
+                </div>
+              </div>
+            </div>
+            <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-transparent bg-linear-to-b pointer-events-none" />
+          </div>
+        </div>
 
         <div className="space-y-16 px-4">
           <SectionHeader
@@ -199,6 +178,40 @@ export default function MarketingHomePage() {
           </SectionHeader>
           <Pricing />
         </div>
+
+        <SectionBasic title="Stacked" artwork={<BrandTiles />}>
+          <p className="text-lg text-muted-foreground">
+            Bklit is built with the best development tools in the industry, to
+            help you build your next big thing.
+          </p>
+          <ul className="space-y-1 text-lg">
+            <li className="flex items-center gap-2 text-muted-foreground">
+              <Check size={16} className="text-emerald-500" /> Typescript
+            </li>
+            <li className="flex items-center gap-2 text-muted-foreground">
+              <Check size={16} className="text-emerald-500" /> tRPC
+            </li>
+            <li className="flex items-center gap-2 text-muted-foreground">
+              <Check size={16} className="text-emerald-500" /> Shadcn
+            </li>
+            <li className="flex items-center gap-2 text-muted-foreground">
+              <Check size={16} className="text-emerald-500" /> Nuqs
+            </li>
+          </ul>
+          <Button variant="outline" size="lg" asChild>
+            <a
+              href="https://github.com/bklit/bklit"
+              target="_blank"
+              title="Bklit on Github"
+              rel="noopener noreferrer"
+            >
+              <Github size={16} /> See on Github
+              <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
+                <GithubStarCount />
+              </span>
+            </a>
+          </Button>
+        </SectionBasic>
       </div>
       <Footer />
     </>

@@ -63,8 +63,42 @@ export function AnimatedHeroVisual() {
         >
           <img src="/Content.svg" alt="layout" />
         </motion.div>
+        <motion.div
+          data-name="comp-content"
+          className="col-start-1 row-start-1 w-full h-auto aspect-1080/714 pt-[18px] pl-[340px] scale-150 origin-top-right text-[10px] text-muted-foreground"
+          initial={{
+            opacity: 0,
+            filter: "blur(10px)",
+            y: -10,
+            x: 290,
+            rotateX: 40,
+            rotateY: 20,
+            rotateZ: 336,
+          }}
+          animate={{
+            opacity: 1,
+            filter: "blur(0px)",
+            y: 0,
+            x: 300,
+            rotateX: 45,
+            rotateY: 20,
+            rotateZ: 333,
+          }}
+          transition={{
+            duration: 0.66,
+            delay: 2.6,
+            ease: "easeOut",
+          }}
+        >
+          1 Live user
+        </motion.div>
 
-        <div className="relative col-start-1 row-start-1 w-full h-auto aspect-1080/714 sm:-translate-y-2 sm:translate-x-[440px] sm:rotate-x-45 sm:rotate-y-20 sm:rotate-z-333 border rounded-lg scale-150 origin-top-right" />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
+          className="relative col-start-1 row-start-1 w-full h-auto aspect-1080/714 sm:-translate-y-2 sm:translate-x-[440px] sm:rotate-x-45 sm:rotate-y-20 sm:rotate-z-333 border rounded-lg scale-150 origin-top-right"
+        />
         <div className="relative col-start-1 row-start-1 w-full h-auto aspect-1080/714 sm:translate-y-0 sm:translate-x-26 sm:rotate-x-45 sm:rotate-y-20 sm:rotate-z-333 scale-150 origin-top-right">
           <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-transparent via-90% bg-linear-to-b pointer-events-none" />
           <div className="absolute top-0 left-0 w-full h-full from-transparent to-background to-70% via-transparent via-50% bg-linear-to-r pointer-events-none" />
