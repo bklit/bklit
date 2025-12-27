@@ -60,7 +60,6 @@ export default function MarketingHomePage() {
                 </div>
               </div>
             </div>
-            <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-transparent bg-linear-to-b pointer-events-none" />
           </div>
         </div>
 

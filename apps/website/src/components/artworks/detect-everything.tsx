@@ -14,6 +14,7 @@ import { EdgeIcon } from "@bklit/ui/icons/edge";
 import { FirefoxIcon } from "@bklit/ui/icons/firefox";
 import { SafariIcon } from "@bklit/ui/icons/safari";
 import { Monitor, Smartphone } from "lucide-react";
+import { useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 
 interface CountryData {
@@ -41,6 +42,8 @@ const mockCountries: CountryData[] = [
   { country: "Germany", countryCode: "de", views: 19250 },
   { country: "France", countryCode: "fr", views: 16890 },
   { country: "Canada", countryCode: "ca", views: 12450 },
+  { country: "Australia", countryCode: "au", views: 9870 },
+  { country: "Japan", countryCode: "jp", views: 7650 },
 ];
 
 const mockBrowsers: BrowserData[] = [
@@ -87,6 +90,20 @@ const mockSessions: SessionData[] = [
     pageCount: 6,
     timeAgo: "23 mins ago",
   },
+  {
+    id: "6",
+    browser: "safari",
+    device: "Desktop",
+    pageCount: 4,
+    timeAgo: "31 mins ago",
+  },
+  {
+    id: "7",
+    browser: "firefox",
+    device: "Mobile",
+    pageCount: 7,
+    timeAgo: "45 mins ago",
+  },
 ];
 
 const getBrowserIcon = (browser: string, size = 16) => {
@@ -112,17 +129,96 @@ const getDeviceIcon = (device: string) => {
 };
 
 export const DetectEverything = () => {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [parentHovered, setParentHovered] = useState(false);
+
   const totalCountryViews = mockCountries.reduce(
     (sum, country) => sum + country.views,
     0,
   );
 
+  const getCardClasses = (cardIndex: number) => {
+    const isHovered = hoveredCard === cardIndex;
+    const isOtherHovered = hoveredCard !== null && !isHovered;
+
+    let translateClasses = "";
+    let opacityClass = "opacity-100"; // All cards full opacity by default
+    let blurClass = "";
+
+    // Base transforms for each card - equal spacing of 20 units
+    const baseTransforms = [
+      "translate-z-0 translate-x-0 translate-y-0",
+      "translate-z-20 translate-x-20 translate-y-20",
+      "translate-z-40 translate-x-40 translate-y-40",
+    ];
+
+    // Spread transforms when parent is hovered (push cards apart on X axis)
+    const spreadTransforms = [
+      "translate-z-0 -translate-x-12 translate-y-0",
+      "translate-z-20 translate-x-20 translate-y-20",
+      "translate-z-40 translate-x-52 translate-y-40",
+    ];
+
+    if (parentHovered) {
+      // Parent is hovered - use spread positions
+      const spreadX = ["-translate-x-12", "translate-x-20", "translate-x-52"][
+        cardIndex
+      ];
+      const spreadZ = ["translate-z-0", "translate-z-20", "translate-z-40"][
+        cardIndex
+      ];
+
+      if (isHovered) {
+        // This card is hovered - lift it up, full opacity, no blur
+        const liftedY = [`-translate-y-5`, `translate-y-15`, `translate-y-35`][
+          cardIndex
+        ];
+        translateClasses = `${spreadZ} ${spreadX} ${liftedY}`;
+        opacityClass = "opacity-100";
+        blurClass = "";
+      } else if (isOtherHovered) {
+        // Another card is hovered - reduce opacity and blur this card
+        translateClasses = spreadTransforms[cardIndex] ?? "";
+        opacityClass = "opacity-30";
+        blurClass = "blur-sm";
+      } else {
+        // Parent hovered but no specific card - spread position, full opacity
+        translateClasses = spreadTransforms[cardIndex] ?? "";
+        opacityClass = "opacity-100";
+        blurClass = "";
+      }
+    } else {
+      // Parent not hovered - use base positions, full opacity
+      translateClasses = baseTransforms[cardIndex] ?? "";
+      opacityClass = "opacity-100";
+      blurClass = "";
+    }
+
+    return `${translateClasses} ${opacityClass} ${blurClass}`;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className="perspective-[2000px]">
-        {/* Card 1: Top Countries */}
-        <div className="w-[400px]  skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 translate-z-0 translate-x-0 translate-y-0 preserve-3d [transition:transform,background_0.32s_var(--ease-out-quad)]">
-          <Card className="w-full h-fit shadow-2xl absolute inset-0">
+      <div
+        role="group"
+        className="perspective-[2000px]"
+        onMouseEnter={() => setParentHovered(true)}
+        onMouseLeave={() => {
+          setParentHovered(false);
+          setHoveredCard(null);
+        }}
+      >
+        {/* Card 0: Top Countries (Back - 33% opacity) */}
+        <div
+          role="button"
+          tabIndex={0}
+          className={`w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out ${getCardClasses(0)}`}
+          onMouseEnter={() => setHoveredCard(0)}
+          onMouseLeave={() => setHoveredCard(null)}
+          onClick={() => {}}
+          onKeyDown={() => {}}
+        >
+          <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
             <CardHeader>
               <CardTitle>Top Countries</CardTitle>
               <CardDescription>Top countries by page views.</CardDescription>
@@ -154,26 +250,17 @@ export const DetectEverything = () => {
           </Card>
         </div>
 
-        {/* Card 2: Browser Usage */}
-        <div className="w-[400px]  skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 translate-z-12 translate-x-12 translate-y-12 preserve-3d [transition:transform,background_0.32s_var(--ease-out-quad)]">
-          <Card className="w-full h-fit shadow-2xl absolute inset-0">
-            <CardHeader>
-              <CardTitle>Browser Usage</CardTitle>
-              <CardDescription>Page visits by browser.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PieDonut
-                data={mockBrowsers}
-                centerLabel={{ showTotal: true, suffix: "page views" }}
-                className=""
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Card 3: Recent Sessions */}
-        <div className="w-[400px]  skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 translate-z-24 translate-x-24 translate-y-24 preserve-3d [transition:transform,background_0.32s_var(--ease-out-quad)]">
-          <Card className="w-full h-fit shadow-2xl absolute inset-0">
+        {/* Card 1: Recent Sessions (Middle - 66% opacity) */}
+        <div
+          role="button"
+          tabIndex={0}
+          className={`w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out ${getCardClasses(1)}`}
+          onMouseEnter={() => setHoveredCard(1)}
+          onMouseLeave={() => setHoveredCard(null)}
+          onClick={() => {}}
+          onKeyDown={() => {}}
+        >
+          <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
             <CardHeader>
               <CardTitle>Recent Sessions</CardTitle>
               <CardDescription>The most recent sessions.</CardDescription>
@@ -202,6 +289,31 @@ export const DetectEverything = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Card 2: Browser Usage (Front - 100% opacity) */}
+        <div
+          role="button"
+          tabIndex={0}
+          className={`scale-95 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out ${getCardClasses(2)}`}
+          onMouseEnter={() => setHoveredCard(2)}
+          onMouseLeave={() => setHoveredCard(null)}
+          onClick={() => {}}
+          onKeyDown={() => {}}
+        >
+          <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
+            <CardHeader>
+              <CardTitle>Browser Usage</CardTitle>
+              <CardDescription>Page visits by browser.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PieDonut
+                data={mockBrowsers}
+                centerLabel={{ showTotal: true, suffix: "page views" }}
+                className=""
+              />
             </CardContent>
           </Card>
         </div>
