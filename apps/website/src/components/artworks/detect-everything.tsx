@@ -14,7 +14,6 @@ import { EdgeIcon } from "@bklit/ui/icons/edge";
 import { FirefoxIcon } from "@bklit/ui/icons/firefox";
 import { SafariIcon } from "@bklit/ui/icons/safari";
 import { Monitor, Smartphone } from "lucide-react";
-import { useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 
 interface CountryData {
@@ -129,94 +128,21 @@ const getDeviceIcon = (device: string) => {
 };
 
 export const DetectEverything = () => {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-  const [parentHovered, setParentHovered] = useState(false);
-
   const totalCountryViews = mockCountries.reduce(
     (sum, country) => sum + country.views,
     0,
   );
 
-  const getCardClasses = (cardIndex: number) => {
-    const isHovered = hoveredCard === cardIndex;
-    const isOtherHovered = hoveredCard !== null && !isHovered;
-
-    let translateClasses = "";
-    let opacityClass = "opacity-100"; // All cards full opacity by default
-    let blurClass = "";
-
-    // Base transforms for each card - equal spacing of 20 units
-    const baseTransforms = [
-      "translate-z-0 translate-x-0 translate-y-0",
-      "translate-z-20 translate-x-20 translate-y-20",
-      "translate-z-40 translate-x-40 translate-y-40",
-    ];
-
-    // Spread transforms when parent is hovered (push cards apart on X axis)
-    const spreadTransforms = [
-      "translate-z-0 -translate-x-12 translate-y-0",
-      "translate-z-20 translate-x-20 translate-y-20",
-      "translate-z-40 translate-x-52 translate-y-40",
-    ];
-
-    if (parentHovered) {
-      // Parent is hovered - use spread positions
-      const spreadX = ["-translate-x-12", "translate-x-20", "translate-x-52"][
-        cardIndex
-      ];
-      const spreadZ = ["translate-z-0", "translate-z-20", "translate-z-40"][
-        cardIndex
-      ];
-
-      if (isHovered) {
-        // This card is hovered - lift it up, full opacity, no blur
-        const liftedY = [`-translate-y-5`, `translate-y-15`, `translate-y-35`][
-          cardIndex
-        ];
-        translateClasses = `${spreadZ} ${spreadX} ${liftedY}`;
-        opacityClass = "opacity-100";
-        blurClass = "";
-      } else if (isOtherHovered) {
-        // Another card is hovered - reduce opacity and blur this card
-        translateClasses = spreadTransforms[cardIndex] ?? "";
-        opacityClass = "opacity-30";
-        blurClass = "blur-sm";
-      } else {
-        // Parent hovered but no specific card - spread position, full opacity
-        translateClasses = spreadTransforms[cardIndex] ?? "";
-        opacityClass = "opacity-100";
-        blurClass = "";
-      }
-    } else {
-      // Parent not hovered - use base positions, full opacity
-      translateClasses = baseTransforms[cardIndex] ?? "";
-      opacityClass = "opacity-100";
-      blurClass = "";
-    }
-
-    return `${translateClasses} ${opacityClass} ${blurClass}`;
-  };
-
   return (
     <div className="flex flex-col items-center justify-center">
-      <div
-        role="group"
-        className="perspective-[2000px]"
-        onMouseEnter={() => setParentHovered(true)}
-        onMouseLeave={() => {
-          setParentHovered(false);
-          setHoveredCard(null);
-        }}
-      >
-        {/* Card 0: Top Countries (Back - 33% opacity) */}
+      <div className="perspective-[2000px] group -translate-x-50">
         <div
-          role="button"
-          tabIndex={0}
-          className={`w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out ${getCardClasses(0)}`}
-          onMouseEnter={() => setHoveredCard(0)}
-          onMouseLeave={() => setHoveredCard(null)}
-          onClick={() => {}}
-          onKeyDown={() => {}}
+          className="card-0 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
+            translate-z-0 translate-x-0 translate-y-0
+            group-hover:translate-z-0 group-hover:-translate-x-12 group-hover:translate-y-0
+            hover:-translate-y-5!
+            group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm
+            group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
         >
           <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
             <CardHeader>
@@ -250,15 +176,13 @@ export const DetectEverything = () => {
           </Card>
         </div>
 
-        {/* Card 1: Recent Sessions (Middle - 66% opacity) */}
         <div
-          role="button"
-          tabIndex={0}
-          className={`w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out ${getCardClasses(1)}`}
-          onMouseEnter={() => setHoveredCard(1)}
-          onMouseLeave={() => setHoveredCard(null)}
-          onClick={() => {}}
-          onKeyDown={() => {}}
+          className="card-1 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
+            translate-z-20 translate-x-20 translate-y-20
+            group-hover:translate-z-20 group-hover:translate-x-20 group-hover:translate-y-20
+            hover:translate-y-15!
+            group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
+            group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
         >
           <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
             <CardHeader>
@@ -293,15 +217,13 @@ export const DetectEverything = () => {
           </Card>
         </div>
 
-        {/* Card 2: Browser Usage (Front - 100% opacity) */}
         <div
-          role="button"
-          tabIndex={0}
-          className={`scale-95 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out ${getCardClasses(2)}`}
-          onMouseEnter={() => setHoveredCard(2)}
-          onMouseLeave={() => setHoveredCard(null)}
-          onClick={() => {}}
-          onKeyDown={() => {}}
+          className="card-2 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
+            translate-z-40 translate-x-40 translate-y-40
+            group-hover:translate-z-40 group-hover:translate-x-52 group-hover:translate-y-40
+            hover:translate-y-35!
+            group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
+            group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm"
         >
           <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
             <CardHeader>
