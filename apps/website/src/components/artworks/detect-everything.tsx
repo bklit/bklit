@@ -135,7 +135,7 @@ export const DetectEverything = () => {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className="perspective-[2000px] group -translate-x-50">
+      <div className="perspective-[2000px] group -translate-x-20">
         <div
           className="card-0 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
             translate-z-0 translate-x-0 translate-y-0
