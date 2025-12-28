@@ -16,3 +16,18 @@ export function endOfDay(date: Date): Date {
 export function parseClickHouseDate(dateString: string): Date {
   return new Date(`${dateString}Z`);
 }
+
+export function getPreviousPeriod(
+  startDate: Date,
+  endDate: Date,
+): { startDate: Date; endDate: Date } {
+  const duration = endDate.getTime() - startDate.getTime();
+
+  const prevEndDate = new Date(startDate.getTime() - 1);
+  const prevStartDate = new Date(prevEndDate.getTime() - duration);
+
+  return {
+    startDate: startOfDay(prevStartDate),
+    endDate: endOfDay(prevEndDate),
+  };
+}

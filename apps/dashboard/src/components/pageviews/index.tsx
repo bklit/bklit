@@ -11,11 +11,18 @@ import { useMediaQuery } from "@bklit/ui/hooks/use-media-query";
 import { cn } from "@bklit/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, Globe, ListFilter, Monitor, Smartphone } from "lucide-react";
-import { parseAsIsoDateTime, parseAsString, useQueryStates } from "nuqs";
+import {
+  parseAsBoolean,
+  parseAsIsoDateTime,
+  parseAsString,
+  useQueryStates,
+} from "nuqs";
 import { useMemo } from "react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
+import { getPreviousPeriod } from "@/lib/date-utils";
+import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
 import { PageviewsChart } from "./pageviews-chart";
 import { PageviewsTable } from "./pageviews-table";
@@ -36,6 +43,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
       viewMode: parseAsString.withDefault("all"),
+      compare: parseAsBoolean.withDefault(false),
     },
     {
       history: "push",
@@ -52,6 +60,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
 
   const endDate = dateParams.endDate ?? undefined;
   const viewMode = dateParams.viewMode as ViewMode;
+  const compare = dateParams.compare;
 
   // Get pageview stats using tRPC
   const { data: statsData, isLoading: statsLoading } = useQuery(
@@ -73,6 +82,41 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
     }),
     enabled: viewMode === "entry-points",
   });
+
+  // Calculate previous period dates for comparison
+  const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
+    if (!compare || !startDate || !endDate) {
+      return { startDate: undefined, endDate: undefined };
+    }
+    return getPreviousPeriod(startDate, endDate);
+  }, [compare, startDate, endDate]);
+
+  // Fetch previous period stats for comparison
+  const { data: prevStatsData, isLoading: prevStatsLoading } = useQuery({
+    ...trpc.pageview.getStats.queryOptions({
+      projectId,
+      organizationId,
+      startDate: prevStartDate,
+      endDate: prevEndDate,
+    }),
+    enabled: compare && !!prevStartDate && !!prevEndDate,
+  });
+
+  // Fetch previous period entry points for comparison
+  const { data: prevEntryPointsData, isLoading: prevEntryPointsLoading } =
+    useQuery({
+      ...trpc.pageview.getEntryPoints.queryOptions({
+        projectId,
+        organizationId,
+        startDate: prevStartDate,
+        endDate: prevEndDate,
+      }),
+      enabled:
+        compare &&
+        viewMode === "entry-points" &&
+        !!prevStartDate &&
+        !!prevEndDate,
+    });
 
   const isLoading =
     statsLoading || (viewMode === "entry-points" && entryPointsLoading);
@@ -127,6 +171,30 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 viewMode === "entry-points"
                   ? entryPointsData?.entryPages?.length || 0
                   : statsData?.totalViews || 0,
+              ...(compare &&
+                viewMode === "entry-points" &&
+                prevEntryPointsData && {
+                  ...calculateChange(
+                    entryPointsData?.entryPages?.length || 0,
+                    prevEntryPointsData?.entryPages?.length || 0,
+                  ),
+                }),
+              ...(compare &&
+                viewMode === "all" &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.totalViews || 0,
+                    prevStatsData?.totalViews || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData &&
+                !prevEntryPointsData && {
+                  changeLoading:
+                    viewMode === "entry-points"
+                      ? prevEntryPointsLoading
+                      : prevStatsLoading,
+                }),
             },
             {
               icon: Globe,
@@ -138,6 +206,36 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                       0,
                     ) || 0
                   : statsData?.uniquePages || 0,
+              ...(compare &&
+                viewMode === "entry-points" &&
+                prevEntryPointsData && {
+                  ...calculateChange(
+                    entryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.sessions,
+                      0,
+                    ) || 0,
+                    prevEntryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.sessions,
+                      0,
+                    ) || 0,
+                  ),
+                }),
+              ...(compare &&
+                viewMode === "all" &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.uniquePages || 0,
+                    prevStatsData?.uniquePages || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData &&
+                !prevEntryPointsData && {
+                  changeLoading:
+                    viewMode === "entry-points"
+                      ? prevEntryPointsLoading
+                      : prevStatsLoading,
+                }),
             },
             {
               icon: Smartphone,
@@ -149,6 +247,36 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                       0,
                     ) || 0
                   : statsData?.mobileViews || 0,
+              ...(compare &&
+                viewMode === "entry-points" &&
+                prevEntryPointsData && {
+                  ...calculateChange(
+                    entryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.mobileSessions,
+                      0,
+                    ) || 0,
+                    prevEntryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.mobileSessions,
+                      0,
+                    ) || 0,
+                  ),
+                }),
+              ...(compare &&
+                viewMode === "all" &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.mobileViews || 0,
+                    prevStatsData?.mobileViews || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData &&
+                !prevEntryPointsData && {
+                  changeLoading:
+                    viewMode === "entry-points"
+                      ? prevEntryPointsLoading
+                      : prevStatsLoading,
+                }),
             },
             {
               icon: Monitor,
@@ -160,6 +288,36 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                       0,
                     ) || 0
                   : statsData?.desktopViews || 0,
+              ...(compare &&
+                viewMode === "entry-points" &&
+                prevEntryPointsData && {
+                  ...calculateChange(
+                    entryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.desktopSessions,
+                      0,
+                    ) || 0,
+                    prevEntryPointsData?.entryPages?.reduce(
+                      (sum, page) => sum + page.desktopSessions,
+                      0,
+                    ) || 0,
+                  ),
+                }),
+              ...(compare &&
+                viewMode === "all" &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.desktopViews || 0,
+                    prevStatsData?.desktopViews || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData &&
+                !prevEntryPointsData && {
+                  changeLoading:
+                    viewMode === "entry-points"
+                      ? prevEntryPointsLoading
+                      : prevStatsLoading,
+                }),
             },
           ]}
         />
