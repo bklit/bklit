@@ -1,10 +1,11 @@
+import { analyticsEnv } from "@bklit/analytics/env";
 import { dbEnv } from "@bklit/db/env";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets-zod";
 import { z } from "zod/v4";
 
 export const env = createEnv({
-  extends: [dbEnv(), vercel()],
+  extends: [dbEnv(), analyticsEnv(), vercel()],
   shared: {
     NODE_ENV: z
       .enum(["development", "production", "test"])
