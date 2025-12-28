@@ -40,7 +40,7 @@ const faqs: FAQItem[] = [
     value: "item-5",
     question: "Is there a paid plan?",
     answer:
-      "We're currently developing our paid plans for the hosted version. While these aren't live yet, they'll include features like extended data retention, priority support, higher usage limits, and advanced analytics capabilities. The open-source version will always remain free.",
+      "Yes, we offer a paid plan for the hosted version. Check our pricing page for detailed information.",
   },
   {
     value: "item-6",
