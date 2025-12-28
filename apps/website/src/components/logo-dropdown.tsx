@@ -46,7 +46,7 @@ export const LogoDropdown = () => {
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem asChild>
-          <a href="/bklit-branding.zip" download title="Download branding zip">
+          <a href="/branding.zip" download title="Download branding zip">
             Download Zip
           </a>
         </ContextMenuItem>
