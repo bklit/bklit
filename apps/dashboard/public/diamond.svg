@@ -82,15 +82,15 @@
 </feMerge>
 </filter>
 <linearGradient id="paint0_linear_262_1517" x1="746.693" y1="0" x2="746.693" y2="389.885" gradientUnits="userSpaceOnUse">
-<stop stop-color="#3D3D3D"/>
+<stop stopColor="#3D3D3D"/>
 <stop offset="1"/>
 </linearGradient>
 <linearGradient id="paint1_linear_262_1517" x1="1022.86" y1="275.031" x2="1022.86" y2="664.916" gradientUnits="userSpaceOnUse">
-<stop stop-color="#3D3D3D"/>
+<stop stopColor="#3D3D3D"/>
 <stop offset="1"/>
 </linearGradient>
 <linearGradient id="paint2_linear_262_1517" x1="470.633" y1="275.546" x2="470.633" y2="665.431" gradientUnits="userSpaceOnUse">
-<stop stop-color="#3D3D3D"/>
+<stop stopColor="#3D3D3D"/>
 <stop offset="1"/>
 </linearGradient>
 </defs>

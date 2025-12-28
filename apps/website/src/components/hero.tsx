@@ -1,76 +1,95 @@
 "use client";
 
 import { Button } from "@bklit/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@bklit/ui/components/dialog";
 import { BklitLogo } from "@bklit/ui/icons/bklit";
-import { Play } from "lucide-react";
-import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
+
+const competitors = [
+  "Google Analytics",
+  "Plausible",
+  "Fathom",
+  "Umami",
+  "PostHog",
+];
 
 export const Hero = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [widthIndex, setWidthIndex] = useState(0);
 
-  const handlePlay = () => {
-    if (videoRef.current) {
-      videoRef.current.play();
-      setIsPlaying(true);
-    }
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % competitors.length);
+    }, 2500);
 
-  const handlePlayEvent = () => {
-    setIsPlaying(true);
-  };
+    return () => clearInterval(interval);
+  }, []);
 
-  const handlePauseEvent = () => {
-    setIsPlaying(false);
-  };
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setWidthIndex(currentIndex);
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [currentIndex]);
+
   return (
     <div className="container mx-auto max-w-6xl flex flex-col px-4">
-      <div className="flex flex-col items-center justify-center text-center w-full space-y-6 pt-26 sm:pt-48">
-        <div className="hidden sm:flex items-center justify-center w-36 aspect-square bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl sm:rounded-[300px] squircle">
-          <BklitLogo size={90} variant="color" />
-        </div>
-        <h1 className="text-3xl md:text-6xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100">
-          Analytics for everyone
-        </h1>
-        <p className="text-xl font-medium dark:text-white dark:text-shadow-sm">
-          Track everything with 4 lines of code
-        </p>
-
-        <div className="flex items-center justify-center">
-          <Dialog open={isPlaying} onOpenChange={setIsPlaying}>
-            <DialogTrigger asChild>
-              <button
-                type="button"
-                onClick={handlePlay}
-                className="flex items-center justify-center cursor-pointer size-18 bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-3xl sm:rounded-[300px] squircle transition-all duration-300 z-10 shadow-xl hover:scale-110"
+      <div className="flex flex-col items-center justify-center text-center w-full space-y-4 pt-32 sm:pt-42 pb-0">
+        <motion.div
+          className="hidden sm:flex items-center justify-center w-24 aspect-square bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl sm:rounded-[300px] squircle"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
+          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <BklitLogo size={60} variant="color" />
+        </motion.div>
+        <motion.h1
+          className="text-3xl md:text-4xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
+          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+        >
+          Purpose built Analytics
+        </motion.h1>
+        <motion.div
+          className="flex items-center gap-2 text-base font-medium dark:text-muted-foreground"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
+          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          layout="position"
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+        >
+          <div>A replacement for </div>
+          <motion.div
+            className="relative inline-block"
+            layout
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+          >
+            <span className="invisible">{competitors[widthIndex]}</span>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={currentIndex}
+                initial={{ opacity: 0, filter: "blur(10px)", y: -10 }}
+                animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                exit={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                transition={{ duration: 0.5 }}
+                className="absolute inset-0 text-card-foreground"
               >
-                <Play size={32} strokeWidth={1.5} className="text-black" />
-              </button>
-            </DialogTrigger>
-            <DialogContent className="p-0 min-w-5xl aspect-video border-t-0">
-              <DialogHeader className="sr-only">
-                <DialogTitle>Bklit Demo</DialogTitle>
-              </DialogHeader>
-              <video
-                ref={videoRef}
-                src="/demo.mp4"
-                autoPlay
-                muted
-                loop
-                className="w-full h-full object-cover"
-                onPlay={handlePlayEvent}
-                onPause={handlePauseEvent}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+                {competitors[currentIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
+          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+          className="flex items-center justify-center"
+        >
+          <Button variant="default" size="lg">
+            Get started
+          </Button>
+        </motion.div>
       </div>
     </div>
   );

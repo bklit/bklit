@@ -1,18 +1,20 @@
 "use client";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
-import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { LogoDropdown } from "./logo-dropdown";
 
 export const PageHeader = () => {
   return (
-    <header className="fixed z-50 w-full flex p-3 py-5 md:py-3 bg-linear-to-b from-background to-transparent progressive-blur">
+    <header className="fixed z-50 w-full flex sm:px-3 py-5 md:py-3 bg-linear-to-b from-background to-transparent">
       <div className="container max-w-7xl mx-auto px-4">
-        <div className="flex items-center gap-2 justify-between">
-          <div className="flex items-start gap-3">
+        <div className="flex items-center gap-2 justify-between border sm:px-4 py-1 rounded-xl backdrop-blur-sm bg-background/60">
+          <div className="flex items-start gap-3 pl-3 sm:pl-0">
             <LogoDropdown />
-            <Badge variant="secondary" className="opacity-70 hover:opacity-100">
+            <Badge
+              variant="secondary"
+              className="opacity-70 hover:opacity-100 hidden sm:block"
+            >
               Beta
             </Badge>
           </div>
@@ -20,7 +22,7 @@ export const PageHeader = () => {
             <ul className="flex items-center gap-2">
               <li>
                 <Button variant="ghost" asChild>
-                  <Link href="#features">Product</Link>
+                  <Link href="/#product">Product</Link>
                 </Button>
               </li>
               <li>
@@ -30,12 +32,16 @@ export const PageHeader = () => {
               </li>
               <li>
                 <Button variant="ghost" asChild>
+                  <Link href="/contact">Contact</Link>
+                </Button>
+              </li>
+              <li>
+                <Button variant="ghost" asChild>
                   <a
                     href="https://docs.bklit.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <ExternalLink size={16} />
                     Docs
                   </a>
                 </Button>
@@ -44,9 +50,14 @@ export const PageHeader = () => {
           </nav>
 
           <nav className="flex items-center gap-2">
-            <Button size="lg" variant="mono" asChild>
+            <Button size="lg" variant="ghost" asChild>
               <a href="https://app.bklit.com/signin" title="Sign in">
                 Sign in
+              </a>
+            </Button>
+            <Button size="lg" variant="mono" asChild>
+              <a href="https://app.bklit.com/signup" title="Sign up">
+                Sign up
               </a>
             </Button>
           </nav>

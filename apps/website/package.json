@@ -11,11 +11,14 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@bklit/analytics": "workspace:*",
     "@bklit/auth": "workspace:*",
     "@bklit/db": "workspace:*",
     "@bklit/sdk": "workspace:*",
     "@bklit/ui": "workspace:*",
     "@bklit/utils": "workspace:*",
+    "@number-flow/react": "^0.5.10",
+    "motion": "^12.23.24",
     "next": "catalog:",
     "next-themes": "^0.4.4",
     "react": "catalog:react19",
