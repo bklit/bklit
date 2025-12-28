@@ -77,7 +77,7 @@ export default function BrandingPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="lg" asChild>
               <a
-                href="https://discord.gg/bklit"
+                href="https://discord.gg/9yyK8FwPcU"
                 target="_blank"
                 rel="noopener noreferrer"
               >

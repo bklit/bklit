@@ -10,7 +10,7 @@
     ·
     <a href="https://x.com/bklitai">X.com</a>
     ·
-    <a href="https://discord.gg/GFfD67gZGf">Discord</a>
+    <a href="https://discord.gg/9yyK8FwPcU">Discord</a>
     ·
     <a href="https://github.com/bklit/bklit/issues">Issues</a>
   </p>
