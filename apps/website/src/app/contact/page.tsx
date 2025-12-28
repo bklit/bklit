@@ -1,115 +1,113 @@
 import { Button } from "@bklit/ui/components/button";
-import { Card } from "@bklit/ui/components/card";
-import { Github, Mail, MessageCircle } from "lucide-react";
+import { ButtonGroup } from "@bklit/ui/components/button-group";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@bklit/ui/components/card";
+import { DiscordIcon } from "@bklit/ui/icons/discord";
+import { GitHubIcon } from "@bklit/ui/icons/github";
+import { XIcon } from "@bklit/ui/icons/x";
 import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
+import { GithubStarCount } from "@/components/github-star-count";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeader } from "@/components/section-header";
 
 export const metadata: Metadata = {
-  title: "Contact Us - Bklit Analytics",
-  description: "Get in touch with the Bklit team",
+  title: "Bklit Branding",
+  description: "Download the Bklit branding assets",
 };
 
-export default function ContactPage() {
+export default function BrandingPage() {
   return (
     <>
       <PageHeader />
-      <div className="min-h-screen pt-32 pb-16">
-        <div className="container max-w-4xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Get in Touch</h1>
-            <p className="text-xl text-muted-foreground">
-              We'd love to hear from you. Choose the best way to reach us.
+      <div className="container mx-auto max-w-6xl py-48 space-y-16 px-4">
+        <SectionHeader title="Contact" description="Contact the Bklit team">
+          <Button variant="outline" asChild size="lg">
+            <a
+              href="https://www.linkedin.com/company/bklit/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              LinkedIn
+            </a>
+          </Button>
+        </SectionHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sales</CardTitle>
+                <CardDescription>Contact the Bklit.com sales</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild size="lg" variant="mono">
+                  <a href="mailto:matt@bklit.com">Email Sales</a>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Support</CardTitle>
+                <CardDescription>
+                  The light version of the Bklit logo &amp; wordmark.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button size="lg" asChild variant="mono">
+                  <a href="mailto:support@bklit.com">Email Support</a>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-center items-center gap-8">
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Follow the community...
             </p>
           </div>
-
-          <div className="grid gap-6 md:grid-cols-2 mb-12">
-            <Card className="p-6 hover:border-primary/50 transition-colors">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Mail className="size-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-2">Email Support</h3>
-                  <p className="text-muted-foreground mb-4">
-                    For general inquiries and support questions
-                  </p>
-                  <Button variant="outline" asChild>
-                    <a href="mailto:support@bklit.com">support@bklit.com</a>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover:border-primary/50 transition-colors">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Github className="size-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-2">GitHub</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Report bugs, request features, or contribute
-                  </p>
-                  <Button variant="outline" asChild>
-                    <a
-                      href="https://github.com/bklit/bklit"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Visit Repository
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover:border-primary/50 transition-colors md:col-span-2">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <MessageCircle className="size-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-2">
-                    Community & Discussions
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Join our community to discuss features, best practices, and
-                    connect with other users
-                  </p>
-                  <Button variant="outline" asChild>
-                    <a
-                      href="https://github.com/bklit/bklit/discussions"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Join Discussions
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-4">Quick Links</h2>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button variant="ghost" asChild>
-                <a
-                  href="https://docs.bklit.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Documentation
-                </a>
-              </Button>
-              <Button variant="ghost" asChild>
-                <a href="/pricing">Pricing</a>
-              </Button>
-              <Button variant="ghost" asChild>
-                <a href="/status">Status Page</a>
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="lg" asChild>
+              <a
+                href="https://discord.gg/bklit"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <DiscordIcon className="size-4" />
+                Discord
+              </a>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <a
+                href="https://x.com/bklitai"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <XIcon className="size-4" />
+                .com
+              </a>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <a
+                href="https://github.com/bklit/bklit"
+                target="_blank"
+                title="Bklit on Github"
+                rel="noopener noreferrer"
+              >
+                <GitHubIcon className="size-4" /> Github
+                <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
+                  <GithubStarCount />
+                </span>
+              </a>
+            </Button>
           </div>
         </div>
       </div>
@@ -117,4 +115,3 @@ export default function ContactPage() {
     </>
   );
 }
-

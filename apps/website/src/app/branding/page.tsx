@@ -8,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { FigmaIcon } from "@bklit/ui/icons/figma";
+import { DownloadIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Footer } from "@/components/footer";
@@ -28,11 +30,24 @@ export default function BrandingPage() {
           title="Bklit Branding"
           description="Download the Bklit branding assets"
         >
-          <Button variant="outline" asChild>
-            <a href="/branding.zip" download>
-              Download Zip
-            </a>
-          </Button>
+          <ButtonGroup>
+            <Button variant="outline" asChild size="lg">
+              <a
+                href="https://www.figma.com/design/i8XNdCS4y9K7r1e1wdk0MU/Bklit.com-Branding?m=auto&t=nZefB3QSZ0RuAPXi-6"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FigmaIcon />
+                Figma
+              </a>
+            </Button>
+            <Button variant="outline" asChild size="lg">
+              <a href="/branding.zip" download>
+                <DownloadIcon />
+                Download Zip
+              </a>
+            </Button>
+          </ButtonGroup>
         </SectionHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="col-span-1">

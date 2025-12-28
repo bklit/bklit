@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeader } from "@/components/section-header";
 
 export const metadata: Metadata = {
   title: "Privacy Policy - Bklit",
@@ -11,13 +12,16 @@ export default function PrivacyPage() {
   return (
     <main className="w-full min-h-screen flex flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-4xl px-4 pt-32">
-        <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
-        <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8">
+      <div className="container mx-auto max-w-6xl flex flex-col px-4 py-48 space-y-12">
+        <SectionHeader
+          title="Privacy Policy"
+          description="Privacy Policy for Bklit analytics platform"
+        >
           <p className="text-muted-foreground">
-            Last updated: December 21, 2025
+            Last updated: December 28, 2025
           </p>
-
+        </SectionHeader>
+        <div className="prose prose-neutral dark:prose-invert max-w-4xl mx-auto space-y-8 text-sm">
           <section className="page-content">
             <h2>1. Information We Collect</h2>
             <h3>Account Information</h3>

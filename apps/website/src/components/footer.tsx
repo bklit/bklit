@@ -86,8 +86,8 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/"
-                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground opacity-50"
+                  href="/branding"
+                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                 >
                   <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
                     ◑
