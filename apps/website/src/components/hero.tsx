@@ -42,7 +42,7 @@ export const Hero = () => {
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <BklitLogo size={60} variant="color" />
+          <BklitLogo size={60} theme="light" variant="blended" />
         </motion.div>
         <motion.h1
           className="text-3xl md:text-4xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100"
