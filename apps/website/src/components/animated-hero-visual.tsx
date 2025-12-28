@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 
 export function AnimatedHeroVisual() {
   return (
-    <div className="sm:perspective-[3000px] col-start-1 row-start-1 overflow-hidden">
+    <div className="hidden sm:block perspective-[3000px] col-start-1 row-start-1 overflow-hidden">
       <div className="grid grid-cols-1 grid-rows-1 w-full h-auto aspect-1080/714 max-w-[1600px] mx-auto overflow-hidden ">
         <motion.div
           data-name="comp-layout"
@@ -90,16 +90,23 @@ export function AnimatedHeroVisual() {
             ease: "easeOut",
           }}
         >
-          1 Live user
+          <div className="flex items-center gap-2">
+            <div className="size-3 relative">
+              <div className="absolute top-0 left-0 size-3 rounded-full bg-red-400 animate-ping" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full bg-red-400" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-7 rounded-full bg-red-400 pointer-events-none blur-xl opacity-80" />
+            </div>
+            <span>1 Live user</span>
+          </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
-          className="relative col-start-1 row-start-1 w-full h-auto aspect-1080/714 sm:-translate-y-2 sm:translate-x-[440px] sm:rotate-x-45 sm:rotate-y-20 sm:rotate-z-333 border rounded-lg scale-150 origin-top-right"
+          className="relative col-start-1 row-start-1 w-full h-auto aspect-1080/714 -translate-y-2 translate-x-[440px] rotate-x-45 rotate-y-20 rotate-z-333 border rounded-lg scale-150 origin-top-right"
         />
-        <div className="relative col-start-1 row-start-1 w-full h-auto aspect-1080/714 sm:translate-y-0 sm:translate-x-26 sm:rotate-x-45 sm:rotate-y-20 sm:rotate-z-333 scale-150 origin-top-right">
+        <div className="relative col-start-1 row-start-1 w-full h-auto aspect-1080/714 translate-y-0 translate-x-26 rotate-x-45 rotate-y-20 rotate-z-333 scale-150 origin-top-right">
           <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-transparent via-90% bg-linear-to-b pointer-events-none" />
           <div className="absolute top-0 left-0 w-full h-full from-transparent to-background to-70% via-transparent via-50% bg-linear-to-r pointer-events-none" />
         </div>

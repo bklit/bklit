@@ -134,110 +134,140 @@ export const DetectEverything = () => {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="perspective-[2000px] group -translate-x-20">
-        <div
-          className="card-0 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
+    <div className="flex flex-col sm:grid sm:grid-cols-2 gap-8">
+      <div className="col-span-1 space-y-6 sm:border-l">
+        <div className="flex flex-col gap-2 p-6 sm:p-12 border-b">
+          <h2 className="text-xl font-bold">Browser Usage</h2>
+          <p className="text-lg text-muted-foreground">
+            Gain insight into which browsers your visitors are using and how
+            they're interacting with your website.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 p-6 sm:p-12 border-b">
+          <h3 className="text-xl font-bold">Recent Sessions</h3>
+          <p className="text-lg text-muted-foreground">
+            Understand your users' behavior and how they flow through your
+            website.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 p-6 sm:p-12">
+          <h3 className="text-xl font-bold">Top Countries</h3>
+          <p className="text-lg text-muted-foreground">
+            Gain insight into where your visitors are coming from and what
+            timezones they're in.
+          </p>
+        </div>
+      </div>
+      <div className="col-span-1 hidden sm:flex items-start justify-center">
+        <div className="flex flex-col items-center justify-center ">
+          <div className="perspective-[2000px] group -translate-x-20 translate-y-10 scale-50 sm:scale-90">
+            <div
+              className="card-0 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
             translate-z-0 translate-x-0 translate-y-0
             group-hover:translate-z-0 group-hover:-translate-x-12 group-hover:translate-y-0
             hover:-translate-y-5!
             group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm
             group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
-        >
-          <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
-            <CardHeader>
-              <CardTitle>Top Countries</CardTitle>
-              <CardDescription>Top countries by page views.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col">
-                {mockCountries.map((country) => {
-                  const percentage =
-                    totalCountryViews > 0
-                      ? ((Number(country.views) || 0) / totalCountryViews) * 100
-                      : 0;
-                  return (
-                    <ProgressRow
-                      key={country.countryCode}
-                      label={country.country}
-                      value={country.views}
-                      percentage={percentage}
-                      icon={
-                        <CircleFlag
-                          countryCode={country.countryCode.toLowerCase()}
-                          className="size-4"
+            >
+              <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
+                <CardHeader>
+                  <CardTitle>Top Countries</CardTitle>
+                  <CardDescription>
+                    Top countries by page views.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col">
+                    {mockCountries.map((country) => {
+                      const percentage =
+                        totalCountryViews > 0
+                          ? ((Number(country.views) || 0) / totalCountryViews) *
+                            100
+                          : 0;
+                      return (
+                        <ProgressRow
+                          key={country.countryCode}
+                          label={country.country}
+                          value={country.views}
+                          percentage={percentage}
+                          icon={
+                            <CircleFlag
+                              countryCode={country.countryCode.toLowerCase()}
+                              className="size-4"
+                            />
+                          }
                         />
-                      }
-                    />
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        <div
-          className="card-1 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
+            <div
+              className="card-1 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
             translate-z-20 translate-x-20 translate-y-20
             group-hover:translate-z-20 group-hover:translate-x-20 group-hover:translate-y-20
             hover:translate-y-15!
             group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
             group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
-        >
-          <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
-            <CardHeader>
-              <CardTitle>Recent Sessions</CardTitle>
-              <CardDescription>The most recent sessions.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col">
-                {mockSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-3">
-                        <span>{getBrowserIcon(session.browser)}</span>
-                        <span className="text-muted-foreground">
-                          {getDeviceIcon(session.device)}
-                        </span>
-                        <span className="text-sm">
-                          {session.pageCount} pages
-                        </span>
+            >
+              <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
+                <CardHeader>
+                  <CardTitle>Recent Sessions</CardTitle>
+                  <CardDescription>The most recent sessions.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col">
+                    {mockSessions.map((session) => (
+                      <div
+                        key={session.id}
+                        className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-3">
+                            <span>{getBrowserIcon(session.browser)}</span>
+                            <span className="text-muted-foreground">
+                              {getDeviceIcon(session.device)}
+                            </span>
+                            <span className="text-sm">
+                              {session.pageCount} pages
+                            </span>
+                          </div>
+                        </div>
+                        <div className="gap-2 text-xs text-muted-foreground">
+                          {session.timeAgo}
+                        </div>
                       </div>
-                    </div>
-                    <div className="gap-2 text-xs text-muted-foreground">
-                      {session.timeAgo}
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        <div
-          className="card-2 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
+            <div
+              className="card-2 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
             translate-z-40 translate-x-40 translate-y-40
             group-hover:translate-z-40 group-hover:translate-x-52 group-hover:translate-y-40
             hover:translate-y-35!
             group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
             group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm"
-        >
-          <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
-            <CardHeader>
-              <CardTitle>Browser Usage</CardTitle>
-              <CardDescription>Page visits by browser.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PieDonut
-                data={mockBrowsers}
-                centerLabel={{ showTotal: true, suffix: "page views" }}
-                className=""
-              />
-            </CardContent>
-          </Card>
+            >
+              <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
+                <CardHeader>
+                  <CardTitle>Browser Usage</CardTitle>
+                  <CardDescription>Page visits by browser.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PieDonut
+                    data={mockBrowsers}
+                    centerLabel={{ showTotal: true, suffix: "page views" }}
+                    className=""
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

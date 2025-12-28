@@ -34,7 +34,7 @@ export function AnimatedGlobalStats() {
   }, [hasAnimated]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pt-8 sm:pt-0">
       <div className="grid grid-cols-4 grid-rows-1 gap-0">
         <motion.div
           initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
@@ -45,10 +45,10 @@ export function AnimatedGlobalStats() {
             ease: "easeOut",
           }}
           onAnimationComplete={() => setHasAnimated(true)}
-          className="flex flex-col gap-1 border-r p-12"
+          className="flex flex-col gap-1 sm:border-r p-4 sm:p-12"
         >
-          <h3>Sessions recorded</h3>
-          <div className="text-2xl font-bold">
+          <h3 className="text-xs sm:text-lg">Sessions recorded</h3>
+          <div className="text-xl sm:text-2xl font-bold">
             <NumberFlow value={stats.totalSessions} />
           </div>
         </motion.div>
@@ -60,10 +60,10 @@ export function AnimatedGlobalStats() {
             delay: 1.0,
             ease: "easeOut",
           }}
-          className="flex flex-col gap-1 border-r p-12"
+          className="flex flex-col gap-1 sm:border-r p-4 sm:p-12"
         >
-          <h3>Pageviews recorded</h3>
-          <div className="text-2xl font-bold">
+          <h3 className="text-xs sm:text-lg">Pageviews recorded</h3>
+          <div className="text-xl sm:text-2xl font-bold">
             <NumberFlow value={stats.totalPageviews} />
           </div>
         </motion.div>
@@ -75,10 +75,10 @@ export function AnimatedGlobalStats() {
             delay: 1.2,
             ease: "easeOut",
           }}
-          className="flex flex-col gap-1 border-r p-12"
+          className="flex flex-col gap-1 sm:border-r p-4 sm:p-12"
         >
-          <h3>Unique users recorded</h3>
-          <div className="text-2xl font-bold">
+          <h3 className="text-xs sm:text-lg">Unique users</h3>
+          <div className="text-xl sm:text-2xl font-bold">
             <NumberFlow value={stats.totalUniqueUsers} />
           </div>
         </motion.div>
@@ -90,10 +90,10 @@ export function AnimatedGlobalStats() {
             delay: 1.4,
             ease: "easeOut",
           }}
-          className="flex flex-col gap-1 p-12"
+          className="flex flex-col gap-1 p-4 sm:p-12"
         >
-          <h3>Conversions recorded</h3>
-          <div className="text-2xl font-bold">
+          <h3 className="text-xs sm:text-lg">Conversions recorded</h3>
+          <div className="text-xl sm:text-2xl font-bold">
             <NumberFlow value={stats.totalConversions} />
           </div>
         </motion.div>

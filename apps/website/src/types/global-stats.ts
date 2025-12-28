@@ -4,4 +4,3 @@ export interface GlobalStats {
   totalUniqueUsers: number;
   totalConversions: number;
 }
-

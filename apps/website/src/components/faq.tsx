@@ -73,7 +73,7 @@ export const FAQ = () => {
               value={faq.value}
               className="border-none"
             >
-              <AccordionTrigger className="text-lg sm:text-2xl font-normal hover:cursor-pointer">
+              <AccordionTrigger className="text-lg font-normal hover:cursor-pointer">
                 {faq.question}
               </AccordionTrigger>
               <AccordionContent className="flex flex-col gap-4 text-balance">

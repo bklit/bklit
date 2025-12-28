@@ -23,8 +23,8 @@ export function EdgeIcon({ className, size = 16 }: IconProps) {
           gradientTransform="matrix(1 0 0 -.95 0 248.8)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".7" stop-opacity="0" />
-          <stop offset=".9" stop-opacity=".5" />
+          <stop offset=".7" stopOpacity="0" />
+          <stop offset=".9" stopOpacity=".5" />
           <stop offset="1" />
         </radialGradient>
         <radialGradient
@@ -35,8 +35,8 @@ export function EdgeIcon({ className, size = 16 }: IconProps) {
           gradientTransform="matrix(.15 -.99 -.8 -.12 176.6 -125.4)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset=".8" stop-opacity="0" />
-          <stop offset=".9" stop-opacity=".5" />
+          <stop offset=".8" stopOpacity="0" />
+          <stop offset=".9" stopOpacity=".5" />
           <stop offset="1" />
         </radialGradient>
         <radialGradient
@@ -47,11 +47,11 @@ export function EdgeIcon({ className, size = 16 }: IconProps) {
           gradientTransform="matrix(-.04 1 2.13 .08 -1179.5 -106.7)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stop-color="#35c1f1" />
-          <stop offset=".1" stop-color="#34c1ed" />
-          <stop offset=".2" stop-color="#2fc2df" />
-          <stop offset=".3" stop-color="#2bc3d2" />
-          <stop offset=".7" stop-color="#36c752" />
+          <stop offset="0" stopColor="#35c1f1" />
+          <stop offset=".1" stopColor="#34c1ed" />
+          <stop offset=".2" stopColor="#2fc2df" />
+          <stop offset=".3" stopColor="#2bc3d2" />
+          <stop offset=".7" stopColor="#36c752" />
         </radialGradient>
         <radialGradient
           id="f"
@@ -61,8 +61,8 @@ export function EdgeIcon({ className, size = 16 }: IconProps) {
           gradientTransform="matrix(.28 .96 .78 -.23 -303.8 -148.5)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stop-color="#66eb6e" />
-          <stop offset="1" stop-color="#66eb6e" stop-opacity="0" />
+          <stop offset="0" stopColor="#66eb6e" />
+          <stop offset="1" stopColor="#66eb6e" stopOpacity="0" />
         </radialGradient>
         <linearGradient
           id="a"
@@ -73,8 +73,8 @@ export function EdgeIcon({ className, size = 16 }: IconProps) {
           gradientTransform="matrix(1 0 0 -1 0 266)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stop-color="#0c59a4" />
-          <stop offset="1" stop-color="#114a8b" />
+          <stop offset="0" stopColor="#0c59a4" />
+          <stop offset="1" stopColor="#114a8b" />
         </linearGradient>
         <linearGradient
           id="c"
@@ -85,10 +85,10 @@ export function EdgeIcon({ className, size = 16 }: IconProps) {
           gradientTransform="matrix(1 0 0 -1 0 266)"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stop-color="#1b9de2" />
-          <stop offset=".2" stop-color="#1595df" />
-          <stop offset=".7" stop-color="#0680d7" />
-          <stop offset="1" stop-color="#0078d4" />
+          <stop offset="0" stopColor="#1b9de2" />
+          <stop offset=".2" stopColor="#1595df" />
+          <stop offset=".7" stopColor="#0680d7" />
+          <stop offset="1" stopColor="#0078d4" />
         </linearGradient>
       </defs>
       <path

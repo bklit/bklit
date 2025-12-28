@@ -27,7 +27,7 @@ const data = [
 
 export const FunnelDemo = () => {
   return (
-    <div className="h-[500px] w-full sm:max-w-4xl mx-auto">
+    <div className="w-full">
       <Funnel data={data} />
     </div>
   );

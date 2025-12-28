@@ -8,9 +8,15 @@ export async function GET() {
   try {
     const analytics = new AnalyticsService();
 
-    const [sessionsResult, pageviewsResult, uniqueUsersResult, conversionsResult] = await Promise.all([
+    const [
+      sessionsResult,
+      pageviewsResult,
+      uniqueUsersResult,
+      conversionsResult,
+    ] = await Promise.all([
       analytics["client"].query({
-        query: "SELECT count(DISTINCT session_id) as count FROM tracked_session",
+        query:
+          "SELECT count(DISTINCT session_id) as count FROM tracked_session",
         format: "JSONEachRow",
       }),
       analytics["client"].query({
@@ -18,7 +24,8 @@ export async function GET() {
         format: "JSONEachRow",
       }),
       analytics["client"].query({
-        query: "SELECT count(DISTINCT visitor_id) as count FROM tracked_session WHERE visitor_id IS NOT NULL",
+        query:
+          "SELECT count(DISTINCT visitor_id) as count FROM tracked_session WHERE visitor_id IS NOT NULL",
         format: "JSONEachRow",
       }),
       analytics["client"].query({
@@ -27,10 +34,16 @@ export async function GET() {
       }),
     ]);
 
-    const sessions = await sessionsResult.json() as Array<{ count: number }>;
-    const pageviews = await pageviewsResult.json() as Array<{ count: number }>;
-    const uniqueUsers = await uniqueUsersResult.json() as Array<{ count: number }>;
-    const conversions = await conversionsResult.json() as Array<{ count: number }>;
+    const sessions = (await sessionsResult.json()) as Array<{ count: number }>;
+    const pageviews = (await pageviewsResult.json()) as Array<{
+      count: number;
+    }>;
+    const uniqueUsers = (await uniqueUsersResult.json()) as Array<{
+      count: number;
+    }>;
+    const conversions = (await conversionsResult.json()) as Array<{
+      count: number;
+    }>;
 
     const stats: GlobalStats = {
       totalSessions: sessions[0]?.count || 0,
@@ -49,8 +62,7 @@ export async function GET() {
         totalUniqueUsers: 0,
         totalConversions: 0,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

@@ -65,25 +65,18 @@ export const Features = () => {
   return (
     <div className="w-full">
       <div className="container mx-auto max-w-6xl px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="col-span-1 rounded-3xl grid grid-cols-1 grid-rows-1 p-px pb-0 relative border bg-linear-to-b from-bklit-700 to-bklit-900"
+              className="flex flex-col gap-2 relative border-b sm:border-r p-6 sm:p-12 nth-[3n+3]:border-r-0 sm:nth-last-[-n+3]:border-b-0"
             >
-              <div className="col-span-1 col-start-1 row-start-1 flex flex-col gap-6 p-12 bg-bklit-800 rounded-3xl">
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-2xl font-regular dark:text-white text-black">
-                    {feature.title}
-                  </h3>
-                  <h4 className="text-base text-muted-foreground">
-                    {feature.subtitle}
-                  </h4>
-                </div>
-                <p className="text-lg text-muted-foreground">
-                  {feature.description}
-                </p>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-xl font-bold">{feature.title}</h3>
               </div>
+              <p className="text-sm text-muted-foreground">
+                {feature.description}
+              </p>
             </div>
           ))}
         </div>
