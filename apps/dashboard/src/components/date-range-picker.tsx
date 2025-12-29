@@ -4,15 +4,25 @@ import { Button } from "@bklit/ui/components/button";
 import { ButtonGroup } from "@bklit/ui/components/button-group";
 import { Calendar as CalendarComponent } from "@bklit/ui/components/calendar";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@bklit/ui/components/dropdown-menu";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@bklit/ui/components/popover";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { CalendarIcon, ChevronDown, GitCompare } from "lucide-react";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
+import {
+  DATE_PRESETS,
+  type DatePreset,
+  formatDateRangeDisplay,
+} from "@/lib/date-presets";
 import { endOfDay, startOfDay } from "@/lib/date-utils";
 
 interface DateRangePickerProps {
@@ -23,6 +33,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   const [dateParams, setDateParams] = useQueryStates({
     startDate: parseAsIsoDateTime,
     endDate: parseAsIsoDateTime,
+    compare: parseAsBoolean.withDefault(false),
   });
 
   const startDate = useMemo(() => {
@@ -31,11 +42,14 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   }, [dateParams.startDate]);
 
   const endDate = dateParams.endDate ?? undefined;
+  const compare = dateParams.compare;
 
   const [localRange, setLocalRange] = useState<DateRange | undefined>({
     from: startDate,
     to: endDate,
   });
+
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     setLocalRange({
@@ -44,47 +58,63 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
     });
   }, [startDate, endDate]);
 
-  const [isOpen, setIsOpen] = useState(false);
-
+  // Set default to "Last 30 days" if no dates are set
   useEffect(() => {
     if (dateParams.startDate === null && dateParams.endDate === null) {
-      const defaultEndDate = endOfDay(new Date());
-      const defaultStartDate = startOfDay(new Date());
-      defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+      const defaultPreset = DATE_PRESETS[0]; // "Last 30 days"
+      if (defaultPreset) {
+        const { startDate: defaultStart, endDate: defaultEnd } =
+          defaultPreset.getValue();
 
-      setDateParams({
-        startDate: defaultStartDate,
-        endDate: defaultEndDate,
-      });
+        setDateParams({
+          startDate: defaultStart,
+          endDate: defaultEnd,
+        });
+      }
     }
   }, [dateParams.startDate, dateParams.endDate, setDateParams]);
 
+  // Calculate display text
+  const displayText = useMemo(() => {
+    if (!startDate || !endDate) return "Select dates";
+    return formatDateRangeDisplay(startDate, endDate);
+  }, [startDate, endDate]);
+
+  // Check if current dates match default
   const isDefaultRange = useMemo(() => {
-    if (!dateParams.startDate || !dateParams.endDate) return false;
+    if (!startDate || !endDate) return false;
 
-    const today = new Date();
-    const defaultEndDate = endOfDay(today);
-    const defaultStartDate = startOfDay(today);
-    defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+    const defaultPreset = DATE_PRESETS[0]; // "Last 30 days"
+    if (!defaultPreset) return false;
 
-    const normalizedCurrentStart = startOfDay(dateParams.startDate);
-    const normalizedCurrentEnd = endOfDay(dateParams.endDate);
+    const { startDate: defaultStart, endDate: defaultEnd } =
+      defaultPreset.getValue();
 
-    const defaultStartDateStr = defaultStartDate.toISOString().split("T")[0];
-    const defaultEndDateStr = defaultEndDate.toISOString().split("T")[0];
-    const currentStartDateStr = normalizedCurrentStart
-      .toISOString()
-      .split("T")[0];
-    const currentEndDateStr = normalizedCurrentEnd.toISOString().split("T")[0];
+    const normalizedCurrentStart = startOfDay(startDate);
+    const normalizedCurrentEnd = endOfDay(endDate);
+    const normalizedDefaultStart = startOfDay(defaultStart);
+    const normalizedDefaultEnd = endOfDay(defaultEnd);
 
     return (
-      currentStartDateStr === defaultStartDateStr &&
-      currentEndDateStr === defaultEndDateStr
+      normalizedCurrentStart.getTime() === normalizedDefaultStart.getTime() &&
+      normalizedCurrentEnd.getTime() === normalizedDefaultEnd.getTime()
     );
-  }, [dateParams.startDate, dateParams.endDate]);
+  }, [startDate, endDate]);
 
   const hasActiveFilters = !isDefaultRange;
 
+  // Handle preset selection
+  const handlePresetSelect = (preset: DatePreset) => {
+    const { startDate: presetStart, endDate: presetEnd } = preset.getValue();
+
+    setDateParams({
+      startDate: presetStart,
+      endDate: presetEnd,
+    });
+    onRangeChange?.(presetStart, presetEnd);
+  };
+
+  // Handle custom date range from calendar
   const applyDateRange = () => {
     const normalizedStartDate = localRange?.from
       ? startOfDay(localRange.from)
@@ -99,26 +129,29 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
       normalizedStartDate ?? undefined,
       normalizedEndDate ?? undefined,
     );
-    setIsOpen(false);
+    setIsCalendarOpen(false);
   };
 
+  // Clear filters (reset to default)
   const clearFilters = () => {
-    const defaultEndDate = endOfDay(new Date());
-    const defaultStartDate = startOfDay(new Date());
-    defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+    const defaultPreset = DATE_PRESETS[0]; // "Last 30 days"
+    if (!defaultPreset) return;
+
+    const { startDate: defaultStart, endDate: defaultEnd } =
+      defaultPreset.getValue();
 
     setDateParams({
-      startDate: defaultStartDate,
-      endDate: defaultEndDate,
+      startDate: defaultStart,
+      endDate: defaultEnd,
     });
     setLocalRange({
-      from: defaultStartDate,
-      to: defaultEndDate,
+      from: defaultStart,
+      to: defaultEnd,
     });
-    onRangeChange?.(defaultStartDate, defaultEndDate);
+    onRangeChange?.(defaultStart, defaultEnd);
   };
 
-  const handleOpenChange = (open: boolean) => {
+  const handleCalendarOpenChange = (open: boolean) => {
     if (!open) {
       // Reset local state if popover is closed without applying
       setLocalRange({ from: startDate, to: endDate });
@@ -126,31 +159,45 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
       // Sync local state with current filters when opening
       setLocalRange({ from: startDate, to: endDate });
     }
-    setIsOpen(open);
+    setIsCalendarOpen(open);
   };
 
   return (
     <ButtonGroup>
-      <Popover open={isOpen} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
+      {/* Preset Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             size="lg"
             className="justify-start text-left font-normal"
           >
-            <CalendarIcon className="size-4" />
-            <span className="hidden sm:inline text-sm">
-              {startDate && endDate ? (
-                <>
-                  {format(startDate, "MMM dd, yyyy")} -{" "}
-                  {format(endDate, "MMM dd, yyyy")}
-                </>
-              ) : startDate ? (
-                <>{format(startDate, "MMM dd, yyyy")} - Now</>
-              ) : (
-                "All time"
-              )}
+            <span className="hidden sm:inline text-sm">{displayText}</span>
+            <span className="sm:hidden text-sm">
+              {displayText.length > 15
+                ? `${displayText.substring(0, 15)}...`
+                : displayText}
             </span>
+            <ChevronDown className="size-4 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {DATE_PRESETS.map((preset) => (
+            <DropdownMenuItem
+              key={preset.label}
+              onClick={() => handlePresetSelect(preset)}
+            >
+              {preset.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Calendar Picker */}
+      <Popover open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="lg">
+            <CalendarIcon className="size-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">
@@ -166,7 +213,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsOpen(false)}
+                onClick={() => setIsCalendarOpen(false)}
               >
                 Cancel
               </Button>
@@ -177,9 +224,21 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Comparison Toggle */}
+      <Button
+        variant={compare ? "secondary" : "outline"}
+        size="lg"
+        onClick={() => setDateParams({ compare: !compare })}
+        aria-label="Toggle comparison"
+      >
+        <GitCompare className="size-4" />
+      </Button>
+
+      {/* Clear filters button */}
       {hasActiveFilters && (
         <Button variant="secondary" size="lg" onClick={clearFilters}>
-          Clear filters
+          Clear
         </Button>
       )}
     </ButtonGroup>

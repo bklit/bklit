@@ -90,7 +90,7 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
                             : item.change && item.change < 0
                               ? "- "
                               : ""}
-                          {item.change?.toFixed(1)}%
+                          {Math.abs(item.change ?? 0).toFixed(1)}%
                         </span>
                       </Badge>
                     )}

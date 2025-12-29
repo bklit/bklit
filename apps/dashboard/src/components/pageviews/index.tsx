@@ -142,7 +142,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
           >
             <SelectTrigger
               size="sm"
-              className={cn("w-auto", isDesktop && "w-full sm:w-[180px]")}
+              className={cn("w-auto", isDesktop && "w-full")}
             >
               {isDesktop ? (
                 <SelectValue placeholder="Select view mode" />
