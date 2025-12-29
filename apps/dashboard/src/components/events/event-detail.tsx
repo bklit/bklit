@@ -170,19 +170,21 @@ export function EventDetail({
           </div>
         </PageHeader>
         <div className="container mx-auto">
-          <Empty className="border border-bklit-600 bg-bklit-900">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Activity size={16} />
-              </EmptyMedia>
-              <EmptyTitle>Event not found</EmptyTitle>
-            </EmptyHeader>
-            <EmptyContent>
-              <EmptyDescription>
-                The event you're looking for doesn't exist.
-              </EmptyDescription>
-            </EmptyContent>
-          </Empty>
+          <Card>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Activity size={16} />
+                </EmptyMedia>
+                <EmptyTitle>Event not found</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <EmptyDescription>
+                  The event you're looking for doesn't exist.
+                </EmptyDescription>
+              </EmptyContent>
+            </Empty>
+          </Card>
         </div>
       </>
     );

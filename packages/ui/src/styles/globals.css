@@ -80,7 +80,7 @@
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.93 0.1421 124.85);
   --primary-foreground: oklch(0.32 0.0617 115.83);
-  --secondary: var(--bklit-700);
+  --secondary: var(--bklit-600);
   --secondary-foreground: var(--color-white);
   --muted: var(--bklit-700);
   --muted-foreground: var(--bklit-200);

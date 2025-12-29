@@ -648,8 +648,8 @@ export function Events({ organizationId, projectId }: EventsProps) {
         <EventsChart organizationId={organizationId} projectId={projectId} />
 
         {isLoading && (
-          <div className="space-y-4">
-            <Empty className="border border-bklit-600 bg-bklit-900">
+          <Card>
+            <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
                   <Spinner />
@@ -660,22 +660,24 @@ export function Events({ organizationId, projectId }: EventsProps) {
                 <EmptyDescription>Fetching your events</EmptyDescription>
               </EmptyContent>
             </Empty>
-          </div>
+          </Card>
         )}
         {events && events.length === 0 && (
-          <Empty className="border border-bklit-600 bg-bklit-900">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Activity size={16} />
-              </EmptyMedia>
-              <EmptyTitle>No events found</EmptyTitle>
-            </EmptyHeader>
-            <EmptyContent>
-              <EmptyDescription>
-                No events found for the selected date range.
-              </EmptyDescription>
-            </EmptyContent>
-          </Empty>
+          <Card>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Activity size={16} />
+                </EmptyMedia>
+                <EmptyTitle>No events found</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <EmptyDescription>
+                  No events found for the selected date range.
+                </EmptyDescription>
+              </EmptyContent>
+            </Empty>
+          </Card>
         )}
         {events && Array.isArray(events) && events.length > 0 && (
           <Card>
