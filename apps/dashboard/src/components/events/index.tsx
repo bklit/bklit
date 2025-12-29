@@ -616,31 +616,6 @@ export function Events({ organizationId, projectId }: EventsProps) {
                   ).length;
                   return sum + today;
                 }, 0) || 0,
-              ...(compare &&
-                prevEvents && {
-                  ...calculateChange(
-                    events?.reduce((sum, e) => {
-                      const today = e.recentEvents.filter(
-                        (re) =>
-                          new Date(re.timestamp) >
-                          new Date(Date.now() - 24 * 60 * 60 * 1000),
-                      ).length;
-                      return sum + today;
-                    }, 0) || 0,
-                    prevEvents?.reduce((sum, e) => {
-                      const today = e.recentEvents.filter(
-                        (re) =>
-                          new Date(re.timestamp) >
-                          new Date(Date.now() - 24 * 60 * 60 * 1000),
-                      ).length;
-                      return sum + today;
-                    }, 0) || 0,
-                  ),
-                }),
-              ...(compare &&
-                !prevEvents && {
-                  changeLoading: prevEventsLoading,
-                }),
             },
           ]}
         />

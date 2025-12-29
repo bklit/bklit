@@ -188,8 +188,9 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                   ),
                 }),
               ...(compare &&
-                !prevStatsData &&
-                !prevEntryPointsData && {
+                (viewMode === "entry-points"
+                  ? !prevEntryPointsData
+                  : !prevStatsData) && {
                   changeLoading:
                     viewMode === "entry-points"
                       ? prevEntryPointsLoading
@@ -229,8 +230,9 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                   ),
                 }),
               ...(compare &&
-                !prevStatsData &&
-                !prevEntryPointsData && {
+                (viewMode === "entry-points"
+                  ? !prevEntryPointsData
+                  : !prevStatsData) && {
                   changeLoading:
                     viewMode === "entry-points"
                       ? prevEntryPointsLoading
@@ -270,8 +272,9 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                   ),
                 }),
               ...(compare &&
-                !prevStatsData &&
-                !prevEntryPointsData && {
+                (viewMode === "entry-points"
+                  ? !prevEntryPointsData
+                  : !prevStatsData) && {
                   changeLoading:
                     viewMode === "entry-points"
                       ? prevEntryPointsLoading
@@ -311,8 +314,9 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                   ),
                 }),
               ...(compare &&
-                !prevStatsData &&
-                !prevEntryPointsData && {
+                (viewMode === "entry-points"
+                  ? !prevEntryPointsData
+                  : !prevStatsData) && {
                   changeLoading:
                     viewMode === "entry-points"
                       ? prevEntryPointsLoading
