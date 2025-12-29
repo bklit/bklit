@@ -158,9 +158,9 @@ export function SessionEventsTable({
           <TableBody>
             {data.sessions.map((session) => {
               const sessionData = session.session;
-              const browser = sessionData?.userAgent
+              const browser = sessionData?.user_agent
                 ? (() => {
-                    const ua = sessionData.userAgent;
+                    const ua = sessionData.user_agent;
                     if (ua.includes("Chrome")) return "Chrome";
                     if (ua.includes("Firefox")) return "Firefox";
                     if (ua.includes("Safari")) return "Safari";

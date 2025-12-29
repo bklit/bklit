@@ -42,12 +42,14 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
+import { getPreviousPeriod } from "@/lib/date-utils";
+import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
 import { SessionEventsTable } from "./session-events-table";
 
@@ -69,6 +71,7 @@ export function EventDetail({
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -84,6 +87,7 @@ export function EventDetail({
   }, [dateParams.startDate, dateParams.endDate]);
 
   const endDate = dateParams.endDate ?? undefined;
+  const compare = dateParams.compare;
 
   const { data: event, isLoading } = useQuery(
     trpc.event.getByTrackingId.queryOptions({
@@ -126,6 +130,31 @@ export function EventDetail({
       ? (event.totalCount / event.sessionsWithEvent).toFixed(2)
       : "0";
 
+  // Calculate previous period dates for comparison
+  const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
+    if (!compare || !startDate || !endDate) {
+      return { startDate: undefined, endDate: undefined };
+    }
+    return getPreviousPeriod(startDate, endDate);
+  }, [compare, startDate, endDate]);
+
+  // Fetch previous period event data for comparison
+  const { data: prevEvent, isLoading: prevEventLoading } = useQuery({
+    ...trpc.event.getByTrackingId.queryOptions({
+      trackingId,
+      projectId,
+      organizationId,
+      startDate: prevStartDate,
+      endDate: prevEndDate,
+    }),
+    enabled: compare && !!prevStartDate && !!prevEndDate,
+  });
+
+  const prevAvgTriggersPerSession =
+    prevEvent && prevEvent.sessionsWithEvent > 0
+      ? (prevEvent.totalCount / prevEvent.sessionsWithEvent).toFixed(2)
+      : "0";
+
   // Show empty state if no event found and not loading
   if (!event && !isLoading) {
     return (
@@ -141,19 +170,21 @@ export function EventDetail({
           </div>
         </PageHeader>
         <div className="container mx-auto">
-          <Empty className="border border-bklit-600 bg-bklit-900">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Activity size={16} />
-              </EmptyMedia>
-              <EmptyTitle>Event not found</EmptyTitle>
-            </EmptyHeader>
-            <EmptyContent>
-              <EmptyDescription>
-                The event you're looking for doesn't exist.
-              </EmptyDescription>
-            </EmptyContent>
-          </Empty>
+          <Card>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Activity size={16} />
+                </EmptyMedia>
+                <EmptyTitle>Event not found</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <EmptyDescription>
+                  The event you're looking for doesn't exist.
+                </EmptyDescription>
+              </EmptyContent>
+            </Empty>
+          </Card>
         </div>
       </>
     );
@@ -226,21 +257,66 @@ export function EventDetail({
               icon: MousePointerClick,
               name: "Total Triggers",
               stat: isLoading || !event ? "..." : event.totalCount,
+              ...(compare &&
+                prevEvent &&
+                event && {
+                  ...calculateChange(event.totalCount, prevEvent.totalCount),
+                }),
+              ...(compare &&
+                !prevEvent && {
+                  changeLoading: prevEventLoading,
+                }),
             },
             {
               icon: TrendingUp,
               name: "Conversion Rate",
               stat: isLoading || !event ? "..." : `${event.conversionRate}%`,
+              ...(compare &&
+                prevEvent &&
+                event && {
+                  ...calculateChange(
+                    event.conversionRate,
+                    prevEvent.conversionRate,
+                  ),
+                }),
+              ...(compare &&
+                !prevEvent && {
+                  changeLoading: prevEventLoading,
+                }),
             },
             {
               icon: Users,
               name: "Sessions with Event",
               stat: isLoading || !event ? "..." : event.sessionsWithEvent,
+              ...(compare &&
+                prevEvent &&
+                event && {
+                  ...calculateChange(
+                    event.sessionsWithEvent,
+                    prevEvent.sessionsWithEvent,
+                  ),
+                }),
+              ...(compare &&
+                !prevEvent && {
+                  changeLoading: prevEventLoading,
+                }),
             },
             {
               icon: BarChart3,
               name: "Avg per Session",
               stat: isLoading || !event ? "..." : avgTriggersPerSession,
+              ...(compare &&
+                prevEvent &&
+                event && {
+                  ...calculateChange(
+                    parseFloat(avgTriggersPerSession),
+                    parseFloat(prevAvgTriggersPerSession),
+                  ),
+                }),
+              ...(compare &&
+                !prevEvent && {
+                  changeLoading: prevEventLoading,
+                }),
             },
           ]}
         />
