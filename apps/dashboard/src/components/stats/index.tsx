@@ -1,3 +1,4 @@
+import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
@@ -7,7 +8,6 @@ import {
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import NumberFlow from "@number-flow/react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatItem {
@@ -40,24 +40,19 @@ const getGridColsClass = (count: number): string => {
 export const Stats = ({ items, variant = "default" }: StatsProps) => {
   const gridColsClass = getGridColsClass(items.length);
 
-  const getChangeIcon = (changeType?: "increase" | "decrease" | "neutral") => {
-    if (changeType === "increase") return ArrowUp;
-    if (changeType === "decrease") return ArrowDown;
-    return Minus;
-  };
-
-  const getChangeColor = (changeType?: "increase" | "decrease" | "neutral") => {
-    if (changeType === "increase") return "text-green-600 dark:text-green-500";
-    if (changeType === "decrease") return "text-red-600 dark:text-red-500";
-    return "text-muted-foreground";
+  const getChangeVariant = (
+    changeType?: "increase" | "decrease" | "neutral",
+  ): "success" | "destructive" | "default" => {
+    if (changeType === "increase") return "success";
+    if (changeType === "decrease") return "destructive";
+    return "default";
   };
 
   return (
     <div className={`grid gap-4 ${gridColsClass}`}>
       {items.map((item) => {
         const Icon = item.icon;
-        const ChangeIcon = getChangeIcon(item.changeType);
-        const changeColor = getChangeColor(item.changeType);
+        const changeVariant = getChangeVariant(item.changeType);
 
         return (
           <Card
@@ -76,30 +71,28 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col gap-1">
-                <div className="text-4xl font-semibold">
+              <div className="flex flex-row gap-3 items-center">
+                <div className="text-4xl font-semibold leading-9">
                   <NumberFlow
                     value={Number(item.stat)}
                     suffix={item.suffix || ""}
                   />
                 </div>
                 {(item.changeLoading || item.change !== undefined) && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center">
                     {item.changeLoading ? (
                       <Skeleton className="h-4 w-16" />
                     ) : (
-                      <div
-                        className={cn(
-                          "flex items-center gap-1 text-sm font-medium transition-all duration-300",
-                          changeColor,
-                        )}
-                      >
-                        <ChangeIcon className="size-3" />
+                      <Badge variant={changeVariant}>
                         <span>
-                          {item.change && item.change > 0 ? "+" : ""}
+                          {item.change && item.change > 0
+                            ? "+ "
+                            : item.change && item.change < 0
+                              ? "- "
+                              : ""}
                           {item.change?.toFixed(1)}%
                         </span>
-                      </div>
+                      </Badge>
                     )}
                   </div>
                 )}
