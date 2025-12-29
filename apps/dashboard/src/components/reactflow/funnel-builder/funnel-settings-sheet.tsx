@@ -131,66 +131,73 @@ export function FunnelSettingsSheet({
 
             <form.Field name="hasExpirationDate">
               {(field) => (
-                <FieldGroup>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <FieldLabel>Set Expiration Date</FieldLabel>
-                      <FieldDescription>
-                        Optionally set an expiration date for this funnel
-                      </FieldDescription>
+                <>
+                  <FieldGroup>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <FieldLabel>Set Expiration Date</FieldLabel>
+                        <FieldDescription>
+                          Optionally set an expiration date for this funnel
+                        </FieldDescription>
+                      </div>
+                      <Switch
+                        checked={field.state.value}
+                        onCheckedChange={(checked) => {
+                          field.handleChange(checked);
+                          if (!checked) {
+                            setSelectedDate(undefined);
+                            form.setFieldValue("endDate", undefined);
+                          }
+                        }}
+                      />
                     </div>
-                    <Switch
-                      checked={field.state.value}
-                      onCheckedChange={(checked) => {
-                        field.handleChange(checked);
-                        if (!checked) {
-                          setSelectedDate(undefined);
-                          form.setFieldValue("endDate", undefined);
-                        }
-                      }}
-                    />
-                  </div>
-                </FieldGroup>
+                  </FieldGroup>
+
+                  {field.state.value && ( // Conditionally render endDate field, inside same scope
+                    <form.Field name="endDate">
+                      {(endDateField) => (
+                        <FieldGroup>
+                          <FieldLabel>Expiration Date</FieldLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full justify-start text-left font-normal"
+                              >
+                                <CalendarIcon className="mr-2 size-4" />
+                                {selectedDate ? (
+                                  format(selectedDate, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <CalendarComponent
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={(date) => {
+                                  setSelectedDate(date);
+                                  endDateField.handleChange(date);
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FieldError>
+                            {endDateField.state.meta.errors[0]}
+                          </FieldError>
+                        </FieldGroup>
+                      )}
+                    </form.Field>
+                  )}
+                </>
               )}
             </form.Field>
-
-            {form.state.values.hasExpirationDate && (
-              <form.Field name="endDate">
-                {(field) => (
-                  <FieldGroup>
-                    <FieldLabel>Expiration Date</FieldLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 size-4" />
-                          {selectedDate ? (
-                            format(selectedDate, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={(date) => {
-                            setSelectedDate(date);
-                            field.handleChange(date);
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FieldError>{field.state.meta.errors[0]}</FieldError>
-                  </FieldGroup>
-                )}
-              </form.Field>
-            )}
           </div>
 
           <SheetFooter>

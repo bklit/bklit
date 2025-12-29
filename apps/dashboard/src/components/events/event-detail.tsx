@@ -218,7 +218,7 @@ export function EventDetail({
         </div>
       </PageHeader>
 
-      <div className="container mx-auto gap-4">
+      <div className="container flex flex-col mx-auto gap-4">
         {/* Key Metrics */}
         <Stats
           items={[
