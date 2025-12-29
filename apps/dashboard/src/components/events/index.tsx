@@ -63,7 +63,7 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createEvent, deleteEvent, updateEvent } from "@/actions/event-actions";
@@ -71,6 +71,8 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { FormPermissions } from "@/components/permissions/form-permissions";
 import { Stats } from "@/components/stats";
+import { getPreviousPeriod } from "@/lib/date-utils";
+import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
 import { EventsChart } from "./events-chart";
 
@@ -120,6 +122,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -135,6 +138,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
   }, [dateParams.startDate, dateParams.endDate]);
 
   const endDate = dateParams.endDate ?? undefined;
+  const compare = dateParams.compare;
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -157,6 +161,25 @@ export function Events({ organizationId, projectId }: EventsProps) {
       endDate,
     }),
   );
+
+  // Calculate previous period dates for comparison
+  const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
+    if (!compare || !startDate || !endDate) {
+      return { startDate: undefined, endDate: undefined };
+    }
+    return getPreviousPeriod(startDate, endDate);
+  }, [compare, startDate, endDate]);
+
+  // Fetch previous period events for comparison
+  const { data: prevEvents, isLoading: prevEventsLoading } = useQuery({
+    ...trpc.event.list.queryOptions({
+      projectId,
+      organizationId,
+      startDate: prevStartDate,
+      endDate: prevEndDate,
+    }),
+    enabled: compare && !!prevStartDate && !!prevEndDate,
+  });
 
   useEffect(() => {
     if (sheetMode === "create" && name) {
@@ -532,11 +555,23 @@ export function Events({ organizationId, projectId }: EventsProps) {
               icon: Clock,
               name: "Total Events",
               stat: events?.length || 0,
+              // Note: Total Events is count of event definitions, not date-filtered, so no comparison
             },
             {
               icon: Monitor,
               name: "Total Interactions",
               stat: events?.reduce((sum, e) => sum + e.totalCount, 0) || 0,
+              ...(compare &&
+                prevEvents && {
+                  ...calculateChange(
+                    events?.reduce((sum, e) => sum + e.totalCount, 0) || 0,
+                    prevEvents?.reduce((sum, e) => sum + e.totalCount, 0) || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevEvents && {
+                  changeLoading: prevEventsLoading,
+                }),
             },
             {
               icon: User,
@@ -547,6 +582,27 @@ export function Events({ organizationId, projectId }: EventsProps) {
                       events.length,
                   )
                 : 0,
+              ...(compare &&
+                prevEvents && {
+                  ...calculateChange(
+                    events?.length
+                      ? Math.round(
+                          events.reduce((sum, e) => sum + e.totalCount, 0) /
+                            events.length,
+                        )
+                      : 0,
+                    prevEvents?.length
+                      ? Math.round(
+                          prevEvents.reduce((sum, e) => sum + e.totalCount, 0) /
+                            prevEvents.length,
+                        )
+                      : 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevEvents && {
+                  changeLoading: prevEventsLoading,
+                }),
             },
             {
               icon: CalendarIcon,
@@ -560,6 +616,31 @@ export function Events({ organizationId, projectId }: EventsProps) {
                   ).length;
                   return sum + today;
                 }, 0) || 0,
+              ...(compare &&
+                prevEvents && {
+                  ...calculateChange(
+                    events?.reduce((sum, e) => {
+                      const today = e.recentEvents.filter(
+                        (re) =>
+                          new Date(re.timestamp) >
+                          new Date(Date.now() - 24 * 60 * 60 * 1000),
+                      ).length;
+                      return sum + today;
+                    }, 0) || 0,
+                    prevEvents?.reduce((sum, e) => {
+                      const today = e.recentEvents.filter(
+                        (re) =>
+                          new Date(re.timestamp) >
+                          new Date(Date.now() - 24 * 60 * 60 * 1000),
+                      ).length;
+                      return sum + today;
+                    }, 0) || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevEvents && {
+                  changeLoading: prevEventsLoading,
+                }),
             },
           ]}
         />

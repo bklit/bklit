@@ -33,7 +33,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   const [dateParams, setDateParams] = useQueryStates({
     startDate: parseAsIsoDateTime,
     endDate: parseAsIsoDateTime,
-    compare: parseAsBoolean.withDefault(false),
+    compare: parseAsBoolean.withDefault(true),
   });
 
   const startDate = useMemo(() => {

@@ -43,7 +43,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
       viewMode: parseAsString.withDefault("all"),
-      compare: parseAsBoolean.withDefault(false),
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",

@@ -12,13 +12,15 @@ import { ProgressRow } from "@bklit/ui/components/progress-row";
 import { Separator } from "@bklit/ui/components/separator";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin, Monitor } from "lucide-react";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { ErrorFallback } from "@/components/error-fallback";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
+import { getPreviousPeriod } from "@/lib/date-utils";
+import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
 import {
   type SessionWithPageViews,
@@ -50,6 +52,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -65,6 +68,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
   }, [dateParams.startDate, dateParams.endDate]);
 
   const endDate = dateParams.endDate ?? undefined;
+  const compare = dateParams.compare;
 
   const { data: sessionsData, isLoading } = useQuery(
     trpc.session.getRecent.queryOptions({
@@ -78,6 +82,29 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
   const totalSessions = sessionsData?.totalCount || 0;
   const allSessions = sessionsData?.sessions || [];
+
+  // Calculate previous period dates for comparison
+  const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
+    if (!compare || !startDate || !endDate) {
+      return { startDate: undefined, endDate: undefined };
+    }
+    return getPreviousPeriod(startDate, endDate);
+  }, [compare, startDate, endDate]);
+
+  // Fetch previous period sessions for comparison
+  const { data: prevSessionsData, isLoading: prevSessionsLoading } = useQuery({
+    ...trpc.session.getRecent.queryOptions({
+      projectId,
+      organizationId,
+      limit: 1000,
+      startDate: prevStartDate,
+      endDate: prevEndDate,
+    }),
+    enabled: compare && !!prevStartDate && !!prevEndDate,
+  });
+
+  const prevTotalSessions = prevSessionsData?.totalCount || 0;
+  const prevAllSessions = prevSessionsData?.sessions || [];
 
   const sankeyData = useMemo(() => {
     if (!allSessions || allSessions.length === 0) {
@@ -182,16 +209,46 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
               icon: Clock,
               name: "Total Sessions",
               stat: totalSessions,
+              ...(compare &&
+                prevSessionsData && {
+                  ...calculateChange(totalSessions, prevTotalSessions),
+                }),
+              ...(compare &&
+                !prevSessionsData && {
+                  changeLoading: prevSessionsLoading,
+                }),
             },
             {
               icon: Monitor,
               name: "Engaged",
               stat: allSessions.filter((s) => !s.didBounce).length,
+              ...(compare &&
+                prevSessionsData && {
+                  ...calculateChange(
+                    allSessions.filter((s) => !s.didBounce).length,
+                    prevAllSessions.filter((s) => !s.didBounce).length,
+                  ),
+                }),
+              ...(compare &&
+                !prevSessionsData && {
+                  changeLoading: prevSessionsLoading,
+                }),
             },
             {
               icon: MapPin,
               name: "Bounced",
               stat: allSessions.filter((s) => s.didBounce).length,
+              ...(compare &&
+                prevSessionsData && {
+                  ...calculateChange(
+                    allSessions.filter((s) => s.didBounce).length,
+                    prevAllSessions.filter((s) => s.didBounce).length,
+                  ),
+                }),
+              ...(compare &&
+                !prevSessionsData && {
+                  changeLoading: prevSessionsLoading,
+                }),
             },
             {
               icon: Clock,
@@ -220,6 +277,37 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
                 return avgSeconds < 60 ? "s" : "m";
               })(),
+              ...(compare &&
+                prevSessionsData && {
+                  ...calculateChange(
+                    (() => {
+                      if (allSessions.length === 0) return 0;
+                      const avgSeconds =
+                        allSessions.reduce(
+                          (sum: number, s) => sum + (s.duration || 0),
+                          0,
+                        ) / allSessions.length;
+                      return avgSeconds < 60
+                        ? Math.round(avgSeconds)
+                        : Math.ceil(avgSeconds / 60);
+                    })(),
+                    (() => {
+                      if (prevAllSessions.length === 0) return 0;
+                      const avgSeconds =
+                        prevAllSessions.reduce(
+                          (sum: number, s) => sum + (s.duration || 0),
+                          0,
+                        ) / prevAllSessions.length;
+                      return avgSeconds < 60
+                        ? Math.round(avgSeconds)
+                        : Math.ceil(avgSeconds / 60);
+                    })(),
+                  ),
+                }),
+              ...(compare &&
+                !prevSessionsData && {
+                  changeLoading: prevSessionsLoading,
+                }),
             },
           ]}
         />

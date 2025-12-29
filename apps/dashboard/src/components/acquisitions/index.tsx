@@ -2,11 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { CreditCard, Globe, MousePointer, Search, Share2 } from "lucide-react";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
+import { getPreviousPeriod } from "@/lib/date-utils";
+import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
 import { AcquisitionsChart } from "./acquisitions-chart";
 import { AcquisitionsTable } from "./acquisitions-table";
@@ -23,6 +25,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -38,6 +41,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
   }, [dateParams.startDate, dateParams.endDate]);
 
   const endDate = dateParams.endDate ?? undefined;
+  const compare = dateParams.compare;
 
   const { data: statsData, isLoading: statsLoading } = useQuery(
     trpc.acquisition.getStats.queryOptions({
@@ -47,6 +51,25 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
       endDate,
     }),
   );
+
+  // Calculate previous period dates for comparison
+  const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
+    if (!compare || !startDate || !endDate) {
+      return { startDate: undefined, endDate: undefined };
+    }
+    return getPreviousPeriod(startDate, endDate);
+  }, [compare, startDate, endDate]);
+
+  // Fetch previous period stats for comparison
+  const { data: prevStatsData, isLoading: prevStatsLoading } = useQuery({
+    ...trpc.acquisition.getStats.queryOptions({
+      projectId,
+      organizationId,
+      startDate: prevStartDate,
+      endDate: prevEndDate,
+    }),
+    enabled: compare && !!prevStartDate && !!prevEndDate,
+  });
 
   return (
     <>
@@ -69,26 +92,81 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
               icon: Globe,
               name: "Total Views",
               stat: statsData?.totalViews || 0,
+              ...(compare &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.totalViews || 0,
+                    prevStatsData?.totalViews || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData && {
+                  changeLoading: prevStatsLoading,
+                }),
             },
             {
               icon: MousePointer,
               name: "Direct Traffic",
               stat: statsData?.directTraffic || 0,
+              ...(compare &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.directTraffic || 0,
+                    prevStatsData?.directTraffic || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData && {
+                  changeLoading: prevStatsLoading,
+                }),
             },
             {
               icon: Search,
               name: "Organic Traffic",
               stat: statsData?.organicTraffic || 0,
+              ...(compare &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.organicTraffic || 0,
+                    prevStatsData?.organicTraffic || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData && {
+                  changeLoading: prevStatsLoading,
+                }),
             },
             {
               icon: Share2,
               name: "Social Traffic",
               stat: statsData?.socialTraffic || 0,
+              ...(compare &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.socialTraffic || 0,
+                    prevStatsData?.socialTraffic || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData && {
+                  changeLoading: prevStatsLoading,
+                }),
             },
             {
               icon: CreditCard,
               name: "Paid Traffic",
               stat: statsData?.paidTraffic || 0,
+              ...(compare &&
+                prevStatsData && {
+                  ...calculateChange(
+                    statsData?.paidTraffic || 0,
+                    prevStatsData?.paidTraffic || 0,
+                  ),
+                }),
+              ...(compare &&
+                !prevStatsData && {
+                  changeLoading: prevStatsLoading,
+                }),
             },
           ]}
         />

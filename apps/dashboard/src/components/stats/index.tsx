@@ -42,10 +42,10 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
 
   const getChangeVariant = (
     changeType?: "increase" | "decrease" | "neutral",
-  ): "success" | "destructive" | "default" => {
+  ): "success" | "destructive" | "secondary" => {
     if (changeType === "increase") return "success";
     if (changeType === "decrease") return "destructive";
-    return "default";
+    return "secondary";
   };
 
   return (
