@@ -86,8 +86,33 @@ export const Hero = () => {
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
           className="flex items-center justify-center"
         >
-          <Button variant="default" size="lg">
-            Get started
+          <Button
+            variant="default"
+            size="lg"
+            data-bklit-event="view-demo-button"
+            asChild
+          >
+            <a
+              href="https://app.bklit.com/signup?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View Demo
+            </a>
+          </Button>
+          <Button
+            variant="ghost"
+            size="lg"
+            data-bklit-event="sign-up-button"
+            asChild
+          >
+            <a
+              href="https://app.bklit.com/signup?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Sign Up
+            </a>
           </Button>
         </motion.div>
       </div>

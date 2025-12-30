@@ -22,9 +22,10 @@ import { Input } from "@bklit/ui/components/input";
 import { Label } from "@bklit/ui/components/label";
 import { Switch } from "@bklit/ui/components/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Settings as SettingsIcon, TestTube2, Trash2 } from "lucide-react";
+import { TestTube2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EventSheet } from "@/components/events/event-sheet";
 import { EventSelector } from "@/components/extensions/event-selector";
 import { useTRPC } from "@/trpc/react";
 
@@ -44,9 +45,11 @@ export function ProjectExtensionsList({
     ...trpc.extension.listForProject.queryOptions({ projectId }),
   });
 
-  const { data: eventDefinitions } = useQuery({
+  const { data: eventDefinitions, refetch: refetchEvents } = useQuery({
     ...trpc.event.list.queryOptions({ projectId, organizationId }),
   });
+
+  const [eventSheetOpen, setEventSheetOpen] = useState(false);
 
   const updateMutation = useMutation(
     trpc.extension.updateConfig.mutationOptions({
@@ -121,7 +124,6 @@ export function ProjectExtensionsList({
     }),
   );
 
-  const [editingExtension, setEditingExtension] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<
     Record<string, Record<string, unknown>>
   >({});
@@ -135,24 +137,17 @@ export function ProjectExtensionsList({
   } | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
-  const handleConfigure = (
+  const handleSave = (
     extensionId: string,
-    config: Record<string, unknown>,
-    eventIds: string[],
+    defaultConfig: Record<string, unknown>,
+    defaultEventIds: string[],
   ) => {
-    setEditingExtension(extensionId);
-    setConfigValues((prev) => ({ ...prev, [extensionId]: config }));
-    setSelectedEvents((prev) => ({ ...prev, [extensionId]: eventIds }));
-  };
-
-  const handleSave = (extensionId: string) => {
     updateMutation.mutate({
       projectId,
       extensionId,
-      config: configValues[extensionId] || {},
-      eventDefinitionIds: selectedEvents[extensionId] || [],
+      config: configValues[extensionId] || defaultConfig,
+      eventDefinitionIds: selectedEvents[extensionId] || defaultEventIds,
     });
-    setEditingExtension(null);
   };
 
   if (isLoading) {
@@ -177,9 +172,13 @@ export function ProjectExtensionsList({
         </Card>
       ) : (
         extensions.map((ext) => {
-          const isEditing = editingExtension === ext.extensionId;
           const config = (ext.config as Record<string, unknown>) || {};
           const eventIds = ext.eventDefinitions?.map((e) => e.id) || [];
+          const currentWebhookUrl =
+            (configValues[ext.extensionId]?.webhookUrl as string) ||
+            (config.webhookUrl as string) ||
+            "";
+          const currentEventIds = selectedEvents[ext.extensionId] || eventIds;
 
           return (
             <Card key={ext.id}>
@@ -226,108 +225,71 @@ export function ProjectExtensionsList({
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {isEditing ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor={`webhook-${ext.extensionId}`}>
-                        Webhook URL
-                      </Label>
-                      <Input
-                        id={`webhook-${ext.extensionId}`}
-                        type="url"
-                        placeholder="https://discord.com/api/webhooks/..."
-                        value={
-                          (configValues[ext.extensionId]
-                            ?.webhookUrl as string) || ""
-                        }
-                        onChange={(e) =>
-                          setConfigValues((prev) => ({
-                            ...prev,
-                            [ext.extensionId]: {
-                              ...prev[ext.extensionId],
-                              webhookUrl: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor={`webhook-${ext.extensionId}`}>
+                    Webhook URL
+                  </Label>
+                  <Input
+                    id={`webhook-${ext.extensionId}`}
+                    type="url"
+                    placeholder="https://discord.com/api/webhooks/..."
+                    value={currentWebhookUrl}
+                    onChange={(e) =>
+                      setConfigValues((prev) => ({
+                        ...prev,
+                        [ext.extensionId]: {
+                          webhookUrl: e.target.value,
+                        },
+                      }))
+                    }
+                  />
+                </div>
 
-                    <EventSelector
-                      events={eventDefinitions || []}
-                      selectedEventIds={selectedEvents[ext.extensionId] || []}
-                      onSelectionChange={(ids) =>
-                        setSelectedEvents((prev) => ({
-                          ...prev,
-                          [ext.extensionId]: ids,
-                        }))
-                      }
-                    />
+                <EventSelector
+                  events={eventDefinitions || []}
+                  selectedEventIds={currentEventIds}
+                  onSelectionChange={(ids) =>
+                    setSelectedEvents((prev) => ({
+                      ...prev,
+                      [ext.extensionId]: ids,
+                    }))
+                  }
+                  onCreateEvent={() => setEventSheetOpen(true)}
+                />
 
-                    <div className="flex gap-2">
-                      <Button onClick={() => handleSave(ext.extensionId)}>
-                        Save Configuration
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setEditingExtension(null)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-sm space-y-2">
-                      <div>
-                        <span className="font-medium">Webhook URL:</span>{" "}
-                        <span className="text-muted-foreground">
-                          {config.webhookUrl ? "Configured" : "Not configured"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-medium">Events:</span>{" "}
-                        <span className="text-muted-foreground">
-                          {eventIds.length} event
-                          {eventIds.length !== 1 ? "s" : ""} selected
-                        </span>
-                      </div>
-                      {ext.lastTriggeredAt && (
-                        <div>
-                          <span className="font-medium">Last triggered:</span>{" "}
-                          <span className="text-muted-foreground">
-                            {new Date(ext.lastTriggeredAt).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          handleConfigure(ext.extensionId, config, eventIds)
-                        }
-                      >
-                        <SettingsIcon className="size-4 mr-2" />
-                        Configure
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          testMutation.mutate({
-                            projectId,
-                            extensionId: ext.extensionId,
-                          })
-                        }
-                        disabled={!config.webhookUrl}
-                      >
-                        <TestTube2 className="size-4 mr-2" />
-                        Test
-                      </Button>
-                    </div>
-                  </>
+                {ext.lastTriggeredAt && (
+                  <div className="text-sm text-muted-foreground">
+                    Last triggered:{" "}
+                    {new Date(ext.lastTriggeredAt).toLocaleString()}
+                  </div>
                 )}
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() =>
+                      handleSave(ext.extensionId, config, eventIds)
+                    }
+                    disabled={updateMutation.isPending}
+                  >
+                    {updateMutation.isPending
+                      ? "Saving..."
+                      : "Save Configuration"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      testMutation.mutate({
+                        projectId,
+                        extensionId: ext.extensionId,
+                      })
+                    }
+                    disabled={!currentWebhookUrl || testMutation.isPending}
+                  >
+                    <TestTube2 className="size-4 mr-2" />
+                    {testMutation.isPending ? "Testing..." : "Test"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
@@ -390,6 +352,16 @@ export function ProjectExtensionsList({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EventSheet
+        projectId={projectId}
+        organizationId={organizationId}
+        open={eventSheetOpen}
+        onOpenChange={setEventSheetOpen}
+        mode="create"
+        existingEvents={eventDefinitions}
+        onSuccess={() => refetchEvents()}
+      />
     </div>
   );
 }

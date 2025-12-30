@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@bklit/ui/components/button";
 import { Checkbox } from "@bklit/ui/components/checkbox";
 import { Label } from "@bklit/ui/components/label";
 
@@ -14,12 +15,14 @@ interface EventSelectorProps {
   events: EventDefinition[];
   selectedEventIds: string[];
   onSelectionChange: (eventIds: string[]) => void;
+  onCreateEvent?: () => void;
 }
 
 export function EventSelector({
   events,
   selectedEventIds,
   onSelectionChange,
+  onCreateEvent,
 }: EventSelectorProps) {
   const handleToggle = (eventId: string) => {
     const newSelection = selectedEventIds.includes(eventId)
@@ -38,11 +41,13 @@ export function EventSelector({
 
   if (events.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground p-4 border rounded-lg">
-        No custom events defined for this project.{" "}
-        <a href="../events" className="text-primary hover:underline">
-          Create one
-        </a>
+      <div className="text-sm text-muted-foreground p-4 border rounded-lg space-y-3">
+        <p>No custom events defined for this project.</p>
+        {onCreateEvent && (
+          <Button onClick={onCreateEvent} size="sm">
+            Create Your First Event
+          </Button>
+        )}
       </div>
     );
   }
