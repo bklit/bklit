@@ -5,6 +5,7 @@ import {
   Layers2,
   MousePointerClick,
   PanelsTopLeft,
+  Puzzle,
   SendHorizontal,
   Settings,
   Split,
@@ -29,6 +30,11 @@ export const navigationConfig: NavigationConfig = {
       title: "Projects",
       icon: Layers2,
       href: "/[organizationId]",
+    },
+    {
+      title: "Extensions",
+      icon: Puzzle,
+      href: "/[organizationId]/extensions",
     },
     {
       title: "Team",
@@ -122,6 +128,10 @@ export const navigationConfig: NavigationConfig = {
           title: "Notifications",
           href: "/[organizationId]/[projectId]/settings/notifications",
         },
+        {
+          title: "Extensions",
+          href: "/[organizationId]/[projectId]/settings/extensions",
+        },
       ],
     },
   ],
@@ -168,6 +178,10 @@ export const navigationConfig: NavigationConfig = {
       title: "Notifications",
       href: "/[organizationId]/[projectId]/settings/notifications",
     },
+    {
+      title: "Extensions",
+      href: "/[organizationId]/[projectId]/settings/extensions",
+    },
   ],
 
   // Funnel navigation
@@ -192,13 +206,14 @@ export function getNavigationItems(pathname: string): NavigationItem[] {
   }
 
   // Project level: /[organizationId]/[projectId]/...
-  // Exclude organization-level routes like settings, billing, projects, team
+  // Exclude organization-level routes like settings, billing, projects, team, extensions
   if (
     segments.length >= 2 &&
     segments[1] !== "billing" &&
     segments[1] !== "settings" &&
     segments[1] !== "projects" &&
-    segments[1] !== "team"
+    segments[1] !== "team" &&
+    segments[1] !== "extensions"
   ) {
     return navigationConfig.project ?? [];
   }

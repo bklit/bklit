@@ -125,110 +125,32 @@ model Project {
   updatedAt        DateTime          @updatedAt
   organizationId   String?
   eventDefinitions EventDefinition[]
-  pageViewEvents   PageViewEvent[]
   organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  trackedEvents    TrackedEvent[]
-  trackedSessions  TrackedSession[]
   apiTokenProjects ApiTokenProject[]
   funnels          Funnel[]
+  extensions       ProjectExtension[]
 
   @@index([organizationId])
 }
 
-model PageViewEvent {
-  id          String          @id @default(cuid())
-  url         String
-  timestamp   DateTime
-  createdAt   DateTime        @default(now())
-  city        String?
-  country     String?
-  countryCode String?
-  ip          String?
-  isp         String?
-  lat         Float?
-  lon         Float?
-  mobile      Boolean?
-  region      String?
-  regionName  String?
-  timezone    String?
-  zip         String?
-  userAgent   String?
-  sessionId   String?
-  projectId   String
-  referrer    String?
-  utmCampaign String?
-  utmContent  String?
-  utmMedium   String?
-  utmSource   String?
-  utmTerm     String?
-  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  session     TrackedSession? @relation(fields: [sessionId], references: [id])
-
-  @@index([projectId, timestamp])
-  @@index([createdAt])
-  @@index([country])
-  @@index([city])
-  @@index([sessionId])
-  @@index([referrer])
-  @@index([utmSource])
-}
 
 model EventDefinition {
-  id            String         @id @default(cuid())
-  name          String
-  description   String?
-  trackingId    String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  projectId     String
-  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  trackedEvents TrackedEvent[]
+  id                String                   @id @default(cuid())
+  name              String
+  description       String?
+  trackingId        String
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  projectId         String
+  project           Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectExtensions ProjectExtensionEvent[]
 
   @@unique([projectId, trackingId])
   @@unique([projectId, name])
   @@index([projectId])
 }
 
-model TrackedEvent {
-  id                String          @id @default(cuid())
-  timestamp         DateTime
-  metadata          Json?
-  createdAt         DateTime        @default(now())
-  eventDefinitionId String
-  projectId         String
-  sessionId         String?
-  eventDefinition   EventDefinition @relation(fields: [eventDefinitionId], references: [id], onDelete: Cascade)
-  project           Project         @relation(fields: [projectId], references: [id], onDelete: NoAction)
-  session           TrackedSession? @relation(fields: [sessionId], references: [id])
 
-  @@index([eventDefinitionId])
-  @@index([projectId, timestamp])
-  @@index([projectId, createdAt])
-  @@index([sessionId])
-}
-
-model TrackedSession {
-  id             String          @id @default(cuid())
-  sessionId      String          @unique
-  startedAt      DateTime        @default(now())
-  endedAt        DateTime?
-  duration       Int?
-  didBounce      Boolean         @default(false)
-  visitorId      String?
-  entryPage      String
-  exitPage       String?
-  userAgent      String?
-  country        String?
-  city           String?
-  projectId      String
-  pageViewEvents PageViewEvent[]
-  trackedEvents  TrackedEvent[]
-  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId, startedAt])
-  @@index([projectId, didBounce])
-  @@index([visitorId])
-}
 
 model NotificationPreference {
   id                String   @id @default(cuid())
@@ -342,4 +264,45 @@ model FunnelStep {
   @@index([funnelId])
   @@index([funnelId, stepOrder])
   @@map("funnel_step")
+}
+
+model ProjectExtension {
+  id               String                   @id @default(cuid())
+  projectId        String
+  extensionId      String // "discord", "slack", etc.
+  enabled          Boolean                  @default(true)
+  config           Json // Extension-specific config (webhookUrl, etc.)
+  eventDefinitions ProjectExtensionEvent[]
+  lastTriggeredAt  DateTime?
+  eventsSentToday  Int                      @default(0)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  project          Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, extensionId])
+  @@index([projectId])
+  @@map("project_extension")
+}
+
+model ProjectExtensionEvent {
+  id                 String            @id @default(cuid())
+  projectExtensionId String
+  eventDefinitionId  String
+  projectExtension   ProjectExtension  @relation(fields: [projectExtensionId], references: [id], onDelete: Cascade)
+  eventDefinition    EventDefinition   @relation(fields: [eventDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([projectExtensionId, eventDefinitionId])
+  @@index([eventDefinitionId])
+  @@map("project_extension_event")
+}
+
+model ExtensionRateLimit {
+  id            String   @id @default(cuid())
+  extensionId   String // "discord"
+  hourTimestamp DateTime // Truncated to hour
+  eventCount    Int      @default(0)
+
+  @@unique([extensionId, hourTimestamp])
+  @@index([extensionId, hourTimestamp])
+  @@map("extension_rate_limit")
 }
