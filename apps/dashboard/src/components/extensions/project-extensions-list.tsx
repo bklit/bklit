@@ -1,11 +1,14 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@bklit/ui/components/card";
-import { Button } from "@bklit/ui/components/button";
-import { Input } from "@bklit/ui/components/input";
-import { Label } from "@bklit/ui/components/label";
-import { Switch } from "@bklit/ui/components/switch";
 import { Badge } from "@bklit/ui/components/badge";
+import { Button } from "@bklit/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@bklit/ui/components/card";
 import {
   Dialog,
   DialogClose,
@@ -15,12 +18,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@bklit/ui/components/dialog";
-import { EventSelector } from "@/components/extensions/event-selector";
-import { Trash2, TestTube2, Settings as SettingsIcon } from "lucide-react";
-import { useState } from "react";
-import { useTRPC } from "@/trpc/react";
-import { toast } from "sonner";
+import { Input } from "@bklit/ui/components/input";
+import { Label } from "@bklit/ui/components/label";
+import { Switch } from "@bklit/ui/components/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Settings as SettingsIcon, TestTube2, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { EventSelector } from "@/components/extensions/event-selector";
+import { useTRPC } from "@/trpc/react";
 
 interface ProjectExtensionsListProps {
   organizationId: string;
@@ -98,8 +104,9 @@ export function ProjectExtensionsList({
     }
 
     removeMutation.mutate({
-      projectId,
+      organizationId,
       extensionId: extensionToDelete.id,
+      projectIds: [projectId],
     });
   };
 
@@ -115,8 +122,12 @@ export function ProjectExtensionsList({
   );
 
   const [editingExtension, setEditingExtension] = useState<string | null>(null);
-  const [configValues, setConfigValues] = useState<Record<string, Record<string, unknown>>>({});
-  const [selectedEvents, setSelectedEvents] = useState<Record<string, string[]>>({});
+  const [configValues, setConfigValues] = useState<
+    Record<string, Record<string, unknown>>
+  >({});
+  const [selectedEvents, setSelectedEvents] = useState<
+    Record<string, string[]>
+  >({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [extensionToDelete, setExtensionToDelete] = useState<{
     id: string;
@@ -124,7 +135,11 @@ export function ProjectExtensionsList({
   } | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
-  const handleConfigure = (extensionId: string, config: Record<string, unknown>, eventIds: string[]) => {
+  const handleConfigure = (
+    extensionId: string,
+    config: Record<string, unknown>,
+    eventIds: string[],
+  ) => {
     setEditingExtension(extensionId);
     setConfigValues((prev) => ({ ...prev, [extensionId]: config }));
     setSelectedEvents((prev) => ({ ...prev, [extensionId]: eventIds }));
@@ -222,7 +237,10 @@ export function ProjectExtensionsList({
                         id={`webhook-${ext.extensionId}`}
                         type="url"
                         placeholder="https://discord.com/api/webhooks/..."
-                        value={(configValues[ext.extensionId]?.webhookUrl as string) || ""}
+                        value={
+                          (configValues[ext.extensionId]
+                            ?.webhookUrl as string) || ""
+                        }
                         onChange={(e) =>
                           setConfigValues((prev) => ({
                             ...prev,
@@ -270,7 +288,8 @@ export function ProjectExtensionsList({
                       <div>
                         <span className="font-medium">Events:</span>{" "}
                         <span className="text-muted-foreground">
-                          {eventIds.length} event{eventIds.length !== 1 ? "s" : ""} selected
+                          {eventIds.length} event
+                          {eventIds.length !== 1 ? "s" : ""} selected
                         </span>
                       </div>
                       {ext.lastTriggeredAt && (
@@ -286,7 +305,9 @@ export function ProjectExtensionsList({
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        onClick={() => handleConfigure(ext.extensionId, config, eventIds)}
+                        onClick={() =>
+                          handleConfigure(ext.extensionId, config, eventIds)
+                        }
                       >
                         <SettingsIcon className="size-4 mr-2" />
                         Configure
@@ -316,10 +337,12 @@ export function ProjectExtensionsList({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Remove Extension: {extensionToDelete?.name}</DialogTitle>
+            <DialogTitle>
+              Remove Extension: {extensionToDelete?.name}
+            </DialogTitle>
             <DialogDescription>
-              This will remove the extension from this project. To confirm, please
-              enter &quot;
+              This will remove the extension from this project. To confirm,
+              please enter &quot;
               <span className="font-semibold">{extensionToDelete?.name}</span>
               &quot; below.
             </DialogDescription>
@@ -370,4 +393,3 @@ export function ProjectExtensionsList({
     </div>
   );
 }
-

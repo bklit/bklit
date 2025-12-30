@@ -42,6 +42,18 @@ export function ExtensionDetail({
 
   const projects = organization?.projects || [];
 
+  // Get list of projects that already have this extension activated
+  const { data: activatedExtensions } = useQuery({
+    ...trpc.extension.listForOrganization.queryOptions({
+      organizationId,
+      extensionId,
+    }),
+    enabled: !!organizationId && !!extensionId,
+  });
+
+  const activatedProjectIds =
+    activatedExtensions?.map((ext) => ext.projectId) || [];
+
   const activateMutation = useMutation(
     trpc.extension.activate.mutationOptions({
       onSuccess: () => {
@@ -49,7 +61,27 @@ export function ExtensionDetail({
         queryClient.invalidateQueries({
           queryKey: [["extension", "listForProject"]],
         });
+        queryClient.invalidateQueries({
+          queryKey: [["extension", "listForOrganization"]],
+        });
         router.push(`/${organizationId}/extensions`);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    }),
+  );
+
+  const removeMutation = useMutation(
+    trpc.extension.remove.mutationOptions({
+      onSuccess: () => {
+        toast.success("Extension deactivated");
+        queryClient.invalidateQueries({
+          queryKey: [["extension", "listForProject"]],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [["extension", "listForOrganization"]],
+        });
       },
       onError: (error) => {
         toast.error(error.message);
@@ -62,6 +94,14 @@ export function ExtensionDetail({
       organizationId,
       extensionId,
       projectIds,
+    });
+  };
+
+  const handleRemove = (projectId: string, projectName: string) => {
+    removeMutation.mutate({
+      organizationId,
+      extensionId,
+      projectIds: [projectId],
     });
   };
 
@@ -112,8 +152,10 @@ export function ExtensionDetail({
           isPro={extension.isPro}
           icon={extension.icon}
           projects={projects}
+          activatedProjectIds={activatedProjectIds}
           onActivate={handleActivate}
-          isActivating={activateMutation.isPending}
+          onRemove={handleRemove}
+          isActivating={activateMutation.isPending || removeMutation.isPending}
         />
 
         <ExtensionReadme extensionId={extensionId} />

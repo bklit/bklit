@@ -31,7 +31,9 @@ interface ExtensionHeaderProps {
   isPro: boolean;
   icon?: string;
   projects?: Project[];
+  activatedProjectIds?: string[];
   onActivate?: (projectIds: string[]) => void;
+  onRemove?: (projectId: string, projectName: string) => void;
   isActivating?: boolean;
 }
 
@@ -45,7 +47,9 @@ export function ExtensionHeader({
   isPro,
   icon,
   projects,
+  activatedProjectIds,
   onActivate,
+  onRemove,
   isActivating,
 }: ExtensionHeaderProps) {
   return (
@@ -105,7 +109,9 @@ export function ExtensionHeader({
 
           <ProjectSelector
             projects={projects}
+            activatedProjectIds={activatedProjectIds}
             onActivate={onActivate}
+            onRemove={onRemove}
             isLoading={isActivating}
           />
         </div>

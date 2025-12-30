@@ -128,6 +128,50 @@ export const extensionRouter = createTRPCRouter({
       });
     }),
 
+  // List projects in an organization that have a specific extension activated
+  listForOrganization: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+        extensionId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Get all projects in the organization
+      const organization = await ctx.prisma.organization.findFirst({
+        where: {
+          id: input.organizationId,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+            },
+          },
+        },
+        include: {
+          projects: true,
+        },
+      });
+
+      if (!organization) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Organization not found",
+        });
+      }
+
+      const projectIds = organization.projects.map((p) => p.id);
+
+      // Find which projects have this extension
+      const extensions = await ctx.prisma.projectExtension.findMany({
+        where: {
+          projectId: { in: projectIds },
+          extensionId: input.extensionId,
+        },
+      });
+
+      return extensions;
+    }),
+
   // Update extension configuration
   updateConfig: protectedProcedure
     .input(
@@ -256,47 +300,56 @@ export const extensionRouter = createTRPCRouter({
       return updated;
     }),
 
-  // Remove extension from project
+  // Remove extension from project(s)
   remove: protectedProcedure
     .input(
       z.object({
-        projectId: z.string(),
+        organizationId: z.string(),
         extensionId: z.string(),
+        projectIds: z.array(z.string()),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // Verify access
-      const project = await ctx.prisma.project.findFirst({
+      // Verify user has access to organization
+      const member = await ctx.prisma.member.findFirst({
         where: {
-          id: input.projectId,
-          organization: {
-            members: {
-              some: {
-                userId: ctx.session.user.id,
-                role: { in: ["owner", "admin"] },
-              },
-            },
-          },
+          organizationId: input.organizationId,
+          userId: ctx.session.user.id,
+          role: { in: ["owner", "admin"] },
         },
       });
 
-      if (!project) {
+      if (!member) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You don't have access to this project",
+          message: "You don't have permission to manage extensions",
         });
       }
 
-      await ctx.prisma.projectExtension.delete({
+      // Verify all projects belong to the organization
+      const projects = await ctx.prisma.project.findMany({
         where: {
-          projectId_extensionId: {
-            projectId: input.projectId,
-            extensionId: input.extensionId,
-          },
+          id: { in: input.projectIds },
+          organizationId: input.organizationId,
         },
       });
 
-      return { success: true };
+      if (projects.length !== input.projectIds.length) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Some projects do not belong to this organization",
+        });
+      }
+
+      // Remove from all specified projects
+      await ctx.prisma.projectExtension.deleteMany({
+        where: {
+          projectId: { in: input.projectIds },
+          extensionId: input.extensionId,
+        },
+      });
+
+      return { success: true, count: input.projectIds.length };
     }),
 
   // Test extension (send test message)

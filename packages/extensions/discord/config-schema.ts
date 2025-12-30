@@ -5,4 +5,3 @@ export const discordConfigSchema = z.object({
 });
 
 export type DiscordConfig = z.infer<typeof discordConfigSchema>;
-

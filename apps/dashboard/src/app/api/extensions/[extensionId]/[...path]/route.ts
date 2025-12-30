@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { extensionId, path } = await params;
-    
+
     // Construct file path
     const filePath = join(
       process.cwd(),
@@ -44,4 +44,3 @@ export async function GET(
     return new NextResponse("Not Found", { status: 404 });
   }
 }
-

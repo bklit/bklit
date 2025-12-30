@@ -1,5 +1,5 @@
-import { PageHeader } from "@/components/header/page-header";
 import { ExtensionCard } from "@/components/extensions/extension-card";
+import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
 
@@ -47,4 +47,3 @@ export default async function ExtensionsPage({
     </>
   );
 }
-

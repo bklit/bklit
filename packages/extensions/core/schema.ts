@@ -21,9 +21,10 @@ export interface Extension<TConfig = unknown> {
   handler: ExtensionHandler<TConfig>;
 }
 
-export interface ExtensionHandler<TConfig = unknown> {
-  (config: TConfig, event: EventData): Promise<void>;
-}
+export type ExtensionHandler<TConfig = unknown> = (
+  config: TConfig,
+  event: EventData,
+) => Promise<void>;
 
 export interface EventData {
   trackingId: string;
@@ -39,4 +40,3 @@ export interface EventPayload {
   eventDefinitionId: string;
   eventData: EventData;
 }
-

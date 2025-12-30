@@ -40,10 +40,7 @@ export function EventSelector({
     return (
       <div className="text-sm text-muted-foreground p-4 border rounded-lg">
         No custom events defined for this project.{" "}
-        <a
-          href="../events"
-          className="text-primary hover:underline"
-        >
+        <a href="../events" className="text-primary hover:underline">
           Create one
         </a>
       </div>
@@ -53,13 +50,17 @@ export function EventSelector({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label className="text-base font-semibold">Select Events to Trigger</Label>
+        <Label className="text-base font-semibold">
+          Select Events to Trigger
+        </Label>
         <button
           type="button"
           onClick={handleToggleAll}
           className="text-sm text-primary hover:underline"
         >
-          {selectedEventIds.length === events.length ? "Deselect All" : "Select All"}
+          {selectedEventIds.length === events.length
+            ? "Deselect All"
+            : "Select All"}
         </button>
       </div>
 
@@ -93,4 +94,3 @@ export function EventSelector({
     </div>
   );
 }
-

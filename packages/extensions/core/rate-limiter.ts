@@ -5,7 +5,8 @@ const DEFAULT_RATE_LIMIT = 1000; // events per hour
 
 export async function checkRateLimit(extensionId: string): Promise<boolean> {
   const extension = extensionRegistry.get(extensionId);
-  const limit = extension?.metadata.rateLimit?.eventsPerHour ?? DEFAULT_RATE_LIMIT;
+  const limit =
+    extension?.metadata.rateLimit?.eventsPerHour ?? DEFAULT_RATE_LIMIT;
 
   const currentHour = new Date();
   currentHour.setMinutes(0, 0, 0);
@@ -50,14 +51,18 @@ export async function incrementRateLimit(extensionId: string): Promise<void> {
   });
 }
 
-export async function resetDailyStats(projectExtensionId: string): Promise<void> {
+export async function resetDailyStats(
+  projectExtensionId: string,
+): Promise<void> {
   await prisma.projectExtension.update({
     where: { id: projectExtensionId },
     data: { eventsSentToday: 0 },
   });
 }
 
-export async function updateExtensionStats(projectExtensionId: string): Promise<void> {
+export async function updateExtensionStats(
+  projectExtensionId: string,
+): Promise<void> {
   await prisma.projectExtension.update({
     where: { id: projectExtensionId },
     data: {
@@ -68,4 +73,3 @@ export async function updateExtensionStats(projectExtensionId: string): Promise<
     },
   });
 }
-

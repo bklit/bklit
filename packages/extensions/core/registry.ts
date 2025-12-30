@@ -40,4 +40,3 @@ class ExtensionRegistry {
 }
 
 export const extensionRegistry = new ExtensionRegistry();
-

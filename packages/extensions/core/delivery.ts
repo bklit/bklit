@@ -1,7 +1,11 @@
 import { prisma } from "@bklit/db/client";
-import type { EventPayload } from "./schema";
-import { checkRateLimit, incrementRateLimit, updateExtensionStats } from "./rate-limiter";
+import {
+  checkRateLimit,
+  incrementRateLimit,
+  updateExtensionStats,
+} from "./rate-limiter";
 import { extensionRegistry } from "./registry";
+import type { EventPayload } from "./schema";
 
 export async function deliverToExtensions(event: EventPayload): Promise<void> {
   try {
@@ -33,10 +37,13 @@ export async function deliverToExtensions(event: EventPayload): Promise<void> {
 
         // Get handler
         const handler = extensionRegistry.getHandler(ext.extensionId);
-        
+
         // Validate config
-        const config = extensionRegistry.validateConfig(ext.extensionId, ext.config);
-        
+        const config = extensionRegistry.validateConfig(
+          ext.extensionId,
+          ext.config,
+        );
+
         // Execute handler
         await handler(config, event.eventData);
 
@@ -59,4 +66,3 @@ export async function deliverToExtensions(event: EventPayload): Promise<void> {
     throw err;
   }
 }
-

@@ -1,6 +1,6 @@
+import { ProjectExtensionsList } from "@/components/extensions/project-extensions-list";
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
-import { ProjectExtensionsList } from "@/components/extensions/project-extensions-list";
 import { authenticated } from "@/lib/auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
