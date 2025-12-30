@@ -58,15 +58,11 @@ export function EventSelector({
         <Label className="text-base font-semibold">
           Select Events to Trigger
         </Label>
-        <button
-          type="button"
-          onClick={handleToggleAll}
-          className="text-sm text-primary hover:underline"
-        >
+        <Button variant="ghost" size="sm" onClick={handleToggleAll}>
           {selectedEventIds.length === events.length
             ? "Deselect All"
             : "Select All"}
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-2 border rounded-lg p-4 max-h-64 overflow-y-auto">

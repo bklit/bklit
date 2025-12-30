@@ -16,4 +16,3 @@ export interface EventListItem {
     sessionId: string | null;
   }>;
 }
-

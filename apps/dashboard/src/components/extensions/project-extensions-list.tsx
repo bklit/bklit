@@ -4,6 +4,7 @@ import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -22,7 +23,9 @@ import { Input } from "@bklit/ui/components/input";
 import { Label } from "@bklit/ui/components/label";
 import { Switch } from "@bklit/ui/components/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { TestTube2, Trash2 } from "lucide-react";
+import { Puzzle, TestTube2, Trash2 } from "lucide-react";
+import Image from "next/image";
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { EventSheet } from "@/components/events/event-sheet";
@@ -183,14 +186,25 @@ export function ProjectExtensionsList({
           return (
             <Card key={ext.id}>
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-12 items-center justify-center rounded-lg border bg-muted overflow-hidden">
+                    {ext.metadata?.icon ? (
+                      <Image
+                        src={`/extensions/${ext.extensionId}/${ext.metadata.icon.replace("./", "")}`}
+                        alt={ext.metadata?.displayName || ext.extensionId}
+                        width={48}
+                        height={48}
+                        className="size-12 object-cover"
+                      />
+                    ) : (
+                      <Puzzle className="size-6" />
+                    )}
+                  </div>
+                  <div className="flex flex-col">
                     <CardTitle className="flex items-center gap-2">
                       {ext.metadata?.displayName || ext.extensionId}
                       {ext.enabled ? (
-                        <Badge variant="default" className="bg-green-500">
-                          Active
-                        </Badge>
+                        <Badge variant="success">Active</Badge>
                       ) : (
                         <Badge variant="secondary">Disabled</Badge>
                       )}
@@ -199,31 +213,33 @@ export function ProjectExtensionsList({
                       {ext.metadata?.description}
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={ext.enabled}
-                      onCheckedChange={(enabled) =>
-                        toggleMutation.mutate({
-                          projectId,
-                          extensionId: ext.extensionId,
-                          enabled,
-                        })
-                      }
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        handleRemoveClick(
-                          ext.extensionId,
-                          ext.metadata?.displayName || ext.extensionId,
-                        )
-                      }
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
                 </div>
+
+                <CardAction className="flex items-center gap-2">
+                  <Switch
+                    className="cursor-pointer"
+                    checked={ext.enabled}
+                    onCheckedChange={(enabled) =>
+                      toggleMutation.mutate({
+                        projectId,
+                        extensionId: ext.extensionId,
+                        enabled,
+                      })
+                    }
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      handleRemoveClick(
+                        ext.extensionId,
+                        ext.metadata?.displayName || ext.extensionId,
+                      )
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </CardAction>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -272,9 +288,7 @@ export function ProjectExtensionsList({
                     }
                     disabled={updateMutation.isPending}
                   >
-                    {updateMutation.isPending
-                      ? "Saving..."
-                      : "Save Configuration"}
+                    {updateMutation.isPending ? "Saving..." : "Save"}
                   </Button>
                   <Button
                     variant="outline"

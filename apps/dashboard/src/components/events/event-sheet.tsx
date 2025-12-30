@@ -63,7 +63,7 @@ export function EventSheet({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
-  
+
   const queryClient = useQueryClient();
 
   // Initialize form with editing event data
@@ -335,8 +335,8 @@ export function EventSheet({
                 <div>
                   <p className="font-semibold mb-2">Usage Examples:</p>
                   <p className="text-sm">
-                    Simply add the data attribute - all interaction types (click,
-                    impression, hover) are tracked automatically!
+                    Simply add the data attribute - all interaction types
+                    (click, impression, hover) are tracked automatically!
                   </p>
                 </div>
                 <div>
@@ -361,8 +361,8 @@ export function EventSheet({
                     value={`window.trackEvent("${trackingId}", "custom_event");`}
                   />
                   <p className="text-xs text-muted-foreground mt-2">
-                    Manual events don't count toward conversion rates since they may
-                    not be user-perceived.
+                    Manual events don't count toward conversion rates since they
+                    may not be user-perceived.
                   </p>
                 </div>
               </div>
@@ -417,7 +417,10 @@ export function EventSheet({
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <label htmlFor="delete-confirmation" className="text-sm font-medium">
+              <label
+                htmlFor="delete-confirmation"
+                className="text-sm font-medium"
+              >
                 Type{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-sm">
                   {editingEvent?.trackingId}
@@ -456,4 +459,3 @@ export function EventSheet({
     </>
   );
 }
-
