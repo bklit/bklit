@@ -59,10 +59,18 @@ export function ExtensionDetail({
       onSuccess: () => {
         toast.success("Extension activated successfully");
         queryClient.invalidateQueries({
-          queryKey: [["extension", "listForProject"]],
+          queryKey: [
+            "extension",
+            "listForProject",
+            { projectId: organizationId },
+          ],
         });
         queryClient.invalidateQueries({
-          queryKey: [["extension", "listForOrganization"]],
+          queryKey: [
+            "extension",
+            "listForOrganization",
+            { organizationId, extensionId },
+          ],
         });
         router.push(`/${organizationId}/extensions`);
       },
@@ -77,10 +85,14 @@ export function ExtensionDetail({
       onSuccess: () => {
         toast.success("Extension deactivated");
         queryClient.invalidateQueries({
-          queryKey: [["extension", "listForProject"]],
+          queryKey: ["extension", "listForProject"],
         });
         queryClient.invalidateQueries({
-          queryKey: [["extension", "listForOrganization"]],
+          queryKey: [
+            "extension",
+            "listForOrganization",
+            { organizationId, extensionId },
+          ],
         });
       },
       onError: (error) => {

@@ -19,19 +19,14 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
-# Perform backup
+# Perform backup (set -e will exit automatically on failure)
 pg_dump "$DATABASE_URL" > "$BACKUP_FILE"
 
-if [ $? -eq 0 ]; then
-    echo "✅ Database backup completed successfully!"
-    echo "📦 Backup saved to: ${BACKUP_FILE}"
-    echo ""
-    echo "File size: $(du -h ${BACKUP_FILE} | cut -f1)"
-    echo ""
-    echo "⚠️  IMPORTANT: Verify this backup before proceeding with schema changes"
-    echo "To restore: psql \$DATABASE_URL < ${BACKUP_FILE}"
-else
-    echo "❌ Backup failed!"
-    exit 1
-fi
+echo "✅ Database backup completed successfully!"
+echo "📦 Backup saved to: ${BACKUP_FILE}"
+echo ""
+echo "File size: $(du -h ${BACKUP_FILE} | cut -f1)"
+echo ""
+echo "⚠️  IMPORTANT: Verify this backup before proceeding with schema changes"
+echo "To restore: psql \$DATABASE_URL < ${BACKUP_FILE}"
 

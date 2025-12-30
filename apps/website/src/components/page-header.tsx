@@ -55,6 +55,8 @@ export const PageHeader = () => {
                 href="https://app.bklit.com/signin"
                 title="Sign in"
                 data-bklit-event="signin-button"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Sign in
               </a>
@@ -64,6 +66,8 @@ export const PageHeader = () => {
                 href="https://app.bklit.com/signup"
                 title="Sign up"
                 data-bklit-event="signup-button"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Sign up
               </a>

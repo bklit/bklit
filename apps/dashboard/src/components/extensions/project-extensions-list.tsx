@@ -25,6 +25,7 @@ import { Switch } from "@bklit/ui/components/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Puzzle, TestTube2, Trash2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { useState } from "react";
 import { toast } from "sonner";
@@ -169,7 +170,9 @@ export function ProjectExtensionsList({
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <a href={`/${organizationId}/extensions`}>Browse Extensions</a>
+              <Link href={`/${organizationId}/extensions`}>
+                Browse Extensions
+              </Link>
             </Button>
           </CardContent>
         </Card>

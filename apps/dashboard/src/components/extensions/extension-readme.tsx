@@ -2,6 +2,7 @@
 
 import { CodeBlockClient } from "@bklit/ui/components/code-block-client";
 import { Skeleton } from "@bklit/ui/components/skeleton";
+import DOMPurify from "dompurify";
 import { useEffect, useState } from "react";
 
 type SupportedLanguage =
@@ -73,7 +74,24 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
         return (
           <div
             key={index}
-            dangerouslySetInnerHTML={{ __html: block.content }}
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(block.content, {
+                ALLOWED_TAGS: [
+                  "h1",
+                  "h2",
+                  "h3",
+                  "p",
+                  "strong",
+                  "code",
+                  "ul",
+                  "ol",
+                  "li",
+                  "a",
+                  "div",
+                ],
+                ALLOWED_ATTR: ["class", "href", "target", "rel"],
+              }),
+            }}
             className="space-y-4"
           />
         );

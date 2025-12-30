@@ -105,6 +105,27 @@ export const extensionRouter = createTRPCRouter({
   listForProject: protectedProcedure
     .input(z.object({ projectId: z.string() }))
     .query(async ({ input, ctx }) => {
+      // Verify user has access to project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organization: {
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+              },
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have access to this project",
+        });
+      }
+
       const extensions = await ctx.prisma.projectExtension.findMany({
         where: { projectId: input.projectId },
         include: {
@@ -361,6 +382,27 @@ export const extensionRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
+      // Verify user has access to project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organization: {
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+              },
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have access to this project",
+        });
+      }
+
       const projectExtension = await ctx.prisma.projectExtension.findUnique({
         where: {
           projectId_extensionId: {

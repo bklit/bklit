@@ -1,3 +1,5 @@
+import { Skeleton } from "@bklit/ui/components/skeleton";
+import { Suspense } from "react";
 import { ProjectExtensionsList } from "@/components/extensions/project-extensions-list";
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
@@ -28,10 +30,19 @@ export default async function ProjectExtensionsPage({
         />
       </PageHeader>
       <HydrateClient>
-        <ProjectExtensionsList
-          organizationId={organizationId}
-          projectId={projectId}
-        />
+        <Suspense
+          fallback={
+            <div className="container mx-auto space-y-6">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          }
+        >
+          <ProjectExtensionsList
+            organizationId={organizationId}
+            projectId={projectId}
+          />
+        </Suspense>
       </HydrateClient>
     </>
   );
