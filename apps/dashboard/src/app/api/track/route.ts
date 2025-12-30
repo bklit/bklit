@@ -3,6 +3,7 @@ import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
+import { isIpBlacklisted } from "@/lib/ip-blacklist";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
 import { checkEventLimit } from "@/lib/usage-limits";
 import { isMobileDevice } from "@/lib/user-agent";
@@ -149,8 +150,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Extract client IP and get location data
+    // Extract client IP for blacklist check and geolocation
     const clientIP = extractClientIP(request);
+
+    // Check IP blacklist - silently ignore blacklisted IPs
+    if (clientIP) {
+      const project = await prisma.project.findUnique({
+        where: { id: payload.projectId },
+        select: { blacklistedIps: true },
+      });
+
+      if (project && isIpBlacklisted(clientIP, project.blacklistedIps)) {
+        // Return 200 OK but don't store data (silent block)
+        return createCorsResponse({ message: "Data received and stored" }, 200);
+      }
+    }
+
+    // Get location data from IP
     let locationData: GeoLocation | null = null;
 
     if (clientIP) {
