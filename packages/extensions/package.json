@@ -1,0 +1,19 @@
+{
+  "name": "@bklit/extensions",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./core": "./core/index.ts",
+    "./discord": "./discord/index.ts"
+  },
+  "dependencies": {
+    "@bklit/db": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@bklit/tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

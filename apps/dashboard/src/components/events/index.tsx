@@ -1,6 +1,5 @@
 "use client";
 
-import type { Prisma } from "@bklit/db/client";
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
@@ -11,15 +10,6 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@bklit/ui/components/dialog";
-import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -27,15 +17,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@bklit/ui/components/empty";
-import { CopyInput } from "@bklit/ui/components/input-copy";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@bklit/ui/components/sheet";
 import { Spinner } from "@bklit/ui/components/spinner";
 import {
   Table,
@@ -51,11 +32,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@bklit/ui/components/tooltip";
-import { MemberRole } from "@bklit/utils/roles";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
-  AlertCircle,
   CalendarIcon,
   Clock,
   Info,
@@ -64,42 +43,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { createEvent, deleteEvent, updateEvent } from "@/actions/event-actions";
+import { useMemo, useState } from "react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
-import { FormPermissions } from "@/components/permissions/form-permissions";
 import { Stats } from "@/components/stats";
 import { getPreviousPeriod } from "@/lib/date-utils";
 import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
+import { EventSheet } from "./event-sheet";
 import { EventsChart } from "./events-chart";
-
-interface EventListItem {
-  id: string;
-  name: string;
-  description: string | null;
-  trackingId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  totalCount: number;
-  eventTypeCounts: Record<string, number>;
-  recentEvents: Array<{
-    id: string;
-    timestamp: Date;
-    metadata: Prisma.JsonValue | null;
-    sessionId: string | null;
-  }>;
-}
-
-function toKebabCase(str: string): string {
-  return str
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import type { EventListItem } from "./types";
 
 interface EventsProps {
   organizationId: string;
@@ -107,15 +60,9 @@ interface EventsProps {
 }
 
 export function Events({ organizationId, projectId }: EventsProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [trackingId, setTrackingId] = useState("");
   const [editingEvent, setEditingEvent] = useState<EventListItem | null>(null);
   const [openEventsSheet, setOpenEventsSheet] = useState(false);
   const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   // Date range state using nuqs
   const [dateParams] = useQueryStates(
@@ -141,7 +88,6 @@ export function Events({ organizationId, projectId }: EventsProps) {
   const compare = dateParams.compare;
 
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
 
   // Total sessions in range for conversion rate baseline
   const { data: sessionsStats } = useQuery(
@@ -153,7 +99,11 @@ export function Events({ organizationId, projectId }: EventsProps) {
     }),
   );
 
-  const { data: events, isLoading } = useQuery(
+  const {
+    data: events,
+    isLoading,
+    refetch,
+  } = useQuery(
     trpc.event.list.queryOptions({
       projectId,
       organizationId,
@@ -181,195 +131,15 @@ export function Events({ organizationId, projectId }: EventsProps) {
     enabled: compare && !!prevStartDate && !!prevEndDate,
   });
 
-  useEffect(() => {
-    if (sheetMode === "create" && name) {
-      const generatedId = toKebabCase(name);
-      setTrackingId(generatedId);
-
-      const duplicateName = events?.some(
-        (event) => event.name.toLowerCase() === name.toLowerCase(),
-      );
-
-      const duplicateTrackingId = events?.some(
-        (event) => event.trackingId === generatedId,
-      );
-
-      if (duplicateName) {
-        setValidationError(
-          "An event with this name already exists. Please choose a different name.",
-        );
-      } else if (duplicateTrackingId) {
-        setValidationError(
-          "An event with this tracking ID already exists. Please choose a different name.",
-        );
-      } else {
-        setValidationError(null);
-      }
-    } else if (sheetMode === "create" && !name) {
-      setTrackingId("");
-      setValidationError(null);
-    }
-  }, [name, events, sheetMode]);
-
-  useEffect(() => {
-    if (sheetMode === "edit" && editingEvent) {
-      // Name is read-only in edit mode, so only check tracking ID
-      const duplicateTrackingId = events?.some(
-        (event) =>
-          event.trackingId === trackingId && event.id !== editingEvent.id,
-      );
-
-      if (duplicateTrackingId) {
-        setValidationError("An event with this tracking ID already exists.");
-      } else {
-        setValidationError(null);
-      }
-    }
-  }, [trackingId, events, sheetMode, editingEvent]);
-
-  const createMutation = useMutation({
-    mutationFn: async (data: {
-      name: string;
-      description?: string;
-      trackingId: string;
-      projectId: string;
-      organizationId: string;
-    }) => {
-      const result = await createEvent(data);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    onSuccess: () => {
-      toast.success("Event created successfully!");
-      setName("");
-      setDescription("");
-      setTrackingId("");
-      setOpenEventsSheet(false);
-      queryClient.invalidateQueries({
-        queryKey: [["event", "list"]],
-      });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: {
-      id: string;
-      name?: string;
-      description?: string;
-      trackingId?: string;
-      organizationId: string;
-    }) => {
-      const result = await updateEvent(data);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    onSuccess: () => {
-      toast.success("Event updated successfully!");
-      setEditingEvent(null);
-      setOpenEventsSheet(false);
-      setName("");
-      setDescription("");
-      setTrackingId("");
-      queryClient.invalidateQueries({
-        queryKey: [["event", "list"]],
-      });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (data: { id: string; organizationId: string }) => {
-      const result = await deleteEvent(data);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result;
-    },
-    onSuccess: () => {
-      toast.success("Event deleted successfully!");
-      setOpenDeleteDialog(false);
-      setOpenEventsSheet(false);
-      setDeleteConfirmation("");
-      setEditingEvent(null);
-      queryClient.invalidateQueries({
-        queryKey: [["event", "list"]],
-      });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate({
-      name,
-      description: description || undefined,
-      trackingId,
-      projectId,
-      organizationId,
-    });
-  };
-
-  const handleUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingEvent) return;
-
-    updateMutation.mutate({
-      id: editingEvent.id,
-      name: name || undefined,
-      description: description || undefined,
-      trackingId: trackingId || undefined,
-      organizationId,
-    });
-  };
-
-  const handleDelete = () => {
-    if (!editingEvent) return;
-    setOpenDeleteDialog(true);
-  };
-
-  const confirmDelete = () => {
-    if (!editingEvent || deleteConfirmation !== editingEvent.trackingId) return;
-
-    deleteMutation.mutate({ id: editingEvent.id, organizationId });
-  };
-
-  const handleDeleteDialogChange = (open: boolean) => {
-    setOpenDeleteDialog(open);
-    if (!open) {
-      // Reset confirmation when dialog closes
-      setDeleteConfirmation("");
-    }
-  };
-
   const openCreateSheet = () => {
     setSheetMode("create");
     setEditingEvent(null);
-    setName("");
-    setDescription("");
-    setTrackingId("");
-    setValidationError(null);
     setOpenEventsSheet(true);
   };
 
   const openEditSheet = (event: EventListItem) => {
     setSheetMode("edit");
     setEditingEvent(event);
-    setName(event.name);
-    setDescription(event.description || "");
-    setTrackingId(event.trackingId);
-    setValidationError(null);
-    setDeleteConfirmation("");
     setOpenEventsSheet(true);
   };
 
@@ -382,171 +152,16 @@ export function Events({ organizationId, projectId }: EventsProps) {
         </div>
       </PageHeader>
 
-      <Sheet
+      <EventSheet
+        projectId={projectId}
+        organizationId={organizationId}
         open={openEventsSheet}
-        onOpenChange={(open) => {
-          // Only allow closing the sheet if the delete dialog is not open
-          if (!open && openDeleteDialog) {
-            return;
-          }
-          setOpenEventsSheet(open);
-          if (!open) {
-            // Reset form state when sheet closes
-            setEditingEvent(null);
-            setName("");
-            setDescription("");
-            setTrackingId("");
-            setValidationError(null);
-          }
-        }}
-      >
-        <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()}>
-          <SheetHeader>
-            <SheetTitle>
-              {sheetMode === "create" ? "Create Event" : "Edit Event"}
-            </SheetTitle>
-            <SheetDescription>
-              Events are used to track user interactions with your website.
-            </SheetDescription>
-          </SheetHeader>
-          <form
-            id="event-form"
-            onSubmit={sheetMode === "create" ? handleCreate : handleUpdate}
-            className="flex flex-col gap-4 w-full px-4 mt-4"
-          >
-            <div className="flex flex-col gap-1">
-              <label htmlFor="name">
-                Event Name:
-                {sheetMode === "edit" && (
-                  <span className="text-sm text-muted-foreground ml-2">
-                    (read-only)
-                  </span>
-                )}
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                readOnly={sheetMode === "edit"}
-                className={`w-full border p-2 rounded ${sheetMode === "edit" ? "bg-muted cursor-not-allowed" : ""} ${validationError && sheetMode === "create" ? "border-red-500" : ""}`}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="description">Description (optional):</label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full border p-2 rounded"
-                rows={3}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="trackingId">
-                Tracking ID:
-                {sheetMode === "create" && (
-                  <span className="text-sm text-muted-foreground ml-2">
-                    (auto-generated)
-                  </span>
-                )}
-              </label>
-              <input
-                id="trackingId"
-                type="text"
-                value={trackingId}
-                onChange={(e) => setTrackingId(e.target.value)}
-                required
-                readOnly={sheetMode === "create"}
-                placeholder="e.g., evt_signup_click"
-                className={`w-full border p-2 rounded ${sheetMode === "create" ? "bg-muted cursor-not-allowed" : ""} ${validationError ? "border-red-500" : ""}`}
-              />
-            </div>
-
-            {validationError && (
-              <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
-                <AlertCircle className="size-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {validationError}
-                </p>
-              </div>
-            )}
-
-            {sheetMode === "edit" && editingEvent && (
-              <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
-                <div>
-                  <p className="font-semibold mb-2">Usage Examples:</p>
-                  <p className="text-sm">
-                    Simply add the data attribute - all interaction types
-                    (click, impression, hover) are tracked automatically!
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-2">
-                    Data attribute (recommended):
-                  </p>
-                  <CopyInput
-                    value={`<button data-bklit-event="${trackingId}">Click Me</button>`}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-2">ID attribute:</p>
-                  <CopyInput
-                    value={`<button id="bklit-event-${trackingId}">Click Me</button>`}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-2">
-                    Manual tracking (JavaScript):
-                  </p>
-                  <CopyInput
-                    value={`window.trackEvent("${trackingId}", "custom_event");`}
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Manual events don't count toward conversion rates since they
-                    may not be user-perceived.
-                  </p>
-                </div>
-              </div>
-            )}
-          </form>
-          <SheetFooter>
-            <div className="flex justify-between w-full">
-              {sheetMode === "edit" && (
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  type="button"
-                >
-                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                </Button>
-              )}
-              <Button
-                variant="default"
-                form="event-form"
-                type="submit"
-                disabled={
-                  !!validationError ||
-                  (sheetMode === "create"
-                    ? createMutation.isPending
-                    : updateMutation.isPending)
-                }
-                className="disabled:opacity-50 ml-auto"
-              >
-                {sheetMode === "create"
-                  ? createMutation.isPending
-                    ? "Creating..."
-                    : "Create Event"
-                  : updateMutation.isPending
-                    ? "Saving..."
-                    : "Save Changes"}
-              </Button>
-            </div>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+        onOpenChange={setOpenEventsSheet}
+        mode={sheetMode}
+        editingEvent={editingEvent}
+        existingEvents={events}
+        onSuccess={() => refetch()}
+      />
 
       <div className="container mx-auto flex flex-col gap-4">
         <Stats
@@ -772,58 +387,6 @@ export function Events({ organizationId, projectId }: EventsProps) {
           </Card>
         )}
       </div>
-
-      <Dialog open={openDeleteDialog} onOpenChange={handleDeleteDialogChange}>
-        <DialogContent>
-          <FormPermissions requiredRole={MemberRole.ADMIN} inModal asChild>
-            <DialogHeader>
-              <DialogTitle>Delete Event</DialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently delete the
-                event <strong>"{editingEvent?.name}"</strong> and all associated
-                tracked event data.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <label
-                htmlFor="delete-confirmation"
-                className="text-sm font-medium"
-              >
-                Type{" "}
-                <code className="bg-muted px-1 py-0.5 rounded text-sm">
-                  {editingEvent?.trackingId}
-                </code>{" "}
-                to confirm:
-              </label>
-              <input
-                id="delete-confirmation"
-                type="text"
-                value={deleteConfirmation}
-                onChange={(e) => setDeleteConfirmation(e.target.value)}
-                placeholder="Enter tracking ID"
-                className="w-full border p-2 rounded mt-2"
-                autoComplete="off"
-              />
-            </div>
-            <DialogFooter>
-              <DialogClose>Cancel</DialogClose>
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  confirmDelete();
-                }}
-                disabled={
-                  deleteConfirmation !== editingEvent?.trackingId ||
-                  deleteMutation.isPending
-                }
-                variant="destructive"
-              >
-                {deleteMutation.isPending ? "Deleting..." : "Delete Event"}
-              </Button>
-            </DialogFooter>
-          </FormPermissions>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
