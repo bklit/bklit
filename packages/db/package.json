@@ -16,7 +16,7 @@
     "studio": "pnpm with-env-dev prisma studio --schema=./prisma/schema.prisma",
     "db:seed": "pnpm with-env tsx src/seed.ts",
     "with-env": "dotenv -e ../../.env --",
-    "with-env-dev": "dotenv -e ../../.env -- sh -c 'DATABASE_URL=\"${DEV_DATABASE_URL:-$DATABASE_URL}\" \"$@\"' --"
+    "with-env-dev": "node scripts/with-env-dev.js"
   },
   "dependencies": {
     "@prisma/client": "catalog:prisma",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@bklit/tsconfig": "workspace:*",
+    "dotenv": "^16.4.7",
     "dotenv-cli": "^10.0.0",
     "prisma": "catalog:prisma",
     "typescript": "catalog:"

@@ -14,7 +14,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "with-env": "dotenv -e ../../.env --",
-    "with-env-dev": "dotenv -e ../../.env -- sh -c 'CLICKHOUSE_HOST=\"${DEV_CLICKHOUSE_HOST:-$CLICKHOUSE_HOST}\" CLICKHOUSE_USERNAME=\"${DEV_CLICKHOUSE_USERNAME:-$CLICKHOUSE_USERNAME}\" CLICKHOUSE_PASSWORD=\"${DEV_CLICKHOUSE_PASSWORD:-$CLICKHOUSE_PASSWORD}\" \"$@\"' --",
+    "with-env-dev": "node scripts/with-env-dev.js",
     "verify": "pnpm with-env-dev tsx src/migrations/verify-data.ts",
     "clear-data": "pnpm with-env-dev tsx src/migrations/clear-data.ts",
     "migrate": "pnpm with-env-dev tsx src/migrations/init-tables.ts",
@@ -33,6 +33,7 @@
     "@bklit/tsconfig": "workspace:*",
     "@prisma/client": "catalog:prisma",
     "@prisma/extension-accelerate": "catalog:prisma",
+    "dotenv": "^16.4.7",
     "dotenv-cli": "^10.0.0",
     "tsx": "^4.7.0",
     "typescript": "catalog:"
