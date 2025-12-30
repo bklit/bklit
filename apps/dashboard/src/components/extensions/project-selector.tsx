@@ -151,10 +151,10 @@ export function ProjectSelector({
         })}
       </div>
 
-      {hasNonActivatedSelection && (
+      {hasNonActivatedSelection && selectedProjects.size > 0 && (
         <Button
           onClick={handleActivate}
-          disabled={selectedProjects.size === 0 || isLoading}
+          disabled={isLoading}
           className="w-full"
         >
           {isLoading
