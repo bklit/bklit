@@ -1,0 +1,13 @@
+{
+  "name": "@bklit/extension-discord",
+  "displayName": "Discord",
+  "description": "Send real-time analytics events to Discord channels",
+  "author": "bklit",
+  "version": "1.0.0",
+  "icon": "./metadata/extension-icon.png",
+  "category": "notifications",
+  "isPro": false,
+  "rateLimit": {
+    "eventsPerHour": 1000
+  }
+}
