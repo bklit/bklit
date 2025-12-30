@@ -24,7 +24,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const projectId =
     segments.length > 1 &&
     segments[1] !== "billing" &&
-    segments[1] !== "settings"
+    segments[1] !== "settings" &&
+    segments[1] !== "extensions" &&
+    segments[1] !== "team" &&
+    segments[1] !== "projects"
       ? segments[1]
       : undefined;
   const userId =
@@ -42,6 +45,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     segments.length >= 2 &&
     segments[1] !== "billing" &&
     segments[1] !== "settings" &&
+    segments[1] !== "extensions" &&
+    segments[1] !== "team" &&
     segments[1] !== "projects";
 
   const trpc = useTRPC();

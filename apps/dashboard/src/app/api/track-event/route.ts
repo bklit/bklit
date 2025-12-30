@@ -221,6 +221,32 @@ export async function POST(request: NextRequest) {
         .catch(() => {}); // Silently fail
     }
 
+    // Deliver to extensions (fire-and-forget)
+    // Skip hover events - they're pseudo events not useful for notifications
+    if (payload.eventType !== "hover") {
+      Promise.resolve()
+        .then(async () => {
+          const { deliverToExtensions } = await import(
+            "@bklit/extensions/core"
+          );
+          await deliverToExtensions({
+            projectId: payload.projectId,
+            eventDefinitionId: eventDefinition.id,
+            eventData: {
+              trackingId: payload.trackingId,
+              eventType: payload.eventType,
+              metadata: payload.metadata,
+              timestamp: payload.timestamp,
+              projectId: payload.projectId,
+              sessionId: payload.sessionId,
+            },
+          });
+        })
+        .catch((err) => {
+          console.error("❌ Extension delivery failed:", err);
+        });
+    }
+
     return createCorsResponse({ message: "Event tracked successfully" }, 200);
   } catch (error) {
     console.error("❌ API: Error processing event tracking data:", error);

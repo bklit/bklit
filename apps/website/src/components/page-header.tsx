@@ -51,12 +51,24 @@ export const PageHeader = () => {
 
           <nav className="flex items-center gap-2">
             <Button size="lg" variant="ghost" asChild>
-              <a href="https://app.bklit.com/signin" title="Sign in">
+              <a
+                href="https://app.bklit.com/signin"
+                title="Sign in"
+                data-bklit-event="signin-button"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Sign in
               </a>
             </Button>
             <Button size="lg" variant="mono" asChild>
-              <a href="https://app.bklit.com/signup" title="Sign up">
+              <a
+                href="https://app.bklit.com/signup"
+                title="Sign up"
+                data-bklit-event="signup-button"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Sign up
               </a>
             </Button>

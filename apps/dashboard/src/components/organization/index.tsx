@@ -69,58 +69,7 @@ export const Organization = ({
       </PageHeader>
 
       <div className="w-full flex flex-col gap-4">
-        <div className="w-full flex flex-col gap-4 sm:grid sm:grid-cols-2">
-          <BillingSnapshotCard organizationId={organizationId} />
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Team</CardTitle>
-              <CardDescription>Manage your team.</CardDescription>
-              <CardAction>
-                <Button
-                  variant="outline"
-                  onClick={() => setInviteDialogOpen(true)}
-                  aria-label="Invite member"
-                >
-                  Invite member
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-bklit-600/30 rounded-md p-4 space-y-px border">
-                {organization.members.slice(0, 5).map((member) => (
-                  <Item key={member.id} size="sm">
-                    <ItemMedia>
-                      <Avatar>
-                        <AvatarImage src={member.user.image || ""} />
-                        <AvatarFallback>
-                          {member.user.name?.[0]?.toUpperCase() || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>{member.user.name}</ItemTitle>
-                    </ItemContent>
-                    <ItemActions>
-                      <Badge
-                        variant={
-                          member.role === "owner" ? "default" : "outline"
-                        }
-                      >
-                        {member.role}
-                      </Badge>
-                    </ItemActions>
-                  </Item>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         <div className="space-y-4">
-          <div>
-            <h2 className="text-base font-semibold">Projects</h2>
-          </div>
           {organization.projects.length === 0 ? (
             <Card>
               <Empty>
@@ -179,6 +128,59 @@ export const Organization = ({
               ))}
             </div>
           )}
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-base font-semibold">Usage & Billing</h2>
+          </div>
+          <div className="w-full flex flex-col gap-4 sm:grid sm:grid-cols-2">
+            <BillingSnapshotCard organizationId={organizationId} />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Team</CardTitle>
+                <CardDescription>Manage your team.</CardDescription>
+                <CardAction>
+                  <Button
+                    variant="outline"
+                    onClick={() => setInviteDialogOpen(true)}
+                    aria-label="Invite member"
+                  >
+                    Invite member
+                  </Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-bklit-600/30 rounded-md p-4 space-y-px border">
+                  {organization.members.slice(0, 5).map((member) => (
+                    <Item key={member.id} size="sm">
+                      <ItemMedia>
+                        <Avatar>
+                          <AvatarImage src={member.user.image || ""} />
+                          <AvatarFallback>
+                            {member.user.name?.[0]?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </ItemMedia>
+                      <ItemContent>
+                        <ItemTitle>{member.user.name}</ItemTitle>
+                      </ItemContent>
+                      <ItemActions>
+                        <Badge
+                          variant={
+                            member.role === "owner" ? "default" : "outline"
+                          }
+                        >
+                          {member.role}
+                        </Badge>
+                      </ItemActions>
+                    </Item>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 

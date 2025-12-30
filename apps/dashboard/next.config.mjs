@@ -36,7 +36,26 @@ const config = {
         hostname: "icons.duckduckgo.com",
         pathname: "/ip3/**",
       },
+      {
+        protocol: "https",
+        hostname: "github.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        pathname: "/**",
+      },
     ],
+  },
+
+  async rewrites() {
+    return [
+      {
+        source: "/extensions/:extensionId/:path*",
+        destination: "/api/extensions/:extensionId/:path*",
+      },
+    ];
   },
 };
 

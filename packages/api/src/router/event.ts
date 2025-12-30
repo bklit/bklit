@@ -189,14 +189,9 @@ export const eventRouter = {
         }),
       );
 
-      return eventsWithData.filter((event) => {
-        // When date filters are applied, only show events with tracked events in that range
-        if (input.startDate || input.endDate) {
-          return event.totalCount > 0;
-        }
-        // When no date filters, show all event definitions
-        return true;
-      });
+      // Always return all event definitions, even if they have 0 tracked events
+      // This ensures newly created events appear immediately
+      return eventsWithData;
     }),
 
   listBySession: protectedProcedure
