@@ -5,6 +5,7 @@
   "root": true,
   "pages": [
     "index",
+    "features",
     "getting-started/quick-start",
     "--- ---",
     "dashboard",

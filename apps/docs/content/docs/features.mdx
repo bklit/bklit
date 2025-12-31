@@ -1,0 +1,838 @@
+---
+title: Features
+description: A comprehensive list of all features available in Bklit Analytics
+icon: Crown
+---
+
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+# Complete Feature List
+
+Bklit Analytics is a full-featured analytics platform with capabilities comparable to enterprise solutions. Here's everything you can do with Bklit:
+
+## 📊 Core Analytics Features
+
+<Accordions type="multiple">
+
+<Accordion title="Page View Analytics">
+
+- **Real-time tracking** - Track page views as they happen
+- **SPA navigation detection** - Automatic tracking for Single Page Applications (pushState/replaceState)
+- **View counts & trends** - Historical data and trend analysis over time
+- **Top pages ranking** - See which pages get the most traffic
+- **Entry/Exit tracking** - Understand where users start and end their journey
+- **Referrer tracking** - Know where your visitors came from
+- **Referrer analytics** - Detailed breakdown with percentage distribution
+
+</Accordion>
+
+<Accordion title="Session Tracking">
+
+- **Automatic session management** - 30-minute timeout with intelligent session detection
+- **Session persistence** - Maintains sessions across page loads
+- **Session start/end tracking** - Precise timing for all sessions
+- **Live session monitoring** - See active sessions in real-time
+- **Recent sessions view** - Quick access to latest visitor sessions
+- **Session analytics** - Duration, pages viewed, bounce rate calculations
+- **User journey visualization** - Sankey diagrams showing user paths
+- **Automatic cleanup** - Stale session cleanup for data hygiene
+
+</Accordion>
+
+<Accordion title="Custom Event Tracking">
+
+- **Event definitions** - Create and manage custom event types
+- **CRUD operations** - Full Create, Read, Update, Delete support
+- **SDK event tracking** - Click, view, and hover events via JavaScript
+- **Auto-tracking** - Use `data-bklit-event` HTML attributes for automatic tracking
+- **Manual tracking** - `trackEvent()` JavaScript API for programmatic tracking
+- **Event metadata** - Attach custom data to any event
+- **Trigger method tracking** - Distinguish between automatic and manual events
+- **Detailed analytics** - View and analyze all tracked events
+
+</Accordion>
+
+<Accordion title="Live Analytics (Pro Plan Only)">
+
+- **Real-time visitor count** - See how many visitors are on your site right now
+- **Live user tracking** - Track active users on interactive map
+- **Live visitor map** - Visualization showing active locations
+- **Real-time activity feed** - Stream of visitor actions
+- **Live visitor notifications** - Toast notifications for new visitors
+
+</Accordion>
+
+</Accordions>
+
+## 🌍 Geographic Analytics
+
+<Accordions type="multiple">
+
+<Accordion title="Location Tracking">
+
+- **Country analytics** - Track visitors by country with full country names
+- **Top countries ranking** - See which countries send the most traffic
+- **City-level tracking** - Precise city-level visitor location data
+- **Country code mapping** - ISO 3166-1 alpha-2 country codes
+- **Geographic coordinates** - Latitude/longitude for precise mapping
+- **Region tracking** - State/province level location data
+- **Timezone detection** - Automatic timezone identification for all visitors
+- **Postal/ZIP code** - Postal code tracking where available
+
+</Accordion>
+
+<Accordion title="Geographic Visualizations">
+
+- **Interactive world map** - Click and explore countries with visual highlighting
+- **City breakdowns** - Detailed city-level statistics per country
+- **Heat maps** - Color-coded by traffic volume
+- **Country statistics overlay** - Traffic volume per country
+
+</Accordion>
+
+</Accordions>
+
+<Callout type="info">
+  Geographic data is sourced from **Cloudflare headers** in production, ensuring
+  fast and accurate geolocation without external API calls. City-level tracking
+  is available for all visitors.
+</Callout>
+
+## 📱 Device & Browser Analytics
+
+<Accordions type="multiple">
+
+<Accordion title="Device Insights">
+
+- **Mobile vs Desktop** - Percentage breakdown with visitor counts
+- **Device categorization** - Automatic mobile/desktop/tablet detection
+- **User agent parsing** - Detailed device and browser information
+
+</Accordion>
+
+<Accordion title="Browser Statistics">
+
+- **Browser breakdown** - Chrome, Safari, Firefox, Edge, and more
+- **Browser percentages** - Market share visualization
+- **Browser trends** - Track browser adoption over time
+
+</Accordion>
+
+</Accordions>
+
+## 🎯 Conversion & Funnel Analytics
+
+<Accordions type="multiple">
+
+<Accordion title="Visual Funnel Builder">
+
+- **Drag-and-drop interface** - Powered by ReactFlow for intuitive funnel creation
+- **Unlimited steps** - Create funnels with as many steps as needed
+- **Pageview-based steps** - Track navigation through specific URLs
+- **Event-based steps** - Track custom events in your conversion path
+- **Drop-off visualization** - See where users abandon the funnel
+- **Conversion rates** - Automatic calculation at each step
+- **Visual ordering** - Steps automatically ordered based on layout
+- **Full CRUD support** - Create, update, and delete funnels
+- **Time-limited campaigns** - Set funnel end dates for campaigns
+- **Interactive visualization** - Explore funnel performance with rich charts
+
+</Accordion>
+
+</Accordions>
+
+## 🔗 Acquisition & Campaign Tracking
+
+<Accordions type="multiple">
+
+<Accordion title="UTM Parameter Tracking">
+
+Track all standard UTM parameters automatically:
+
+- **utm_source** - Identify traffic sources (e.g., google, newsletter)
+- **utm_medium** - Track marketing mediums (e.g., email, cpc, social)
+- **utm_campaign** - Monitor specific campaign performance
+- **utm_term** - Track paid search keywords
+- **utm_content** - Differentiate similar content or links (A/B testing)
+
+</Accordion>
+
+<Accordion title="Acquisition Analytics">
+
+- **Acquisition channel analytics** - Track and report on traffic sources
+- **Campaign performance** - Monitor campaign effectiveness over time
+- **Referrer analysis** - Traffic source attribution
+- **Acquisition trends** - Compare channels and identify growth
+
+</Accordion>
+
+</Accordions>
+
+## 👥 User & Session Insights
+
+<Accordions type="multiple">
+
+<Accordion title="Visitor Metrics">
+
+- **Unique visitors** - Deduplicated visitor counting
+- **Visitors by country** - Geographic distribution of traffic
+- **Total visitor counts** - Aggregate visitor statistics
+- **New vs returning** - Coming soon: distinguish first-time vs repeat visitors
+
+</Accordion>
+
+<Accordion title="Session Metrics">
+
+- **Session duration** - Track and average session lengths
+- **Bounce rate** - Calculate single-page session percentage
+- **Average session duration** - Mean time spent per session
+- **Pageviews per session** - Average pages viewed per visit
+
+</Accordion>
+
+</Accordions>
+
+## 📈 Statistics & Metrics
+
+<Accordions type="multiple">
+
+<Accordion title="Dashboard & Charts">
+
+- **Quick stats dashboard** - Pageviews, sessions, unique visitors, bounce rate at a glance
+- **Interactive time-series charts** - Trend analysis with hover details
+- **Real-time updates** - Data refreshes automatically
+
+</Accordion>
+
+<Accordion title="Date Range & Filtering">
+
+- **Flexible date range filtering** - Choose any time period
+- **30-day default window** - Sensible defaults for quick insights
+- **Custom date ranges** - Select any start and end date
+- **Period comparison** - Compare current vs previous period
+- **Session aggregations** - Advanced session analytics
+
+</Accordion>
+
+</Accordions>
+
+## 🔧 SDK Features
+
+<Accordions type="multiple">
+
+<Accordion title="Auto-Tracking Capabilities">
+
+- **Automatic page view tracking** - Tracks on initial load
+- **SPA navigation tracking** - pushState/replaceState detection
+- **Automatic event tracking** - Via HTML data attributes
+- **Intelligent session management** - 30-minute timeout
+- **Debounced tracking** - 1-second debounce to prevent duplicates
+
+</Accordion>
+
+<Accordion title="Manual Tracking API">
+
+- **initBklit()** - Initialize the SDK with your project configuration
+- **trackPageView()** - Manually trigger page view tracking
+- **trackEvent()** - Track custom events with optional metadata
+- **clearBklitSession()** - Clear current session (useful for testing)
+
+</Accordion>
+
+<Accordion title="Event Types">
+
+- **Click events** - Track user clicks on interactive elements
+- **View events** - Track when elements become visible (IntersectionObserver)
+- **Hover events** - Track sustained hover interactions (500ms threshold)
+
+</Accordion>
+
+<Accordion title="SDK Configuration">
+
+- **Environment support** - Development/production modes
+- **Debug mode** - Detailed console logging
+- **Custom API host** - Configure API endpoint
+- **API key authentication** - Secure tracking
+- **Configurable session timeout** - Adjust session expiry
+
+</Accordion>
+
+</Accordions>
+
+## 🔐 Authentication & Authorization
+
+<Accordions type="multiple">
+
+<Accordion title="Authentication Providers">
+
+- **Better Auth** - Core authentication system
+- **GitHub OAuth** - Sign in with GitHub
+- **Google OAuth** - Sign in with Google
+- **Email verification** - Account security
+- **Password reset** - Self-service password recovery
+
+</Accordion>
+
+<Accordion title="Role-Based Access Control">
+
+**Roles & Permissions:**
+
+- **Owner** - Full control including billing and deletion
+- **Admin** - Manage projects, events, and team members
+- **Member** - View analytics and reports
+
+**Features:**
+
+- Granular permission system for all features
+- Permission checks on every operation
+- Role-based feature access
+
+</Accordion>
+
+</Accordions>
+
+## 👨‍👩‍👧‍👦 Team Management
+
+<Accordions type="multiple">
+
+<Accordion title="Team Collaboration">
+
+- **Multi-workspace support** - Create separate workspaces for different businesses
+- **Team member invitations** - Email-based invitation system
+- **Role assignment** - Owner, Admin, Member roles
+- **Add and remove members** - Full team management
+- **Automatic invitation expiry** - Security-focused invitations
+
+</Accordion>
+
+<Accordion title="Workspace Customization">
+
+- **Workspace creation** - Unlimited organizations
+- **Custom slugs** - Branded URLs for organizations
+- **Theme customization** - Per-organization themes
+
+</Accordion>
+
+</Accordions>
+
+## 🏢 Multi-Tenancy
+
+<Accordions type="multiple">
+
+<Accordion title="Organization Structure">
+
+- **Organizations (Workspaces)** - Separate environments for different teams
+- **Multiple projects** - Organize analytics by website/app
+- **Unlimited projects** - Pro plan removes all limits
+
+</Accordion>
+
+<Accordion title="Project & Organization Settings">
+
+- **Domain management** - Validate and manage project domains
+- **Project-level settings** - Configure each project independently
+- **Organization-level settings** - Billing and team at org level
+
+</Accordion>
+
+</Accordions>
+
+## 💳 Billing & Subscriptions
+
+### Plans Comparison
+
+| Plan     | Price     | Events               | Projects  | Team Members |
+| -------- | --------- | -------------------- | --------- | ------------ |
+| **Free** | $0/month  | 4,000/month          | 1         | 1            |
+| **Pro**  | $10/month | 100,000 base + usage | Unlimited | Unlimited    |
+
+### Features
+
+<Accordions type="multiple">
+
+<Accordion title="Billing Features">
+
+- **Polar.sh integration** - Modern payment processing
+- **Usage-based billing** - $0.0004 per event after base limit
+- **Automatic overage handling** - Never lose data
+- **Payment method management** - Update cards easily
+- **Invoice viewing** - Download invoices anytime
+
+</Accordion>
+
+<Accordion title="Subscription Management">
+
+- **Self-service portal** - Manage subscription independently
+- **Plan upgrades/downgrades** - Switch plans anytime
+- **Webhook integration** - Real-time subscription updates
+- **Usage snapshots** - Current usage at a glance
+- **Upgrade prompts** - Contextual upgrade suggestions
+- **Status tracking** - Active, canceled, past due states
+
+</Accordion>
+
+</Accordions>
+
+## 🔑 API & Integration
+
+<Accordions type="multiple">
+
+<Accordion title="API Tokens">
+
+- **Token creation** - Generate API tokens for programmatic access
+- **Bearer authentication** - Industry-standard token authentication
+- **Optional expiry** - Set expiration dates for security
+- **Last used tracking** - Security auditing and monitoring
+- **Domain allowlisting** - Restrict tokens to specific domains
+- **Multi-project assignment** - One token for multiple projects
+- **Recognizable prefixes** - All tokens start with `bk_live_`
+
+</Accordion>
+
+<Accordion title="Raycast Extension API">
+
+All endpoints return last 24 hours of data:
+
+- **/api/raycast/top-countries** - Top 5 countries by views
+- **/api/raycast/device-usage** - Mobile vs desktop breakdown
+- **/api/raycast/top-referrers** - Top 5 traffic sources
+- **/api/raycast/top-pages** - Top 5 most visited pages
+- **/api/raycast/browser-usage** - Browser statistics
+
+</Accordion>
+
+<Accordion title="tRPC API Routes">
+
+Type-safe API routes for all platform features:
+
+- Organization management routes
+- Project management routes
+- Session analytics routes
+- Event tracking routes
+- Funnel management routes
+- Pageview analytics routes
+- Acquisition tracking routes
+- Team invitation routes
+- Authentication routes
+- Notification preference routes
+- Extension management routes
+- API token management routes
+
+</Accordion>
+
+</Accordions>
+
+## 🔔 Notifications
+
+<Accordions type="multiple">
+
+<Accordion title="Notification Features">
+
+- **Live visitor toast notifications** - Real-time notifications
+- **Per-project preferences** - Configurable notification settings
+- **Enable/disable toasts** - Toggle live visitor notifications
+- **WebSocket notifications** - Coming soon: real-time push notifications
+
+</Accordion>
+
+</Accordions>
+
+## 🧩 Extensions System
+
+<Accordions type="multiple">
+
+<Accordion title="Extension Management">
+
+- **Extension registry** - Centralized extension management
+- **Discord integration** - Send events to Discord webhooks
+- **Event-based triggers** - Configure which events trigger extensions
+- **JSON configuration** - Flexible extension settings storage
+- **Enable/disable** - Toggle extensions per project
+- **Event selector** - Fine-grained control over triggered events
+
+</Accordion>
+
+<Accordion title="Extension Features">
+
+- **Rate limiting** - Hourly limits to prevent spam
+- **Delivery system** - Retry logic for failed deliveries
+- **Timestamp tracking** - Last triggered timestamps
+- **Event count tracking** - Daily event counts per extension
+- **Project-specific config** - Different settings per project
+- **README display** - Extension documentation in dashboard
+
+</Accordion>
+
+</Accordions>
+
+## 🏥 Health Monitoring
+
+<Accordions type="multiple">
+
+<Accordion title="Health Check Features">
+
+- **API health checks** - Powered by Trigger.dev
+- **Multiple endpoint monitoring** - Track all critical endpoints
+- **Response time tracking** - Millisecond precision
+- **HTTP status code monitoring** - Track success/error rates
+- **Uptime monitoring** - Track endpoint availability
+
+</Accordion>
+
+<Accordion title="Alerting & Management">
+
+- **Error message logging** - Debug failures easily
+- **Health alert management** - Automatic alerting
+- **Consecutive failure counting** - Smart alert thresholds
+- **Automated cleanup jobs** - Remove old health check data
+- **Health dashboard** - Coming soon: visualize system health
+
+</Accordion>
+
+</Accordions>
+
+## 🎨 UI/UX Features
+
+<Accordions type="multiple">
+
+<Accordion title="Theming & Design">
+
+- **Dark/Light theme toggle** - Automatic or manual theme selection
+- **Responsive design** - Optimized for mobile, tablet, and desktop
+- **Loading skeletons** - Smooth loading states
+- **Error boundaries** - Graceful error handling
+
+</Accordion>
+
+<Accordion title="Interactive Components">
+
+- **Toast notifications** - User feedback via Sonner
+- **Modal dialogs** - Focused interactions
+- **Sheet components** - Side panel interactions
+- **Date range picker** - Advanced date selection with presets
+- **Number animations** - Smooth value transitions via NumberFlow
+- **Interactive charts** - Hover details and drill-downs
+- **Data tables** - Sorting, filtering, pagination
+- **Global search** - Find anything quickly
+- **Sidebar navigation** - Collapsible navigation
+- **Project switcher** - Quick project switching
+- **Workspace switcher** - Fast workspace changes
+- **Sub-navigation** - Contextual navigation
+
+</Accordion>
+
+</Accordions>
+
+## 🚀 Onboarding
+
+### 4-Step Onboarding Wizard
+
+<Steps>
+
+<Step>
+
+**Create Workspace** - Set up your organization
+
+</Step>
+
+<Step>
+
+**Create Project** - Add your first project with domain
+
+</Step>
+
+<Step>
+
+**Install SDK** - Generate API token and get SDK code snippets
+
+</Step>
+
+<Step>
+
+**Test Connection** - Verify your integration is working
+
+</Step>
+
+</Steps>
+
+### Onboarding Features
+
+<Accordions type="multiple">
+
+<Accordion title="Wizard Interface">
+
+- **Progressive wizard interface** - Step-by-step guidance
+- **Visual progress indicator** - Always know where you are
+- **Skip option** - For advanced users
+- **URL-based state management** - Bookmark any step
+- **Step validation** - Prevent errors
+- **Auto-redirect** - Go to dashboard on completion
+
+</Accordion>
+
+<Accordion title="Onboarding Modals">
+
+- **Welcome modal** - First-time user greeting
+- **Demo project modal** - Quick exploration
+- **Invitation confirmed modal** - Join team confirmation
+
+</Accordion>
+
+</Accordions>
+
+## ⚙️ Settings & Configuration
+
+<Accordions type="multiple">
+
+<Accordion title="Project Settings">
+
+- **General settings** - Project name and domain
+- **Notification preferences** - Configure per-project notifications
+- **Extension configuration** - Manage project extensions
+- **Project deletion** - With confirmation safeguards
+
+</Accordion>
+
+<Accordion title="Organization Settings">
+
+- **General settings** - Organization name and slug
+- **Billing management** - Subscription and payment
+- **API token management** - Create and manage tokens
+- **Team management** - Invite and manage members
+- **Theme customization** - Organization-wide themes
+- **Organization deletion** - With safety checks
+
+</Accordion>
+
+<Accordion title="User Settings">
+
+- **Profile management** - Update user information
+- **Email preferences** - Email notifications and verification
+- **Account security** - Password and authentication settings
+
+</Accordion>
+
+</Accordions>
+
+## 📊 Dashboard Features
+
+<Accordions type="multiple">
+
+<Accordion title="Overview Dashboards">
+
+- **Project dashboard** - Comprehensive overview of project analytics
+- **Organization dashboard** - High-level view across all projects
+
+</Accordion>
+
+<Accordion title="Analytics Cards">
+
+- **Quick stats** - Pageviews, sessions, bounce rate
+- **Recent page views table** - Latest visitor activity
+- **Top countries map** - Geographic visualization
+- **Browser statistics chart** - Browser usage breakdown
+- **Mobile/Desktop breakdown** - Device split
+- **Bounce rate trends** - Track engagement
+- **Session analytics summary** - Session insights
+- **No data placeholders** - Empty state guidance
+
+</Accordion>
+
+</Accordions>
+
+## 🗺️ Maps & Visualizations
+
+<Accordions type="multiple">
+
+<Accordion title="Map Features">
+
+- **Interactive world map** - Country highlighting and click interaction
+- **Live visitor map** - Real-time location tracking
+- **City breakdowns** - Click countries for city-level detail
+- **Coordinate visualization** - Precise positioning with lat/lon
+
+</Accordion>
+
+<Accordion title="Visualization Features">
+
+- **Visit statistics overlay** - Traffic volume per country
+- **Heat maps** - Color-coded by traffic volume
+
+</Accordion>
+
+</Accordions>
+
+## 🔍 Data Display
+
+<Accordions type="multiple">
+
+<Accordion title="Data Tables">
+
+- **Pageviews table** - Multi-column sorting, pagination
+- **Sessions table** - Duration, bounce rate, page count
+- **Events table** - Metadata, timestamps, event types
+- **Funnels table** - Conversion metrics, step analysis
+- **Acquisitions table** - Traffic source analysis
+
+</Accordion>
+
+<Accordion title="Additional Views">
+
+- **Recent sessions** - Latest visitor sessions with full details
+- **Session events timeline** - Event sequence per session
+- **Top pages ranking** - Most visited pages with view counts
+- **City breakdowns** - Country-specific city statistics
+
+</Accordion>
+
+</Accordions>
+
+## 🏗️ Infrastructure
+
+<Accordions type="multiple">
+
+<Accordion title="Database & Storage">
+
+- **ClickHouse** - High-performance analytics database
+- **PostgreSQL** - Application database with Prisma ORM
+- **Session storage** - Automatic cleanup and management
+- **Unlimited data retention** - Keep all your data forever
+
+</Accordion>
+
+<Accordion title="Processing & Performance">
+
+- **Real-time processing** - Event processing pipeline
+- **Event streaming** - High-throughput architecture
+- **Automatic aggregation** - Data summarization for reports
+- **Query caching** - Performance optimization
+- **Connection pooling** - Efficient database connections
+- **Optimized indexes** - Fast queries for common patterns
+
+</Accordion>
+
+</Accordions>
+
+## 📧 Email System
+
+<Accordions type="multiple">
+
+<Accordion title="Email Infrastructure">
+
+- **React Email** - Beautiful email templates
+- **Resend** - Reliable email delivery
+- **Transactional emails** - Automated email system
+
+</Accordion>
+
+<Accordion title="Email Templates">
+
+- **Welcome emails** - Onboarding new users
+- **Invitation emails** - Team member invites
+- **Password reset emails** - Account recovery
+- **Billing notifications** - Payment and subscription updates
+- **Usage alerts** - Coming soon: usage notifications
+
+</Accordion>
+
+</Accordions>
+
+## 🔐 Security
+
+<Accordions type="multiple">
+
+<Accordion title="Authentication & Access Control">
+
+- **Token hash storage** - Tokens are hashed before storage
+- **Bearer token authentication** - For API requests
+- **Domain allowlisting** - API token access control
+- **Role-based permission checks** - On all operations
+- **Secure session management** - Protected sessions
+
+</Accordion>
+
+<Accordion title="Data Security & Network">
+
+- **CORS handling** - Secure cross-origin requests
+- **Extension-specific rate limiting** - Prevent abuse
+- **Organization-scoped data access** - Data isolation
+- **Project-scoped analytics queries** - Query isolation
+- **HTTPS enforcement** - Required in production
+
+</Accordion>
+
+</Accordions>
+
+## 📱 Progressive Features
+
+<Accordions type="multiple">
+
+<Accordion title="Next.js Features">
+
+- **Intercepting routes** - Modal dialogs without navigation
+- **Parallel routes** - Complex layouts with @modal pattern
+- **Server-side rendering** - Fast initial page loads
+- **React Suspense** - Streaming and progressive rendering
+- **Streaming responses** - Large datasets streamed efficiently
+- **Optimistic updates** - Instant UI feedback
+
+</Accordion>
+
+</Accordions>
+
+## 🧪 Development Tools
+
+<Accordions type="multiple">
+
+<Accordion title="SDK Development Tools">
+
+- **Debug mode** - Detailed console logging in SDK
+- **Environment detection** - Automatic dev/prod switching
+- **Development bypass** - Skip usage limits in dev mode
+
+</Accordion>
+
+<Accordion title="Backend Development Tools">
+
+- **Test webhook endpoint** - Integration testing support
+- **Health check trigger** - Manual health check triggering
+- **Session cleanup utilities** - Manage stale sessions
+- **Migration verification** - Database migration scripts
+- **Backup scripts** - Database backup automation
+
+</Accordion>
+
+</Accordions>
+
+## 📦 Monorepo Packages
+
+| Package             | Purpose                                 |
+| ------------------- | --------------------------------------- |
+| `@bklit/ui`         | Shared UI component library (shadcn/ui) |
+| `@bklit/analytics`  | ClickHouse analytics engine             |
+| `@bklit/auth`       | Authentication and authorization        |
+| `@bklit/db`         | Database client and Prisma schema       |
+| `@bklit/api`        | tRPC API routes and procedures          |
+| `@bklit/utils`      | Common utility functions                |
+| `@bklit/validators` | Zod validation schemas                  |
+| `@bklit/sdk`        | Published analytics SDK (npm)           |
+| `@bklit/email`      | Email templates and client              |
+| `@bklit/extensions` | Extension system core                   |
+
+---
+
+## Summary
+
+Bklit Analytics provides:
+
+- **150+ Features** across analytics, team management, billing, and integrations
+- **Real-time analytics** with live visitor tracking
+- **Visual funnel builder** for conversion optimization
+- **Geographic insights** with city-level precision
+- **Unlimited data retention** on all plans
+- **Open-source** with self-hosting option
+- **Enterprise-grade** security and permissions
+- **Developer-friendly** SDK and API
+
+Ready to get started? Check out our [Quick Start Guide](/getting-started/quick-start).
