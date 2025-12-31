@@ -78,7 +78,7 @@ export function IpBlacklistSettings({
       onSuccess: () => {
         toast.success("IP added to blacklist");
         queryClient.invalidateQueries({
-          queryKey: [["ipBlacklist", "list"]],
+          queryKey: ["ipBlacklist", "list", { projectId, organizationId }],
         });
         form.reset();
       },
@@ -94,7 +94,7 @@ export function IpBlacklistSettings({
       onSuccess: () => {
         toast.success("IP removed from blacklist");
         queryClient.invalidateQueries({
-          queryKey: [["ipBlacklist", "list"]],
+          queryKey: ["ipBlacklist", "list", { projectId, organizationId }],
         });
       },
       onError: (error) => {
