@@ -56,7 +56,7 @@ export default function TermsPage() {
                 <strong>Free Plan:</strong> 4,000 events per month at no charge
               </li>
               <li>
-                <strong>Pro Plan:</strong> $30/month for 100,000 base events,
+                <strong>Pro Plan:</strong> $10/month for 100,000 base events,
                 then $0.0004 per additional event
               </li>
               <li>

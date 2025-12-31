@@ -40,7 +40,7 @@ export const PLAN_DETAILS: Record<PlanType, PlanDetails> = {
     description: "For growing businesses",
     projectLimit: 999999,
     teamMemberLimit: 999999,
-    price: 3000,
+    price: 1000,
     currency: "USD",
     interval: "month",
     features: [
