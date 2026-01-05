@@ -47,7 +47,7 @@ export const pageviewRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -193,7 +193,7 @@ export const pageviewRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -326,7 +326,7 @@ export const pageviewRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
@@ -531,7 +531,7 @@ export const pageviewRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -677,7 +677,7 @@ export const pageviewRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {

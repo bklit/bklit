@@ -34,12 +34,31 @@ Bklit Analytics provides 150+ features including:
 - Enterprise-grade security and permissions
 - Developer-friendly SDK and API
 
+## **Quick Start**
+
+Get Bklit running in under 2 minutes:
+
+```bash
+npx @bklit/create
+```
+
+That's it! The CLI will:
+- ✓ Check your system prerequisites
+- ✓ Generate secure secrets automatically
+- ✓ Set up PostgreSQL & ClickHouse with Docker
+- ✓ Install dependencies
+- ✓ Create database schema
+- ✓ Start the development server
+
+**Total time: ~90 seconds**
+
 ## **Prerequisites**
 
-- **Node.js 22.14.0+**
+- **Node.js 22.0.0+**
 - **pnpm 9.6.0+**
-- **PostgreSQL** database
-- **ClickHouse** database (for analytics)
+- **Docker** (optional - for automatic database setup)
+- **PostgreSQL** (if not using Docker)
+- **ClickHouse** (if not using Docker)
 
 ## **Project Structure**
 
@@ -86,6 +105,40 @@ bklit/
 - **Documentation:** Fumadocs (Next.js-based docs framework)
 - **Maps:** Nivo Geo, D3, ReactFlow for visualizations
 
+## **Manual Setup**
+
+If you prefer manual setup or can't use Docker:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/bklit.git
+cd bklit
+
+# 2. Run interactive setup
+pnpm setup
+
+# 3. Start development
+pnpm dev
+```
+
+## **What's Optional?**
+
+**Core features** (work out of the box):
+- Email authentication (magic links)
+- Analytics tracking & dashboards
+- Funnel builder
+- Session tracking
+- Geographic insights (list view)
+
+**Optional features** (can enable later):
+- OAuth (GitHub/Google) - for social login
+- Billing (Polar.sh) - for paid plans
+- Email sending (Resend) - for transactional emails
+- Maps (Mapbox) - for map visualization
+- Background jobs (Trigger.dev) - for scheduled tasks
+
+Enable these by adding their API keys to `.env`.
+
 ## **Documentation**
 
 📚 **[Full Documentation](https://docs.bklit.com)**
@@ -94,6 +147,7 @@ bklit/
 - **[SDK Documentation](https://docs.bklit.com/sdk)** - Integrate Bklit into your app
 - **[Dashboard Guide](https://docs.bklit.com/dashboard)** - Learn the dashboard features
 - **[Local Development](https://docs.bklit.com/reference/local-development)** - Set up isolated dev environment
+- **[Environment Variables](https://docs.bklit.com/reference/environment-variables)** - Configuration reference
 - **[Playground](https://docs.bklit.com/playground)** - Test SDK integration
 - **[Feature List](https://docs.bklit.com/features)** - Complete list of all features
 

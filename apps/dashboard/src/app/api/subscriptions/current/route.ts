@@ -1,3 +1,4 @@
+import { polarClient } from "@bklit/auth";
 import { prisma } from "@bklit/db/client";
 import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
@@ -42,7 +43,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const subscriptions = await auth.api.subscriptions({
+    // If Polar is not configured, return null subscription
+    if (!polarClient || !("subscriptions" in auth.api)) {
+      return NextResponse.json({ subscription: null });
+    }
+
+    // biome-ignore lint/suspicious/noExplicitAny: Polar plugin types are conditionally available
+    const subscriptions = await (auth.api as any).subscriptions({
       query: {
         page: 1,
         limit: 1,
@@ -56,6 +63,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ subscription: activeSubscription });
   } catch (error) {
+    console.error("Error fetching subscription:", error);
     return NextResponse.json(
       { error: "Failed to fetch subscription" },
       { status: 500 },

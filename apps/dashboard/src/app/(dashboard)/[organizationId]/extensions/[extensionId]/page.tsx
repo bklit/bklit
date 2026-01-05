@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { ExtensionDetail } from "@/components/extensions/extension-detail";
-import { PageHeader } from "@/components/header/page-header";
 import { authenticated } from "@/lib/auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 

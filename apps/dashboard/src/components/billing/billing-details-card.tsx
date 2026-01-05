@@ -95,7 +95,6 @@ export function BillingDetailsCard({
     );
   }
 
-  const hasBillingAddress = billingDetails?.billingAddress !== null;
   const hasInvoices =
     billingDetails?.invoices && billingDetails.invoices.length > 0;
   const hasNextInvoice = billingDetails?.nextInvoice !== null;

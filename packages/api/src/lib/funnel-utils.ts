@@ -156,7 +156,7 @@ export function matchSessionToFunnel(
       .map((e) => ({
         type: "event" as const,
         timestamp: e.timestamp,
-        eventTrackingId: e.eventDefinition!.trackingId,
+        eventTrackingId: e.eventDefinition?.trackingId,
       })),
   ].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 

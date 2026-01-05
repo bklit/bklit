@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const { spawnSync } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+const { spawnSync } = require("node:child_process");
+const path = require("node:path");
+const fs = require("node:fs");
 
 // Load .env file from workspace root
 const envPath = path.join(__dirname, "../../../.env");
@@ -11,14 +11,18 @@ if (fs.existsSync(envPath)) {
 
 // Use DEV_* variables if available, otherwise fall back to production variables
 const CLICKHOUSE_HOST =
-  process.env.DEV_CLICKHOUSE_HOST || process.env.CLICKHOUSE_HOST;
+  process.env.DEV_CLICKHOUSE_HOST ?? process.env.CLICKHOUSE_HOST;
 const CLICKHOUSE_USERNAME =
-  process.env.DEV_CLICKHOUSE_USERNAME || process.env.CLICKHOUSE_USERNAME;
+  process.env.DEV_CLICKHOUSE_USERNAME ?? process.env.CLICKHOUSE_USERNAME;
 const CLICKHOUSE_PASSWORD =
-  process.env.DEV_CLICKHOUSE_PASSWORD || process.env.CLICKHOUSE_PASSWORD;
+  process.env.DEV_CLICKHOUSE_PASSWORD ?? process.env.CLICKHOUSE_PASSWORD;
 
-// Validate required variables
-if (!CLICKHOUSE_HOST || !CLICKHOUSE_USERNAME || !CLICKHOUSE_PASSWORD) {
+// Validate required variables (password can be empty string for local Docker)
+if (
+  !CLICKHOUSE_HOST ||
+  !CLICKHOUSE_USERNAME ||
+  CLICKHOUSE_PASSWORD === undefined
+) {
   console.error(
     "Error: Missing required ClickHouse configuration in .env file",
   );

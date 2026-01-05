@@ -178,8 +178,8 @@ export async function GET() {
         .filter((inc) => inc.end)
         .map((inc) => ({
           startTime: inc.start.toISOString(),
-          endTime: inc.end!.toISOString(),
-          duration: inc.end!.getTime() - inc.start.getTime(),
+          endTime: inc.end?.toISOString(),
+          duration: inc.end?.getTime() - inc.start.getTime(),
           errorMessage: inc.error,
         }))
         .slice(-10); // Last 10 incidents

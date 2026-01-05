@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const { spawnSync } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+const { spawnSync } = require("node:child_process");
+const path = require("node:path");
+const fs = require("node:fs");
 
 // Load .env file from workspace root
 const envPath = path.join(__dirname, "../../../.env");
@@ -10,7 +10,7 @@ if (fs.existsSync(envPath)) {
 }
 
 // Use DEV_DATABASE_URL if available, otherwise fall back to DATABASE_URL
-const DATABASE_URL = process.env.DEV_DATABASE_URL || process.env.DATABASE_URL;
+const DATABASE_URL = process.env.DEV_DATABASE_URL ?? process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   console.error(

@@ -11,7 +11,6 @@ import {
 } from "@bklit/ui/components/card";
 import { Funnel as FunnelChart } from "@bklit/ui/components/charts/funnel";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
-import { Separator } from "@bklit/ui/components/separator";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import {
   Table,

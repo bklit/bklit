@@ -4,13 +4,6 @@ import {
   AvatarImage,
 } from "@bklit/ui/components/avatar";
 import { Badge } from "@bklit/ui/components/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@bklit/ui/components/card";
 import { Separator } from "@bklit/ui/components/separator";
 import { Puzzle } from "lucide-react";
 import Image from "next/image";

@@ -64,6 +64,6 @@ export function getPlanDetails(planId?: string | null): PlanDetails {
   return PLAN_DETAILS[PlanType.FREE];
 }
 
-export function getPlanTypeByPolarProductId(polarProductId: string): PlanType {
+export function getPlanTypeByPolarProductId(_polarProductId: string): PlanType {
   return PlanType.FREE;
 }

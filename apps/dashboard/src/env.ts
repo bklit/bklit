@@ -16,32 +16,41 @@ export const env = createEnv({
    */
   server: {
     /**
-     * BetterAuth
+     * BetterAuth - Required
      */
-    AUTH_GITHUB_ID: z.string().min(1),
-    AUTH_GITHUB_SECRET: z.string().min(1),
+    AUTH_SECRET: z.string().min(32),
+
+    /**
+     * BetterAuth - OAuth Providers (OPTIONAL)
+     */
+    AUTH_GITHUB_ID: z.string().min(1).optional(),
+    AUTH_GITHUB_SECRET: z.string().min(1).optional(),
     AUTH_GOOGLE_ID: z.string().min(1).optional(),
     AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
-    AUTH_SECRET: z.string().min(1),
 
     /**
-     * Polar
+     * Polar - Billing (OPTIONAL)
      */
-    POLAR_SERVER_MODE: z.string().min(1),
-    POLAR_ACCESS_TOKEN: z.string().min(1),
-    POLAR_WEBHOOK_SECRET: z.string().min(1),
+    POLAR_SERVER_MODE: z.string().min(1).optional(),
+    POLAR_ACCESS_TOKEN: z.string().min(1).optional(),
+    POLAR_WEBHOOK_SECRET: z.string().min(1).optional(),
 
     /**
-     * Trigger.dev
+     * Trigger.dev - Background Jobs (OPTIONAL)
      */
     TRIGGER_SECRET_KEY: z.string().optional(),
     TRIGGER_API_KEY: z.string().optional(),
     TRIGGER_API_URL: z.string().url().optional(),
 
     /**
-     * API Health Monitoring
+     * Email - Resend (OPTIONAL)
      */
-    ALERT_EMAIL: z.string().email().min(1),
+    RESEND_API_KEY: z.string().optional(),
+
+    /**
+     * API Health Monitoring (OPTIONAL)
+     */
+    ALERT_EMAIL: z.string().email().optional(),
     HEALTH_CHECK_SECRET: z.string().min(1),
   },
 
@@ -50,7 +59,11 @@ export const env = createEnv({
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_MAPBOX_TOKEN: z.string().min(1),
+    /**
+     * Mapbox - Maps (OPTIONAL - will fallback to list view)
+     */
+    NEXT_PUBLIC_MAPBOX_TOKEN: z.string().min(1).optional(),
+    NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
@@ -58,15 +71,11 @@ export const env = createEnv({
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
   skipValidation:
     !!process.env.CI ||
     process.env.npm_lifecycle_event === "lint" ||
     !!process.env.TRIGGER_BUILD ||
-    process.env.NODE_ENV === "test" ||
-    // Skip validation during Trigger.dev task indexing/build phase
-    // Check if required env vars are missing (they won't be available during indexing)
-    !process.env.AUTH_GITHUB_ID ||
-    !process.env.AUTH_SECRET ||
-    !process.env.POLAR_SERVER_MODE,
+    process.env.NODE_ENV === "test",
 });

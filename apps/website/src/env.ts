@@ -17,18 +17,22 @@ export const env = createEnv({
    */
   server: {
     /**
-     * BetterAuth
+     * BetterAuth - Required
      */
-    AUTH_GITHUB_ID: z.string().min(1),
-    AUTH_GITHUB_SECRET: z.string().min(1),
-    AUTH_SECRET: z.string().min(1),
+    AUTH_SECRET: z.string().min(32),
 
     /**
-     * Polar
+     * BetterAuth - OAuth Providers (OPTIONAL)
      */
-    POLAR_SERVER_MODE: z.string().min(1),
-    POLAR_ACCESS_TOKEN: z.string().min(1),
-    POLAR_WEBHOOK_SECRET: z.string().min(1),
+    AUTH_GITHUB_ID: z.string().min(1).optional(),
+    AUTH_GITHUB_SECRET: z.string().min(1).optional(),
+
+    /**
+     * Polar - Billing (OPTIONAL)
+     */
+    POLAR_SERVER_MODE: z.string().min(1).optional(),
+    POLAR_ACCESS_TOKEN: z.string().min(1).optional(),
+    POLAR_WEBHOOK_SECRET: z.string().min(1).optional(),
   },
 
   /**

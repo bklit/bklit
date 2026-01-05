@@ -16,7 +16,6 @@ import type {
   CountryStats,
   CountryWithCities,
   CountryWithVisits,
-  SessionData,
   TopCountryData,
   TopCountryResult,
 } from "@/types/geo";
@@ -61,7 +60,7 @@ export async function getTopCountries(
         throw new Error("Site not found or access denied");
       }
 
-      const dateFilter = {
+      const _dateFilter = {
         timestamp: {
           gte: defaultStartDate,
           lte: normalizedEndDate,
@@ -136,7 +135,7 @@ export async function getAnalyticsStats(
         throw new Error("Site not found or access denied");
       }
 
-      const dateFilter = {
+      const _dateFilter = {
         timestamp: {
           gte: defaultStartDate,
           lte: normalizedEndDate,
@@ -766,7 +765,7 @@ export async function getMobileDesktopStats(
         throw new Error("Site not found or access denied");
       }
 
-      const dateFilter = {
+      const _dateFilter = {
         timestamp: {
           gte: defaultStartDate,
           lte: normalizedEndDate,
@@ -850,7 +849,7 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         throw new Error("Site not found or access denied");
       }
 
-      const dateFilter = {
+      const _dateFilter = {
         timestamp: {
           gte: defaultStartDate,
           lte: normalizedEndDate,
@@ -934,7 +933,7 @@ export async function getBrowserStats(
         throw new Error("Site not found or access denied");
       }
 
-      const dateFilter = {
+      const _dateFilter = {
         timestamp: {
           gte: defaultStartDate,
           lte: normalizedEndDate,
@@ -989,7 +988,7 @@ export async function getBrowserStats(
         } else if (userAgent.length > 0) {
           // If we have a user agent but couldn't identify it, try to extract a hint
           const uaMatch = userAgent.match(/([a-z]+)\/(\d+)/);
-          if (uaMatch && uaMatch[1]) {
+          if (uaMatch?.[1]) {
             browser = uaMatch[1].charAt(0).toUpperCase() + uaMatch[1].slice(1);
           }
         }
@@ -1056,7 +1055,7 @@ export async function getSessionAnalytics(
         throw new Error("Site not found or access denied");
       }
 
-      const dateFilter = {
+      const _dateFilter = {
         startedAt: {
           gte: defaultStartDate,
           lte: normalizedEndDate,
@@ -1283,7 +1282,7 @@ export async function getConversions(
         throw new Error("Site not found or access denied");
       }
 
-      const dateFilter = {
+      const _dateFilter = {
         timestamp: {
           gte: defaultStartDate,
           lte: normalizedEndDate,
