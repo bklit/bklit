@@ -11,7 +11,6 @@ import { Input } from "@bklit/ui/components/input";
 import NumberFlow from "@number-flow/react";
 import { useForm } from "@tanstack/react-form";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/client";
@@ -70,7 +69,6 @@ function getCooldownRemaining(): number {
 }
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(
     getCooldownRemaining(),

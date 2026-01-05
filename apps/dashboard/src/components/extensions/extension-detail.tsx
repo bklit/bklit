@@ -1,13 +1,6 @@
 "use client";
 
 import { Button } from "@bklit/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@bklit/ui/components/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -15,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ExtensionHeader } from "@/components/extensions/extension-header";
 import { ExtensionReadme } from "@/components/extensions/extension-readme";
-import { ProjectSelector } from "@/components/extensions/project-selector";
 import { PageHeader } from "@/components/header/page-header";
 import { useTRPC } from "@/trpc/react";
 
@@ -109,7 +101,7 @@ export function ExtensionDetail({
     });
   };
 
-  const handleRemove = (projectId: string, projectName: string) => {
+  const handleRemove = (projectId: string) => {
     removeMutation.mutate({
       organizationId,
       extensionId,
