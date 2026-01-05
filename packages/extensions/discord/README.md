@@ -62,6 +62,15 @@ userId: user-123
 Project ID: your-project-id
 ```
 
+## Event Filtering
+
+**Note:** "View" events are automatically filtered out to prevent spam. The Discord extension only forwards:
+- Click events
+- Custom events (purchase, signup, etc.)
+- Other interaction events
+
+Pageview events are excluded since they can generate thousands of notifications per day.
+
 ## Multiple Channels
 
 To send different events to different Discord channels:

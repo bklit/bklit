@@ -32,7 +32,7 @@ const env = authEnv();
 if (env.POLAR_ACCESS_TOKEN) {
   if (!env.POLAR_WEBHOOK_SECRET || !env.POLAR_ORGANIZATION_ID) {
     throw new Error(
-      "POLAR_WEBHOOK_SECRET and POLAR_ORGANIZATION_ID are required when POLAR_ACCESS_TOKEN is set"
+      "POLAR_WEBHOOK_SECRET and POLAR_ORGANIZATION_ID are required when POLAR_ACCESS_TOKEN is set",
     );
   }
 }
