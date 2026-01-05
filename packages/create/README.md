@@ -5,10 +5,15 @@ One-command setup for Bklit Analytics.
 ## Usage
 
 ```bash
+# Create in default 'bklit' directory
 npx @bklit/create
+
+# Or specify a custom directory name
+npx @bklit/create my-analytics
 ```
 
 That's it! The wizard will:
+- ✓ Clone the Bklit repository
 - ✓ Check your system prerequisites
 - ✓ Generate secure secrets automatically
 - ✓ Set up PostgreSQL & ClickHouse with Docker

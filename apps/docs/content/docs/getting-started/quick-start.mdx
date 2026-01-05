@@ -105,19 +105,24 @@ When you skip email setup, login codes appear directly in your terminal:
 
 Enable any optional feature by adding API keys to your `.env` file.
 
+## Custom Directory Name
+
+By default, the wizard creates a `bklit` directory. To use a custom name:
+
+```bash
+npx @bklit/create my-analytics-project
+```
+
 ## Manual Setup (Alternative)
 
-If you prefer manual setup or already cloned the repo:
+If you prefer manual setup:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/bklit.git
+git clone https://github.com/bklit/bklit.git
 cd bklit
 
-# Run interactive setup
-pnpm setup
-
-# Or install and configure manually
+# Install and configure manually
 pnpm install
 # ... configure .env
 pnpm db:migrate

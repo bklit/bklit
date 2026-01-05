@@ -2,6 +2,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 
 export interface SetupAnswers {
+  projectName: string;
   useDocker: boolean;
   setupBilling: boolean;
   setupOAuth: boolean;
@@ -26,6 +27,21 @@ export async function askSetupQuestions(): Promise<SetupAnswers> {
   console.log("Let's get you up and running in under 2 minutes.\n");
 
   const answers = await inquirer.prompt([
+    {
+      type: "input",
+      name: "projectName",
+      message: "What would you like to name your project directory?",
+      default: "bklit",
+      validate: (input: string) => {
+        if (!input || input.trim().length === 0) {
+          return "Project name cannot be empty";
+        }
+        if (!/^[a-zA-Z0-9-_]+$/.test(input)) {
+          return "Project name can only contain letters, numbers, hyphens, and underscores";
+        }
+        return true;
+      },
+    },
     {
       type: "confirm",
       name: "useDocker",

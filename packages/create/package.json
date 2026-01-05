@@ -1,6 +1,6 @@
 {
   "name": "@bklit/create",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "Create a new Bklit instance with one command",
   "type": "module",
   "bin": {

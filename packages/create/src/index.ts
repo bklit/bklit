@@ -18,7 +18,7 @@ const program = new Command();
 program
   .name("create")
   .description("Set up Bklit Analytics in under 2 minutes")
-  .version("1.0.0")
+  .version("1.0.1")
   .action(async () => {
     try {
       console.clear();
@@ -26,11 +26,37 @@ program
       console.log(chalk.cyan.bold("│  🎯 Bklit Setup Wizard          │"));
       console.log(chalk.cyan.bold("└─────────────────────────────────┘\n"));
 
-      // Step 1: Ask user preferences
+      // Step 1: Ask user preferences (including project name)
       const answers = await askSetupQuestions();
 
-      // Step 2: Check prerequisites
-      const spinner = ora("Checking prerequisites...").start();
+      // Step 2: Clone the repository
+      let cloneSpinner = ora("Cloning Bklit repository...").start();
+      try {
+        await execa("git", [
+          "clone",
+          "https://github.com/bklit/bklit.git",
+          answers.projectName,
+        ]);
+        process.chdir(answers.projectName);
+        cloneSpinner.succeed(`Repository cloned to ${answers.projectName}`);
+      } catch (error: any) {
+        cloneSpinner.fail("Failed to clone repository");
+        if (error.stderr?.includes("already exists")) {
+          console.log(chalk.yellow(`\nDirectory '${answers.projectName}' already exists. Using existing directory.`));
+          try {
+            process.chdir(answers.projectName);
+          } catch {
+            console.error(chalk.red(`Cannot access directory '${answers.projectName}'`));
+            process.exit(1);
+          }
+        } else {
+          console.error(error.message);
+          process.exit(1);
+        }
+      }
+
+      // Step 3: Check prerequisites
+      let spinner = ora("Checking prerequisites...").start();
 
       const nodeVersion = process.version;
       const majorVersion = Number.parseInt(
