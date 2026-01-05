@@ -65,7 +65,8 @@ export async function sendEmail(params: SendEmailParams) {
     return {
       success: true,
       id: `dev-console-${Date.now()}`,
-      message: "Email logged to console (development mode - no Resend configured)",
+      message:
+        "Email logged to console (development mode - no Resend configured)",
     };
   }
 

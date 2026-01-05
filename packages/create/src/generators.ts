@@ -24,4 +24,3 @@ export function generateDatabasePassword(): string {
     .map((byte) => chars[byte % chars.length])
     .join("");
 }
-

@@ -77,4 +77,3 @@ NODE_ENV="development"
   await fs.writeFile(".env", envContent);
   console.log(chalk.green("\n✓ Created .env file"));
 }
-

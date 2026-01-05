@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-import { Command } from "commander";
 import chalk from "chalk";
-import ora from "ora";
+import { Command } from "commander";
 import { execa } from "execa";
+import ora from "ora";
 import {
   isDockerAvailable,
   isDockerComposeAvailable,
   setupDockerServices,
 } from "./docker.js";
-import { generateSecrets, generateDatabasePassword } from "./generators.js";
-import { askSetupQuestions, type SetupAnswers } from "./prompts.js";
 import { generateEnvFile } from "./env.js";
+import { generateDatabasePassword, generateSecrets } from "./generators.js";
+import { askSetupQuestions, type SetupAnswers } from "./prompts.js";
 
 const program = new Command();
 
@@ -33,14 +33,14 @@ program
       const spinner = ora("Checking prerequisites...").start();
 
       const nodeVersion = process.version;
-      const majorVersion = Number.parseInt(nodeVersion.slice(1).split('.')[0]);
-      const minorVersion = Number.parseInt(nodeVersion.slice(1).split('.')[1]);
-      
+      const majorVersion = Number.parseInt(nodeVersion.slice(1).split(".")[0]);
+      const minorVersion = Number.parseInt(nodeVersion.slice(1).split(".")[1]);
+
       if (majorVersion < 22) {
         spinner.fail(`Node.js 22+ required (current: ${nodeVersion})`);
         process.exit(1);
       }
-      
+
       if (majorVersion === 22 && minorVersion < 0) {
         spinner.warn(`Node.js 22.14+ recommended (current: ${nodeVersion})`);
       }
@@ -114,9 +114,9 @@ program
       if (answers.useDocker) {
         spinner.start("Setting up database schema...");
         try {
-          await execa("pnpm", ["db:push"], { 
+          await execa("pnpm", ["db:push"], {
             stdio: "pipe",
-            env: { ...process.env, FORCE_COLOR: "0" }
+            env: { ...process.env, FORCE_COLOR: "0" },
           });
           spinner.succeed("Database schema ready");
         } catch (error: any) {
@@ -131,7 +131,7 @@ program
         try {
           await execa("pnpm", ["-F", "@bklit/analytics", "migrate"], {
             stdio: "pipe",
-            env: { ...process.env, FORCE_COLOR: "0" }
+            env: { ...process.env, FORCE_COLOR: "0" },
           });
           spinner.succeed("ClickHouse tables ready");
         } catch (error: any) {
@@ -157,7 +157,9 @@ program
         console.log(
           chalk.cyan("   • Login OTP codes will appear in your terminal"),
         );
-        console.log(chalk.cyan("   • Welcome emails will be logged (not sent)"));
+        console.log(
+          chalk.cyan("   • Welcome emails will be logged (not sent)"),
+        );
         console.log(
           chalk.gray(
             "   • Add RESEND_API_KEY to .env later to send real emails\n",
@@ -168,11 +170,11 @@ program
       if (!answers.setupOAuth && !answers.setupEmail) {
         console.log(chalk.yellow("🔐 Authentication:"));
         console.log(
-          chalk.white("   Email authentication is enabled (magic links via OTP)"),
+          chalk.white(
+            "   Email authentication is enabled (magic links via OTP)",
+          ),
         );
-        console.log(
-          chalk.cyan("   • OTP codes will display in your terminal"),
-        );
+        console.log(chalk.cyan("   • OTP codes will display in your terminal"));
         console.log(
           chalk.gray(
             "   • Add OAuth providers later for GitHub/Google login\n",
@@ -186,7 +188,9 @@ program
           chalk.white("   Billing is disabled (all users have free tier)"),
         );
         console.log(
-          chalk.gray("   • Add Polar.sh credentials later to enable paid plans\n"),
+          chalk.gray(
+            "   • Add Polar.sh credentials later to enable paid plans\n",
+          ),
         );
       }
 
@@ -219,4 +223,3 @@ program
   });
 
 program.parse();
-

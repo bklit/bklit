@@ -38,4 +38,3 @@ const result = spawnSync(args[0], args.slice(1), {
 });
 
 process.exit(result.status || 0);
-

@@ -206,12 +206,18 @@ export function initAuth(options: {
 
                         // In development, prominently display the invite link
                         if (process.env.NODE_ENV === "development") {
-                          console.log("\n🎉 ==========================================");
+                          console.log(
+                            "\n🎉 ==========================================",
+                          );
                           console.log("📬 DEMO PROJECT INVITATION");
                           console.log(`👤 User: ${user.email}`);
-                          console.log(`🏢 Organization: ${project.organization.name}`);
+                          console.log(
+                            `🏢 Organization: ${project.organization.name}`,
+                          );
                           console.log(`🔗 Invite Link: ${inviteLink}`);
-                          console.log("==========================================\n");
+                          console.log(
+                            "==========================================\n",
+                          );
                         }
 
                         const emailHtml = await render(
@@ -302,57 +308,63 @@ export function initAuth(options: {
         ? [
             polar({
               client: polarClient,
-        // In development, allow +aliases without Polar customer creation
-        createCustomerOnSignUp: process.env.NODE_ENV !== "development",
-        use: [
-          checkout({
-            // Only include plans that have a Polar product ID
-            products: plans
-              .filter((plan) => plan.polarProductId)
-              .map((plan) => ({
-                productId: plan.polarProductId as string,
-                slug: plan.slug,
-              })),
-            successUrl: "/settings/billing?purchase=success", // Generic success URL, will redirect to correct organization
-            authenticatedUsersOnly: true,
-          }),
-          portal(),
-          usage(),
-          webhooks({
-            secret: env.POLAR_WEBHOOK_SECRET,
-            onSubscriptionActive: async (payload: PolarWebhookPayload) => {
-              logWebhookPayload("subscription.active", payload);
-              const referenceId = payload.data?.reference_id;
-              if (referenceId) {
-                await updateOrganizationPlan(referenceId, "pro");
-              }
-            },
-            onSubscriptionCanceled: async (payload: PolarWebhookPayload) => {
-              logWebhookPayload("subscription.canceled", payload);
-              const referenceId = payload.data?.reference_id;
-              if (referenceId) {
-                await updateOrganizationPlan(referenceId, "free");
-              }
-            },
-            onSubscriptionRevoked: async (payload: PolarWebhookPayload) => {
-              logWebhookPayload("subscription.revoked", payload);
-              const referenceId = payload.data?.reference_id;
-              if (referenceId) {
-                await updateOrganizationPlan(referenceId, "free");
-              }
-            },
-            onCustomerStateChanged: async (payload) => {
-              logWebhookPayload("customer.state_changed", payload);
-            },
-            onOrderPaid: async (payload) => {
-              logWebhookPayload("order.paid", payload);
-            },
-            onPayload: async (payload) => {
-              logWebhookPayload("webhook.received", payload);
-            },
-          }),
-        ],
-      })
+              // In development, allow +aliases without Polar customer creation
+              createCustomerOnSignUp: process.env.NODE_ENV !== "development",
+              use: [
+                checkout({
+                  // Only include plans that have a Polar product ID
+                  products: plans
+                    .filter((plan) => plan.polarProductId)
+                    .map((plan) => ({
+                      productId: plan.polarProductId as string,
+                      slug: plan.slug,
+                    })),
+                  successUrl: "/settings/billing?purchase=success", // Generic success URL, will redirect to correct organization
+                  authenticatedUsersOnly: true,
+                }),
+                portal(),
+                usage(),
+                webhooks({
+                  secret: env.POLAR_WEBHOOK_SECRET,
+                  onSubscriptionActive: async (
+                    payload: PolarWebhookPayload,
+                  ) => {
+                    logWebhookPayload("subscription.active", payload);
+                    const referenceId = payload.data?.reference_id;
+                    if (referenceId) {
+                      await updateOrganizationPlan(referenceId, "pro");
+                    }
+                  },
+                  onSubscriptionCanceled: async (
+                    payload: PolarWebhookPayload,
+                  ) => {
+                    logWebhookPayload("subscription.canceled", payload);
+                    const referenceId = payload.data?.reference_id;
+                    if (referenceId) {
+                      await updateOrganizationPlan(referenceId, "free");
+                    }
+                  },
+                  onSubscriptionRevoked: async (
+                    payload: PolarWebhookPayload,
+                  ) => {
+                    logWebhookPayload("subscription.revoked", payload);
+                    const referenceId = payload.data?.reference_id;
+                    if (referenceId) {
+                      await updateOrganizationPlan(referenceId, "free");
+                    }
+                  },
+                  onCustomerStateChanged: async (payload) => {
+                    logWebhookPayload("customer.state_changed", payload);
+                  },
+                  onOrderPaid: async (payload) => {
+                    logWebhookPayload("order.paid", payload);
+                  },
+                  onPayload: async (payload) => {
+                    logWebhookPayload("webhook.received", payload);
+                  },
+                }),
+              ],
+            }),
           ]
         : []),
 

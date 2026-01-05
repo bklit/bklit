@@ -1,7 +1,7 @@
+import fs from "node:fs/promises";
+import chalk from "chalk";
 import { execa } from "execa";
 import ora from "ora";
-import chalk from "chalk";
-import fs from "node:fs/promises";
 
 export async function isDockerAvailable(): Promise<boolean> {
   try {
@@ -49,7 +49,7 @@ export async function setupDockerServices(dbPassword: string): Promise<{
     await waitForPostgres(dbPassword);
     // Give PostgreSQL a moment to fully initialize
     await new Promise((resolve) => setTimeout(resolve, 3000));
-    
+
     // Test actual connection with credentials
     await testPostgresConnection(dbPassword);
     spinner.succeed("PostgreSQL is ready");
@@ -114,7 +114,10 @@ volumes:
 `.trim();
 }
 
-async function waitForPostgres(dbPassword: string, maxAttempts = 60): Promise<void> {
+async function waitForPostgres(
+  dbPassword: string,
+  maxAttempts = 60,
+): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
       await execa("docker", [
@@ -137,19 +140,23 @@ async function waitForPostgres(dbPassword: string, maxAttempts = 60): Promise<vo
 async function testPostgresConnection(dbPassword: string): Promise<void> {
   // Test actual connection with credentials
   try {
-    await execa("docker", [
-      "exec",
-      "bklit-postgres",
-      "psql",
-      "-U",
-      "bklit",
-      "-d",
-      "bklit",
-      "-c",
-      "SELECT 1;",
-    ], {
-      env: { PGPASSWORD: dbPassword }
-    });
+    await execa(
+      "docker",
+      [
+        "exec",
+        "bklit-postgres",
+        "psql",
+        "-U",
+        "bklit",
+        "-d",
+        "bklit",
+        "-c",
+        "SELECT 1;",
+      ],
+      {
+        env: { PGPASSWORD: dbPassword },
+      },
+    );
   } catch (error) {
     throw new Error(
       `PostgreSQL connection test failed. Password might not be set correctly. Try: docker compose logs postgres`,
@@ -162,7 +169,7 @@ async function waitForClickHouse(maxAttempts = 60): Promise<void> {
     try {
       // Try HTTP ping directly from host (more reliable than docker exec)
       const fetch = (await import("node:http")).default;
-      
+
       await new Promise<void>((resolve, reject) => {
         const req = fetch.get("http://localhost:8123/ping", (res) => {
           if (res.statusCode === 200) {
@@ -177,7 +184,7 @@ async function waitForClickHouse(maxAttempts = 60): Promise<void> {
           reject(new Error("Timeout"));
         });
       });
-      
+
       return;
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -187,4 +194,3 @@ async function waitForClickHouse(maxAttempts = 60): Promise<void> {
     "ClickHouse did not become ready in time. Try: docker compose logs clickhouse",
   );
 }
-

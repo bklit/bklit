@@ -1,5 +1,5 @@
-import inquirer from "inquirer";
 import chalk from "chalk";
+import inquirer from "inquirer";
 
 export interface SetupAnswers {
   useDocker: boolean;
@@ -134,4 +134,3 @@ export async function askSetupQuestions(): Promise<SetupAnswers> {
 
   return answers as SetupAnswers;
 }
-
