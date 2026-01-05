@@ -67,7 +67,10 @@ program
       spinner.succeed("Secrets generated");
 
       // Step 4: Set up databases
-      let databases;
+      let databases: {
+        postgresUrl: string;
+        clickhouseUrl: string;
+      };
       if (answers.useDocker) {
         const dbPassword = generateDatabasePassword();
         databases = await setupDockerServices(dbPassword);
