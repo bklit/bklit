@@ -11,7 +11,7 @@ import {
 } from "./docker.js";
 import { generateEnvFile } from "./env.js";
 import { generateDatabasePassword, generateSecrets } from "./generators.js";
-import { askSetupQuestions, type SetupAnswers } from "./prompts.js";
+import { askSetupQuestions } from "./prompts.js";
 
 const program = new Command();
 
@@ -33,8 +33,14 @@ program
       const spinner = ora("Checking prerequisites...").start();
 
       const nodeVersion = process.version;
-      const majorVersion = Number.parseInt(nodeVersion.slice(1).split(".")[0]);
-      const minorVersion = Number.parseInt(nodeVersion.slice(1).split(".")[1]);
+      const majorVersion = Number.parseInt(
+        nodeVersion.slice(1).split(".")[0],
+        10,
+      );
+      const minorVersion = Number.parseInt(
+        nodeVersion.slice(1).split(".")[1],
+        10,
+      );
 
       if (majorVersion < 22) {
         spinner.fail(`Node.js 22+ required (current: ${nodeVersion})`);

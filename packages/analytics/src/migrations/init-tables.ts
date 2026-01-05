@@ -102,7 +102,7 @@ async function initTables() {
       `,
     });
     console.log("✓ Ensured updated_at column exists in tracked_session table");
-  } catch (error) {
+  } catch (_error) {
     // Column might already exist or table might not exist yet, ignore error
     if (process.env.NODE_ENV === "development") {
       console.log(

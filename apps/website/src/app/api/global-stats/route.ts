@@ -14,21 +14,21 @@ export async function GET() {
       uniqueUsersResult,
       conversionsResult,
     ] = await Promise.all([
-      analytics["client"].query({
+      analytics.client.query({
         query:
           "SELECT count(DISTINCT session_id) as count FROM tracked_session",
         format: "JSONEachRow",
       }),
-      analytics["client"].query({
+      analytics.client.query({
         query: "SELECT count() as count FROM page_view_event",
         format: "JSONEachRow",
       }),
-      analytics["client"].query({
+      analytics.client.query({
         query:
           "SELECT count(DISTINCT visitor_id) as count FROM tracked_session WHERE visitor_id IS NOT NULL",
         format: "JSONEachRow",
       }),
-      analytics["client"].query({
+      analytics.client.query({
         query: "SELECT count() as count FROM tracked_event",
         format: "JSONEachRow",
       }),

@@ -38,7 +38,7 @@ export const sessionRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
@@ -129,7 +129,7 @@ export const sessionRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
@@ -264,7 +264,7 @@ export const sessionRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {
@@ -728,7 +728,7 @@ export const sessionRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               startedAt: {

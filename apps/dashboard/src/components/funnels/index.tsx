@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
-import { Separator } from "@bklit/ui/components/separator";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import Link from "next/link";

@@ -646,7 +646,7 @@ function buildHeaders(apiKey?: string): HeadersInit {
   };
 
   if (apiKey) {
-    headers["Authorization"] = `Bearer ${apiKey}`;
+    headers.Authorization = `Bearer ${apiKey}`;
   }
 
   return headers;

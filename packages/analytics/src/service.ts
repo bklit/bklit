@@ -12,7 +12,7 @@ import type {
 
 // Helper to parse ClickHouse DateTime strings as UTC
 function parseClickHouseDate(dateString: string): Date {
-  return new Date(dateString + "Z");
+  return new Date(`${dateString}Z`);
 }
 
 function formatDateForClickHouse(date: Date): string {

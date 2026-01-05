@@ -27,23 +27,23 @@ export function getPricingPlans(): PricingPlan[] {
   return [];
 }
 
-export function getPricingPlanBySlug(slug: string): PricingPlan | undefined {
+export function getPricingPlanBySlug(_slug: string): PricingPlan | undefined {
   return undefined;
 }
 
 export function getPricingPlanByEventLimit(
-  eventLimit: number,
+  _eventLimit: number,
 ): PricingPlan | undefined {
   return undefined;
 }
 
-export function getProductIdForPlan(slug: string): string | null {
+export function getProductIdForPlan(_slug: string): string | null {
   return null;
 }
 
 export function getRecommendedUpgradeTier(
-  currentEventLimit: number,
-  currentUsage: number,
+  _currentEventLimit: number,
+  _currentUsage: number,
 ): PricingPlan | undefined {
   return undefined;
 }
@@ -55,7 +55,7 @@ export function formatPrice(price: number): string {
   }).format(price / 100); // Prices are stored in cents
 }
 
-export function getPlanLimits(planSlug: string) {
+export function getPlanLimits(_planSlug: string) {
   // For now, return defaults
   // This should be fetched from Polar metadata
   return {

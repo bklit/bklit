@@ -36,7 +36,7 @@ export const acquisitionRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -177,7 +177,7 @@ export const acquisitionRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -264,7 +264,7 @@ export const acquisitionRouter = createTRPCRouter({
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -318,7 +318,7 @@ export const acquisitionRouter = createTRPCRouter({
                 utmCampaign: p.utm_campaign,
               }) === source,
           );
-          const sourceType = getSourceType({
+          const _sourceType = getSourceType({
             referrer: samplePageview?.referrer || null,
             utmSource: samplePageview?.utm_source || null,
           });

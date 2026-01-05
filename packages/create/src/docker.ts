@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import chalk from "chalk";
 import { execa } from "execa";
 import ora from "ora";
 
@@ -115,7 +114,7 @@ volumes:
 }
 
 async function waitForPostgres(
-  dbPassword: string,
+  _dbPassword: string,
   maxAttempts = 60,
 ): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
@@ -157,7 +156,7 @@ async function testPostgresConnection(dbPassword: string): Promise<void> {
         env: { PGPASSWORD: dbPassword },
       },
     );
-  } catch (error) {
+  } catch (_error) {
     throw new Error(
       `PostgreSQL connection test failed. Password might not be set correctly. Try: docker compose logs postgres`,
     );

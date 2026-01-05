@@ -1,9 +1,7 @@
 import {
   differenceInDays,
   endOfMonth,
-  endOfWeek,
   format,
-  isMonday,
   isSameDay,
   isSameMonth,
   isSameYear,

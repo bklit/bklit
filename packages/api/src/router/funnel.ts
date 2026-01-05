@@ -565,9 +565,9 @@ export const funnelRouter = {
 
       // Calculate overall stats
       const firstStepConversions =
-        stepStats.length > 0 ? stepStats[0]!.conversions : 0;
+        stepStats.length > 0 ? stepStats[0]?.conversions : 0;
       const lastStepConversions =
-        stepStats.length > 0 ? stepStats[stepStats.length - 1]!.conversions : 0;
+        stepStats.length > 0 ? stepStats[stepStats.length - 1]?.conversions : 0;
       const totalDropOffs = stepStats.reduce(
         (sum, stat) => sum + stat.dropOffs,
         0,

@@ -126,7 +126,7 @@ export const eventRouter = {
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -238,7 +238,7 @@ export const eventRouter = {
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -635,7 +635,7 @@ export const eventRouter = {
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -899,7 +899,7 @@ export const eventRouter = {
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -987,7 +987,7 @@ export const eventRouter = {
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {
@@ -1118,7 +1118,7 @@ export const eventRouter = {
         ? endOfDay(input.endDate)
         : undefined;
 
-      const dateFilter =
+      const _dateFilter =
         normalizedStartDate || normalizedEndDate
           ? {
               timestamp: {

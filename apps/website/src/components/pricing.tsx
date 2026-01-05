@@ -1,13 +1,11 @@
-import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { PLAN_DETAILS } from "../lib/plans";
 
 export const Pricing = () => {
