@@ -32,6 +32,9 @@ export function SDKConnectionStepForm({
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const hasCreatedToken = useRef(false);
 
+  // Dumped this here, get's removed in production
+  console.log("projectDomain", projectDomain);
+
   // Determine API host based on current dashboard location
   const getApiHost = () => {
     if (typeof window === "undefined") {
