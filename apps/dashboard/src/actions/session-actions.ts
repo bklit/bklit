@@ -4,23 +4,11 @@ import { prisma } from "@bklit/db/client";
 import { parseClickHouseDate } from "@/lib/date-utils";
 import type { SessionData } from "@/types/geo";
 
-// Generate a simple visitor ID for returning user detection
-function generateVisitorId(userAgent: string): string {
-  // Simple hash of user agent for anonymous visitor tracking
-  let hash = 0;
-  for (let i = 0; i < userAgent.length; i++) {
-    const char = userAgent.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString(36);
-}
-
 // DEPRECATED: This function is no longer used - all session operations now go through ClickHouse
 // Kept for backward compatibility but should not be called
 export async function createOrUpdateSession(
-  data: SessionData,
-  prismaClient: typeof prisma = prisma,
+  _data: SessionData,
+  _prismaClient: typeof prisma = prisma,
 ) {
   console.warn(
     "createOrUpdateSession is deprecated - use ClickHouse directly via AnalyticsService",
@@ -32,7 +20,7 @@ export async function createOrUpdateSession(
 
 // DEPRECATED: This function is no longer used - all session operations now go through ClickHouse
 // Kept for backward compatibility but should not be called
-export async function endSession(sessionId: string) {
+export async function endSession(_sessionId: string) {
   console.warn(
     "endSession is deprecated - use ClickHouse directly via AnalyticsService",
   );
@@ -70,7 +58,7 @@ export async function getSessionAnalytics(
           if (!acc[pv.session_id]) {
             acc[pv.session_id] = [];
           }
-          acc[pv.session_id].push({
+          acc[pv.session_id]?.push({
             id: pv.id,
             url: pv.url,
             timestamp: parseClickHouseDate(pv.timestamp),
@@ -157,7 +145,7 @@ export async function getRecentSessions(projectId: string, limit: number = 10) {
           if (!acc[pv.session_id]) {
             acc[pv.session_id] = [];
           }
-          acc[pv.session_id].push({
+          acc[pv.session_id]?.push({
             id: pv.id,
             url: pv.url,
             timestamp: parseClickHouseDate(pv.timestamp),
@@ -247,7 +235,7 @@ export async function getSessionById(sessionId: string) {
           return {
             id: session.id,
             sessionId: session.session_id,
-            startedAt: parseClickHouseDate(session.started_at),
+            startedAt: parseClickHouseDate(session.started_at ?? ""),
             endedAt: session.ended_at
               ? parseClickHouseDate(session.ended_at)
               : null,
