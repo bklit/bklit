@@ -40,7 +40,11 @@ export async function setupDockerServices(dbPassword: string): Promise<{
 
     // Remove any containers with our names (in case from different compose file)
     try {
-      await execa("docker", ["rm", "-f", "bklit-postgres", "bklit-clickhouse"], { stdio: "ignore" });
+      await execa(
+        "docker",
+        ["rm", "-f", "bklit-postgres", "bklit-clickhouse"],
+        { stdio: "ignore" },
+      );
     } catch {
       // Ignore if containers don't exist
     }
@@ -55,7 +59,9 @@ export async function setupDockerServices(dbPassword: string): Promise<{
         console.error("\nDocker error:");
         console.error(error.stderr);
       }
-      throw new Error(`Docker compose failed. Try running: docker compose down -v && docker system prune -f`);
+      throw new Error(
+        `Docker compose failed. Try running: docker compose down -v && docker system prune -f`,
+      );
     }
 
     spinner.succeed("Docker services started");

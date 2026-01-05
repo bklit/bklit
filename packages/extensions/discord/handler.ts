@@ -5,6 +5,11 @@ export async function sendToDiscord(
   config: DiscordConfig,
   event: EventData,
 ): Promise<void> {
+  // Skip "view" events to prevent spam
+  if (event.eventType === "view") {
+    return;
+  }
+
   const embed = {
     title: `🎯 ${event.trackingId}`,
     description: `Event: **${event.eventType}**`,

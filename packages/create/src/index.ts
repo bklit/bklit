@@ -30,7 +30,7 @@ program
       const answers = await askSetupQuestions();
 
       // Step 2: Clone the repository
-      let cloneSpinner = ora("Cloning Bklit repository...").start();
+      const cloneSpinner = ora("Cloning Bklit repository...").start();
       try {
         await execa("git", [
           "clone",
@@ -42,11 +42,17 @@ program
       } catch (error: any) {
         cloneSpinner.fail("Failed to clone repository");
         if (error.stderr?.includes("already exists")) {
-          console.log(chalk.yellow(`\nDirectory '${answers.projectName}' already exists. Using existing directory.`));
+          console.log(
+            chalk.yellow(
+              `\nDirectory '${answers.projectName}' already exists. Using existing directory.`,
+            ),
+          );
           try {
             process.chdir(answers.projectName);
           } catch {
-            console.error(chalk.red(`Cannot access directory '${answers.projectName}'`));
+            console.error(
+              chalk.red(`Cannot access directory '${answers.projectName}'`),
+            );
             process.exit(1);
           }
         } else {
@@ -56,7 +62,7 @@ program
       }
 
       // Step 3: Check prerequisites
-      let spinner = ora("Checking prerequisites...").start();
+      const spinner = ora("Checking prerequisites...").start();
 
       const nodeVersion = process.version;
       const majorVersion = Number.parseInt(
