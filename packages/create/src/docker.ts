@@ -95,7 +95,7 @@ services:
     environment:
       CLICKHOUSE_DB: default
       CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_PASSWORD: "local_dev_password"
     ports:
       - '8123:8123'
       - '9000:9000'

@@ -10,7 +10,7 @@ if (fs.existsSync(envPath)) {
 }
 
 // Use DEV_DATABASE_URL if available, otherwise fall back to DATABASE_URL
-const DATABASE_URL = process.env.DEV_DATABASE_URL || process.env.DATABASE_URL;
+const DATABASE_URL = process.env.DEV_DATABASE_URL ?? process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   console.error(

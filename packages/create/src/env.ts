@@ -31,10 +31,10 @@ DEV_DATABASE_URL="${config.databases.postgresUrl}"
 # ClickHouse Analytics
 CLICKHOUSE_HOST="${config.databases.clickhouseUrl}"
 CLICKHOUSE_USERNAME="default"
-CLICKHOUSE_PASSWORD=""
+CLICKHOUSE_PASSWORD="local_dev_password"
 DEV_CLICKHOUSE_HOST="${config.databases.clickhouseUrl}"
 DEV_CLICKHOUSE_USERNAME="default"
-DEV_CLICKHOUSE_PASSWORD=""
+DEV_CLICKHOUSE_PASSWORD="local_dev_password"
 
 # Auth - Auto-generated
 AUTH_SECRET="${config.secrets.AUTH_SECRET}"

@@ -13,7 +13,7 @@ import { GoogleIcon } from "@bklit/ui/icons/google";
 import { useForm } from "@tanstack/react-form";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/client";
 import { signInSchema } from "@/lib/schemas/auth-schema";
@@ -24,6 +24,17 @@ function LoginPage() {
   const invited = searchParams.get("invited") === "true";
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [providers, setProviders] = useState<{
+    github: boolean;
+    google: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((res) => res.json())
+      .then(setProviders)
+      .catch(() => setProviders({ github: false, google: false }));
+  }, []);
 
   // Build callback URL that preserves invitation parameters
   let callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -223,47 +234,55 @@ function LoginPage() {
           Continue with Email
         </Button>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
+        {(providers?.github || providers?.google) && (
+          <>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
 
-        <div className="flex flex-col gap-3">
-          <Button
-            onClick={() =>
-              authClient.signIn.social({
-                provider: "github",
-                callbackURL: callbackUrl,
-              })
-            }
-            size="lg"
-            className="w-full gap-2"
-            variant="mono"
-          >
-            <GitHubIcon className="size-5" />
-            Continue with GitHub
-          </Button>
-          <Button
-            onClick={() =>
-              authClient.signIn.social({
-                provider: "google",
-                callbackURL: callbackUrl,
-              })
-            }
-            variant="outline"
-            size="lg"
-            className="w-full gap-2"
-          >
-            <GoogleIcon className="size-5" />
-            Continue with Google
-          </Button>
-        </div>
+            <div className="flex flex-col gap-3">
+              {providers?.github && (
+                <Button
+                  onClick={() =>
+                    authClient.signIn.social({
+                      provider: "github",
+                      callbackURL: callbackUrl,
+                    })
+                  }
+                  size="lg"
+                  className="w-full gap-2"
+                  variant="mono"
+                >
+                  <GitHubIcon className="size-5" />
+                  Continue with GitHub
+                </Button>
+              )}
+              {providers?.google && (
+                <Button
+                  onClick={() =>
+                    authClient.signIn.social({
+                      provider: "google",
+                      callbackURL: callbackUrl,
+                    })
+                  }
+                  variant="outline"
+                  size="lg"
+                  className="w-full gap-2"
+                >
+                  <GoogleIcon className="size-5" />
+                  Continue with Google
+                </Button>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="text-center">

@@ -5,34 +5,48 @@ export function authEnv() {
   const isDev = process.env.NODE_ENV === "development";
 
   return createEnv({
-    server: {
-      // Required - must be at least 32 characters
-      AUTH_SECRET: z.string().min(32),
+    server: z
+      .object({
+        // Required - must be at least 32 characters
+        AUTH_SECRET: z.string().min(32),
 
-      // OAuth providers - OPTIONAL
-      AUTH_GITHUB_ID: z.string().min(1).optional(),
-      AUTH_GITHUB_SECRET: z.string().min(1).optional(),
-      AUTH_GOOGLE_ID: z.string().min(1).optional(),
-      AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
+        // OAuth providers - OPTIONAL
+        AUTH_GITHUB_ID: z.string().min(1).optional(),
+        AUTH_GITHUB_SECRET: z.string().min(1).optional(),
+        AUTH_GOOGLE_ID: z.string().min(1).optional(),
+        AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
 
-      // Polar billing - OPTIONAL
-      POLAR_ACCESS_TOKEN: z.string().min(1).optional(),
-      POLAR_SERVER_MODE: z
-        .enum(["sandbox", "production"])
-        .optional()
-        .default("sandbox"),
-      POLAR_WEBHOOK_SECRET: z.string().min(1).optional(),
-      POLAR_ORGANIZATION_ID: z.string().min(1).optional(),
-      POLAR_METER_ID_EVENTS: z.string().optional(),
+        // Polar billing - OPTIONAL
+        POLAR_ACCESS_TOKEN: z.string().min(1).optional(),
+        POLAR_SERVER_MODE: z
+          .enum(["sandbox", "production"])
+          .optional()
+          .default("sandbox"),
+        POLAR_WEBHOOK_SECRET: z.string().min(1).optional(),
+        POLAR_ORGANIZATION_ID: z.string().min(1).optional(),
+        POLAR_METER_ID_EVENTS: z.string().optional(),
 
-      // Email - OPTIONAL (will use console logs in dev)
-      RESEND_API_KEY: z.string().min(1).optional(),
+        // Email - OPTIONAL (will use console logs in dev)
+        RESEND_API_KEY: z.string().min(1).optional(),
 
-      BKLIT_DEFAULT_PROJECT: z.string().optional(), // Optional - Auto-invite new users to the organization of this project
-      DEV_BKLIT_DEFAULT_PROJECT: z.string().optional(), // Optional - Local dev demo project
+        BKLIT_DEFAULT_PROJECT: z.string().optional(), // Optional - Auto-invite new users to the organization of this project
+        DEV_BKLIT_DEFAULT_PROJECT: z.string().optional(), // Optional - Local dev demo project
 
-      NODE_ENV: z.enum(["development", "production", "test"]).optional(),
-    },
+        NODE_ENV: z.enum(["development", "production", "test"]).optional(),
+      })
+      .refine(
+        (data) => {
+          // If Polar is enabled, require webhook secret and org ID
+          if (data.POLAR_ACCESS_TOKEN) {
+            return !!(data.POLAR_WEBHOOK_SECRET && data.POLAR_ORGANIZATION_ID);
+          }
+          return true;
+        },
+        {
+          message:
+            "POLAR_WEBHOOK_SECRET and POLAR_ORGANIZATION_ID are required when POLAR_ACCESS_TOKEN is set",
+        },
+      ),
     experimental__runtimeEnv: {
       // Use DEV_BKLIT_DEFAULT_PROJECT in development
       BKLIT_DEFAULT_PROJECT:
