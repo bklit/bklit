@@ -14,6 +14,7 @@ This is the first stable release of Bklit Analytics, establishing a clean baseli
 ### ✨ Added
 
 #### Smart Setup CLI
+
 - **`npx @bklit/create`** - Zero-configuration setup wizard
   - Auto-generates all secrets (AUTH_SECRET, etc.)
   - Auto-detects and configures Docker for PostgreSQL + ClickHouse
@@ -22,6 +23,7 @@ This is the first stable release of Bklit Analytics, establishing a clean baseli
   - Complete setup in ~90 seconds
 
 #### Simplified Environment Configuration
+
 - Reduced required environment variables from 12+ to just 3
 - Made Polar.sh billing completely optional
 - Made OAuth providers (GitHub/Google) optional
@@ -30,6 +32,7 @@ This is the first stable release of Bklit Analytics, establishing a clean baseli
 - Made Trigger.dev background jobs optional
 
 #### Developer Experience Improvements
+
 - Added `pnpm db:reset`, `db:push`, `db:pull`, `db:status`, `db:deploy` commands
 - Email OTPs now prominently displayed in terminal during development
 - Email sending falls back to console logging in development
@@ -37,6 +40,7 @@ This is the first stable release of Bklit Analytics, establishing a clean baseli
 - Cross-platform support (Windows, macOS, Linux)
 
 #### Documentation
+
 - Complete rewrite of Quick Start guide
 - New Environment Variables reference guide
 - Updated all documentation to reflect optional features
@@ -46,17 +50,20 @@ This is the first stable release of Bklit Analytics, establishing a clean baseli
 ### 🔧 Changed
 
 #### Core Changes
+
 - **Breaking**: Node.js requirement changed from >=22.14.0 to >=22.0.0
 - Polar plugin now loads conditionally (only if credentials exist)
 - OAuth providers load conditionally (only if credentials exist)
 - Email sending gracefully falls back to console in development
 
 #### Database
+
 - Established V1 baseline schema (18 tables)
 - Removed ClickHouse-migrated models (PageViewEvent, TrackedEvent, TrackedSession)
 - Clean migration state - ready for incremental updates
 
 ### 🐛 Fixed
+
 - Fixed ESM/CommonJS conflicts in with-env-dev scripts
 - Fixed ClickHouse password validation (allows empty string for local Docker)
 - Fixed Docker volume persistence issues in setup
@@ -65,9 +72,11 @@ This is the first stable release of Bklit Analytics, establishing a clean baseli
 ### 📦 Packages
 
 #### New Packages
+
 - `@bklit/create` - Setup CLI tool (publishable to npm)
 
 #### Modified Packages
+
 - `@bklit/auth` - Optional Polar integration
 - `@bklit/email` - Console fallback for development
 - `@bklit/analytics` - Relaxed password validation
@@ -115,5 +124,4 @@ Changes that are in development but not yet released will be listed here.
 
 ---
 
-[1.0.0]: https://github.com/YOUR_USERNAME/bklit/releases/tag/v1.0.0
-
+[1.0.0]: https://github.com/bklit/bklit/releases/tag/v1.0.0
