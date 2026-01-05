@@ -1,180 +1,181 @@
 ---
 title: Quick Start
-description: Get up and running with Bklit Analytics
+description: Get up and running with Bklit Analytics in under 2 minutes
 icon: Zap
 ---
 
-import { Terminal, Box, ChartNoAxesColumnIncreasing, SquareDashedMousePointer } from 'lucide-react';
+import { Terminal, Box, ChartNoAxesColumnIncreasing, SquareDashedMousePointer, Rocket } from 'lucide-react';
 
-Get Bklit Analytics running locally in minutes. This guide will help you set up the dashboard, SDK, and playground for development.
-
-<Callout type="info">
-  **Quick Setup:** To get started quickly, you only need the SDK, dashboard, and
-  playground running. The website and Trigger.dev are optional for basic
-  development.
-</Callout>
+Get Bklit Analytics running locally in under 2 minutes with our interactive setup wizard.
 
 <Callout type="success">
-  **Local Development:** For isolated local databases with Docker and Prisma Dev, see [Local Development](/reference/local-development).
+  **Zero Configuration Required:** The setup wizard automatically generates secrets, configures databases, and gets you running - no manual configuration needed!
 </Callout>
 
-## Prerequisites
+## One-Command Setup
 
-- Node.js 22.14.0 or higher
-- pnpm 9.6.0 or higher (recommended)
-- PostgreSQL (<a href="https://console.prisma.io/sign-up" target="_blank">Prisma Postgres</a> recommended)
-- GitHub OAuth app (for authentication)
+Run this single command to set up everything:
 
-## Installation
+<Tabs items={["npx", "pnpm", "npm"]}>
+  <Tab value="npx">
 
-Clone the repository and install dependencies:
+```bash
+npx @bklit/create
+```
 
-<Tabs items={["pnpm", "npm"]}>
+  </Tab>
   <Tab value="pnpm">
 
 ```bash
-git clone https://github.com/yourusername/bklit.git
-cd bklit
-pnpm install
+pnpm create @bklit/create
 ```
 
   </Tab>
   <Tab value="npm">
 
 ```bash
-git clone https://github.com/yourusername/bklit.git
-cd bklit
-npm install
+npm create @bklit/create
 ```
 
   </Tab>
 </Tabs>
 
-## Environment Setup
+That's it! The wizard will:
 
-### Local Development (Recommended for Start)
+- ✓ Check your system (Node.js, Docker)
+- ✓ Generate secure secrets automatically
+- ✓ Set up PostgreSQL & ClickHouse
+- ✓ Install dependencies
+- ✓ Create database schema
+- ✓ Start the development server
 
-For local development with isolated databases, use DEV_* prefixed variables. Create a `.env` file in the root directory:
+**Total time: ~90 seconds**
+
+## What You'll Be Asked
+
+The setup wizard asks about optional features you can enable later:
+
+1. **Use Docker for databases?** (Recommended - auto-configures everything)
+2. **Set up billing with Polar.sh?** (Optional - for paid plans)
+3. **Set up OAuth providers?** (Optional - GitHub/Google login)
+4. **Set up email with Resend?** (Optional - for sending emails)
+5. **Start development server?** (Yes to start immediately)
+
+<Callout type="info">
+  **All Optional!** Core features work out of the box with just email authentication (magic links). Add OAuth, billing, and email later when you need them.
+</Callout>
+
+## Authentication in Development
+
+When you skip email setup, login codes appear directly in your terminal:
 
 ```bash
-NODE_ENV="development"
-
-# Local Databases
-DEV_DATABASE_URL="prisma+postgres://localhost:51213/?api_key=__API_KEY__"
-DEV_CLICKHOUSE_HOST="http://localhost:8123"
-DEV_CLICKHOUSE_USERNAME="default"
-DEV_CLICKHOUSE_PASSWORD="local_dev_password"
-DEV_BKLIT_DEFAULT_PROJECT="your-local-demo-project-id"
-
-# Production Databases (for deployment later)
-DATABASE_URL="postgresql://..."
-CLICKHOUSE_HOST="https://..."
-CLICKHOUSE_USERNAME="default"
-CLICKHOUSE_PASSWORD="..."
-BKLIT_DEFAULT_PROJECT="your-prod-project-id"
-
-# Auth (works for both local and prod)
-AUTH_SECRET="your-secret"
-AUTH_GITHUB_ID="your-github-id"
-AUTH_GITHUB_SECRET="your-github-secret"
-
-# Polar - use sandbox for local dev
-POLAR_SERVER_MODE="sandbox"
-POLAR_ACCESS_TOKEN="..."
-POLAR_WEBHOOK_SECRET="..."
-
-# Other required variables
-ALERT_EMAIL="your-email@example.com"
-HEALTH_CHECK_SECRET="your-secret"
-NEXT_PUBLIC_MAPBOX_TOKEN="your-token"
+🔐 ==========================================
+📧 Email: user@example.com
+🔑 OTP Code: 123456
+📝 Type: email-verification
+==========================================
 ```
 
-See [Local Development](/reference/local-development) for complete setup guide.
+**No email checking needed!** Just copy the code from your terminal.
 
-## Database Setup
+<Callout type="success">
+  **Watch Your Terminal:** OTP codes and email logs appear in the terminal during development. This makes testing super fast!
+</Callout>
 
-### Local Development with Prisma Dev
+## What's Included Out of the Box
 
-1. **Start Prisma Postgres locally:**
-   ```bash
-   cd apps/dashboard
-   npx prisma dev
-   ```
-   
-2. **Press `h`** to get the connection URL
+**Core Features (Zero Configuration):**
 
-3. **Add to `.env`** as `DEV_DATABASE_URL`
+- ✅ Email authentication (magic links)
+- ✅ Analytics tracking & dashboards
+- ✅ Funnel builder
+- ✅ Session tracking
+- ✅ Geographic insights (list view)
+- ✅ Custom events
+- ✅ Real-time analytics
 
-4. **Start ClickHouse** (automatically via docker-compose):
-   ```bash
-   pnpm dev:services
-   ```
+**Optional Features (Add Later):**
 
-5. **Run migrations:**
-   ```bash
-   pnpm db:migrate
-   cd packages/analytics && pnpm run migrate
-   ```
+- OAuth (GitHub/Google) - Social login
+- Billing (Polar.sh) - Paid subscription plans
+- Email sending (Resend) - Transactional emails
+- Maps (Mapbox) - Geographic map visualization
+- Background jobs (Trigger.dev) - Scheduled tasks
 
-See [Local Development](/reference/local-development) for detailed instructions.
+Enable any optional feature by adding API keys to your `.env` file.
 
-### Production Setup
+## Manual Setup (Alternative)
 
-For production deployment with Prisma Postgres or your PostgreSQL provider:
+If you prefer manual setup or already cloned the repo:
 
 ```bash
-pnpm db:generate
+# Clone the repository
+git clone https://github.com/yourusername/bklit.git
+cd bklit
+
+# Run interactive setup
+pnpm setup
+
+# Or install and configure manually
+pnpm install
+# ... configure .env
 pnpm db:migrate
-```
-
-## Start Development
-
-Run the dashboard and playground:
-
-<Tabs items={["pnpm", "npm"]}>
-  <Tab value="pnpm">
-
-```bash
 pnpm dev
 ```
 
-  </Tab>
-  <Tab value="npm">
-
-```bash
-npm run dev
-```
-
-  </Tab>
-</Tabs>
-
-The dashboard will be available at `http://localhost:3000`
+See [Local Development](/reference/local-development) for detailed manual setup instructions.
 
 ## Next Steps
 
 <Cards>
   <Card
-    icon={<Terminal className="size-8 text-primary" />}
-    title="Local Development"
-    description="Set up local databases and isolated development environment"
-    href="/reference/local-development"
+    icon={<Rocket className="size-8 text-primary" />}
+    title="Create Your First Project"
+    description="Set up your first analytics project in the dashboard"
+    href="/dashboard/onboarding/project-setup"
   />
   <Card
     icon={<Box className="size-8 text-primary" />}
-    title="SDK Guide"
-    description="Learn how to integrate the Bklit SDK into your application"
-    href="/sdk"
-  />
-  <Card
-    icon={<ChartNoAxesColumnIncreasing className="size-8 text-primary" />}
-    title="Dashboard"
-    description="Explore the analytics dashboard features"
-    href="/dashboard"
+    title="Install the SDK"
+    description="Add analytics tracking to your application"
+    href="/sdk/installation"
   />
   <Card
     icon={<SquareDashedMousePointer className="size-8 text-primary" />}
-    title="Playground"
-    description="Get started with your local playground, test pageviews, events and funnels."
+    title="Test with Playground"
+    description="Try out tracking with the included playground app"
     href="/playground"
   />
+  <Card
+    icon={<Terminal className="size-8 text-primary" />}
+    title="Environment Variables"
+    description="Learn about required and optional configuration"
+    href="/reference/environment-variables"
+  />
 </Cards>
+
+## Troubleshooting
+
+### Docker Not Available
+
+If you don't have Docker, the wizard will fall back to manual database setup. You'll need to:
+
+1. Install PostgreSQL and ClickHouse manually
+2. Provide connection URLs when prompted
+3. Run migrations: `pnpm db:migrate`
+
+### Port Already in Use
+
+If port 3000 is already in use:
+
+```bash
+# Set custom port
+PORT=3001 pnpm dev
+```
+
+### Need Help?
+
+- [Discord Community](https://discord.gg/9yyK8FwPcU)
+- [GitHub Issues](https://github.com/yourusername/bklit/issues)
+- [Full Documentation](/reference/local-development)

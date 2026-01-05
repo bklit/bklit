@@ -31,10 +31,13 @@ const env = authEnv();
 // No static plans - all pricing fetched from Polar API
 const plans: any[] = [];
 
-const polarClient = new Polar({
-  accessToken: env.POLAR_ACCESS_TOKEN,
-  server: env.POLAR_SERVER_MODE,
-});
+// Only create Polar client if credentials exist
+const polarClient = env.POLAR_ACCESS_TOKEN
+  ? new Polar({
+      accessToken: env.POLAR_ACCESS_TOKEN,
+      server: env.POLAR_SERVER_MODE || "sandbox",
+    })
+  : null;
 
 export function initAuth(options: {
   baseUrl: string;
@@ -201,6 +204,16 @@ export function initAuth(options: {
                           "http://localhost:3000";
                         const inviteLink = `${baseUrl}/invite/${invitation.id}`;
 
+                        // In development, prominently display the invite link
+                        if (process.env.NODE_ENV === "development") {
+                          console.log("\n🎉 ==========================================");
+                          console.log("📬 DEMO PROJECT INVITATION");
+                          console.log(`👤 User: ${user.email}`);
+                          console.log(`🏢 Organization: ${project.organization.name}`);
+                          console.log(`🔗 Invite Link: ${inviteLink}`);
+                          console.log("==========================================\n");
+                        }
+
                         const emailHtml = await render(
                           BklitInvitationEmail({
                             inviterName: "Bklit Team",
@@ -283,8 +296,12 @@ export function initAuth(options: {
           }
         },
       }),
-      polar({
-        client: polarClient,
+
+      // Only add Polar plugin if credentials exist
+      ...(polarClient
+        ? [
+            polar({
+              client: polarClient,
         // In development, allow +aliases without Polar customer creation
         createCustomerOnSignUp: process.env.NODE_ENV !== "development",
         use: [
@@ -335,15 +352,24 @@ export function initAuth(options: {
             },
           }),
         ],
-      }),
+      })
+          ]
+        : []),
+
       expo(),
     ],
     socialProviders: {
-      github: {
-        clientId: options.githubClientId,
-        clientSecret: options.githubClientSecret,
-        redirectURI: `${options.baseUrl}/api/auth/callback/github`,
-      },
+      // Only add GitHub if credentials exist
+      ...(options.githubClientId && options.githubClientSecret
+        ? {
+            github: {
+              clientId: options.githubClientId,
+              clientSecret: options.githubClientSecret,
+              redirectURI: `${options.baseUrl}/api/auth/callback/github`,
+            },
+          }
+        : {}),
+      // Only add Google if credentials exist
       ...(options.googleClientId && options.googleClientSecret
         ? {
             google: {
@@ -364,15 +390,17 @@ export type BetterAuth = typeof betterAuth;
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
 
-// Export Polar client for direct API access
+// Export Polar client for direct API access (null if not configured)
 export { polarClient };
 
-// Export Polar configuration
-export const polarConfig = {
-  organizationId: env.POLAR_ORGANIZATION_ID,
-  serverMode: env.POLAR_SERVER_MODE,
-  meterIdEvents: env.POLAR_METER_ID_EVENTS || null,
-} as const;
+// Export Polar configuration (null if not configured)
+export const polarConfig = polarClient
+  ? ({
+      organizationId: env.POLAR_ORGANIZATION_ID,
+      serverMode: env.POLAR_SERVER_MODE,
+      meterIdEvents: env.POLAR_METER_ID_EVENTS || null,
+    } as const)
+  : null;
 
 // Export plans with injected IDs
 export { plans };

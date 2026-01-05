@@ -43,6 +43,33 @@ export interface SendEmailParams {
 
 export async function sendEmail(params: SendEmailParams) {
   const apiKey = emailEnv().RESEND_API_KEY;
+
+  // In development without Resend, just log to console
+  if (!apiKey && process.env.NODE_ENV === "development") {
+    console.log("\n📧 ==========================================");
+    console.log("📨 EMAIL (Development - Console Mode)");
+    console.log(
+      `📬 To: ${Array.isArray(params.to) ? params.to.join(", ") : params.to}`,
+    );
+    console.log(`📋 Subject: ${params.subject}`);
+    if (params.from) console.log(`👤 From: ${params.from}`);
+    if (params.html) {
+      console.log(`📄 HTML Preview: ${params.html.substring(0, 200)}...`);
+    }
+    if (params.text) {
+      console.log(`📝 Text: ${params.text}`);
+    }
+    console.log("==========================================");
+    console.log("💡 Tip: Add RESEND_API_KEY to .env to send real emails\n");
+
+    return {
+      success: true,
+      id: `dev-console-${Date.now()}`,
+      message: "Email logged to console (development mode - no Resend configured)",
+    };
+  }
+
+  // In production, fail loudly if no API key
   if (!apiKey) {
     throw new Error("RESEND_API_KEY is not configured. Cannot send email.");
   }

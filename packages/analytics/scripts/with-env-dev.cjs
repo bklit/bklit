@@ -17,8 +17,8 @@ const CLICKHOUSE_USERNAME =
 const CLICKHOUSE_PASSWORD =
   process.env.DEV_CLICKHOUSE_PASSWORD || process.env.CLICKHOUSE_PASSWORD;
 
-// Validate required variables
-if (!CLICKHOUSE_HOST || !CLICKHOUSE_USERNAME || !CLICKHOUSE_PASSWORD) {
+// Validate required variables (password can be empty string for local Docker)
+if (!CLICKHOUSE_HOST || !CLICKHOUSE_USERNAME || CLICKHOUSE_PASSWORD === undefined) {
   console.error(
     "Error: Missing required ClickHouse configuration in .env file",
   );
@@ -50,3 +50,4 @@ const result = spawnSync(args[0], args.slice(1), {
 });
 
 process.exit(result.status || 0);
+

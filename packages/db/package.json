@@ -15,8 +15,14 @@
     "migrate": "pnpm with-env-dev prisma migrate dev --schema=./prisma/schema.prisma",
     "studio": "pnpm with-env-dev prisma studio --schema=./prisma/schema.prisma",
     "db:seed": "pnpm with-env tsx src/seed.ts",
+    "db:reset": "pnpm with-env-dev prisma migrate reset --skip-seed --schema=./prisma/schema.prisma",
+    "db:reset:seed": "pnpm with-env-dev prisma migrate reset --schema=./prisma/schema.prisma",
+    "db:push": "pnpm with-env-dev prisma db push --schema=./prisma/schema.prisma",
+    "db:pull": "pnpm with-env-dev prisma db pull --schema=./prisma/schema.prisma",
+    "db:status": "pnpm with-env-dev prisma migrate status --schema=./prisma/schema.prisma",
+    "db:deploy": "pnpm with-env prisma migrate deploy --schema=./prisma/schema.prisma",
     "with-env": "dotenv -e ../../.env --",
-    "with-env-dev": "node scripts/with-env-dev.js"
+    "with-env-dev": "node scripts/with-env-dev.cjs"
   },
   "dependencies": {
     "@prisma/client": "catalog:prisma",

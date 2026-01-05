@@ -8,10 +8,10 @@ export function analyticsEnv() {
     server: {
       CLICKHOUSE_HOST: z.string().url(),
       CLICKHOUSE_USERNAME: z.string().min(1),
-      CLICKHOUSE_PASSWORD: z.string().min(1),
+      CLICKHOUSE_PASSWORD: z.string(), // Allow empty string for local Docker
       DEV_CLICKHOUSE_HOST: z.string().url().optional(),
       DEV_CLICKHOUSE_USERNAME: z.string().min(1).optional(),
-      DEV_CLICKHOUSE_PASSWORD: z.string().min(1).optional(),
+      DEV_CLICKHOUSE_PASSWORD: z.string().optional(), // Allow empty string for local Docker
     },
     experimental__runtimeEnv: {
       CLICKHOUSE_HOST:
