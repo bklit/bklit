@@ -41,7 +41,7 @@ program
         process.exit(1);
       }
 
-      if (majorVersion === 22 && minorVersion < 0) {
+      if (majorVersion === 22 && minorVersion < 14) {
         spinner.warn(`Node.js 22.14+ recommended (current: ${nodeVersion})`);
       }
 
