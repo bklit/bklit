@@ -6,10 +6,14 @@
   "exports": {
     ".": "./index.ts",
     "./core": "./core/index.ts",
-    "./discord": "./discord/index.ts"
+    "./discord": "./discord/index.ts",
+    "./slack": "./slack/index.ts",
+    "./github": "./github/index.ts",
+    "./github/api-client": "./github/api-client.ts"
   },
   "dependencies": {
     "@bklit/db": "workspace:*",
+    "@octokit/rest": "^22.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {

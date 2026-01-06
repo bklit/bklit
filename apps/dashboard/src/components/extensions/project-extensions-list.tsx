@@ -31,6 +31,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { EventSheet } from "@/components/events/event-sheet";
 import { EventSelector } from "@/components/extensions/event-selector";
+import { GitHubConfig } from "@/components/extensions/github-config";
 import { useTRPC } from "@/trpc/react";
 
 interface ProjectExtensionsListProps {
@@ -245,37 +246,53 @@ export function ProjectExtensionsList({
                 </CardAction>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor={`webhook-${ext.extensionId}`}>
-                    Webhook URL
-                  </Label>
-                  <Input
-                    id={`webhook-${ext.extensionId}`}
-                    type="url"
-                    placeholder="https://discord.com/api/webhooks/..."
-                    value={currentWebhookUrl}
-                    onChange={(e) =>
+                {ext.extensionId === "github" ? (
+                  <GitHubConfig
+                    organizationId={organizationId}
+                    projectId={projectId}
+                    config={configValues[ext.extensionId] || config}
+                    onChange={(newConfig) =>
                       setConfigValues((prev) => ({
                         ...prev,
-                        [ext.extensionId]: {
-                          webhookUrl: e.target.value,
-                        },
+                        [ext.extensionId]: newConfig,
                       }))
                     }
                   />
-                </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor={`webhook-${ext.extensionId}`}>
+                        Webhook URL
+                      </Label>
+                      <Input
+                        id={`webhook-${ext.extensionId}`}
+                        type="url"
+                        placeholder="https://discord.com/api/webhooks/..."
+                        value={currentWebhookUrl}
+                        onChange={(e) =>
+                          setConfigValues((prev) => ({
+                            ...prev,
+                            [ext.extensionId]: {
+                              webhookUrl: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
 
-                <EventSelector
-                  events={eventDefinitions || []}
-                  selectedEventIds={currentEventIds}
-                  onSelectionChange={(ids) =>
-                    setSelectedEvents((prev) => ({
-                      ...prev,
-                      [ext.extensionId]: ids,
-                    }))
-                  }
-                  onCreateEvent={() => setEventSheetOpen(true)}
-                />
+                    <EventSelector
+                      events={eventDefinitions || []}
+                      selectedEventIds={currentEventIds}
+                      onSelectionChange={(ids) =>
+                        setSelectedEvents((prev) => ({
+                          ...prev,
+                          [ext.extensionId]: ids,
+                        }))
+                      }
+                      onCreateEvent={() => setEventSheetOpen(true)}
+                    />
+                  </>
+                )}
 
                 {ext.lastTriggeredAt && (
                   <div className="text-sm text-muted-foreground">

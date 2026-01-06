@@ -52,6 +52,11 @@ export const env = createEnv({
      */
     ALERT_EMAIL: z.string().email().optional(),
     HEALTH_CHECK_SECRET: z.string().min(1),
+
+    /**
+     * GitHub Webhook (OPTIONAL - for deployment tracking extension)
+     */
+    GITHUB_WEBHOOK_SECRET: z.string().optional(),
   },
 
   /**

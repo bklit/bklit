@@ -12,6 +12,7 @@ import { CopyInput } from "@bklit/ui/components/input-copy";
 import { MemberRole } from "@bklit/utils/roles";
 import { redirect } from "next/navigation";
 import { DeleteProjectForm } from "@/components/forms/delete-project-form";
+import { DeploymentTrackingForm } from "@/components/forms/deployment-tracking-form";
 import { PageHeader } from "@/components/header/page-header";
 import { SubNavigation } from "@/components/navigation/sub-navigation";
 import { FormPermissions } from "@/components/permissions/form-permissions";
@@ -115,6 +116,8 @@ initBklit({
             </div>
           </CardContent>
         </Card>
+
+        <DeploymentTrackingForm projectId={projectId} />
 
         <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
           <Card variant="destructive">
