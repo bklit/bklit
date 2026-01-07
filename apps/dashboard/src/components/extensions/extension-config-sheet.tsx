@@ -11,9 +11,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@bklit/ui/components/sheet";
-import { Switch } from "@bklit/ui/components/switch";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { TestTube2, Trash2 } from "lucide-react";
+import { TestTube2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTRPC } from "@/trpc/react";
@@ -156,10 +155,12 @@ export function ExtensionConfigSheet({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => testMutation.mutate({ projectId, extensionId })}
-                disabled={testMutation.isPending}
+                onClick={() =>
+                  extensionId && testMutation.mutate({ projectId, extensionId })
+                }
+                disabled={testMutation.isPending || !extensionId}
               >
-                <TestTube2 className="size-4 mr-2" />
+                <TestTube2 className="size-3" />
                 {testMutation.isPending ? "Testing..." : "Test"}
               </Button>
             </div>

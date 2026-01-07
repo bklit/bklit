@@ -63,12 +63,31 @@ export class GitHubClient {
     }));
   }
 
+  async listWebhooks(owner: string, repo: string) {
+    const { data } = await this.octokit.repos.listWebhooks({
+      owner,
+      repo,
+    });
+
+    return data;
+  }
+
   async createWebhook(
     owner: string,
     repo: string,
     webhookUrl: string,
     secret: string,
   ) {
+    // Check if webhook already exists
+    const existingWebhooks = await this.listWebhooks(owner, repo);
+    const existingWebhook = existingWebhooks.find(
+      (hook) => hook.config?.url === webhookUrl,
+    );
+
+    if (existingWebhook) {
+      return existingWebhook; // Return existing webhook instead of creating duplicate
+    }
+
     const { data } = await this.octokit.repos.createWebhook({
       owner,
       repo,
@@ -77,7 +96,7 @@ export class GitHubClient {
         content_type: "json",
         secret,
       },
-      events: ["workflow_run"],
+      events: ["workflow_run", "deployment", "deployment_status"],
     });
 
     return data;

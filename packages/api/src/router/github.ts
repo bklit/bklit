@@ -116,6 +116,33 @@ export const githubRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  checkWebhook: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+        repository: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      if (!input.repository) return null;
+
+      const installation = await prisma.gitHubInstallation.findFirst({
+        where: { organizationId: input.organizationId },
+      });
+
+      if (!installation) return null;
+
+      const [owner, repo] = input.repository.split("/");
+      const client = new GitHubClient(installation.accessToken);
+
+      const webhooks = await client.listWebhooks(owner, repo);
+      const bklitWebhook = webhooks.find((hook) =>
+        hook.config?.url?.includes("/api/webhooks/github"),
+      );
+
+      return bklitWebhook || null;
+    }),
+
   listRepositories: protectedProcedure
     .input(z.object({ organizationId: z.string() }))
     .query(async ({ input }) => {
@@ -179,10 +206,15 @@ export const githubRouter = createTRPCRouter({
       const [owner, repo] = input.repository.split("/");
       const client = new GitHubClient(installation.accessToken);
 
+      // Use ngrok URL for development, app URL for production
+      const webhookUrl = process.env.NGROK_URL
+        ? `${process.env.NGROK_URL}/api/webhooks/github`
+        : `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/github`;
+
       await client.createWebhook(
         owner,
         repo,
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/github`,
+        webhookUrl,
         process.env.GITHUB_WEBHOOK_SECRET || "",
       );
 
