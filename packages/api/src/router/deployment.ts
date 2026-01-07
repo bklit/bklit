@@ -1,6 +1,6 @@
+import { prisma } from "@bklit/db/client";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { prisma } from "@bklit/db/client";
 
 export const deploymentRouter = createTRPCRouter({
   listForProject: protectedProcedure
@@ -36,7 +36,9 @@ export const deploymentRouter = createTRPCRouter({
           author: true,
           authorAvatar: true,
           platform: true,
+          status: true,
           deploymentUrl: true,
+          githubRepository: true,
         },
       });
     }),

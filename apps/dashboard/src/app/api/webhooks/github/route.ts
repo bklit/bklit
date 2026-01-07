@@ -28,7 +28,10 @@ export async function POST(req: Request) {
     // Handle ping event (sent when webhook is created)
     if (event === "ping") {
       console.log("[GITHUB WEBHOOK] ✅ Ping received");
-      return NextResponse.json({ ok: true, message: "Webhook configured successfully!" });
+      return NextResponse.json({
+        ok: true,
+        message: "Webhook configured successfully!",
+      });
     }
 
     // Process workflow_run and deployment_status events
@@ -104,7 +107,7 @@ async function processWorkflowDeployment(
 ) {
   try {
     console.log("[GITHUB WEBHOOK] Processing workflow deployment...");
-    
+
     // Find matching project extension
     const projectExtension = await prisma.projectExtension.findFirst({
       where: {
@@ -264,7 +267,9 @@ async function processDeploymentStatus(
 
     console.log("[GITHUB WEBHOOK] ✅ Production deployment detected!");
 
-    console.log("[GITHUB WEBHOOK] Creating deployment record from deployment_status...");
+    console.log(
+      "[GITHUB WEBHOOK] Creating deployment record from deployment_status...",
+    );
 
     // Create deployment record
     const deploymentRecord = await prisma.deployment.create({

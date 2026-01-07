@@ -6,12 +6,30 @@ import {
   AvatarImage,
 } from "@bklit/ui/components/avatar";
 import { Badge } from "@bklit/ui/components/badge";
+import { Button } from "@bklit/ui/components/button";
 import type { ChartConfig } from "@bklit/ui/components/chart";
 import { ChartContainer, ChartTooltip } from "@bklit/ui/components/chart";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@bklit/ui/components/dialog";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@bklit/ui/components/item";
+// import { GitHubIcon } from "@bklit/ui/icons/github";
 import { cn } from "@bklit/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { GitCommitHorizontal } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis } from "recharts";
 import { useTRPC } from "@/trpc/react";
 
@@ -53,6 +71,8 @@ export function TimeSeriesChart({
 }: TimeSeriesChartProps) {
   const trpc = useTRPC();
   const [hoverKey, setHoverKey] = useState<string | undefined>();
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const hasAnimatedIn = useRef(new Set<string>());
 
   // Fetch deployments for the date range
   const { data: deployments } = useQuery({
@@ -84,161 +104,210 @@ export function TimeSeriesChart({
     return grouped;
   }, [deployments]);
 
-  // Render deployment marker label - just avatars, no separate tooltip
-  const renderDeploymentLabel = (
-    props: {
-      viewBox?: { x?: number; y?: number; width?: number; height?: number };
-    },
-    deploymentsForDate: Array<{
-      id: string;
-      deployedAt: Date;
-      commitSha: string;
-      commitMessage: string;
-      author: string;
-      authorAvatar: string | null;
-      platform: string;
-    }>,
-  ) => {
-    const { viewBox } = props;
-    const x = viewBox?.x ?? 0;
-    const y = 10;
+  // Render deployment marker label - memoized to prevent re-renders on legend hover
+  const renderDeploymentLabel = useCallback(
+    (
+      props: {
+        viewBox?: { x?: number; y?: number; width?: number; height?: number };
+      },
+      deploymentsForDate: Array<{
+        id: string;
+        deployedAt: Date;
+        commitSha: string;
+        commitMessage: string;
+        author: string;
+        authorAvatar: string | null;
+        platform: string;
+        status: string;
+        githubRepository?: string | null;
+      }>,
+      dateKey: string,
+    ) => {
+      const { viewBox } = props;
+      const x = viewBox?.x ?? 0;
+      const y = 10;
 
-    const visibleCount = Math.min(3, deploymentsForDate.length);
-    const remainingCount = deploymentsForDate.length - 3;
-    const avatarSize = 20;
-    const avatarSpacing = 14;
+      const visibleCount = Math.min(3, deploymentsForDate.length);
+      const remainingCount = deploymentsForDate.length - 3;
+      const avatarSize = 20;
+      const avatarSpacing = 14;
 
-    return (
-      <motion.g
-        initial={{ opacity: 0, y: -15, scale: 0.9, filter: "blur(2px)" }}
-        animate={{
-          opacity: 1,
-          y: [0, -4, 0], // Floating: start at 0, up 2px, back to 0
-          scale: 1,
-          filter: "blur(0px)",
-        }}
-        transition={{
-          opacity: { duration: 0.4, delay: 0.5, ease: "easeOut" },
-          scale: { duration: 0.4, delay: 0.5, ease: "easeOut" },
-          filter: { duration: 0.4, delay: 0.5, ease: "easeOut" },
-          y: {
-            duration: 1.6,
-            delay: 0.5,
-            ease: "easeInOut",
-            times: [0, 0.5, 1], // Control animation at 0%, 50%, 100%
-            repeat: Number.POSITIVE_INFINITY, // Loop forever after initial animation
-            repeatType: "reverse",
-            repeatDelay: 0,
-          },
-        }}
-      >
-        {/* Vertical gradient rectangle below avatars */}
-        <defs>
-          <linearGradient
-            id={`deployment-gradient-${deploymentsForDate[0]?.id || "default"}`}
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <stop offset="0%" stopColor="var(--bklit-300)" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="var(--bklit-300)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <rect
-          x={x - 1.5}
-          y={y + avatarSize}
-          width={3}
-          height={80}
-          fill={`url(#deployment-gradient-${deploymentsForDate[0]?.id || "default"})`}
-          rx={1.5}
-        />
+      // Check if this marker has animated in before
+      const hasAnimated = hasAnimatedIn.current.has(dateKey);
+      if (!hasAnimated) {
+        hasAnimatedIn.current.add(dateKey);
+      }
 
-        {/* Avatar circles */}
-        {deploymentsForDate.slice(0, 3).map((deployment, idx) => {
-          // Center the entire group of avatars over the reference line
-          const totalGroupWidth = (visibleCount - 1) * avatarSpacing;
-          const groupStartX = x - totalGroupWidth / 2;
-          const cx = groupStartX + idx * avatarSpacing;
-          const cy = y + avatarSize / 2;
-
-          return (
-            <g key={deployment.id}>
-              {/* Bklit-500 border circle */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={avatarSize / 2 + 1.5}
-                fill="var(--bklit-300)"
-                stroke="none"
+      return (
+        <motion.g
+          key={`deployment-marker-${dateKey}`}
+          initial={
+            hasAnimated
+              ? false
+              : { opacity: 0, y: -15, scale: 0.9, filter: "blur(2px)" }
+          }
+          animate={{
+            opacity: 1,
+            y: [0, -4, 0],
+            scale: 1,
+            filter: "blur(0px)",
+          }}
+          transition={{
+            opacity: hasAnimated
+              ? {}
+              : { duration: 0.4, delay: 0.5, ease: "easeOut" },
+            scale: hasAnimated
+              ? {}
+              : { duration: 0.4, delay: 0.5, ease: "easeOut" },
+            filter: hasAnimated
+              ? {}
+              : { duration: 0.4, delay: 0.5, ease: "easeOut" },
+            y: {
+              duration: 1.6,
+              delay: hasAnimated ? 0 : 0.9,
+              ease: "easeInOut",
+              times: [0, 0.5, 1],
+              repeat: Number.POSITIVE_INFINITY,
+              repeatType: "reverse",
+              repeatDelay: 0,
+            },
+          }}
+        >
+          {/* Vertical gradient rectangle below avatars */}
+          <defs>
+            <linearGradient
+              id={`deployment-gradient-${deploymentsForDate[0]?.id || "default"}`}
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop
+                offset="0%"
+                stopColor="var(--bklit-300)"
+                stopOpacity="0.8"
               />
-
-              {/* Clip path for circular avatar */}
-              <defs>
-                <clipPath id={`clip-avatar-${deployment.id}`}>
-                  <circle cx={cx} cy={cy} r={avatarSize / 2 - 1} />
-                </clipPath>
-              </defs>
-
-              {/* Avatar image */}
-              <image
-                href={
-                  deployment.authorAvatar ||
-                  `https://github.com/${deployment.author}.png`
-                }
-                x={cx - avatarSize / 2 + 1}
-                y={cy - avatarSize / 2 + 1}
-                width={avatarSize - 2}
-                height={avatarSize - 2}
-                clipPath={`url(#clip-avatar-${deployment.id})`}
-                style={{ cursor: "pointer" }}
+              <stop
+                offset="100%"
+                stopColor="var(--bklit-300)"
+                stopOpacity="0"
               />
-            </g>
-          );
-        })}
+            </linearGradient>
+          </defs>
+          <rect
+            x={x - 1.5}
+            y={y + avatarSize}
+            width={3}
+            height={80}
+            fill={`url(#deployment-gradient-${deploymentsForDate[0]?.id || "default"})`}
+            rx={1.5}
+          />
 
-        {/* +N badge if more than 3 deployments */}
-        {remainingCount > 0 &&
-          (() => {
+          {/* Avatar circles */}
+          {deploymentsForDate.slice(0, 3).map((deployment, idx) => {
+            // Center the entire group of avatars over the reference line
             const totalGroupWidth = (visibleCount - 1) * avatarSpacing;
             const groupStartX = x - totalGroupWidth / 2;
-            const badgeCx = groupStartX + visibleCount * avatarSpacing;
-            const badgeCy = y + avatarSize / 2;
+            const cx = groupStartX + idx * avatarSpacing;
+            const cy = y + avatarSize / 2;
 
             return (
-              <g>
+              <g key={deployment.id}>
+                {/* Bklit-500 border circle */}
                 <circle
-                  cx={badgeCx}
-                  cy={badgeCy}
+                  cx={cx}
+                  cy={cy}
                   r={avatarSize / 2 + 1.5}
                   fill="var(--bklit-300)"
                   stroke="none"
                 />
-                <circle
-                  cx={badgeCx}
-                  cy={badgeCy}
-                  r={avatarSize / 2}
-                  fill="hsl(var(--muted))"
-                  stroke="none"
-                />
-                <text
-                  x={badgeCx}
-                  y={badgeCy}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fontSize="10"
-                  fontWeight="600"
-                  fill="hsl(var(--muted-foreground))"
+
+                {/* Clip path for circular avatar */}
+                <defs>
+                  <clipPath id={`clip-avatar-${deployment.id}`}>
+                    <circle cx={cx} cy={cy} r={avatarSize / 2 - 1} />
+                  </clipPath>
+                </defs>
+
+                {/* Avatar image */}
+                <image
+                  href={
+                    deployment.authorAvatar ||
+                    `https://github.com/${deployment.author}.png`
+                  }
+                  x={cx - avatarSize / 2 + 1}
+                  y={cy - avatarSize / 2 + 1}
+                  width={avatarSize - 2}
+                  height={avatarSize - 2}
+                  clipPath={`url(#clip-avatar-${deployment.id})`}
                   style={{ cursor: "pointer" }}
-                >
-                  +{remainingCount}
-                </text>
+                />
+                {/* Invisible click area for avatar */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={avatarSize / 2}
+                  fill="transparent"
+                  style={{ cursor: "pointer" }}
+                  onPointerDown={() => setSelectedDate(dateKey)}
+                />
               </g>
             );
-          })()}
-      </motion.g>
-    );
-  };
+          })}
+
+          {/* +N badge if more than 3 deployments */}
+          {remainingCount > 0 &&
+            (() => {
+              const totalGroupWidth = (visibleCount - 1) * avatarSpacing;
+              const groupStartX = x - totalGroupWidth / 2;
+              const badgeCx = groupStartX + visibleCount * avatarSpacing;
+              const badgeCy = y + avatarSize / 2;
+
+              return (
+                <g>
+                  <circle
+                    cx={badgeCx}
+                    cy={badgeCy}
+                    r={avatarSize / 2 + 1.5}
+                    fill="var(--bklit-300)"
+                    stroke="none"
+                  />
+                  <circle
+                    cx={badgeCx}
+                    cy={badgeCy}
+                    r={avatarSize / 2}
+                    fill="hsl(var(--muted))"
+                    stroke="none"
+                  />
+                  <text
+                    x={badgeCx}
+                    y={badgeCy}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize="10"
+                    fontWeight="600"
+                    fill="hsl(var(--muted-foreground))"
+                    style={{ cursor: "pointer", pointerEvents: "none" }}
+                  >
+                    +{remainingCount}
+                  </text>
+                  {/* Invisible click area for badge */}
+                  <circle
+                    cx={badgeCx}
+                    cy={badgeCy}
+                    r={avatarSize / 2}
+                    fill="transparent"
+                    style={{ cursor: "pointer" }}
+                    onPointerDown={() => setSelectedDate(dateKey)}
+                  />
+                </g>
+              );
+            })()}
+        </motion.g>
+      );
+    },
+    [height, setSelectedDate],
+  );
 
   // Custom tooltip content that includes deployments
   const CustomTooltipContent = ({ active, payload, label }: any) => {
@@ -376,6 +445,10 @@ export function TimeSeriesChart({
             r: 6,
             style: { fill: `var(--color-${key})`, opacity: 0.8 },
           }}
+          style={{
+            transition:
+              "fill-opacity 0.18s ease-in-out, stroke-opacity 0.18s ease-in-out",
+          }}
         />
       );
     });
@@ -413,33 +486,7 @@ export function TimeSeriesChart({
         style={{ height }}
       >
         <AreaChart data={data} margin={{ left: 12, right: 12, top: 32 }}>
-          <defs>
-            {gradients}
-            {/* Gradient for deployment reference lines */}
-            <linearGradient
-              id="deploymentLineGradient"
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="1"
-            >
-              <stop
-                offset="0%"
-                stopColor="hsl(var(--primary))"
-                stopOpacity="0.8"
-              />
-              <stop
-                offset="50%"
-                stopColor="hsl(var(--primary))"
-                stopOpacity="0.3"
-              />
-              <stop
-                offset="100%"
-                stopColor="hsl(var(--primary))"
-                stopOpacity="0"
-              />
-            </linearGradient>
-          </defs>
+          <defs>{gradients}</defs>
 
           <CartesianGrid
             stroke="var(--chart-cartesian)"
@@ -470,11 +517,9 @@ export function TimeSeriesChart({
                 <ReferenceLine
                   key={date}
                   x={date}
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  strokeOpacity={0.3}
+                  stroke="none"
                   label={(props) =>
-                    renderDeploymentLabel(props, deploymentsForDate)
+                    renderDeploymentLabel(props, deploymentsForDate, date)
                   }
                 />
               ),
@@ -521,6 +566,109 @@ export function TimeSeriesChart({
           </div>
         </div>
       )}
+
+      {/* Deployments Dialog */}
+      <Dialog open={!!selectedDate} onOpenChange={() => setSelectedDate(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Deployments on{" "}
+              {selectedDate &&
+                new Date(selectedDate).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedDate && deploymentsByDate.get(selectedDate)?.length}{" "}
+              deployment
+              {selectedDate && deploymentsByDate.get(selectedDate)?.length !== 1
+                ? "s"
+                : ""}{" "}
+              on this day
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {selectedDate &&
+              deploymentsByDate
+                .get(selectedDate)
+                ?.map(
+                  (deployment: {
+                    id: string;
+                    deployedAt: Date;
+                    commitSha: string;
+                    commitMessage: string;
+                    author: string;
+                    authorAvatar: string | null;
+                    platform: string;
+                    status: string;
+                    deploymentUrl?: string | null;
+                    githubRepository?: string | null;
+                  }) => {
+                    const time = new Date(
+                      deployment.deployedAt,
+                    ).toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    });
+
+                    return (
+                      <Item key={deployment.id} variant="outline" size="sm">
+                        <ItemMedia>
+                          <Avatar className="size-10 mt-1">
+                            <AvatarImage
+                              src={
+                                deployment.authorAvatar ||
+                                `https://github.com/${deployment.author}.png`
+                              }
+                            />
+                            <AvatarFallback>
+                              {deployment.author[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </ItemMedia>
+                        <ItemContent>
+                          <ItemTitle>
+                            <Badge variant="code">{time}</Badge>
+                            <Badge variant="secondary">
+                              {deployment.platform}
+                            </Badge>
+                            {deployment.status === "success" && (
+                              <Badge variant="secondary" className="gap-1.5">
+                                <span className="size-2 rounded-full bg-teal-500" />
+                                Deployed
+                              </Badge>
+                            )}
+                          </ItemTitle>
+                        </ItemContent>
+                        <ItemActions>
+                          {deployment.githubRepository && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                              className="text-xs"
+                            >
+                              <a
+                                href={`https://github.com/${deployment.githubRepository}/commit/${deployment.commitSha}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <GitCommitHorizontal className="size-3" />{" "}
+                                {deployment.commitSha.slice(0, 7)}
+                              </a>
+                            </Button>
+                          )}
+                        </ItemActions>
+                      </Item>
+                    );
+                  },
+                )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
