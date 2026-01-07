@@ -139,7 +139,7 @@ cd packages/analytics
 pnpm with-env-dev tsx src/migrations/add-country-code-to-session.ts
 ```
 
-**Step 2: Backfill existing sessions (one-time)**
+**Step 2: Backfill country codes existing sessions (one-time)**
 
 ```bash
 cd packages/analytics
