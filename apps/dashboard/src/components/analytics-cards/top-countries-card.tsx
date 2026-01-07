@@ -9,7 +9,7 @@ import {
 } from "@bklit/ui/components/card";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
 import { useQuery } from "@tanstack/react-query";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { CircleFlag } from "react-circle-flags";
 import { getTopCountries } from "@/actions/analytics-actions";
@@ -23,6 +23,7 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -39,6 +40,18 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
 
   const endDate = dateParams.endDate ?? undefined;
 
+  const { previousStartDate, previousEndDate } = useMemo(() => {
+    if (!startDate || !endDate)
+      return { previousStartDate: undefined, previousEndDate: undefined };
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const prevEnd = new Date(startDate.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - diffMs);
+    return {
+      previousStartDate: prevStart,
+      previousEndDate: prevEnd,
+    };
+  }, [startDate, endDate]);
+
   const { data: topCountries, isLoading } = useQuery({
     queryKey: ["top-countries", projectId, startDate, endDate],
     queryFn: () =>
@@ -48,6 +61,18 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
         startDate,
         endDate,
       }),
+  });
+
+  const { data: previousTopCountries } = useQuery({
+    queryKey: ["top-countries", projectId, previousStartDate, previousEndDate],
+    queryFn: () =>
+      getTopCountries({
+        projectId,
+        userId,
+        startDate: previousStartDate,
+        endDate: previousEndDate,
+      }),
+    enabled: dateParams.compare && !!previousStartDate && !!previousEndDate,
   });
 
   if (isLoading) {
@@ -81,6 +106,22 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
     0,
   );
 
+  // Calculate changes
+  const calculateChange = (
+    currentViews: number,
+    countryCode: string,
+  ): number | null => {
+    if (!dateParams.compare || !previousTopCountries) return null;
+    const previousCountry = previousTopCountries.find(
+      (c) => c.countryCode === countryCode,
+    );
+    const previousViews = previousCountry ? Number(previousCountry.views) : 0;
+    if (previousViews === 0) {
+      return currentViews > 0 ? 100 : null;
+    }
+    return ((currentViews - previousViews) / previousViews) * 100;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -90,10 +131,10 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
       <CardContent>
         <div className="flex flex-col">
           {top10.map((country) => {
+            const currentViews = Number(country.views) || 0;
             const percentage =
-              totalTop10Views > 0
-                ? ((Number(country.views) || 0) / totalTop10Views) * 100
-                : 0;
+              totalTop10Views > 0 ? (currentViews / totalTop10Views) * 100 : 0;
+            const change = calculateChange(currentViews, country.countryCode);
             return (
               <ProgressRow
                 key={country.countryCode}
@@ -106,6 +147,8 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
                     className="size-4"
                   />
                 }
+                change={change}
+                changeUniqueKey={`country-${country.countryCode}`}
               />
             );
           })}

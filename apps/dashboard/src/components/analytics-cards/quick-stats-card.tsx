@@ -7,12 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { ChangeIndicator } from "@bklit/ui/components/change-indicator";
 import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { getSessionAnalytics } from "@/actions/analytics-actions";
-import { ChangeIndicator } from "@/components/change-indicator";
 import { endOfDay, startOfDay } from "@/lib/date-utils";
 import { useTRPC } from "@/trpc/react";
 import type { SessionAnalyticsSummary } from "@/types/analytics-cards";
@@ -45,6 +45,7 @@ export function QuickStatsCard({
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -116,6 +117,7 @@ export function QuickStatsCard({
       startDate: previousStartDate,
       endDate: previousEndDate,
     }),
+    enabled: dateParams.compare,
   });
 
   const { data: previousSessionData } = useQuery({
@@ -132,16 +134,18 @@ export function QuickStatsCard({
         startDate: previousStartDate,
         endDate: previousEndDate,
       }),
+    enabled: dateParams.compare,
   });
 
-  const { data: previousConversionsData } = useQuery(
-    trpc.event.getConversions.queryOptions({
+  const { data: previousConversionsData } = useQuery({
+    ...trpc.event.getConversions.queryOptions({
       projectId,
       organizationId,
       startDate: previousStartDate,
       endDate: previousEndDate,
     }),
-  );
+    enabled: dateParams.compare,
+  });
 
   const sessionStats: SessionAnalyticsSummary = {
     totalSessions:
@@ -162,23 +166,22 @@ export function QuickStatsCard({
     return ((current - previous) / previous) * 100;
   };
 
-  const sessionsChange = calculateChange(
-    sessionStats.totalSessions,
-    previousSessionData?.totalSessions,
-  );
-  const bounceRateChange = calculateChange(
-    sessionStats.bounceRate,
-    previousSessionData?.bounceRate,
-  );
-  const uniqueVisitsChange = calculateChange(
-    displayStats.uniqueVisits,
-    previousStats?.uniqueVisits,
-  );
+  const sessionsChange = dateParams.compare
+    ? calculateChange(
+        sessionStats.totalSessions,
+        previousSessionData?.totalSessions,
+      )
+    : null;
+  const bounceRateChange = dateParams.compare
+    ? calculateChange(sessionStats.bounceRate, previousSessionData?.bounceRate)
+    : null;
+  const uniqueVisitsChange = dateParams.compare
+    ? calculateChange(displayStats.uniqueVisits, previousStats?.uniqueVisits)
+    : null;
   const currentConversions = conversionsData?.conversions ?? initialConversions;
-  const conversionsChange = calculateChange(
-    currentConversions,
-    previousConversionsData?.conversions,
-  );
+  const conversionsChange = dateParams.compare
+    ? calculateChange(currentConversions, previousConversionsData?.conversions)
+    : null;
 
   return (
     <Card>
