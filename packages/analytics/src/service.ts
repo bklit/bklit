@@ -1306,6 +1306,7 @@ export class AnalyticsService {
           exit_page,
           user_agent,
           country,
+          country_code,
           city,
           project_id
         FROM tracked_session
@@ -1330,6 +1331,7 @@ export class AnalyticsService {
       exit_page: string | null;
       user_agent: string | null;
       country: string | null;
+      country_code: string | null;
       city: string | null;
       project_id: string;
     }>;

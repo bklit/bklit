@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@bklit/ui/components/badge";
+import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardContent,
@@ -32,8 +33,11 @@ import {
 } from "@bklit/ui/components/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { parseAsInteger, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
+import { CircleFlag } from "react-circle-flags";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { useTRPC } from "@/trpc/react";
 
@@ -152,7 +156,7 @@ export function SessionEventsTable({
               <TableHead>Conversion</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Browser</TableHead>
-              <TableHead>Last Activity</TableHead>
+              <TableHead className="text-right">Last Activity</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,10 +177,23 @@ export function SessionEventsTable({
 
               return (
                 <TableRow key={session.sessionId}>
-                  <TableCell className="font-mono text-sm">
-                    {session.sessionId === "no-session"
-                      ? "No Session"
-                      : `${session.sessionId.substring(0, 8)}...`}
+                  <TableCell>
+                    {session.sessionId === "no-session" || !sessionData?.id ? (
+                      session.sessionId === "no-session" ? (
+                        "No Session"
+                      ) : (
+                        `${session.sessionId.substring(0, 8)}...`
+                      )
+                    ) : (
+                      <Button asChild variant="outline" size="sm">
+                        <Link
+                          href={`/${organizationId}/${projectId}/sessions/${sessionData.id}`}
+                        >
+                          View Session
+                          <ArrowRight size={16} />
+                        </Link>
+                      </Button>
+                    )}
                   </TableCell>
                   <TableCell>
                     {session.hasClick ? (
@@ -218,9 +235,19 @@ export function SessionEventsTable({
                     </Tooltip>
                   </TableCell>
                   <TableCell className="text-sm">
-                    {sessionData?.city && sessionData?.country
-                      ? `${sessionData.city}, ${sessionData.country}`
-                      : sessionData?.country || "-"}
+                    <span className="flex items-center gap-2">
+                      {sessionData?.country_code && (
+                        <CircleFlag
+                          countryCode={
+                            sessionData.country_code.toLowerCase() || "us"
+                          }
+                          className="size-4"
+                        />
+                      )}
+                      {sessionData?.city && sessionData?.country
+                        ? `${sessionData.city}, ${sessionData.country}`
+                        : sessionData?.country || "-"}
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm">
                     <span className="flex items-center gap-2">

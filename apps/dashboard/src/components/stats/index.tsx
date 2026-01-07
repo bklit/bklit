@@ -72,12 +72,16 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-row gap-3 items-center">
-                <div className="text-4xl font-semibold leading-9">
-                  <NumberFlow
-                    value={Number(item.stat)}
-                    suffix={item.suffix || ""}
-                  />
-                </div>
+                {item.stat === "..." ? (
+                  <Skeleton className="h-10 w-20" />
+                ) : (
+                  <div className="text-4xl font-semibold leading-9">
+                    <NumberFlow
+                      value={Number(item.stat)}
+                      suffix={item.suffix || ""}
+                    />
+                  </div>
+                )}
                 {(item.changeLoading || item.change !== undefined) && (
                   <div className="flex items-center">
                     {item.changeLoading ? (
