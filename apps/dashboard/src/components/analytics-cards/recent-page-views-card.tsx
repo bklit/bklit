@@ -12,7 +12,7 @@ import {
 import { ProgressRow } from "@bklit/ui/components/progress-row";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { getTopPages } from "@/actions/analytics-actions";
 import { endOfDay, startOfDay } from "@/lib/date-utils";
@@ -30,6 +30,7 @@ export function RecentPageViewsCard({
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -50,6 +51,16 @@ export function RecentPageViewsCard({
       : endOfDay(new Date());
   }, [dateParams.endDate]);
 
+  const { previousStartDate, previousEndDate } = useMemo(() => {
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const prevEnd = new Date(startDate.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - diffMs);
+    return {
+      previousStartDate: startOfDay(prevStart),
+      previousEndDate: endOfDay(prevEnd),
+    };
+  }, [startDate, endDate]);
+
   const { data: topPages, isLoading } = useQuery({
     queryKey: ["top-pages", projectId, startDate, endDate],
     queryFn: () =>
@@ -60,6 +71,19 @@ export function RecentPageViewsCard({
         startDate,
         endDate,
       }),
+  });
+
+  const { data: previousTopPages } = useQuery({
+    queryKey: ["top-pages", projectId, previousStartDate, previousEndDate],
+    queryFn: () =>
+      getTopPages({
+        projectId,
+        userId,
+        limit: 5,
+        startDate: previousStartDate,
+        endDate: previousEndDate,
+      }),
+    enabled: dateParams.compare,
   });
 
   if (isLoading) {
@@ -89,6 +113,20 @@ export function RecentPageViewsCard({
 
   const totalViews = topPages.reduce((sum, page) => sum + page.count, 0);
 
+  // Calculate changes
+  const calculateChange = (
+    currentCount: number,
+    pagePath: string,
+  ): number | null => {
+    if (!dateParams.compare || !previousTopPages) return null;
+    const previousPage = previousTopPages.find((p) => p.path === pagePath);
+    const previousCount = previousPage ? previousPage.count : 0;
+    if (previousCount === 0) {
+      return currentCount > 0 ? 100 : null;
+    }
+    return ((currentCount - previousCount) / previousCount) * 100;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -104,15 +142,20 @@ export function RecentPageViewsCard({
       </CardHeader>
       <CardContent>
         <div className="flex flex-col">
-          {topPages.map((page) => (
-            <ProgressRow
-              key={page.path}
-              variant="secondary"
-              label={page.path}
-              value={page.count}
-              percentage={(page.count / totalViews) * 100}
-            />
-          ))}
+          {topPages.map((page) => {
+            const change = calculateChange(page.count, page.path);
+            return (
+              <ProgressRow
+                key={page.path}
+                variant="secondary"
+                label={page.path}
+                value={page.count}
+                percentage={(page.count / totalViews) * 100}
+                change={change}
+                changeUniqueKey={`page-${page.path}`}
+              />
+            );
+          })}
         </div>
       </CardContent>
     </Card>

@@ -7,9 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
+import { ChangeIndicator } from "@bklit/ui/components/change-indicator";
 import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
-import { parseAsIsoDateTime, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { getSessionAnalytics } from "@/actions/analytics-actions";
 import { endOfDay, startOfDay } from "@/lib/date-utils";
@@ -44,6 +45,7 @@ export function QuickStatsCard({
     {
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
+      compare: parseAsBoolean.withDefault(true),
     },
     {
       history: "push",
@@ -63,6 +65,16 @@ export function QuickStatsCard({
       : endOfDay(new Date());
   }, [dateParams.endDate]);
 
+  const { previousStartDate, previousEndDate } = useMemo(() => {
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const prevEnd = new Date(startDate.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - diffMs);
+    return {
+      previousStartDate: startOfDay(prevStart),
+      previousEndDate: endOfDay(prevEnd),
+    };
+  }, [startDate, endDate]);
+
   const trpc = useTRPC();
 
   const { data: stats } = useQuery({
@@ -72,7 +84,7 @@ export function QuickStatsCard({
       startDate,
       endDate,
     }),
-    initialData: initialStats,
+    placeholderData: initialStats,
   });
 
   const { data: sessionData } = useQuery({
@@ -84,17 +96,56 @@ export function QuickStatsCard({
         startDate,
         endDate,
       }),
-    initialData: initialSessionData,
+    placeholderData: initialSessionData,
   });
 
-  const { data: conversionsData } = useQuery(
-    trpc.event.getConversions.queryOptions({
+  const { data: conversionsData } = useQuery({
+    ...trpc.event.getConversions.queryOptions({
       projectId,
       organizationId,
       startDate,
       endDate,
     }),
-  );
+    placeholderData: { conversions: initialConversions },
+  });
+
+  // Previous period data for comparison
+  const { data: previousStats } = useQuery({
+    ...trpc.pageview.getAnalyticsStats.queryOptions({
+      projectId,
+      organizationId,
+      startDate: previousStartDate,
+      endDate: previousEndDate,
+    }),
+    enabled: dateParams.compare,
+  });
+
+  const { data: previousSessionData } = useQuery({
+    queryKey: [
+      "session-analytics",
+      projectId,
+      previousStartDate,
+      previousEndDate,
+    ],
+    queryFn: () =>
+      getSessionAnalytics({
+        projectId,
+        userId,
+        startDate: previousStartDate,
+        endDate: previousEndDate,
+      }),
+    enabled: dateParams.compare,
+  });
+
+  const { data: previousConversionsData } = useQuery({
+    ...trpc.event.getConversions.queryOptions({
+      projectId,
+      organizationId,
+      startDate: previousStartDate,
+      endDate: previousEndDate,
+    }),
+    enabled: dateParams.compare,
+  });
 
   const sessionStats: SessionAnalyticsSummary = {
     totalSessions:
@@ -103,6 +154,34 @@ export function QuickStatsCard({
   };
 
   const displayStats = stats ?? initialStats;
+
+  // Calculate changes
+  const calculateChange = (current: number, previous: number | undefined) => {
+    if (previous === undefined) return null;
+    if (previous === 0) {
+      // If previous was 0 and current is positive, show as increase
+      // If previous was 0 and current is 0, no change (null)
+      return current > 0 ? 100 : null;
+    }
+    return ((current - previous) / previous) * 100;
+  };
+
+  const sessionsChange = dateParams.compare
+    ? calculateChange(
+        sessionStats.totalSessions,
+        previousSessionData?.totalSessions,
+      )
+    : null;
+  const bounceRateChange = dateParams.compare
+    ? calculateChange(sessionStats.bounceRate, previousSessionData?.bounceRate)
+    : null;
+  const uniqueVisitsChange = dateParams.compare
+    ? calculateChange(displayStats.uniqueVisits, previousStats?.uniqueVisits)
+    : null;
+  const currentConversions = conversionsData?.conversions ?? initialConversions;
+  const conversionsChange = dateParams.compare
+    ? calculateChange(currentConversions, previousConversionsData?.conversions)
+    : null;
 
   return (
     <Card>
@@ -114,18 +193,23 @@ export function QuickStatsCard({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold flex items-center gap-2">
                 <NumberFlow value={sessionStats.totalSessions} />
+                <ChangeIndicator change={sessionsChange} uniqueKey="sessions" />
               </div>
               <div className="text-sm text-muted-foreground">
                 Total Sessions
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold flex items-center gap-2">
                 <NumberFlow
                   value={Math.round(sessionStats.bounceRate)}
                   suffix="%"
+                />
+                <ChangeIndicator
+                  change={bounceRateChange}
+                  uniqueKey="bounce-rate"
                 />
               </div>
               <div className="text-sm text-muted-foreground">Bounce Rate</div>
@@ -133,17 +217,23 @@ export function QuickStatsCard({
           </div>
           <div className="flex justify-between items-center pt-2 border-t">
             <div>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold flex items-center gap-2">
                 <NumberFlow value={displayStats.uniqueVisits} />
+                <ChangeIndicator
+                  change={uniqueVisitsChange}
+                  uniqueKey="unique-visits"
+                />
               </div>
               <div className="text-sm text-muted-foreground">
                 Unique Visitors
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold">
-                <NumberFlow
-                  value={conversionsData?.conversions ?? initialConversions}
+              <div className="text-2xl font-bold flex items-center gap-2">
+                <NumberFlow value={currentConversions} />
+                <ChangeIndicator
+                  change={conversionsChange}
+                  uniqueKey="conversions"
                 />
               </div>
               <div className="text-sm text-muted-foreground">Conversions</div>

@@ -1,6 +1,7 @@
 import { cn } from "@bklit/ui/lib/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { Badge } from "./badge";
+import { ChangeIndicator } from "./change-indicator";
 
 interface ProgressRowProps {
   label: string;
@@ -11,6 +12,8 @@ interface ProgressRowProps {
   variant?: "default" | "secondary";
   color?: string;
   asChild?: boolean;
+  change?: number | null;
+  changeUniqueKey?: string;
 }
 
 export const ProgressRow = ({
@@ -22,6 +25,8 @@ export const ProgressRow = ({
   variant = "default",
   color,
   asChild = false,
+  change,
+  changeUniqueKey,
 }: ProgressRowProps) => {
   if (percentage < 0) {
     percentage = 0;
@@ -48,7 +53,16 @@ export const ProgressRow = ({
             {label}
           </span>
         </div>
-        {value && <Badge variant="secondary">{value}</Badge>}
+        <div className="flex items-center gap-2">
+          {value && <Badge variant="secondary">{value}</Badge>}
+          {change !== undefined && (
+            <ChangeIndicator
+              change={change}
+              uniqueKey={changeUniqueKey || label}
+              size={12}
+            />
+          )}
+        </div>
       </div>
       {percentage !== undefined && (
         <div className="flex h-0.5 bg-muted dark:bg-bklit-600">
