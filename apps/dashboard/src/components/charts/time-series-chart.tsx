@@ -74,6 +74,24 @@ export function TimeSeriesChart({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const hasAnimatedIn = useRef(new Set<string>());
 
+  // Check if project has deployment tracking extensions enabled
+  const { data: projectExtensions } = useQuery({
+    ...trpc.extension.listForProject.queryOptions({
+      projectId,
+    }),
+    enabled: !!projectId,
+  });
+
+  // Only show deployments if GitHub or Vercel extension is enabled
+  const hasDeploymentExtension = useMemo(() => {
+    if (!projectExtensions) return false;
+    return projectExtensions.some(
+      (ext) =>
+        (ext.extensionId === "github" || ext.extensionId === "vercel") &&
+        ext.enabled === true,
+    );
+  }, [projectExtensions]);
+
   // Fetch deployments for the date range
   const { data: deployments } = useQuery({
     ...trpc.deployment.listForProject.queryOptions({
@@ -81,7 +99,7 @@ export function TimeSeriesChart({
       startDate,
       endDate,
     }),
-    enabled: showDeployments && !!projectId,
+    enabled: showDeployments && hasDeploymentExtension && !!projectId,
   });
 
   // Group deployments by date
