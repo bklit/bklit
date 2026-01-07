@@ -10,6 +10,7 @@ import {
 import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { getSessionAnalytics } from "@/actions/analytics-actions";
@@ -180,12 +181,39 @@ export function QuickStatsCard({
     previousConversionsData?.conversions,
   );
 
-  const renderChangeIndicator = (change: number | null) => {
+  const renderChangeIndicator = (change: number | null, uniqueKey: string) => {
     if (change === null) return null;
     const isPositive = change > 0;
     const Icon = isPositive ? ChevronUp : ChevronDown;
     const colorClass = isPositive ? "text-emerald-500" : "text-rose-500";
-    return <Icon size={14} className={colorClass} />;
+
+    // Animation variants based on direction
+    const variants = isPositive
+      ? {
+          initial: { opacity: 0, y: 10 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: -10 },
+        }
+      : {
+          initial: { opacity: 0, y: -10 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: 10 },
+        };
+
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`${uniqueKey}-${change.toFixed(2)}`}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={variants}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+          <Icon size={14} className={colorClass} />
+        </motion.div>
+      </AnimatePresence>
+    );
   };
 
   return (
@@ -200,7 +228,7 @@ export function QuickStatsCard({
             <div>
               <div className="text-2xl font-bold flex items-center gap-2">
                 <NumberFlow value={sessionStats.totalSessions} />
-                {renderChangeIndicator(sessionsChange)}
+                {renderChangeIndicator(sessionsChange, "sessions")}
               </div>
               <div className="text-sm text-muted-foreground">
                 Total Sessions
@@ -212,7 +240,7 @@ export function QuickStatsCard({
                   value={Math.round(sessionStats.bounceRate)}
                   suffix="%"
                 />
-                {renderChangeIndicator(bounceRateChange)}
+                {renderChangeIndicator(bounceRateChange, "bounce-rate")}
               </div>
               <div className="text-sm text-muted-foreground">Bounce Rate</div>
             </div>
@@ -221,7 +249,7 @@ export function QuickStatsCard({
             <div>
               <div className="text-2xl font-bold flex items-center gap-2">
                 <NumberFlow value={displayStats.uniqueVisits} />
-                {renderChangeIndicator(uniqueVisitsChange)}
+                {renderChangeIndicator(uniqueVisitsChange, "unique-visits")}
               </div>
               <div className="text-sm text-muted-foreground">
                 Unique Visitors
@@ -230,7 +258,7 @@ export function QuickStatsCard({
             <div>
               <div className="text-2xl font-bold flex items-center gap-2">
                 <NumberFlow value={currentConversions} />
-                {renderChangeIndicator(conversionsChange)}
+                {renderChangeIndicator(conversionsChange, "conversions")}
               </div>
               <div className="text-sm text-muted-foreground">Conversions</div>
             </div>
