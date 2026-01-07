@@ -22,14 +22,16 @@ async function backfillSessionCountryCodes() {
     console.log(`Found ${totalToUpdate} sessions without country_code`);
 
     if (totalToUpdate === 0) {
-      console.log("✓ All sessions already have country_code, nothing to backfill");
+      console.log(
+        "✓ All sessions already have country_code, nothing to backfill",
+      );
       await client.close();
       return;
     }
 
     // Create a mapping of session_id -> country_code from page_view_events
     console.log("Building session -> country_code mapping...");
-    
+
     const mappingResult = await client.query({
       query: `
         SELECT 
@@ -52,7 +54,9 @@ async function backfillSessionCountryCodes() {
       country_code: string;
     }>;
 
-    console.log(`Found ${mappingData.length} sessions with country codes in pageviews`);
+    console.log(
+      `Found ${mappingData.length} sessions with country codes in pageviews`,
+    );
 
     if (mappingData.length === 0) {
       console.log("No pageview data with country codes found");
@@ -66,10 +70,13 @@ async function backfillSessionCountryCodes() {
 
     for (let i = 0; i < mappingData.length; i += batchSize) {
       const batch = mappingData.slice(i, i + batchSize);
-      
+
       // Build CASE statement for batch update
       const caseStatements = batch
-        .map((item) => `WHEN '${item.session_id.replace(/'/g, "\\'")}' THEN '${item.country_code.replace(/'/g, "\\'")}'`)
+        .map(
+          (item) =>
+            `WHEN '${item.session_id.replace(/'/g, "\\'")}' THEN '${item.country_code.replace(/'/g, "\\'")}'`,
+        )
         .join("\n          ");
 
       const sessionIds = batch
@@ -88,7 +95,9 @@ async function backfillSessionCountryCodes() {
       });
 
       updated += batch.length;
-      console.log(`  Updated batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(mappingData.length / batchSize)} (${updated}/${mappingData.length})`);
+      console.log(
+        `  Updated batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(mappingData.length / batchSize)} (${updated}/${mappingData.length})`,
+      );
     }
 
     console.log("Waiting for updates to complete...");
@@ -146,4 +155,3 @@ backfillSessionCountryCodes().catch((error) => {
   console.error("Backfill failed:", error);
   process.exit(1);
 });
-
