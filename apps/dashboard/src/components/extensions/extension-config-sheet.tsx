@@ -146,29 +146,24 @@ export function ExtensionConfigSheet({
             )}
           </div>
 
-          <SheetFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(true)}
-              className="w-full sm:w-auto"
-            >
-              <Trash2 className="size-4 mr-2" />
-              Remove Extension
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => testMutation.mutate({ projectId, extensionId })}
-              disabled={testMutation.isPending}
-              className="w-full sm:w-auto"
-            >
-              <TestTube2 className="size-4 mr-2" />
-              {testMutation.isPending ? "Testing..." : "Test"}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={updateMutation.isPending}
-              className="w-full sm:w-auto"
-            >
+          <SheetFooter className="flex sm:flex-row justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Remove Extension
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => testMutation.mutate({ projectId, extensionId })}
+                disabled={testMutation.isPending}
+              >
+                <TestTube2 className="size-4 mr-2" />
+                {testMutation.isPending ? "Testing..." : "Test"}
+              </Button>
+            </div>
+            <Button onClick={handleSave} disabled={updateMutation.isPending}>
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </SheetFooter>

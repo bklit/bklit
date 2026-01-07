@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import { Checkbox } from "@bklit/ui/components/checkbox";
 import { Label } from "@bklit/ui/components/label";
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@bklit/ui/components/select";
+import { GitHubIcon } from "@bklit/ui/icons/github";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLink, Github } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -117,45 +119,26 @@ export function GitHubConfig({
 
   if (!installation) {
     return (
-      <div className="text-center py-8">
-        <div className="size-12 mx-auto mb-4 text-muted-foreground flex items-center justify-center">
-          <Github className="size-12" />
-        </div>
-        <h3 className="text-lg font-semibold mb-2">Connect GitHub</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Connect your GitHub account to track workflow deployments
-        </p>
-        <Button onClick={handleLinkGitHub}>
-          <ExternalLink className="size-4 mr-2" />
-          Link GitHub Account
-        </Button>
-      </div>
+      <Button onClick={handleLinkGitHub}>
+        <GitHubIcon className="size-4" />
+        Link GitHub Account
+      </Button>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-4 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Github className="size-10" />
-            <div>
-              <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                ✓ Connected to GitHub
-              </p>
-              <p className="text-xs text-green-600 dark:text-green-400">
-                @{installation.githubUsername}
-              </p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleLinkGitHub}>
-            <ExternalLink className="size-3 mr-1" />
-            Manage Access
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Badge variant="success" size="lg">
+          Connected to GitHub
+        </Badge>
+
+        <Button variant="secondary" size="sm" onClick={handleLinkGitHub}>
+          Manage Access
+        </Button>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label>Repository</Label>
         <Select
           value={selectedRepo}
@@ -164,7 +147,7 @@ export function GitHubConfig({
             onChange({ ...config, repository: value });
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select repository" />
           </SelectTrigger>
           <SelectContent>
@@ -179,46 +162,46 @@ export function GitHubConfig({
 
       {selectedRepo && workflows && (
         <>
-          <div>
+          <div className="space-y-2">
             <Label>Production Workflows</Label>
             <p className="text-sm text-muted-foreground mb-2">
               Select workflows that deploy to production
             </p>
-            <div className="space-y-2 border rounded-lg p-3 max-h-64 overflow-y-auto">
+            <div className="space-y-2 bg-input/50 border border-border rounded-lg p-3 max-h-64 overflow-y-auto">
               {workflows.map((workflow) => (
-                <div key={workflow.id} className="flex items-start space-x-2">
-                  <Checkbox
-                    id={`workflow-${workflow.id}`}
-                    checked={config.productionWorkflows?.includes(
-                      workflow.name,
-                    )}
-                    onCheckedChange={(checked) => {
-                      const current = config.productionWorkflows || [];
-                      onChange({
-                        ...config,
-                        productionWorkflows: checked
-                          ? [...current, workflow.name]
-                          : current.filter((w) => w !== workflow.name),
-                      });
-                    }}
-                  />
-                  <div className="flex-1">
-                    <label
-                      htmlFor={`workflow-${workflow.id}`}
-                      className="font-medium cursor-pointer text-sm"
-                    >
-                      {workflow.name}
-                    </label>
-                    <p className="text-xs text-muted-foreground">
-                      {workflow.recentRuns?.length || 0} recent runs
-                    </p>
+                <Label
+                  key={workflow.id}
+                  htmlFor={`workflow-${workflow.id}`}
+                  className="font-medium cursor-pointer text-sm flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id={`workflow-${workflow.id}`}
+                      checked={config.productionWorkflows?.includes(
+                        workflow.name,
+                      )}
+                      onCheckedChange={(checked) => {
+                        const current = config.productionWorkflows || [];
+                        onChange({
+                          ...config,
+                          productionWorkflows: checked
+                            ? [...current, workflow.name]
+                            : current.filter((w) => w !== workflow.name),
+                        });
+                      }}
+                      className="group-hover:border-bklit-400"
+                    />
+                    {workflow.name}
                   </div>
-                </div>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {workflow.recentRuns?.length || 0} recent runs
+                  </span>
+                </Label>
               ))}
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label>Production Branch</Label>
             <Select
               value={config.productionBranch || "main"}
@@ -226,7 +209,7 @@ export function GitHubConfig({
                 onChange({ ...config, productionBranch: value })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
