@@ -275,8 +275,9 @@ export function EventDetail({
                   ? "..."
                   : Number.isNaN(event.conversionRate) ||
                       event.conversionRate === undefined
-                    ? "0%"
-                    : `${event.conversionRate}%`,
+                    ? 0
+                    : event.conversionRate,
+              suffix: "%",
               ...(compare &&
                 prevEvent &&
                 event &&
@@ -384,18 +385,6 @@ export function EventDetail({
                   margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
                 >
                   <defs>
-                    <linearGradient id="fillViews" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="var(--color-views)"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="var(--color-views)"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
                     <linearGradient id="fillClicks" x1="0" y1="0" x2="0" y2="1">
                       <stop
                         offset="5%"
@@ -405,6 +394,18 @@ export function EventDetail({
                       <stop
                         offset="95%"
                         stopColor="var(--color-clicks)"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                    <linearGradient id="fillViews" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-views)"
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-views)"
                         stopOpacity={0.1}
                       />
                     </linearGradient>
@@ -442,19 +443,19 @@ export function EventDetail({
                     }
                   />
                   <Area
-                    dataKey="views"
-                    type="linear"
-                    fill="url(#fillViews)"
-                    fillOpacity={0.6}
-                    stroke="var(--color-views)"
-                    stackId="a"
-                  />
-                  <Area
                     dataKey="clicks"
                     type="linear"
                     fill="url(#fillClicks)"
                     fillOpacity={0.6}
                     stroke="var(--color-clicks)"
+                    stackId="a"
+                  />
+                  <Area
+                    dataKey="views"
+                    type="linear"
+                    fill="url(#fillViews)"
+                    fillOpacity={0.6}
+                    stroke="var(--color-views)"
                     stackId="a"
                   />
                   <ChartLegend content={<ChartLegendContent />} />
