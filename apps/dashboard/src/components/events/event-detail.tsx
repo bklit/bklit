@@ -270,10 +270,20 @@ export function EventDetail({
             {
               icon: TrendingUp,
               name: "Conversion Rate",
-              stat: isLoading || !event ? "..." : `${event.conversionRate}%`,
+              stat:
+                isLoading || !event
+                  ? "..."
+                  : Number.isNaN(event.conversionRate) ||
+                      event.conversionRate === undefined
+                    ? "0%"
+                    : `${event.conversionRate}%`,
               ...(compare &&
                 prevEvent &&
-                event && {
+                event &&
+                typeof event.conversionRate === "number" &&
+                typeof prevEvent.conversionRate === "number" &&
+                !Number.isNaN(event.conversionRate) &&
+                !Number.isNaN(prevEvent.conversionRate) && {
                   ...calculateChange(
                     event.conversionRate,
                     prevEvent.conversionRate,
@@ -321,9 +331,36 @@ export function EventDetail({
           ]}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+          {/* Conversion Pie Chart */}
+          <Card className="col-span-1 sm:col-span-3">
+            <CardHeader>
+              <CardTitle>Conversion Overview</CardTitle>
+              <CardDescription>
+                Sessions with vs without this event
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center relative">
+              {event && event.totalSessions === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    No session data available
+                  </p>
+                </div>
+              )}
+              <PieDonut
+                data={conversionData}
+                variant="positive-negative"
+                centerLabel={{ showTotal: true, suffix: "sessions" }}
+                innerRadius={46}
+                outerRadius={80}
+                className="min-h-[250px] w-full"
+              />
+            </CardContent>
+          </Card>
+
           {/* Timeline Chart */}
-          <Card>
+          <Card className="col-span-1 sm:col-span-9">
             <CardHeader>
               <CardTitle>Event Timeline</CardTitle>
               <CardDescription>
@@ -338,7 +375,10 @@ export function EventDetail({
                   </p>
                 </div>
               )}
-              <ChartContainer config={timelineChartConfig}>
+              <ChartContainer
+                config={timelineChartConfig}
+                className="aspect-auto h-[300px] w-full"
+              >
                 <AreaChart
                   data={event?.timeSeriesData || []}
                   margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
@@ -371,14 +411,14 @@ export function EventDetail({
                   </defs>
                   <CartesianGrid
                     stroke="var(--chart-cartesian)"
-                    strokeDasharray="3 3"
+                    strokeDasharray="5 5"
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
                   <XAxis
                     dataKey="date"
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
+                    minTickGap={32}
                     tickFormatter={(value) => {
                       const date = new Date(value);
                       return date.toLocaleDateString("en-US", {
@@ -386,57 +426,40 @@ export function EventDetail({
                         day: "numeric",
                       });
                     }}
-                    interval="preserveStartEnd"
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={
+                      <ChartTooltipContent
+                        labelFormatter={(value) => {
+                          return new Date(value).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          });
+                        }}
+                        indicator="dot"
+                      />
+                    }
                   />
                   <Area
                     dataKey="views"
-                    type="natural"
+                    type="linear"
                     fill="url(#fillViews)"
-                    fillOpacity={0.4}
+                    fillOpacity={0.6}
                     stroke="var(--color-views)"
                     stackId="a"
                   />
                   <Area
                     dataKey="clicks"
-                    type="natural"
+                    type="linear"
                     fill="url(#fillClicks)"
-                    fillOpacity={0.4}
+                    fillOpacity={0.6}
                     stroke="var(--color-clicks)"
                     stackId="a"
                   />
-                  <ChartLegend
-                    content={<ChartLegendContent />}
-                    verticalAlign="bottom"
-                  />
+                  <ChartLegend content={<ChartLegendContent />} />
                 </AreaChart>
               </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* Conversion Pie Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Conversion Overview</CardTitle>
-              <CardDescription>
-                Sessions with vs without this event
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center relative">
-              {event && event.totalSessions === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    No session data available
-                  </p>
-                </div>
-              )}
-              <PieDonut
-                data={conversionData}
-                variant="positive-negative"
-                centerLabel={{ showTotal: true, suffix: "sessions" }}
-                innerRadius={46}
-                outerRadius={80}
-                className="min-h-[250px] w-full"
-              />
             </CardContent>
           </Card>
         </div>

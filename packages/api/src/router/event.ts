@@ -696,8 +696,8 @@ export const eventRouter = {
         { dataAttr: number; id: number; programmatic: number }
       > = {};
 
-      // Build time series and type series (data-attr, id, programmatic)
-      for (const trackedEvent of trackedEvents) {
+      // Build time series and type series (data-attr, id, programmatic) using ALL tracked events, not just paginated
+      for (const trackedEvent of allTrackedEvents) {
         const metadata = trackedEvent.metadata as {
           eventType?: string;
           triggerMethod?: string;
@@ -753,7 +753,7 @@ export const eventRouter = {
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
       });
-      const totalSessions = sessionStats.total_sessions;
+      const totalSessions = Number(sessionStats?.total_sessions) || 0;
 
       // Count ALL unique sessions that triggered this event (not just paginated results)
       const allSessionIds = new Set<string>();
@@ -764,8 +764,15 @@ export const eventRouter = {
       }
       const sessionsWithEvent = allSessionIds.size;
 
-      const conversionRate =
-        totalSessions > 0 ? (sessionsWithEvent / totalSessions) * 100 : 0;
+      // Safely calculate conversion rate, ensuring no NaN
+      let conversionRate = 0;
+      if (totalSessions > 0 && !Number.isNaN(totalSessions) && Number.isFinite(totalSessions)) {
+        conversionRate = (sessionsWithEvent / totalSessions) * 100;
+        // Extra safety check
+        if (Number.isNaN(conversionRate) || !Number.isFinite(conversionRate)) {
+          conversionRate = 0;
+        }
+      }
 
       const timeSeriesArray = Object.entries(timeSeriesData)
         .map(([date, data]) => ({
@@ -795,7 +802,9 @@ export const eventRouter = {
           session: ev.session_id ? sessionMap.get(ev.session_id) || null : null,
         })),
         timeSeriesData: timeSeriesArray,
-        conversionRate: Number(conversionRate.toFixed(2)),
+        conversionRate: Number.isFinite(conversionRate) 
+          ? Number(conversionRate.toFixed(2)) 
+          : 0,
         totalSessions,
         sessionsWithEvent,
         pagination: {

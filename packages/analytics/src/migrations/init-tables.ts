@@ -80,6 +80,7 @@ async function initTables() {
         exit_page Nullable(String),
         user_agent Nullable(String),
         country Nullable(String),
+        country_code Nullable(String),
         city Nullable(String),
         project_id String,
         updated_at DateTime DEFAULT now()

@@ -118,10 +118,92 @@ Thank you to everyone who contributed to making v1 possible!
 
 ---
 
+## [1.0.1] - 2025-01-07
+
+### 🔧 Database Migration - Session Country Codes
+
+#### ClickHouse Schema Changes
+
+- **Added `country_code` column to `tracked_session` table**
+  - Enables country flag display in session event tables
+  - Improves geographic analytics and session detail views
+
+#### Migration Required for Self-Hosted Users
+
+If you're self-hosting with your own ClickHouse database, apply this migration:
+
+**Step 1: Add the column**
+
+```bash
+cd packages/analytics
+pnpm with-env-dev tsx src/migrations/add-country-code-to-session.ts
+```
+
+**Step 2: Backfill existing sessions (one-time)**
+
+```bash
+cd packages/analytics
+pnpm with-env-dev tsx src/migrations/backfill-session-country-codes.ts
+```
+
+The backfill script will:
+
+- Find all sessions without country codes
+- Match them with their first pageview event containing a country code
+- Update sessions in batches of 1,000 for efficiency
+- Report progress and completion statistics
+
+**Note:** New installations automatically include this column via the updated `init-tables.ts` migration.
+
+#### Files Changed
+
+- `packages/analytics/src/migrations/init-tables.ts` - Added country_code to schema
+- `packages/analytics/src/migrations/add-country-code-to-session.ts` - Migration script
+- `packages/analytics/src/migrations/backfill-session-country-codes.ts` - Backfill script
+- `packages/analytics/src/service.ts` - Updated getSessionById query
+- `apps/dashboard/src/components/events/session-events-table.tsx` - Added country flags
+
+### ✨ UI Improvements
+
+#### Analytics Change Indicators
+
+- Added animated change indicators to Quick Stats card
+- Added change indicators to Top Countries and Popular Pages cards
+- Created reusable `ChangeIndicator` component with directional animations
+  - Positive changes: slide up with emerald color
+  - Negative changes: slide down with rose color
+  - Includes blur effect on enter/exit
+- Change indicators respect `?compare=false` URL parameter
+
+#### Event Detail Enhancements
+
+- Added country flags to Session Events table
+- Made session IDs clickable links to session detail pages
+- Improved Area Chart styling to match pageviews (linear, better spacing)
+- Fixed NaN issues in stats when switching dates
+- Fixed time series to show all days in selected range (was only showing one day)
+
+#### Component Architecture
+
+- Created `@bklit/ui/components/change-indicator` - Reusable change indicator
+- Enhanced `ProgressRow` component with optional `change` prop
+- All analytics cards now use consistent change comparison logic
+
+### 🐛 Fixes
+
+- Fixed Quick Stats card not updating when changing date range
+- Fixed `initialData` vs `placeholderData` in React Query causing stale data
+- Fixed conversion rate calculation returning NaN
+- Fixed event timeline only showing paginated results instead of all events
+- Fixed session link IDs (now uses `id` field instead of `session_id` hash)
+
+---
+
 ## Unreleased
 
 Changes that are in development but not yet released will be listed here.
 
 ---
 
+[1.0.1]: https://github.com/bklit/bklit/releases/tag/v1.0.1
 [1.0.0]: https://github.com/bklit/bklit/releases/tag/v1.0.0
