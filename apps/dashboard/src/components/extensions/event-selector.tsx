@@ -55,9 +55,7 @@ export function EventSelector({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label className="text-base font-semibold">
-          Select Events to Trigger
-        </Label>
+        <Label className="text-base font-semibold">Select Events</Label>
         <Button variant="ghost" size="sm" onClick={handleToggleAll}>
           {selectedEventIds.length === events.length
             ? "Deselect All"
@@ -65,31 +63,26 @@ export function EventSelector({
         </Button>
       </div>
 
-      <div className="space-y-2 border rounded-lg p-4 max-h-64 overflow-y-auto">
+      <div className="space-y-3 bg-input/50 border border-border rounded-lg p-4 max-h-64 overflow-y-auto">
         {events.map((event) => (
-          <div key={event.id} className="flex items-start space-x-2">
-            <Checkbox
-              id={event.id}
-              checked={selectedEventIds.includes(event.id)}
-              onCheckedChange={() => handleToggle(event.id)}
-            />
-            <div className="flex-1">
-              <Label
-                htmlFor={event.id}
-                className="text-sm font-medium cursor-pointer"
-              >
-                {event.name}
-              </Label>
-              {event.description && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {event.description}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground/70 mt-0.5">
-                Tracking ID: {event.trackingId}
-              </p>
+          <Label
+            key={event.id}
+            htmlFor={event.id}
+            className="text-sm font-medium cursor-pointer flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id={event.id}
+                checked={selectedEventIds.includes(event.id)}
+                onCheckedChange={() => handleToggle(event.id)}
+                className="group-hover:border-bklit-400"
+              />
+              {event.name}
             </div>
-          </div>
+            <span className="text-xs text-muted-foreground font-mono">
+              {event.trackingId}
+            </span>
+          </Label>
         ))}
       </div>
     </div>

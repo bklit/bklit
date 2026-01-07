@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { CodeBlockClient } from "@bklit/ui/components/code-block-client";
 import { CopyInput } from "@bklit/ui/components/input-copy";
 import { MemberRole } from "@bklit/utils/roles";
 import { redirect } from "next/navigation";
@@ -87,33 +86,6 @@ export default async function ProjectDashboardPage({
           </CardHeader>
           <CardContent>
             <CopyInput value={site.id} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>SDK integration</CardTitle>
-            <CardDescription>
-              Integrate the SDK into your website to start tracking your users.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <CodeBlockClient language="bash">{`npm install @bklit/sdk
-# or
-pnpm add @bklit/sdk`}</CodeBlockClient>
-            </div>
-            <div className="space-y-2">
-              <CodeBlockClient
-                language="typescript"
-                lineNumbers={true}
-              >{`import { initBklit } from "@bklit/sdk";
-
-initBklit({
-  projectId: "${site.id}",
-  apiKey: "your-api-key",
-  debug: true, // Optional - enables console logging
-});`}</CodeBlockClient>
-            </div>
           </CardContent>
         </Card>
 

@@ -15,11 +15,17 @@ import { useState } from "react";
 interface CopyInputProps {
   value: string;
   className?: string;
+  readOnly?: boolean;
 }
 
 type CopyState = "idle" | "success";
 
-export function CopyInput({ value, className }: CopyInputProps) {
+export function CopyInput({
+  value,
+  className,
+  readOnly = true,
+  ...props
+}: React.ComponentProps<"input"> & CopyInputProps) {
   const [state, setState] = useState<CopyState>("idle");
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -39,7 +45,12 @@ export function CopyInput({ value, className }: CopyInputProps) {
 
   return (
     <ButtonGroup className={cn("w-full", className)}>
-      <Input value={value} readOnly className="font-mono" />
+      <Input
+        value={value}
+        readOnly={readOnly}
+        className="font-mono"
+        {...props}
+      />
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
           <Button

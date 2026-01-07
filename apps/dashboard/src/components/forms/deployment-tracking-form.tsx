@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { Input } from "@bklit/ui/components/input";
+import { CopyInput } from "@bklit/ui/components/input-copy";
 import { Label } from "@bklit/ui/components/label";
 import {
   Select,
@@ -18,8 +19,8 @@ import {
   SelectValue,
 } from "@bklit/ui/components/select";
 import { Switch } from "@bklit/ui/components/switch";
+import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useTRPC } from "@/trpc/react";
 
@@ -30,11 +31,6 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
   const { data: webhook } = useQuery({
     ...trpc.deployment.getWebhook.queryOptions({ projectId }),
   });
-
-  const [platform, setPlatform] = useState(webhook?.platform || "vercel");
-  const [platformProjectId, setPlatformProjectId] = useState(
-    webhook?.platformProjectId || "",
-  );
 
   const saveMutation = useMutation(
     trpc.deployment.saveWebhook.mutationOptions({
@@ -61,13 +57,19 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
     }),
   );
 
-  const handleSave = () => {
-    saveMutation.mutate({
-      projectId,
-      platform,
-      platformProjectId,
-    });
-  };
+  const form = useForm({
+    defaultValues: {
+      platform: webhook?.platform || "vercel",
+      platformProjectId: webhook?.platformProjectId || "",
+    },
+    onSubmit: async ({ value }) => {
+      await saveMutation.mutateAsync({
+        projectId,
+        platform: value.platform,
+        platformProjectId: value.platformProjectId,
+      });
+    },
+  });
 
   return (
     <Card>
@@ -90,54 +92,80 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <Label htmlFor="platform">Platform</Label>
-          <Select value={platform} onValueChange={setPlatform}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vercel">Vercel</SelectItem>
-              <SelectItem value="netlify">Netlify</SelectItem>
-              <SelectItem value="railway">Railway</SelectItem>
-              <SelectItem value="render">Render</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <CardContent>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          className="space-y-4"
+        >
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            <form.Field name="platform">
+              {(field) => (
+                <div className="space-y-2 w-full max-w-full sm:max-w-xs">
+                  <Label htmlFor="platform">Platform</Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={field.handleChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vercel">Vercel</SelectItem>
+                      <SelectItem value="netlify">Netlify</SelectItem>
+                      <SelectItem value="railway">Railway</SelectItem>
+                      <SelectItem value="render">Render</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </form.Field>
 
-        <div>
-          <Label htmlFor="projectId">Project ID</Label>
-          <Input
-            id="projectId"
-            value={platformProjectId}
-            onChange={(e) => setPlatformProjectId(e.target.value)}
-            placeholder={
-              platform === "vercel"
-                ? "prj_xxxxxxxxxxxxx"
-                : platform === "netlify"
-                  ? "site_xxxxxxxxxxxxx"
-                  : "Project ID from platform"
+            <form.Field name="platformProjectId">
+              {(field) => (
+                <div className="space-y-2 w-full">
+                  <Label htmlFor="projectId">Project ID</Label>
+                  <Input
+                    id="projectId"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={
+                      form.state.values.platform === "vercel"
+                        ? "prj_xxxxxxxxxxxxx"
+                        : form.state.values.platform === "netlify"
+                          ? "site_xxxxxxxxxxxxx"
+                          : "Project ID from platform"
+                    }
+                  />
+                </div>
+              )}
+            </form.Field>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="webhookUrl">Webhook URL:</Label>
+            <CopyInput
+              id="webhookUrl"
+              value={`https://app.bklit.com/api/webhooks/${form.state.values.platform}`}
+              className="w-full"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={
+              !form.state.values.platformProjectId ||
+              saveMutation.isPending ||
+              form.state.isSubmitting
             }
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Found in your {platform} project settings
-          </p>
-        </div>
-
-        <div className="bg-muted p-3 rounded-lg text-sm">
-          <p className="font-medium mb-1">Webhook URL:</p>
-          <code className="text-xs">
-            https://app.bklit.com/api/webhooks/{platform}
-          </code>
-          <p className="text-xs text-muted-foreground mt-2">
-            Configure this URL in your {platform} project webhooks
-          </p>
-        </div>
-
-        <Button onClick={handleSave} disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? "Saving..." : "Save Configuration"}
-        </Button>
+          >
+            {saveMutation.isPending || form.state.isSubmitting
+              ? "Saving..."
+              : "Save Configuration"}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );
