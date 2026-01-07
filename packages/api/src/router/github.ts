@@ -193,6 +193,7 @@ export const githubRouter = createTRPCRouter({
     .input(
       z.object({
         organizationId: z.string(),
+        projectId: z.string(),
         repository: z.string(),
       }),
     )
@@ -206,17 +207,53 @@ export const githubRouter = createTRPCRouter({
       const [owner, repo] = input.repository.split("/");
       const client = new GitHubClient(installation.accessToken);
 
+      // Generate a unique webhook secret for this project
+      const crypto = await import("node:crypto");
+      const webhookSecret = crypto.randomBytes(32).toString("hex");
+
       // Use ngrok URL for development, app URL for production
       const webhookUrl = process.env.NGROK_URL
         ? `${process.env.NGROK_URL}/api/webhooks/github`
         : `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/github`;
 
-      await client.createWebhook(
-        owner,
-        repo,
-        webhookUrl,
-        process.env.GITHUB_WEBHOOK_SECRET || "",
-      );
+      // Create webhook with generated secret
+      await client.createWebhook(owner, repo, webhookUrl, webhookSecret);
+
+      // Get existing config to preserve other settings
+      const existingExtension = await prisma.projectExtension.findUnique({
+        where: {
+          projectId_extensionId: {
+            projectId: input.projectId,
+            extensionId: "github",
+          },
+        },
+      });
+
+      // Store the webhook secret in ProjectExtension config
+      await prisma.projectExtension.upsert({
+        where: {
+          projectId_extensionId: {
+            projectId: input.projectId,
+            extensionId: "github",
+          },
+        },
+        create: {
+          projectId: input.projectId,
+          extensionId: "github",
+          enabled: true,
+          config: {
+            repository: input.repository,
+            webhookSecret: webhookSecret,
+          },
+        },
+        update: {
+          config: {
+            ...(existingExtension?.config as object),
+            repository: input.repository,
+            webhookSecret: webhookSecret,
+          },
+        },
+      });
 
       return { success: true };
     }),

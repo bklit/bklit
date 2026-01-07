@@ -54,7 +54,9 @@ export const env = createEnv({
     HEALTH_CHECK_SECRET: z.string().min(1),
 
     /**
-     * GitHub Webhook (OPTIONAL - for deployment tracking extension)
+     * GitHub Webhook Secret (DEPRECATED - No longer needed!)
+     * Webhook secrets are now auto-generated and stored per-project in the database.
+     * This can be safely removed from your .env file.
      */
     GITHUB_WEBHOOK_SECRET: z.string().optional(),
   },
