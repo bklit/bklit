@@ -1,0 +1,10 @@
+{
+  "name": "@bklit/extension-github",
+  "displayName": "GitHub",
+  "description": "Track GitHub Actions deployments and correlate with analytics metrics",
+  "author": "bklit",
+  "version": "1.0.0",
+  "icon": "./metadata/extension-icon.png",
+  "category": "analytics",
+  "isPro": false
+}

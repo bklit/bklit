@@ -2,21 +2,20 @@ import { cn } from "@bklit/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { HTMLAttributes } from "react";
 
-const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
-  {
-    variants: {
-      variant: {
-        default: "bg-bklit-600/30 text-foreground",
-        destructive:
-          "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive bg-bklit-600/30",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
+const alertVariants = cva("", {
+  variants: {
+    variant: {
+      default: "bg-bklit-600/30 text-foreground",
+      success:
+        "bg-linear-to-br from-teal-500/30 to-bklit-500 border-none p-px [&>div>svg]:text-emerald-500",
+      destructive:
+        "bg-linear-to-br from-rose-300/30 to-bklit-500 border-none p-px [&>div>svg]:text-rose-300",
     },
   },
-);
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
 function Alert({
   className,
@@ -24,7 +23,19 @@ function Alert({
   ...props
 }: HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>) {
   return (
-    <div className={cn(alertVariants({ variant }), className)} {...props} />
+    <div className={cn(alertVariants({ variant }), "p-px rounded-lg")}>
+      <div
+        className={cn(
+          "relative w-full bg-bklit-800 rounded-lg p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-5 [&>svg]:text-foreground",
+          className,
+        )}
+        style={{
+          mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);",
+          maskComposite: "exclude",
+        }}
+        {...props}
+      />
+    </div>
   );
 }
 
@@ -58,4 +69,19 @@ function AlertDescription({
   );
 }
 
-export { Alert, AlertTitle, AlertDescription };
+function AlertFooter({
+  className,
+  ...props
+}: HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <div
+      className={cn(
+        "col-start-2 grid justify-items-start gap-1 mt-3",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export { Alert, AlertTitle, AlertDescription, AlertFooter };

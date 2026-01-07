@@ -71,20 +71,21 @@ model Verification {
 }
 
 model Organization {
-  id               String       @id
-  name             String
-  slug             String?      @unique
-  logo             String?
-  createdAt        DateTime
-  metadata         String?
-  theme            String?
-  plan             String       @default("free")
-  polarCustomerId  String?      @unique // Polar customer ID for billing
-  billingInterval  String?      // "monthly" or "annual"
-  projects         Project[]
-  invitations      Invitation[]
-  members          Member[]
-  apiTokens        ApiToken[]
+  id                  String                @id
+  name                String
+  slug                String?               @unique
+  logo                String?
+  createdAt           DateTime
+  metadata            String?
+  theme               String?
+  plan                String                @default("free")
+  polarCustomerId     String?               @unique // Polar customer ID for billing
+  billingInterval     String?               // "monthly" or "annual"
+  projects            Project[]
+  invitations         Invitation[]
+  members             Member[]
+  apiTokens           ApiToken[]
+  githubInstallations GitHubInstallation[]
 
   @@index([plan])
   @@index([polarCustomerId])
@@ -129,6 +130,8 @@ model Project {
   apiTokenProjects ApiTokenProject[]
   funnels          Funnel[]
   extensions       ProjectExtension[]
+  deployments      Deployment[]
+  deploymentWebhook DeploymentWebhook?
 
   @@index([organizationId])
 }
@@ -306,3 +309,86 @@ model ExtensionRateLimit {
   @@index([extensionId, hourTimestamp])
   @@map("extension_rate_limit")
 }
+
+model Deployment {
+  id            String   @id @default(cuid())
+  projectId     String
+  environment   String   // "production", "preview", "development"
+  
+  // Git metadata
+  commitSha     String
+  commitMessage String
+  branch        String
+  author        String
+  authorAvatar  String?
+  
+  // Deployment metadata
+  deployedAt    DateTime
+  platform      String   // "github", etc.
+  deploymentUrl String?
+  status        String   // "success", "failed", "cancelled"
+  
+  // GitHub-specific
+  githubWorkflowRunId String?  @unique
+  githubRepository    String?
+  
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([projectId, deployedAt])
+  @@index([projectId, environment, deployedAt])
+  @@index([platform])
+  @@index([githubRepository])
+  @@map("deployment")
+}
+
+model GitHubInstallation {
+  id                String   @id @default(cuid())
+  organizationId    String
+  
+  // GitHub OAuth data
+  githubUserId      String
+  githubUsername    String
+  accessToken       String
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  
+  // Repository data
+  repositories      Json     // Array of repos user has access to
+  
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@unique([organizationId, githubUserId])
+  @@index([organizationId])
+  @@map("github_installation")
+}
+
+model DeploymentWebhook {
+  id                  String   @id @default(cuid())
+  projectId           String
+  
+  // Platform details
+  platform            String   // "vercel", "netlify", "railway", "render"
+  platformProjectId   String   // Platform-specific project ID
+  enabled             Boolean  @default(true)
+  
+  // Metadata
+  lastTriggeredAt     DateTime?
+  deploymentsTracked  Int      @default(0)
+  
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([projectId]) // One deployment webhook per project
+  @@index([projectId])
+  @@index([platform])
+  @@map("deployment_webhook")
+}
+

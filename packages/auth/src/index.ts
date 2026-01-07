@@ -387,6 +387,13 @@ export function initAuth(options: {
               clientId: options.githubClientId,
               clientSecret: options.githubClientSecret,
               redirectURI: `${options.baseUrl}/api/auth/callback/github`,
+              scope: [
+                "read:user",
+                "user:email",
+                "repo",
+                "read:org",
+                "workflow",
+              ],
             },
           }
         : {}),

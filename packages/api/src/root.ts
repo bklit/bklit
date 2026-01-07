@@ -1,10 +1,12 @@
 import { acquisitionRouter } from "./router/acquisition";
 import { apiTokenRouter } from "./router/api-token";
 import { authRouter } from "./router/auth";
+import { deploymentRouter } from "./router/deployment";
 import { emailRouter } from "./router/email";
 import { eventRouter } from "./router/event";
 import { extensionRouter } from "./router/extension";
 import { funnelRouter } from "./router/funnel";
+import { githubRouter } from "./router/github";
 import { invitationRouter } from "./router/invitation";
 import { notificationRouter } from "./router/notification";
 import { organizationRouter } from "./router/organization";
@@ -15,6 +17,8 @@ import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
+  github: githubRouter,
+  deployment: deploymentRouter,
   project: projectRouter,
   organization: organizationRouter,
   event: eventRouter,
