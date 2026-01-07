@@ -7,20 +7,31 @@ export async function POST(req: Request) {
   try {
     const signature = req.headers.get("x-hub-signature-256");
     const rawBody = await req.text();
+    const payload = JSON.parse(rawBody);
+    const { repository } = payload;
 
-    if (!verifySignature(rawBody, signature)) {
+    // Verify signature using repository-specific secret
+    const isValid = await verifySignature(
+      rawBody,
+      signature,
+      repository?.full_name,
+    );
+
+    if (!isValid) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    const payload = JSON.parse(rawBody);
     const event = req.headers.get("x-github-event");
+
+    // Handle ping event (sent when webhook is created)
+    if (event === "ping") {
+      return NextResponse.json({ ok: true, message: "Webhook configured successfully!" });
+    }
 
     // Process workflow_run and deployment_status events
     if (event !== "workflow_run" && event !== "deployment_status") {
       return NextResponse.json({ ok: true, skipped: true });
     }
-
-    const { repository } = payload;
 
     // For workflow_run events
     if (event === "workflow_run") {
@@ -192,10 +203,49 @@ async function processDeploymentStatus(
   }
 }
 
-function verifySignature(body: string, signature: string | null): boolean {
+async function verifySignature(
+  body: string,
+  signature: string | null,
+  repositoryFullName: string | undefined,
+): Promise<boolean> {
   if (!signature) return false;
-  const secret = env.GITHUB_WEBHOOK_SECRET;
-  if (!secret) return true; // Skip in development
+  if (!repositoryFullName) return false;
+
+  // Look up the webhook secret for this repository from the database
+  const projectExtension = await prisma.projectExtension.findFirst({
+    where: {
+      extensionId: "github",
+      enabled: true,
+      config: {
+        path: ["repository"],
+        equals: repositoryFullName,
+      },
+    },
+  });
+
+  if (!projectExtension) {
+    console.warn(
+      `[WEBHOOK] No project extension found for repository: ${repositoryFullName}`,
+    );
+    return false;
+  }
+
+  const config = projectExtension.config as { webhookSecret?: string };
+  const secret = config.webhookSecret;
+
+  if (!secret) {
+    console.warn(
+      `[WEBHOOK] No webhook secret found for repository: ${repositoryFullName}`,
+    );
+    // If no secret is stored (legacy webhooks), skip verification in development only
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "[WEBHOOK] Skipping signature verification in development (no secret configured)",
+      );
+      return true;
+    }
+    return false;
+  }
 
   const hash =
     "sha256=" + crypto.createHmac("sha256", secret).update(body).digest("hex");

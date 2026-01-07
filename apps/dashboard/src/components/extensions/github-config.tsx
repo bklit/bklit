@@ -138,6 +138,7 @@ export function GitHubConfig({
 
     setupWebhook.mutate({
       organizationId,
+      projectId,
       repository: selectedRepo,
     });
   };
