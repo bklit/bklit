@@ -25,14 +25,14 @@ export function ChangeIndicator({
   // Animation variants based on direction
   const variants = isPositive
     ? {
-        initial: { opacity: 0, y: 10 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -10 },
+        initial: { opacity: 0, y: 10, filter: "blur(2px)" },
+        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, y: -10, filter: "blur(2px)" },
       }
     : {
-        initial: { opacity: 0, y: -10 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: 10 },
+        initial: { opacity: 0, y: -10, filter: "blur(2px)" },
+        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, y: 10, filter: "blur(2px)" },
       };
 
   return (
@@ -50,4 +50,3 @@ export function ChangeIndicator({
     </AnimatePresence>
   );
 }
-
