@@ -8,18 +8,11 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import type { ChartConfig } from "@bklit/ui/components/chart";
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@bklit/ui/components/chart";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { MobileDesktopChart } from "@/components/analytics-cards/mobile-desktop-chart";
+import { TimeSeriesChart } from "@/components/charts/time-series-chart";
 import { useTRPC } from "@/trpc/react";
 
 interface PageviewsChartProps {
@@ -242,110 +235,15 @@ export function PageviewsChart({
             />
           </div>
           <div className="col-span-3">
-            <ChartContainer
-              config={chartConfig}
-              className="aspect-auto h-[250px] w-full"
-            >
-              <AreaChart data={chartData.timeSeriesData}>
-                <defs>
-                  <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-total)"
-                      stopOpacity={0.8}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-total)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                  {(viewMode === "entry-points"
-                    ? (chartData as any)?.topEntryPoints
-                    : (chartData as any)?.topPages
-                  )?.map((page: any) => (
-                    <linearGradient
-                      key={`fill${page.dataKey}`}
-                      id={`fill${page.dataKey}`}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="5%"
-                        stopColor={`var(--color-${page.dataKey})`}
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor={`var(--color-${page.dataKey})`}
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid
-                  stroke="var(--chart-cartesian)"
-                  strokeDasharray="5 5"
-                />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  minTickGap={32}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    });
-                  }}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={
-                    <ChartTooltipContent
-                      labelFormatter={(value) => {
-                        return new Date(value).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        });
-                      }}
-                      indicator="dot"
-                    />
-                  }
-                />
-
-                {/* Total views area - dashed line */}
-                <Area
-                  dataKey="total"
-                  type="linear"
-                  fill="url(#fillTotal)"
-                  stroke="var(--color-total)"
-                  strokeDasharray="5 5"
-                  fillOpacity={0.3}
-                />
-
-                {/* Individual page areas - overlapping */}
-                {(viewMode === "entry-points"
-                  ? (chartData as any)?.topEntryPoints
-                  : (chartData as any)?.topPages
-                )?.map((page: any) => (
-                  <Area
-                    key={page.dataKey}
-                    dataKey={page.dataKey}
-                    type="linear"
-                    fill={`url(#fill${page.dataKey})`}
-                    stroke={`var(--color-${page.dataKey})`}
-                    fillOpacity={0.6}
-                  />
-                ))}
-
-                <ChartLegend content={<ChartLegendContent />} />
-              </AreaChart>
-            </ChartContainer>
+            <TimeSeriesChart
+              projectId={projectId}
+              data={chartData.timeSeriesData}
+              chartConfig={chartConfig}
+              startDate={startDate}
+              endDate={endDate}
+              isLoading={isLoading}
+              showDeployments={true}
+            />
           </div>
         </div>
       </CardContent>
