@@ -3,48 +3,63 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const deploymentRouter = createTRPCRouter({
-  getWebhook: protectedProcedure
+  listForProject: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      return await prisma.deployment.findMany({
+        where: {
+          projectId: input.projectId,
+          status: "success",
+          // Don't filter by environment - accept all production-like environments
+          // (Vercel sends "Production – dashboard", GitHub Actions might send "production")
+          ...(input.startDate &&
+            input.endDate && {
+              deployedAt: {
+                gte: input.startDate,
+                lte: input.endDate,
+              },
+            }),
+        },
+        orderBy: { deployedAt: "asc" },
+        select: {
+          id: true,
+          deployedAt: true,
+          commitSha: true,
+          commitMessage: true,
+          branch: true,
+          author: true,
+          authorAvatar: true,
+          platform: true,
+          status: true,
+          deploymentUrl: true,
+          githubRepository: true,
+        },
+      });
+    }),
+
+  getStats: protectedProcedure
     .input(z.object({ projectId: z.string() }))
     .query(async ({ input }) => {
-      return await prisma.deploymentWebhook.findUnique({
-        where: { projectId: input.projectId },
-      });
-    }),
+      const [total, recent] = await Promise.all([
+        prisma.deployment.count({
+          where: { projectId: input.projectId },
+        }),
+        prisma.deployment.count({
+          where: {
+            projectId: input.projectId,
+            deployedAt: {
+              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+            },
+          },
+        }),
+      ]);
 
-  saveWebhook: protectedProcedure
-    .input(
-      z.object({
-        projectId: z.string(),
-        platform: z.string(),
-        platformProjectId: z.string(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      return await prisma.deploymentWebhook.upsert({
-        where: { projectId: input.projectId },
-        create: {
-          projectId: input.projectId,
-          platform: input.platform,
-          platformProjectId: input.platformProjectId,
-        },
-        update: {
-          platform: input.platform,
-          platformProjectId: input.platformProjectId,
-        },
-      });
-    }),
-
-  toggleWebhook: protectedProcedure
-    .input(
-      z.object({
-        projectId: z.string(),
-        enabled: z.boolean(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      return await prisma.deploymentWebhook.update({
-        where: { projectId: input.projectId },
-        data: { enabled: input.enabled },
-      });
+      return { total, recent };
     }),
 });
