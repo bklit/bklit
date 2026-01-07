@@ -71,16 +71,25 @@ async function backfillSessionCountryCodes() {
     for (let i = 0; i < mappingData.length; i += batchSize) {
       const batch = mappingData.slice(i, i + batchSize);
 
-      // Build CASE statement for batch update
+      // Build parameterized query to prevent SQL injection
+      const sessionIdParams = batch.reduce(
+        (acc, item, idx) => {
+          acc[`session_id_${idx}`] = item.session_id;
+          acc[`country_code_${idx}`] = item.country_code;
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+
       const caseStatements = batch
         .map(
-          (item) =>
-            `WHEN '${item.session_id.replace(/'/g, "\\'")}' THEN '${item.country_code.replace(/'/g, "\\'")}'`,
+          (_, idx) =>
+            `WHEN {session_id_${idx}:String} THEN {country_code_${idx}:String}`,
         )
         .join("\n          ");
 
-      const sessionIds = batch
-        .map((item) => `'${item.session_id.replace(/'/g, "\\'")}'`)
+      const sessionIdList = batch
+        .map((_, idx) => `{session_id_${idx}:String}`)
         .join(", ");
 
       await client.exec({
@@ -89,9 +98,10 @@ async function backfillSessionCountryCodes() {
           UPDATE country_code = CASE session_id
             ${caseStatements}
           END
-          WHERE session_id IN (${sessionIds})
+          WHERE session_id IN (${sessionIdList})
             AND (country_code IS NULL OR country_code = '')
         `,
+        query_params: sessionIdParams,
       });
 
       updated += batch.length;
