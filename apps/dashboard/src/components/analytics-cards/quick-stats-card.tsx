@@ -72,7 +72,7 @@ export function QuickStatsCard({
       startDate,
       endDate,
     }),
-    initialData: initialStats,
+    placeholderData: initialStats,
   });
 
   const { data: sessionData } = useQuery({
@@ -84,7 +84,7 @@ export function QuickStatsCard({
         startDate,
         endDate,
       }),
-    initialData: initialSessionData,
+    placeholderData: initialSessionData,
   });
 
   const { data: conversionsData } = useQuery(
