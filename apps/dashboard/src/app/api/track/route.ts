@@ -249,6 +249,7 @@ export async function POST(request: NextRequest) {
             exitPage: payload.url,
             userAgent: payload.userAgent,
             country: locationData?.country,
+            countryCode: locationData?.countryCode,
             city: locationData?.city,
             projectId: payload.projectId,
           });

@@ -48,6 +48,7 @@ export interface TrackedSessionData {
   exitPage?: string | null;
   userAgent?: string | null;
   country?: string | null;
+  countryCode?: string | null;
   city?: string | null;
   projectId: string;
 }
@@ -89,6 +90,7 @@ export interface LiveUserLocation {
   startedAt: Date;
   userAgent: string | null;
   country: string | null;
+  countryCode: string | null;
   city: string | null;
   pageviewCountry: string | null;
   pageviewCountryCode: string | null;
@@ -114,6 +116,7 @@ export interface FunnelSessionData {
   exitPage: string | null;
   userAgent: string | null;
   country: string | null;
+  countryCode: string | null;
   city: string | null;
   projectId: string;
   pageViewEvents: Array<{

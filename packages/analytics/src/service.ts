@@ -129,6 +129,7 @@ export class AnalyticsService {
             exit_page: data.exitPage,
             user_agent: data.userAgent,
             country: data.country,
+            country_code: data.countryCode,
             city: data.city,
             project_id: data.projectId,
             updated_at: formatDateForInsert(new Date()), // Set updated_at to current time
@@ -163,6 +164,7 @@ export class AnalyticsService {
           exit_page,
           user_agent,
           country,
+          country_code,
           city,
           project_id
         FROM (
@@ -178,6 +180,7 @@ export class AnalyticsService {
             exit_page,
             user_agent,
             country,
+            country_code,
             city,
             project_id,
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
@@ -203,6 +206,7 @@ export class AnalyticsService {
       exit_page: string | null;
       user_agent: string | null;
       country: string | null;
+      country_code: string | null;
       city: string | null;
       project_id: string;
     }>;
@@ -232,6 +236,7 @@ export class AnalyticsService {
       exitPage: session.exit_page,
       userAgent: session.user_agent,
       country: session.country,
+      countryCode: session.country_code,
       city: session.city,
       projectId: session.project_id,
     });
@@ -259,6 +264,7 @@ export class AnalyticsService {
           exit_page,
           user_agent,
           country,
+          country_code,
           city,
           project_id
         FROM (
@@ -274,6 +280,7 @@ export class AnalyticsService {
             exit_page,
             user_agent,
             country,
+            country_code,
             city,
             project_id,
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
@@ -298,6 +305,7 @@ export class AnalyticsService {
       exit_page: string | null;
       user_agent: string | null;
       country: string | null;
+      country_code: string | null;
       city: string | null;
       project_id: string;
     }>;
@@ -323,6 +331,7 @@ export class AnalyticsService {
       exitPage: data.exitPage !== undefined ? data.exitPage : session.exit_page,
       userAgent: session.user_agent,
       country: session.country,
+      countryCode: session.country_code,
       city: session.city,
       projectId: session.project_id,
     });
@@ -578,6 +587,7 @@ export class AnalyticsService {
           exit_page,
           user_agent,
           country,
+          country_code,
           city,
           project_id
         FROM (
@@ -594,6 +604,7 @@ export class AnalyticsService {
             exit_page,
             user_agent,
             country,
+            country_code,
             city,
             project_id,
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
@@ -622,6 +633,7 @@ export class AnalyticsService {
       exit_page: string | null;
       user_agent: string | null;
       country: string | null;
+      country_code: string | null;
       city: string | null;
       project_id: string;
     }>;
@@ -1159,6 +1171,7 @@ export class AnalyticsService {
           updated_at,
           user_agent,
           country,
+          country_code,
           city
         FROM (
           SELECT 
@@ -1169,6 +1182,7 @@ export class AnalyticsService {
             ended_at,
             user_agent,
             country,
+            country_code,
             city,
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
           FROM tracked_session
@@ -1193,6 +1207,7 @@ export class AnalyticsService {
       updated_at: string;
       user_agent: string | null;
       country: string | null;
+      country_code: string | null;
       city: string | null;
     }>;
 
@@ -1228,6 +1243,7 @@ export class AnalyticsService {
         started_at: session.started_at,
         user_agent: session.user_agent,
         country: session.country,
+        country_code: session.country_code,
         city: session.city,
         pageview_country: latestPv?.country || null,
         pageview_country_code: latestPv?.country_code || null,
@@ -1248,6 +1264,7 @@ export class AnalyticsService {
           session_id,
           started_at,
           country,
+          country_code,
           city,
           user_agent,
           entry_page
@@ -1258,6 +1275,7 @@ export class AnalyticsService {
             started_at,
             updated_at,
             country,
+            country_code,
             city,
             user_agent,
             entry_page,
@@ -1283,6 +1301,7 @@ export class AnalyticsService {
       session_id: string;
       started_at: string;
       country: string | null;
+      country_code: string | null;
       city: string | null;
       user_agent: string | null;
       entry_page: string;
@@ -1693,6 +1712,7 @@ export class AnalyticsService {
           exit_page,
           user_agent,
           country,
+          country_code,
           city,
           project_id
         FROM tracked_session
@@ -1721,6 +1741,7 @@ export class AnalyticsService {
       exit_page: string | null;
       user_agent: string | null;
       country: string | null;
+      country_code: string | null;
       city: string | null;
       project_id: string;
     }>;
@@ -1854,6 +1875,7 @@ export class AnalyticsService {
       exitPage: session.exit_page,
       userAgent: session.user_agent,
       country: session.country,
+      countryCode: session.country_code,
       city: session.city,
       projectId: session.project_id,
       pageViewEvents: pageviewsBySession[session.session_id] || [],
