@@ -20,7 +20,9 @@ export function PricingUpgrade({ currentPlan }: PricingUpgradeProps) {
     queryKey: ["pro-product"],
     queryFn: async () => {
       const res = await fetch("/api/pricing/pro-product");
-      if (!res.ok) throw new Error("Failed to fetch Pro product");
+      if (!res.ok) {
+        throw new Error("Failed to fetch Pro product");
+      }
       return res.json();
     },
     staleTime: 10 * 60 * 1000,
@@ -31,7 +33,7 @@ export function PricingUpgrade({ currentPlan }: PricingUpgradeProps) {
 
   if (isLoading) {
     return (
-      <div className="w-full space-y-4 bg-bklit-600/30 p-4 rounded-lg border">
+      <div className="w-full space-y-4 rounded-lg border bg-bklit-600/30 p-4">
         <Skeleton className="h-12 w-48" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-12 w-full" />
@@ -45,20 +47,20 @@ export function PricingUpgrade({ currentPlan }: PricingUpgradeProps) {
 
   if (isPro) {
     return (
-      <div className="w-full space-y-4 bg-bklit-600/30 p-4 rounded-lg border">
+      <div className="w-full space-y-4 rounded-lg border bg-bklit-600/30 p-4">
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">You're on the Pro Plan</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="font-semibold text-lg">You're on the Pro Plan</h3>
+          <p className="text-muted-foreground text-sm">
             {proProduct.baseEvents.toLocaleString()} events per month, then $
             {proProduct.overagePrice.toFixed(4)} per event
           </p>
         </div>
         <Button
-          variant="outline"
           className="w-full"
           onClick={async () => {
             await authClient.customer.portal();
           }}
+          variant="outline"
         >
           Manage Subscription
         </Button>
@@ -67,7 +69,9 @@ export function PricingUpgrade({ currentPlan }: PricingUpgradeProps) {
   }
 
   const handleUpgrade = async () => {
-    if (!activeOrganization) return;
+    if (!activeOrganization) {
+      return;
+    }
 
     setIsCheckingOut(true);
     try {
@@ -83,26 +87,26 @@ export function PricingUpgrade({ currentPlan }: PricingUpgradeProps) {
   };
 
   return (
-    <div className="w-full space-y-6 bg-bklit-600/30 p-4 rounded-lg border">
+    <div className="w-full space-y-6 rounded-lg border bg-bklit-600/30 p-4">
       <div className="space-y-2">
-        <div className="text-3xl font-bold">
+        <div className="font-bold text-3xl">
           <NumberFlow
-            value={proProduct.basePrice / 100}
             format={{
               style: "currency",
               currency: "USD",
             }}
+            value={proProduct.basePrice / 100}
           />
-          <span className="text-base font-normal text-muted-foreground">
+          <span className="font-normal text-base text-muted-foreground">
             {" "}
             /month
           </span>
         </div>
-        <p className="text-sm text-muted-foreground">
-          <span className="text-xl font-semibold text-card-foreground">
+        <p className="text-muted-foreground text-sm">
+          <span className="font-semibold text-card-foreground text-xl">
             <NumberFlow
-              value={proProduct.baseEvents}
               format={{ style: "decimal" }}
+              value={proProduct.baseEvents}
             />
           </span>{" "}
           events per month, then ${proProduct.overagePrice.toFixed(4)} per event
@@ -110,10 +114,10 @@ export function PricingUpgrade({ currentPlan }: PricingUpgradeProps) {
       </div>
 
       <Button
-        onClick={handleUpgrade}
-        disabled={isCheckingOut}
-        size="lg"
         className="w-full"
+        disabled={isCheckingOut}
+        onClick={handleUpgrade}
+        size="lg"
       >
         {isCheckingOut ? "Processing..." : "Upgrade to Pro"}
       </Button>

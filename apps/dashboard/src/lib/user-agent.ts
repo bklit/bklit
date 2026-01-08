@@ -1,5 +1,7 @@
 export function isMobileDevice(userAgent: string | null | undefined): boolean {
-  if (!userAgent) return false;
+  if (!userAgent) {
+    return false;
+  }
 
   const mobileRegex =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
@@ -7,9 +9,11 @@ export function isMobileDevice(userAgent: string | null | undefined): boolean {
 }
 
 export function detectDevice(
-  userAgent: string | null | undefined,
+  userAgent: string | null | undefined
 ): "mobile" | "desktop" | "tablet" | "unknown" {
-  if (!userAgent) return "unknown";
+  if (!userAgent) {
+    return "unknown";
+  }
 
   const ua = userAgent.toLowerCase();
 

@@ -79,7 +79,7 @@ export function EventSheet({
     }
     setValidationError(null);
     setDeleteConfirmation("");
-  }, [mode, editingEvent, open]);
+  }, [mode, editingEvent]);
 
   // Auto-generate tracking ID when creating
   useEffect(() => {
@@ -88,20 +88,20 @@ export function EventSheet({
       setTrackingId(generatedId);
 
       const duplicateName = existingEvents.some(
-        (event) => event.name.toLowerCase() === name.toLowerCase(),
+        (event) => event.name.toLowerCase() === name.toLowerCase()
       );
 
       const duplicateTrackingId = existingEvents.some(
-        (event) => event.trackingId === generatedId,
+        (event) => event.trackingId === generatedId
       );
 
       if (duplicateName) {
         setValidationError(
-          "An event with this name already exists. Please choose a different name.",
+          "An event with this name already exists. Please choose a different name."
         );
       } else if (duplicateTrackingId) {
         setValidationError(
-          "An event with this tracking ID already exists. Please choose a different name.",
+          "An event with this tracking ID already exists. Please choose a different name."
         );
       } else {
         setValidationError(null);
@@ -117,7 +117,7 @@ export function EventSheet({
     if (mode === "edit" && editingEvent) {
       const duplicateTrackingId = existingEvents.some(
         (event) =>
-          event.trackingId === trackingId && event.id !== editingEvent.id,
+          event.trackingId === trackingId && event.id !== editingEvent.id
       );
 
       if (duplicateTrackingId) {
@@ -217,7 +217,9 @@ export function EventSheet({
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingEvent) return;
+    if (!editingEvent) {
+      return;
+    }
 
     updateMutation.mutate({
       id: editingEvent.id,
@@ -229,12 +231,16 @@ export function EventSheet({
   };
 
   const handleDelete = () => {
-    if (!editingEvent) return;
+    if (!editingEvent) {
+      return;
+    }
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = () => {
-    if (!editingEvent || deleteConfirmation !== editingEvent.trackingId) return;
+    if (!editingEvent || deleteConfirmation !== editingEvent.trackingId) {
+      return;
+    }
     deleteMutation.mutate({ id: editingEvent.id, organizationId });
   };
 
@@ -248,7 +254,6 @@ export function EventSheet({
   return (
     <>
       <Sheet
-        open={open}
         onOpenChange={(isOpen) => {
           // Only allow closing the sheet if the delete dialog is not open
           if (!isOpen && openDeleteDialog) {
@@ -256,8 +261,9 @@ export function EventSheet({
           }
           onOpenChange(isOpen);
         }}
+        open={open}
       >
-        <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <SheetContent onOpenAutoFocus={(e) => e.preventDefault()} side="right">
           <SheetHeader>
             <SheetTitle>
               {mode === "create" ? "Create Event" : "Edit Event"}
@@ -267,80 +273,80 @@ export function EventSheet({
             </SheetDescription>
           </SheetHeader>
           <form
+            className="mt-4 flex w-full flex-col gap-4 px-4"
             id="event-form"
             onSubmit={mode === "create" ? handleCreate : handleUpdate}
-            className="flex flex-col gap-4 w-full px-4 mt-4"
           >
             <div className="flex flex-col gap-1">
               <label htmlFor="name">
                 Event Name:
                 {mode === "edit" && (
-                  <span className="text-sm text-muted-foreground ml-2">
+                  <span className="ml-2 text-muted-foreground text-sm">
                     (read-only)
                   </span>
                 )}
               </label>
               <input
+                className={`w-full rounded border p-2 ${mode === "edit" ? "cursor-not-allowed bg-muted" : ""} ${validationError && mode === "create" ? "border-red-500" : ""}`}
                 id="name"
+                onChange={(e) => setName(e.target.value)}
+                readOnly={mode === "edit"}
+                required
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                readOnly={mode === "edit"}
-                className={`w-full border p-2 rounded ${mode === "edit" ? "bg-muted cursor-not-allowed" : ""} ${validationError && mode === "create" ? "border-red-500" : ""}`}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label htmlFor="description">Description (optional):</label>
               <textarea
+                className="w-full rounded border p-2"
                 id="description"
-                value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full border p-2 rounded"
                 rows={3}
+                value={description}
               />
             </div>
             <div className="flex flex-col gap-1">
               <label htmlFor="trackingId">
                 Tracking ID:
                 {mode === "create" && (
-                  <span className="text-sm text-muted-foreground ml-2">
+                  <span className="ml-2 text-muted-foreground text-sm">
                     (auto-generated)
                   </span>
                 )}
               </label>
               <input
+                className={`w-full rounded border p-2 ${mode === "create" ? "cursor-not-allowed bg-muted" : ""} ${validationError ? "border-red-500" : ""}`}
                 id="trackingId"
+                onChange={(e) => setTrackingId(e.target.value)}
+                placeholder="e.g., evt_signup_click"
+                readOnly={mode === "create"}
+                required
                 type="text"
                 value={trackingId}
-                onChange={(e) => setTrackingId(e.target.value)}
-                required
-                readOnly={mode === "create"}
-                placeholder="e.g., evt_signup_click"
-                className={`w-full border p-2 rounded ${mode === "create" ? "bg-muted cursor-not-allowed" : ""} ${validationError ? "border-red-500" : ""}`}
               />
             </div>
 
             {validationError && (
-              <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
-                <AlertCircle className="size-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
-                <p className="text-sm text-red-600 dark:text-red-400">
+              <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950/20">
+                <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-600 dark:text-red-400" />
+                <p className="text-red-600 text-sm dark:text-red-400">
                   {validationError}
                 </p>
               </div>
             )}
 
             {mode === "edit" && editingEvent && (
-              <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
+              <div className="mt-4 space-y-3 rounded-lg bg-muted p-4">
                 <div>
-                  <p className="font-semibold mb-2">Usage Examples:</p>
+                  <p className="mb-2 font-semibold">Usage Examples:</p>
                   <p className="text-sm">
                     Simply add the data attribute - all interaction types
                     (click, impression, hover) are tracked automatically!
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">
+                  <p className="mb-2 font-medium text-sm">
                     Data attribute (recommended):
                   </p>
                   <CopyInput
@@ -348,19 +354,19 @@ export function EventSheet({
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">ID attribute:</p>
+                  <p className="mb-2 font-medium text-sm">ID attribute:</p>
                   <CopyInput
                     value={`<button id="bklit-event-${trackingId}">Click Me</button>`}
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">
+                  <p className="mb-2 font-medium text-sm">
                     Manual tracking (JavaScript):
                   </p>
                   <CopyInput
                     value={`window.trackEvent("${trackingId}", "custom_event");`}
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="mt-2 text-muted-foreground text-xs">
                     Manual events don't count toward conversion rates since they
                     may not be user-perceived.
                   </p>
@@ -369,28 +375,28 @@ export function EventSheet({
             )}
           </form>
           <SheetFooter>
-            <div className="flex justify-between w-full">
+            <div className="flex w-full justify-between">
               {mode === "edit" && (
                 <Button
-                  variant="destructive"
-                  onClick={handleDelete}
                   disabled={deleteMutation.isPending}
+                  onClick={handleDelete}
                   type="button"
+                  variant="destructive"
                 >
                   {deleteMutation.isPending ? "Deleting..." : "Delete"}
                 </Button>
               )}
               <Button
-                variant="default"
-                form="event-form"
-                type="submit"
+                className="ml-auto disabled:opacity-50"
                 disabled={
                   !!validationError ||
                   (mode === "create"
                     ? createMutation.isPending
                     : updateMutation.isPending)
                 }
-                className="disabled:opacity-50 ml-auto"
+                form="event-form"
+                type="submit"
+                variant="default"
               >
                 {mode === "create"
                   ? createMutation.isPending
@@ -405,9 +411,9 @@ export function EventSheet({
         </SheetContent>
       </Sheet>
 
-      <Dialog open={openDeleteDialog} onOpenChange={handleDeleteDialogChange}>
+      <Dialog onOpenChange={handleDeleteDialogChange} open={openDeleteDialog}>
         <DialogContent>
-          <FormPermissions requiredRole={MemberRole.ADMIN} inModal asChild>
+          <FormPermissions asChild inModal requiredRole={MemberRole.ADMIN}>
             <DialogHeader>
               <DialogTitle>Delete Event</DialogTitle>
               <DialogDescription>
@@ -418,36 +424,36 @@ export function EventSheet({
             </DialogHeader>
             <div className="py-4">
               <label
+                className="font-medium text-sm"
                 htmlFor="delete-confirmation"
-                className="text-sm font-medium"
               >
                 Type{" "}
-                <code className="bg-muted px-1 py-0.5 rounded text-sm">
+                <code className="rounded bg-muted px-1 py-0.5 text-sm">
                   {editingEvent?.trackingId}
                 </code>{" "}
                 to confirm:
               </label>
               <input
+                autoComplete="off"
+                className="mt-2 w-full rounded border p-2"
                 id="delete-confirmation"
-                type="text"
-                value={deleteConfirmation}
                 onChange={(e) => setDeleteConfirmation(e.target.value)}
                 placeholder="Enter tracking ID"
-                className="w-full border p-2 rounded mt-2"
-                autoComplete="off"
+                type="text"
+                value={deleteConfirmation}
               />
             </div>
             <DialogFooter>
               <DialogClose>Cancel</DialogClose>
               <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  confirmDelete();
-                }}
                 disabled={
                   deleteConfirmation !== editingEvent?.trackingId ||
                   deleteMutation.isPending
                 }
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmDelete();
+                }}
                 variant="destructive"
               >
                 {deleteMutation.isPending ? "Deleting..." : "Delete Event"}

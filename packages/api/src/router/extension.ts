@@ -34,7 +34,7 @@ export const extensionRouter = createTRPCRouter({
         organizationId: z.string(),
         extensionId: z.string(),
         projectIds: z.array(z.string()),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user has access to organization
@@ -94,8 +94,8 @@ export const extensionRouter = createTRPCRouter({
               config: {}, // Empty config, user fills in project settings
             },
             update: {}, // If already exists, do nothing
-          }),
-        ),
+          })
+        )
       );
 
       return { success: true, count: results.length };
@@ -143,7 +143,7 @@ export const extensionRouter = createTRPCRouter({
           ...ext,
           metadata,
           eventDefinitions: ext.eventDefinitions.map(
-            (ed) => ed.eventDefinition,
+            (ed) => ed.eventDefinition
           ),
         };
       });
@@ -155,7 +155,7 @@ export const extensionRouter = createTRPCRouter({
       z.object({
         organizationId: z.string(),
         extensionId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Get all projects in the organization
@@ -201,7 +201,7 @@ export const extensionRouter = createTRPCRouter({
         extensionId: z.string(),
         config: z.record(z.unknown()),
         eventDefinitionIds: z.array(z.string()),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user has access to project
@@ -229,7 +229,7 @@ export const extensionRouter = createTRPCRouter({
       // Validate config against extension schema
       const validatedConfig = extensionRegistry.validateConfig(
         input.extensionId,
-        input.config,
+        input.config
       );
 
       // Find the project extension
@@ -283,7 +283,7 @@ export const extensionRouter = createTRPCRouter({
         projectId: z.string(),
         extensionId: z.string(),
         enabled: z.boolean(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify access
@@ -328,7 +328,7 @@ export const extensionRouter = createTRPCRouter({
         organizationId: z.string(),
         extensionId: z.string(),
         projectIds: z.array(z.string()),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user has access to organization
@@ -379,7 +379,7 @@ export const extensionRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         extensionId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user has access to project
@@ -422,7 +422,7 @@ export const extensionRouter = createTRPCRouter({
       const handler = extensionRegistry.getHandler(input.extensionId);
       const config = extensionRegistry.validateConfig(
         input.extensionId,
-        projectExtension.config,
+        projectExtension.config
       );
 
       const testEvent = {

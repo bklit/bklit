@@ -27,12 +27,16 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -41,8 +45,9 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
   const endDate = dateParams.endDate ?? undefined;
 
   const { previousStartDate, previousEndDate } = useMemo(() => {
-    if (!startDate || !endDate)
+    if (!(startDate && endDate)) {
       return { previousStartDate: undefined, previousEndDate: undefined };
+    }
     const diffMs = endDate.getTime() - startDate.getTime();
     const prevEnd = new Date(startDate.getTime() - 1);
     const prevStart = new Date(prevEnd.getTime() - diffMs);
@@ -83,8 +88,8 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -94,8 +99,8 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
   if (!topCountries || topCountries.length === 0) {
     return (
       <NoDataCard
-        title="Top Countries"
         description="Top countries by page views."
+        title="Top Countries"
       />
     );
   }
@@ -103,17 +108,19 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
   const top10 = topCountries.slice(0, 10);
   const totalTop10Views = top10.reduce(
     (sum, c) => sum + (Number(c.views) || 0),
-    0,
+    0
   );
 
   // Calculate changes
   const calculateChange = (
     currentViews: number,
-    countryCode: string,
+    countryCode: string
   ): number | null => {
-    if (!dateParams.compare || !previousTopCountries) return null;
+    if (!(dateParams.compare && previousTopCountries)) {
+      return null;
+    }
     const previousCountry = previousTopCountries.find(
-      (c) => c.countryCode === countryCode,
+      (c) => c.countryCode === countryCode
     );
     const previousViews = previousCountry ? Number(previousCountry.views) : 0;
     if (previousViews === 0) {
@@ -137,18 +144,18 @@ export function TopCountriesCard({ projectId, userId }: TopCountriesCardProps) {
             const change = calculateChange(currentViews, country.countryCode);
             return (
               <ProgressRow
-                key={country.countryCode}
-                label={country.country || "Unknown"}
-                value={country.views}
-                percentage={percentage}
-                icon={
-                  <CircleFlag
-                    countryCode={country.countryCode?.toLowerCase() || "us"}
-                    className="size-4"
-                  />
-                }
                 change={change}
                 changeUniqueKey={`country-${country.countryCode}`}
+                icon={
+                  <CircleFlag
+                    className="size-4"
+                    countryCode={country.countryCode?.toLowerCase() || "us"}
+                  />
+                }
+                key={country.countryCode}
+                label={country.country || "Unknown"}
+                percentage={percentage}
+                value={country.views}
               />
             );
           })}

@@ -20,7 +20,7 @@ export default async function EventsPage({ params }: PageProps) {
     trpc.event.list.queryOptions({
       projectId,
       organizationId,
-    }),
+    })
   );
 
   return <Events organizationId={organizationId} projectId={projectId} />;

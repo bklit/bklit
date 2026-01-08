@@ -3,7 +3,7 @@ import type { DiscordConfig } from "./config-schema";
 
 export async function sendToDiscord(
   config: DiscordConfig,
-  event: EventData,
+  event: EventData
 ): Promise<void> {
   // Skip "view" events to prevent spam
   if (event.eventType === "view") {
@@ -13,7 +13,7 @@ export async function sendToDiscord(
   const embed = {
     title: `🎯 ${event.trackingId}`,
     description: `Event: **${event.eventType}**`,
-    color: 0x00d084, // Bklit green
+    color: 0x00_d0_84, // Bklit green
     fields: Object.entries(event.metadata || {}).map(([key, value]) => ({
       name: key,
       value: String(value),
@@ -40,7 +40,7 @@ export async function sendToDiscord(
 
     if (!response.ok) {
       throw new Error(
-        `Discord webhook failed: ${response.status} ${response.statusText}`,
+        `Discord webhook failed: ${response.status} ${response.statusText}`
       );
     }
   } catch (error) {

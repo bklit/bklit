@@ -15,18 +15,18 @@ export const metadata: Metadata = {
 
 export default async function PricingPage() {
   return (
-    <main className="w-full min-h-screen flex flex-col gap-32">
+    <main className="flex min-h-screen w-full flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-6xl flex flex-col px-4 py-48 space-y-12">
+      <div className="container mx-auto flex max-w-6xl flex-col space-y-12 px-4 py-48">
         <SectionHeader
-          title="Pricing"
           description="Simple, transparent pricing for teams of all sizes."
+          title="Pricing"
         >
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             All prices exclude applicable taxes. Tax will be calculated at
             checkout based on your location.
           </p>
-          <Button variant="default" asChild size="lg">
+          <Button asChild size="lg" variant="default">
             <a href="https://app.bklit.com/signup" title="Sign up">
               Sign up
             </a>

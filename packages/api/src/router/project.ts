@@ -9,7 +9,7 @@ export const projectRouter = {
       z.object({
         id: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -28,11 +28,7 @@ export const projectRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 

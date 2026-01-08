@@ -50,12 +50,16 @@ export function PageviewsTable({
       startDate: parseAsIsoDateTime,
       endDate: parseAsIsoDateTime,
     },
-    { history: "push" },
+    { history: "push" }
   );
 
   const startDate = useMemo(() => {
-    if (queryParams.startDate) return queryParams.startDate;
-    if (!queryParams.endDate) return undefined;
+    if (queryParams.startDate) {
+      return queryParams.startDate;
+    }
+    if (!queryParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -103,7 +107,7 @@ export function PageviewsTable({
         {isLoading || !data ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }, () => (
-              <Skeleton key={crypto.randomUUID()} className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" key={crypto.randomUUID()} />
             ))}
           </div>
         ) : (
@@ -111,7 +115,7 @@ export function PageviewsTable({
               ? (data as any).pages?.length === 0
               : (data as any).entryPages?.length === 0
           ) ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             {viewMode === "entry-points"
               ? "No entry points found"
               : "No pageviews found"}
@@ -146,21 +150,21 @@ export function PageviewsTable({
                       <TableCell className="font-medium">
                         {page.title}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground font-mono">
-                        <Badge variant="code" size="lg">
+                      <TableCell className="font-mono text-muted-foreground text-sm">
+                        <Badge size="lg" variant="code">
                           {page.path}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="font-medium text-sm">
                         {page.viewCount}
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="font-medium text-sm">
                         {page.uniqueUserCount}
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="font-medium text-sm">
                         {page.avgViewsPerUser}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-sm">
                         <div className="space-y-1">
                           <div>
                             {formatDistanceToNow(new Date(page.lastViewed), {
@@ -179,24 +183,24 @@ export function PageviewsTable({
                       <TableCell className="font-medium">
                         {page.title}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground font-mono">
-                        <code className="py-1 px-2 bg-background border border-border/10 rounded-md">
+                      <TableCell className="font-mono text-muted-foreground text-sm">
+                        <code className="rounded-md border border-border/10 bg-background px-2 py-1">
                           {page.path}
                         </code>
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="font-medium text-sm">
                         {page.sessions}
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="font-medium text-sm">
                         {page.totalPageviews}
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="font-medium text-sm">
                         {page.mobileSessions}
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="font-medium text-sm">
                         {page.desktopSessions}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-sm">
                         <div className="space-y-1">
                           <div>
                             {formatDistanceToNow(new Date(page.lastVisited), {
@@ -222,6 +226,11 @@ export function PageviewsTable({
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
+                  className={
+                    data.pagination.hasPreviousPage
+                      ? ""
+                      : "pointer-events-none opacity-50"
+                  }
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
@@ -231,17 +240,12 @@ export function PageviewsTable({
                       });
                     }
                   }}
-                  className={
-                    !data.pagination.hasPreviousPage
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
                 />
               </PaginationItem>
 
               {Array.from(
                 { length: data.pagination.totalPages },
-                (_, i) => i + 1,
+                (_, i) => i + 1
               )
                 .filter((page) => {
                   const current = data.pagination.page;
@@ -266,11 +270,11 @@ export function PageviewsTable({
                       <PaginationItem>
                         <PaginationLink
                           href="#"
+                          isActive={page === data.pagination.page}
                           onClick={(e) => {
                             e.preventDefault();
                             setQueryParams({ page });
                           }}
-                          isActive={page === data.pagination.page}
                         >
                           {page}
                         </PaginationLink>
@@ -281,6 +285,11 @@ export function PageviewsTable({
 
               <PaginationItem>
                 <PaginationNext
+                  className={
+                    data.pagination.hasNextPage
+                      ? ""
+                      : "pointer-events-none opacity-50"
+                  }
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
@@ -290,11 +299,6 @@ export function PageviewsTable({
                       });
                     }
                   }}
-                  className={
-                    !data.pagination.hasNextPage
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
                 />
               </PaginationItem>
             </PaginationContent>

@@ -43,7 +43,7 @@ export async function setupDockerServices(dbPassword: string): Promise<{
       await execa(
         "docker",
         ["rm", "-f", "bklit-postgres", "bklit-clickhouse"],
-        { stdio: "ignore" },
+        { stdio: "ignore" }
       );
     } catch {
       // Ignore if containers don't exist
@@ -60,7 +60,7 @@ export async function setupDockerServices(dbPassword: string): Promise<{
         console.error(error.stderr);
       }
       throw new Error(
-        `Docker compose failed. Try running: docker compose down -v && docker system prune -f`,
+        "Docker compose failed. Try running: docker compose down -v && docker system prune -f"
       );
     }
 
@@ -138,7 +138,7 @@ volumes:
 
 async function waitForPostgres(
   _dbPassword: string,
-  maxAttempts = 60,
+  maxAttempts = 60
 ): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
@@ -155,7 +155,7 @@ async function waitForPostgres(
     }
   }
   throw new Error(
-    "PostgreSQL did not become ready in time. Try: docker compose logs postgres",
+    "PostgreSQL did not become ready in time. Try: docker compose logs postgres"
   );
 }
 
@@ -177,11 +177,11 @@ async function testPostgresConnection(dbPassword: string): Promise<void> {
       ],
       {
         env: { PGPASSWORD: dbPassword },
-      },
+      }
     );
   } catch (_error) {
     throw new Error(
-      `PostgreSQL connection test failed. Password might not be set correctly. Try: docker compose logs postgres`,
+      "PostgreSQL connection test failed. Password might not be set correctly. Try: docker compose logs postgres"
     );
   }
 }
@@ -213,6 +213,6 @@ async function waitForClickHouse(maxAttempts = 60): Promise<void> {
     }
   }
   throw new Error(
-    "ClickHouse did not become ready in time. Try: docker compose logs clickhouse",
+    "ClickHouse did not become ready in time. Try: docker compose logs clickhouse"
   );
 }

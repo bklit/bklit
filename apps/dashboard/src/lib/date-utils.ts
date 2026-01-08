@@ -19,7 +19,7 @@ export function parseClickHouseDate(dateString: string): Date {
 
 export function getPreviousPeriod(
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): { startDate: Date; endDate: Date } {
   const duration = endDate.getTime() - startDate.getTime();
 

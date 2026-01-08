@@ -1,7 +1,6 @@
 import crypto from "node:crypto";
 import { prisma } from "@bklit/db/client";
 import { NextResponse } from "next/server";
-import { env } from "@/env";
 
 export async function POST(req: Request) {
   try {
@@ -17,7 +16,7 @@ export async function POST(req: Request) {
     const isValid = await verifySignature(
       rawBody,
       signature,
-      repository?.full_name,
+      repository?.full_name
     );
 
     if (!isValid) {
@@ -80,7 +79,7 @@ export async function POST(req: Request) {
       // Only process successful deployments
       if (deployment_status.state !== "success") {
         console.log(
-          `[GITHUB WEBHOOK] Skipping - deployment status not success: ${deployment_status.state}`,
+          `[GITHUB WEBHOOK] Skipping - deployment status not success: ${deployment_status.state}`
         );
         return NextResponse.json({ ok: true, skipped: true });
       }
@@ -89,7 +88,7 @@ export async function POST(req: Request) {
         deployment,
         deployment_status,
         repository,
-        prisma,
+        prisma
       );
     }
 
@@ -103,7 +102,7 @@ export async function POST(req: Request) {
 async function processWorkflowDeployment(
   workflow_run: any,
   repository: any,
-  prisma: any,
+  prisma: any
 ) {
   try {
     console.log("[GITHUB WEBHOOK] Processing workflow deployment...");
@@ -123,7 +122,7 @@ async function processWorkflowDeployment(
 
     if (!projectExtension) {
       console.log(
-        `[GITHUB WEBHOOK] No project extension found for repository: ${repository.full_name}`,
+        `[GITHUB WEBHOOK] No project extension found for repository: ${repository.full_name}`
       );
       return NextResponse.json({ ok: true, skipped: true });
     }
@@ -150,12 +149,12 @@ async function processWorkflowDeployment(
     // Check if this workflow is in the production workflows list
     const isProductionWorkflow = config.productionWorkflows?.some(
       (wf) =>
-        wf === workflow_run.name || wf === String(workflow_run.workflow_id),
+        wf === workflow_run.name || wf === String(workflow_run.workflow_id)
     );
 
     if (!isProductionWorkflow) {
       console.log(
-        `[GITHUB WEBHOOK] Skipping - workflow not in production list: ${workflow_run.name}`,
+        `[GITHUB WEBHOOK] Skipping - workflow not in production list: ${workflow_run.name}`
       );
       return NextResponse.json({ ok: true, skipped: true });
     }
@@ -163,7 +162,7 @@ async function processWorkflowDeployment(
     // Check if it's the production branch
     if (workflow_run.head_branch !== config.productionBranch) {
       console.log(
-        `[GITHUB WEBHOOK] Skipping - branch mismatch: ${workflow_run.head_branch} !== ${config.productionBranch}`,
+        `[GITHUB WEBHOOK] Skipping - branch mismatch: ${workflow_run.head_branch} !== ${config.productionBranch}`
       );
       return NextResponse.json({ ok: true, skipped: true });
     }
@@ -206,7 +205,7 @@ async function processDeploymentStatus(
   deployment: any,
   deployment_status: any,
   repository: any,
-  prisma: any,
+  prisma: any
 ) {
   try {
     console.log("[GITHUB WEBHOOK] Processing deployment status...");
@@ -226,7 +225,7 @@ async function processDeploymentStatus(
 
     if (!projectExtension) {
       console.log(
-        `[GITHUB WEBHOOK] No project extension found for repository: ${repository.full_name}`,
+        `[GITHUB WEBHOOK] No project extension found for repository: ${repository.full_name}`
       );
       return NextResponse.json({ ok: true, skipped: true });
     }
@@ -236,7 +235,7 @@ async function processDeploymentStatus(
       projectName: projectExtension.project.name,
     });
 
-    const config = projectExtension.config as {
+    const _config = projectExtension.config as {
       repository: string;
       productionBranch: string;
     };
@@ -260,7 +259,7 @@ async function processDeploymentStatus(
 
     if (!isProductionDeployment) {
       console.log(
-        `[GITHUB WEBHOOK] Skipping - not a production deployment (environment: ${deployment.environment}, production_environment: ${deployment.production_environment})`,
+        `[GITHUB WEBHOOK] Skipping - not a production deployment (environment: ${deployment.environment}, production_environment: ${deployment.production_environment})`
       );
       return NextResponse.json({ ok: true, skipped: true });
     }
@@ -268,7 +267,7 @@ async function processDeploymentStatus(
     console.log("[GITHUB WEBHOOK] ✅ Production deployment detected!");
 
     console.log(
-      "[GITHUB WEBHOOK] Creating deployment record from deployment_status...",
+      "[GITHUB WEBHOOK] Creating deployment record from deployment_status..."
     );
 
     // Create deployment record
@@ -307,10 +306,14 @@ async function processDeploymentStatus(
 async function verifySignature(
   body: string,
   signature: string | null,
-  repositoryFullName: string | undefined,
+  repositoryFullName: string | undefined
 ): Promise<boolean> {
-  if (!signature) return false;
-  if (!repositoryFullName) return false;
+  if (!signature) {
+    return false;
+  }
+  if (!repositoryFullName) {
+    return false;
+  }
 
   // Look up the webhook secret for this repository from the database
   const projectExtension = await prisma.projectExtension.findFirst({
@@ -326,7 +329,7 @@ async function verifySignature(
 
   if (!projectExtension) {
     console.warn(
-      `[WEBHOOK] No project extension found for repository: ${repositoryFullName}`,
+      `[WEBHOOK] No project extension found for repository: ${repositoryFullName}`
     );
     return false;
   }
@@ -336,20 +339,19 @@ async function verifySignature(
 
   if (!secret) {
     console.warn(
-      `[WEBHOOK] No webhook secret found for repository: ${repositoryFullName}`,
+      `[WEBHOOK] No webhook secret found for repository: ${repositoryFullName}`
     );
     // If no secret is stored (legacy webhooks), skip verification in development only
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        "[WEBHOOK] Skipping signature verification in development (no secret configured)",
+        "[WEBHOOK] Skipping signature verification in development (no secret configured)"
       );
       return true;
     }
     return false;
   }
 
-  const hash =
-    "sha256=" + crypto.createHmac("sha256", secret).update(body).digest("hex");
+  const hash = `sha256=${crypto.createHmac("sha256", secret).update(body).digest("hex")}`;
 
   return signature === hash;
 }

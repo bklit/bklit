@@ -37,17 +37,17 @@ export const ProgressRow = ({
   const Comp = asChild ? Slot : "div";
   return (
     <Comp
-      className={cn("flex flex-col group", className)}
+      className={cn("group flex flex-col", className)}
       data-percentage={percentage.toFixed(2)}
     >
-      <div className="flex flex-row justify-between items-center py-1 px-1.5 group-hover:bg-muted">
+      <div className="flex flex-row items-center justify-between px-1.5 py-1 group-hover:bg-muted">
         <div className="flex items-center gap-2">
           {icon && icon}
           <span
             className={cn(
               "font-medium text-sm",
               variant === "secondary" &&
-                "font-mono text-xs text-muted-foreground",
+                "font-mono text-muted-foreground text-xs"
             )}
           >
             {label}
@@ -58,8 +58,8 @@ export const ProgressRow = ({
           {change !== undefined && (
             <ChangeIndicator
               change={change}
-              uniqueKey={changeUniqueKey || label}
               size={12}
+              uniqueKey={changeUniqueKey || label}
             />
           )}
         </div>
@@ -69,7 +69,7 @@ export const ProgressRow = ({
           <div
             className={cn(
               "flex h-full rounded-full transition-all",
-              !color && "bg-primary",
+              !color && "bg-primary"
             )}
             style={{
               width: `${percentage}%`,

@@ -16,7 +16,9 @@ export function AnimatedGlobalStats() {
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
-    if (!hasAnimated) return;
+    if (!hasAnimated) {
+      return;
+    }
 
     const fetchStats = async () => {
       try {
@@ -37,71 +39,71 @@ export function AnimatedGlobalStats() {
     <div className="flex flex-col gap-4 pt-8 sm:pt-0">
       <div className="grid grid-cols-4 grid-rows-1 gap-0">
         <motion.div
-          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          className="flex flex-col gap-1 p-4 sm:border-r sm:p-12"
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+          onAnimationComplete={() => setHasAnimated(true)}
           transition={{
             duration: 0.8,
             delay: 0.8,
             ease: "easeOut",
           }}
-          onAnimationComplete={() => setHasAnimated(true)}
-          className="flex flex-col gap-1 sm:border-r p-4 sm:p-12"
         >
           <h3 className="text-xs sm:text-lg">Sessions recorded</h3>
-          <div className="text-xl sm:text-2xl font-bold">
+          <div className="font-bold text-xl sm:text-2xl">
             <NumberFlow value={stats.totalSessions} />
           </div>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          className="flex flex-col gap-1 p-4 sm:border-r sm:p-12"
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           transition={{
             duration: 0.8,
             delay: 1.0,
             ease: "easeOut",
           }}
-          className="flex flex-col gap-1 sm:border-r p-4 sm:p-12"
         >
           <h3 className="text-xs sm:text-lg">Pageviews recorded</h3>
-          <div className="text-xl sm:text-2xl font-bold">
+          <div className="font-bold text-xl sm:text-2xl">
             <NumberFlow value={stats.totalPageviews} />
           </div>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          className="flex flex-col gap-1 p-4 sm:border-r sm:p-12"
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           transition={{
             duration: 0.8,
             delay: 1.2,
             ease: "easeOut",
           }}
-          className="flex flex-col gap-1 sm:border-r p-4 sm:p-12"
         >
           <h3 className="text-xs sm:text-lg">Unique users</h3>
-          <div className="text-xl sm:text-2xl font-bold">
+          <div className="font-bold text-xl sm:text-2xl">
             <NumberFlow value={stats.totalUniqueUsers} />
           </div>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          className="flex flex-col gap-1 p-4 sm:p-12"
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           transition={{
             duration: 0.8,
             delay: 1.4,
             ease: "easeOut",
           }}
-          className="flex flex-col gap-1 p-4 sm:p-12"
         >
           <h3 className="text-xs sm:text-lg">Conversions recorded</h3>
-          <div className="text-xl sm:text-2xl font-bold">
+          <div className="font-bold text-xl sm:text-2xl">
             <NumberFlow value={stats.totalConversions} />
           </div>
         </motion.div>
       </div>
-      <div className="text-center text-sm text-muted-foreground">
+      <div className="text-center text-muted-foreground text-sm">
         <motion.p
-          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
           transition={{
             duration: 0.8,
             delay: 2.6,

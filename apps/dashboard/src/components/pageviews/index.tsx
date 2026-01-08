@@ -47,12 +47,16 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -69,7 +73,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   // Get entry points data when in entry-points mode
@@ -85,7 +89,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
 
   // Calculate previous period dates for comparison
   const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
-    if (!compare || !startDate || !endDate) {
+    if (!(compare && startDate && endDate)) {
       return { startDate: undefined, endDate: undefined };
     }
     return getPreviousPeriod(startDate, endDate);
@@ -125,7 +129,6 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
     <>
       {/* Header */}
       <PageHeader
-        title="Pageviews"
         description={
           isLoading
             ? "Loading pageviews..."
@@ -133,16 +136,17 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
               ? `${entryPointsData?.entryPages?.length || 0} unique entry points`
               : `${statsData?.totalViews || 0} total pageviews`
         }
+        title="Pageviews"
       >
-        <div className="flex flex-row items-center gap-2 w-full justify-end">
+        <div className="flex w-full flex-row items-center justify-end gap-2">
           <DateRangePicker />
           <Select
-            value={viewMode}
             onValueChange={(value) => setDateParams({ viewMode: value })}
+            value={viewMode}
           >
             <SelectTrigger
-              size="sm"
               className={cn("w-auto", isDesktop && "w-full")}
+              size="sm"
             >
               {isDesktop ? (
                 <SelectValue placeholder="Select view mode" />
@@ -176,7 +180,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 prevEntryPointsData && {
                   ...calculateChange(
                     entryPointsData?.entryPages?.length || 0,
-                    prevEntryPointsData?.entryPages?.length || 0,
+                    prevEntryPointsData?.entryPages?.length || 0
                   ),
                 }),
               ...(compare &&
@@ -184,7 +188,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.totalViews || 0,
-                    prevStatsData?.totalViews || 0,
+                    prevStatsData?.totalViews || 0
                   ),
                 }),
               ...(compare &&
@@ -204,7 +208,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 viewMode === "entry-points"
                   ? entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.sessions,
-                      0,
+                      0
                     ) || 0
                   : statsData?.uniquePages || 0,
               ...(compare &&
@@ -213,12 +217,12 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                   ...calculateChange(
                     entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.sessions,
-                      0,
+                      0
                     ) || 0,
                     prevEntryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.sessions,
-                      0,
-                    ) || 0,
+                      0
+                    ) || 0
                   ),
                 }),
               ...(compare &&
@@ -226,7 +230,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.uniquePages || 0,
-                    prevStatsData?.uniquePages || 0,
+                    prevStatsData?.uniquePages || 0
                   ),
                 }),
               ...(compare &&
@@ -246,7 +250,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 viewMode === "entry-points"
                   ? entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.mobileSessions,
-                      0,
+                      0
                     ) || 0
                   : statsData?.mobileViews || 0,
               ...(compare &&
@@ -255,12 +259,12 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                   ...calculateChange(
                     entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.mobileSessions,
-                      0,
+                      0
                     ) || 0,
                     prevEntryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.mobileSessions,
-                      0,
-                    ) || 0,
+                      0
+                    ) || 0
                   ),
                 }),
               ...(compare &&
@@ -268,7 +272,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.mobileViews || 0,
-                    prevStatsData?.mobileViews || 0,
+                    prevStatsData?.mobileViews || 0
                   ),
                 }),
               ...(compare &&
@@ -288,7 +292,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 viewMode === "entry-points"
                   ? entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.desktopSessions,
-                      0,
+                      0
                     ) || 0
                   : statsData?.desktopViews || 0,
               ...(compare &&
@@ -297,12 +301,12 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                   ...calculateChange(
                     entryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.desktopSessions,
-                      0,
+                      0
                     ) || 0,
                     prevEntryPointsData?.entryPages?.reduce(
                       (sum, page) => sum + page.desktopSessions,
-                      0,
-                    ) || 0,
+                      0
+                    ) || 0
                   ),
                 }),
               ...(compare &&
@@ -310,7 +314,7 @@ export function Pageviews({ organizationId, projectId }: PageviewsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.desktopViews || 0,
-                    prevStatsData?.desktopViews || 0,
+                    prevStatsData?.desktopViews || 0
                   ),
                 }),
               ...(compare &&

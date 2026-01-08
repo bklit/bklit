@@ -29,7 +29,7 @@ export default function MarketingHomePage() {
 
       <div className="flex flex-col space-y-16 sm:space-y-64">
         <div className={cn("relative w-full sm:min-h-[400px]")}>
-          <div className="container mx-auto max-w-full sm:max-w-[1600px] px-4">
+          <div className="container mx-auto max-w-full px-4 sm:max-w-[1600px]">
             <div className="grid grid-cols-1 grid-rows-1">
               <AnimateHeroNew />
               <div className="container mx-auto max-w-6xl px-4">
@@ -41,11 +41,11 @@ export default function MarketingHomePage() {
 
         <div className="space-y-16 px-4" id="product">
           <SectionHeader
-            title="Detect everything, everywhere"
-            description="Countries, Browsers &amp; Devices"
             align="left"
+            description="Countries, Browsers &amp; Devices"
+            title="Detect everything, everywhere"
           />
-          <div className="relative w-full min-h-[600px] ">
+          <div className="relative min-h-[600px] w-full">
             <div className="container mx-auto max-w-6xl px-4">
               <DetectEverything />
             </div>
@@ -53,29 +53,29 @@ export default function MarketingHomePage() {
         </div>
 
         <div className="space-y-16 px-4">
-          <div className="relative w-full min-h-[400px] overflow-hidden">
+          <div className="relative min-h-[400px] w-full overflow-hidden">
             <div className="container mx-auto max-w-6xl px-4">
               <PageviewsView />
             </div>
-            <div className="container mx-auto max-w-6xl px-4 border-t">
+            <div className="container mx-auto max-w-6xl border-t px-4">
               <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="col-span-1 border-b sm:border-r p-6 sm:p-12 space-y-8">
+                <div className="col-span-1 space-y-8 border-b p-6 sm:border-r sm:p-12">
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold">User Journeys</h2>
+                    <h2 className="font-bold text-2xl">User Journeys</h2>
                     <p className="text-lg text-muted-foreground">
                       See where your users enter your website and where they
                       exit, and how they navigate through your website.
                     </p>
                   </div>
-                  <div className="relative w-full min-h-[400px]">
+                  <div className="relative min-h-[400px] w-full">
                     <SankeyDemo />
 
-                    <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-transparent bg-linear-to-b pointer-events-none" />
+                    <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-b from-transparent via-transparent to-background" />
                   </div>
                 </div>
-                <div className="col-span-1 border-b p-6 sm:p-12 space-y-8">
+                <div className="col-span-1 space-y-8 border-b p-6 sm:p-12">
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold">Conversion funnels</h2>
+                    <h2 className="font-bold text-2xl">Conversion funnels</h2>
                     <p className="text-lg text-muted-foreground">
                       Create funnels to improve your conversion rate across
                       campaigns and channels.
@@ -83,7 +83,7 @@ export default function MarketingHomePage() {
                   </div>
                   <div className="relative w-full">
                     <FunnelDemo />
-                    <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-background/66 bg-linear-to-b pointer-events-none" />
+                    <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-b from-transparent via-background/66 to-background" />
                   </div>
                 </div>
               </div>
@@ -92,25 +92,25 @@ export default function MarketingHomePage() {
           </div>
         </div>
 
-        <div className="space-y-16 px-4 hidden sm:block">
-          <SectionBasic title="Simple SDKs" artwork={<SDKs />}>
+        <div className="hidden space-y-16 px-4 sm:block">
+          <SectionBasic artwork={<SDKs />} title="Simple SDKs">
             <p className="text-lg text-muted-foreground">
               Bklit SDKs are designed to be simple and easy to use. Initialize
               once and start tracking your users.
             </p>
             <ul className="space-y-1 text-lg">
               <li className="flex items-center gap-2 text-muted-foreground">
-                <Check size={16} className="text-emerald-500" /> Vanilla React
+                <Check className="text-emerald-500" size={16} /> Vanilla React
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
-                <Check size={16} className="text-emerald-500" /> Next.js
+                <Check className="text-emerald-500" size={16} /> Next.js
               </li>
             </ul>
-            <Button variant="default" size="lg" asChild>
+            <Button asChild size="lg" variant="default">
               <a
                 href="https://app.bklit.com/signin?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 Get started <ArrowRight size={16} />
               </a>
@@ -120,8 +120,8 @@ export default function MarketingHomePage() {
 
         <div className="space-y-16 px-4">
           <SectionHeader
-            title="Got questions?"
             description="We've got answers"
+            title="Got questions?"
           />
           <FAQ />
         </div>

@@ -105,7 +105,7 @@ export const DATE_PRESETS: DatePreset[] = [
 
 export function getPresetForDates(
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): string | null {
   const normalizedStart = startOfDay(startDate);
   const normalizedEnd = endOfDay(endDate);

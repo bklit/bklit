@@ -10,19 +10,19 @@ import { GithubStarCount } from "./github-star-count";
 
 export const Footer = () => {
   return (
-    <footer className="bg-background mt-auto">
-      <div className="container mx-auto max-w-6xl flex flex-col px-4 gap-4">
+    <footer className="mt-auto bg-background">
+      <div className="container mx-auto flex max-w-6xl flex-col gap-4 px-4">
         <BrandTiles />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-16">
+        <div className="grid grid-cols-1 gap-8 border-t pt-16 md:grid-cols-2">
           <div className="col-span-1 space-y-4">
-            <h4 className="text-base font-bold">Company</h4>
-            <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <h4 className="font-bold text-base">Company</h4>
+            <ul className="flex flex-col gap-2 text-muted-foreground text-sm">
               <li>
                 <Link
+                  className="group relative flex items-center gap-2 transition-all duration-200 hover:text-foreground"
                   href="/terms"
-                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                 >
-                  <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                  <span className="absolute left-0 text-lime-200 opacity-0 transition group-hover:opacity-100">
                     ◑
                   </span>
                   <span className="transition-all duration-200 group-hover:translate-x-[20px]">
@@ -32,10 +32,10 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
+                  className="group relative flex items-center gap-2 transition-all duration-200 hover:text-foreground"
                   href="/privacy"
-                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                 >
-                  <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                  <span className="absolute left-0 text-lime-200 opacity-0 transition group-hover:opacity-100">
                     ◑
                   </span>
                   <span className="transition-all duration-200 group-hover:translate-x-[20px]">
@@ -45,10 +45,10 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
+                  className="group relative flex items-center gap-2 transition-all duration-200 hover:text-foreground"
                   href="/pricing"
-                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                 >
-                  <span className="text-lime-200 transition duration-100 absolute left-0 opacity-0 group-hover:opacity-100 delay-100">
+                  <span className="absolute left-0 text-lime-200 opacity-0 transition delay-100 duration-100 group-hover:opacity-100">
                     ◑
                   </span>
                   <span className="transition-all duration-200 group-hover:translate-x-[20px]">
@@ -58,10 +58,10 @@ export const Footer = () => {
               </li>
               <li>
                 <a
+                  className="group relative flex items-center gap-2 transition-all duration-200 hover:text-foreground"
                   href="mailto:support@bklit.com?subject=Support%20Request"
-                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                 >
-                  <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                  <span className="absolute left-0 text-lime-200 opacity-0 transition group-hover:opacity-100">
                     ◑
                   </span>
                   <span className="transition-all duration-200 group-hover:translate-x-[20px]">
@@ -71,12 +71,12 @@ export const Footer = () => {
               </li>
               <li>
                 <a
+                  className="group relative flex items-center gap-2 transition-all duration-200 hover:text-foreground"
                   href="https://docs.bklit.com"
-                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
-                  target="_blank"
                   rel="noopener noreferrer"
+                  target="_blank"
                 >
-                  <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                  <span className="absolute left-0 text-lime-200 opacity-0 transition group-hover:opacity-100">
                     ◑
                   </span>
                   <span className="transition-all duration-200 group-hover:translate-x-[20px]">
@@ -86,10 +86,10 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
+                  className="group relative flex items-center gap-2 transition-all duration-200 hover:text-foreground"
                   href="/branding"
-                  className="flex items-center gap-2 group transition-all duration-200 relative hover:text-foreground"
                 >
-                  <span className="text-lime-200 transition absolute left-0 opacity-0 group-hover:opacity-100">
+                  <span className="absolute left-0 text-lime-200 opacity-0 transition group-hover:opacity-100">
                     ◑
                   </span>
                   <span className="transition-all duration-200 group-hover:translate-x-[20px]">
@@ -100,40 +100,40 @@ export const Footer = () => {
             </ul>
           </div>
           <div className="col-span-1 space-y-4">
-            <h4 className="text-base font-bold">Bklit Inc.</h4>
-            <p className="text-xs md:text-sm text-muted-foreground font-normal">
+            <h4 className="font-bold text-base">Bklit Inc.</h4>
+            <p className="font-normal text-muted-foreground text-xs md:text-sm">
               169 Madison Avenue, New York, NY 10016 US
             </p>
             <ul className="flex items-center gap-4">
               <li>
                 <a
+                  className="text-muted-foreground transition-colors hover:text-foreground"
                   href="https://github.com/bklit/bklit"
-                  title="Github"
-                  target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  target="_blank"
+                  title="Github"
                 >
                   <GitHubIcon className="size-5" />
                 </a>
               </li>
               <li>
                 <a
+                  className="text-muted-foreground transition-colors hover:text-foreground"
                   href="https://x.com/bklitai"
-                  title="X"
-                  target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  target="_blank"
+                  title="X"
                 >
                   <XIcon className="size-5" />
                 </a>
               </li>
               <li>
                 <a
+                  className="text-muted-foreground transition-colors hover:text-foreground"
                   href="https://discord.gg/9yyK8FwPcU"
-                  title="Discord"
-                  target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  target="_blank"
+                  title="Discord"
                 >
                   <DiscordIcon className="size-5" />
                 </a>
@@ -141,20 +141,20 @@ export const Footer = () => {
             </ul>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row md:items-center justify-between py-8 pt-0 md:pt-8 gap-4">
-          <p className="text-muted-foreground text-xs sm:text-sm order-2 sm:order-1">
+        <div className="flex flex-col justify-between gap-4 py-8 pt-0 md:flex-row md:items-center md:pt-8">
+          <p className="order-2 text-muted-foreground text-xs sm:order-1 sm:text-sm">
             &copy; {new Date().getFullYear()} Bklit Inc. All rights reserved.
           </p>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 order-1 sm:order-2">
-            <Button variant="outline" size="lg" asChild>
+          <div className="order-1 flex flex-col items-start gap-2 sm:order-2 sm:flex-row sm:items-center">
+            <Button asChild size="lg" variant="outline">
               <a
                 href="https://github.com/bklit/bklit"
+                rel="noopener noreferrer"
                 target="_blank"
                 title="Bklit on Github"
-                rel="noopener noreferrer"
               >
                 <Github size={16} /> See on Github
-                <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
+                <span className="flex items-center gap-1 opacity-70 transition-opacity group-hover:opacity-100">
                   <GithubStarCount />
                 </span>
               </a>

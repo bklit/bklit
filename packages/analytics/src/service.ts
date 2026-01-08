@@ -25,7 +25,7 @@ function formatDateForInsert(date: Date): number {
 }
 
 export class AnalyticsService {
-  private client = getClickHouseClient();
+  private readonly client = getClickHouseClient();
 
   async createPageView(data: PageViewData): Promise<void> {
     try {
@@ -211,25 +211,29 @@ export class AnalyticsService {
       project_id: string;
     }>;
 
-    if (sessions.length === 0) return;
+    if (sessions.length === 0) {
+      return;
+    }
 
     const session = sessions[0];
-    if (!session || session.ended_at) return; // Already ended
+    if (!session || session.ended_at) {
+      return; // Already ended
+    }
 
     // Calculate duration
     const startedAt = new Date(session.started_at);
     const endedAt = new Date();
     const duration = Math.floor(
-      (endedAt.getTime() - startedAt.getTime()) / 1000,
+      (endedAt.getTime() - startedAt.getTime()) / 1000
     );
 
     // Create new row with ended session
     await this.createTrackedSession({
       id: session.id,
       sessionId: session.session_id,
-      startedAt: startedAt,
-      endedAt: endedAt,
-      duration: duration,
+      startedAt,
+      endedAt,
+      duration,
       didBounce: session.did_bounce,
       visitorId: session.visitor_id,
       entryPage: session.entry_page,
@@ -244,9 +248,7 @@ export class AnalyticsService {
 
   async updateTrackedSession(
     sessionId: string,
-    data: Partial<
-      Pick<TrackedSessionData, "endedAt" | "duration" | "exitPage">
-    >,
+    data: Partial<Pick<TrackedSessionData, "endedAt" | "duration" | "exitPage">>
   ): Promise<void> {
     // Use window function to get the latest state of the session
     // Much simpler than argMax
@@ -310,10 +312,14 @@ export class AnalyticsService {
       project_id: string;
     }>;
 
-    if (sessions.length === 0) return;
+    if (sessions.length === 0) {
+      return;
+    }
 
     const session = sessions[0];
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
     await this.createTrackedSession({
       id: session.id,
@@ -402,7 +408,7 @@ export class AnalyticsService {
 
   async getPageViewsBySessionIds(
     projectId: string,
-    sessionIds: string[],
+    sessionIds: string[]
   ): Promise<
     Array<{
       id: string;
@@ -416,7 +422,9 @@ export class AnalyticsService {
       city?: string | null;
     }>
   > {
-    if (sessionIds.length === 0) return [];
+    if (sessionIds.length === 0) {
+      return [];
+    }
 
     // ClickHouse doesn't support array parameters directly, so we query all pageviews
     // for the project and filter by session_id in code (more reliable)
@@ -458,7 +466,7 @@ export class AnalyticsService {
     // Filter to only the session IDs we need
     const sessionIdSet = new Set(sessionIds);
     return allPageviews.filter(
-      (pv) => pv.session_id && sessionIdSet.has(pv.session_id),
+      (pv) => pv.session_id && sessionIdSet.has(pv.session_id)
     );
   }
 
@@ -849,7 +857,7 @@ export class AnalyticsService {
   async countPageViews(
     projectId: string,
     startDate?: Date,
-    endDate?: Date,
+    endDate?: Date
   ): Promise<number> {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId };
@@ -880,7 +888,7 @@ export class AnalyticsService {
   async countTrackedEvents(
     projectId: string,
     startDate?: Date,
-    endDate?: Date,
+    endDate?: Date
   ): Promise<number> {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId };
@@ -910,7 +918,7 @@ export class AnalyticsService {
 
   async getEventsBySession(
     sessionId: string,
-    projectId: string,
+    projectId: string
   ): Promise<
     Array<{
       id: string;
@@ -1072,8 +1080,12 @@ export class AnalyticsService {
       if (eventCountsByDay[dateKey]) {
         const metadata = event.metadata as { eventType?: string } | null;
         const type = metadata?.eventType || "unknown";
-        if (type === "view") eventCountsByDay[dateKey].views += 1;
-        if (type === "click") eventCountsByDay[dateKey].clicks += 1;
+        if (type === "view") {
+          eventCountsByDay[dateKey].views += 1;
+        }
+        if (type === "click") {
+          eventCountsByDay[dateKey].clicks += 1;
+        }
       }
     }
 
@@ -1115,7 +1127,9 @@ export class AnalyticsService {
       session_id: string | null;
     }>;
 
-    if (rows.length === 0) return null;
+    if (rows.length === 0) {
+      return null;
+    }
 
     const row = rows[0];
     return {
@@ -1124,7 +1138,7 @@ export class AnalyticsService {
     };
   }
 
-  async getTopEvents(query: StatsQuery, limit: number = 10) {
+  async getTopEvents(query: StatsQuery, limit = 10) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };
 
@@ -1211,14 +1225,16 @@ export class AnalyticsService {
       city: string | null;
     }>;
 
-    if (sessions.length === 0) return [];
+    if (sessions.length === 0) {
+      return [];
+    }
 
     const sessionIds = sessions.map((s) => s.session_id);
 
     // Get pageviews for these sessions using the efficient method
     const pageviews = await this.getPageViewsBySessionIds(
       projectId,
-      sessionIds,
+      sessionIds
     );
 
     // Get latest pageview per session
@@ -1253,7 +1269,7 @@ export class AnalyticsService {
     });
   }
 
-  async getRecentSessions(projectId: string, since: Date, limit: number = 10) {
+  async getRecentSessions(projectId: string, since: Date, limit = 10) {
     // Simple approach: Use window function to get latest row per session_id
     // Filter by updated_at to get sessions that were recently active
     // Order by updated_at DESC to show most recently active sessions first
@@ -1355,7 +1371,9 @@ export class AnalyticsService {
       project_id: string;
     }>;
 
-    if (sessions.length === 0) return null;
+    if (sessions.length === 0) {
+      return null;
+    }
 
     const session = sessions[0];
 
@@ -1422,7 +1440,7 @@ export class AnalyticsService {
   async getSessionJourneys(
     projectId: string,
     startDate?: Date,
-    endDate?: Date,
+    endDate?: Date
   ) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId };
@@ -1487,7 +1505,9 @@ export class AnalyticsService {
       session_id: string;
     }>;
 
-    if (sessions.length === 0) return [];
+    if (sessions.length === 0) {
+      return [];
+    }
 
     const sessionIds = sessions.map((s) => s.session_id);
 
@@ -1520,7 +1540,7 @@ export class AnalyticsService {
 
     // Filter to only relevant sessions and get latest per session
     const relevantPageviews = allPageviews.filter(
-      (pv) => pv.session_id && sessionIds.includes(pv.session_id),
+      (pv) => pv.session_id && sessionIds.includes(pv.session_id)
     );
 
     const latestPageviewBySession = new Map<
@@ -1589,7 +1609,9 @@ export class AnalyticsService {
       session_id: string;
     }>;
 
-    if (sessions.length === 0) return [];
+    if (sessions.length === 0) {
+      return [];
+    }
 
     const sessionIds = sessions.map((s) => s.session_id);
 
@@ -1620,7 +1642,7 @@ export class AnalyticsService {
 
     // Filter to only relevant sessions and get latest per session
     const relevantPageviews = allPageviews.filter(
-      (pv) => pv.session_id && sessionIds.includes(pv.session_id),
+      (pv) => pv.session_id && sessionIds.includes(pv.session_id)
     );
 
     const latestPageviewBySession = new Map<
@@ -1696,7 +1718,7 @@ export class AnalyticsService {
   async getSessionsForFunnel(
     projectId: string,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ) {
     const sessionsResult = await this.client.query({
       query: `
@@ -1746,7 +1768,9 @@ export class AnalyticsService {
       project_id: string;
     }>;
 
-    if (sessions.length === 0) return [];
+    if (sessions.length === 0) {
+      return [];
+    }
 
     const sessionIds = sessions.map((s) => s.session_id);
 
@@ -1781,7 +1805,7 @@ export class AnalyticsService {
 
     // Filter to only relevant sessions
     const pageviews = allPageviews.filter(
-      (pv) => pv.session_id && sessionIds.includes(pv.session_id),
+      (pv) => pv.session_id && sessionIds.includes(pv.session_id)
     );
 
     // Query all events and filter in code
@@ -1817,7 +1841,7 @@ export class AnalyticsService {
 
     // Filter to only relevant sessions
     const events = allEvents.filter(
-      (ev) => ev.session_id && sessionIds.includes(ev.session_id),
+      (ev) => ev.session_id && sessionIds.includes(ev.session_id)
     );
 
     const pageviewsBySession = pageviews.reduce(
@@ -1834,7 +1858,7 @@ export class AnalyticsService {
         }
         return acc;
       },
-      {} as Record<string, Array<{ id: string; url: string; timestamp: Date }>>,
+      {} as Record<string, Array<{ id: string; url: string; timestamp: Date }>>
     );
 
     const eventsBySession = events.reduce(
@@ -1860,7 +1884,7 @@ export class AnalyticsService {
           metadata: Record<string, unknown> | null;
           eventDefinitionId: string;
         }>
-      >,
+      >
     );
 
     return sessions.map((session) => ({

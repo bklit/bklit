@@ -29,12 +29,16 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -49,12 +53,12 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   // Calculate previous period dates for comparison
   const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
-    if (!compare || !startDate || !endDate) {
+    if (!(compare && startDate && endDate)) {
       return { startDate: undefined, endDate: undefined };
     }
     return getPreviousPeriod(startDate, endDate);
@@ -74,12 +78,12 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
   return (
     <>
       <PageHeader
-        title="Acquisitions"
         description={
           statsLoading
             ? "Loading acquisitions..."
             : `${statsData?.totalViews || 0} total views`
         }
+        title="Acquisitions"
       >
         <div className="flex items-center gap-2">
           <DateRangePicker />
@@ -96,7 +100,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.totalViews || 0,
-                    prevStatsData?.totalViews || 0,
+                    prevStatsData?.totalViews || 0
                   ),
                 }),
               ...(compare &&
@@ -112,7 +116,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.directTraffic || 0,
-                    prevStatsData?.directTraffic || 0,
+                    prevStatsData?.directTraffic || 0
                   ),
                 }),
               ...(compare &&
@@ -128,7 +132,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.organicTraffic || 0,
-                    prevStatsData?.organicTraffic || 0,
+                    prevStatsData?.organicTraffic || 0
                   ),
                 }),
               ...(compare &&
@@ -144,7 +148,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.socialTraffic || 0,
-                    prevStatsData?.socialTraffic || 0,
+                    prevStatsData?.socialTraffic || 0
                   ),
                 }),
               ...(compare &&
@@ -160,7 +164,7 @@ export function Acquisitions({ organizationId, projectId }: AcquisitionsProps) {
                 prevStatsData && {
                   ...calculateChange(
                     statsData?.paidTraffic || 0,
-                    prevStatsData?.paidTraffic || 0,
+                    prevStatsData?.paidTraffic || 0
                   ),
                 }),
               ...(compare &&

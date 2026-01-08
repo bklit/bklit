@@ -25,33 +25,33 @@ export default function BrandingPage() {
   return (
     <>
       <PageHeader />
-      <div className="container mx-auto max-w-6xl py-48 space-y-16 px-4">
+      <div className="container mx-auto max-w-6xl space-y-16 px-4 py-48">
         <SectionHeader
-          title="Bklit Branding"
           description="Download the Bklit branding assets"
+          title="Bklit Branding"
         >
           <ButtonGroup>
-            <Button variant="outline" asChild size="lg">
+            <Button asChild size="lg" variant="outline">
               <a
                 href="https://www.figma.com/design/i8XNdCS4y9K7r1e1wdk0MU/Bklit.com-Branding?m=auto&t=nZefB3QSZ0RuAPXi-6"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 <FigmaIcon />
                 Figma
               </a>
             </Button>
-            <Button variant="outline" asChild size="lg">
-              <a href="/branding.zip" download>
+            <Button asChild size="lg" variant="outline">
+              <a download href="/branding.zip">
                 <DownloadIcon />
                 Download Zip
               </a>
             </Button>
           </ButtonGroup>
         </SectionHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className="col-span-1">
-            <Card className="bg-transparent border-none">
+            <Card className="border-none bg-transparent">
               <CardHeader>
                 <CardTitle>Dark</CardTitle>
                 <CardDescription>
@@ -59,13 +59,13 @@ export default function BrandingPage() {
                 </CardDescription>
                 <CardAction>
                   <ButtonGroup>
-                    <Button variant="outline" asChild>
-                      <a href="/branding/Dark.png" download>
+                    <Button asChild variant="outline">
+                      <a download href="/branding/Dark.png">
                         PNG
                       </a>
                     </Button>
-                    <Button variant="outline" asChild>
-                      <a href="/branding/Dark.svg" download>
+                    <Button asChild variant="outline">
+                      <a download href="/branding/Dark.svg">
                         SVG
                       </a>
                     </Button>
@@ -74,17 +74,17 @@ export default function BrandingPage() {
               </CardHeader>
               <CardContent>
                 <Image
-                  src="/Dark.svg"
                   alt="Bklit Logo: Dark"
-                  width={473}
+                  className="h-full w-full object-contain"
                   height={256}
-                  className="w-full h-full object-contain"
+                  src="/Dark.svg"
+                  width={473}
                 />
               </CardContent>
             </Card>
           </div>
           <div className="col-span-1">
-            <Card className="bg-transparent border-none">
+            <Card className="border-none bg-transparent">
               <CardHeader>
                 <CardTitle>Light</CardTitle>
                 <CardDescription>
@@ -92,13 +92,13 @@ export default function BrandingPage() {
                 </CardDescription>
                 <CardAction>
                   <ButtonGroup>
-                    <Button variant="outline" asChild>
-                      <a href="/branding/Light.png" download>
+                    <Button asChild variant="outline">
+                      <a download href="/branding/Light.png">
                         PNG
                       </a>
                     </Button>
-                    <Button variant="outline" asChild>
-                      <a href="/branding/Light.svg" download>
+                    <Button asChild variant="outline">
+                      <a download href="/branding/Light.svg">
                         SVG
                       </a>
                     </Button>
@@ -108,11 +108,11 @@ export default function BrandingPage() {
               <CardContent>
                 <div className="bg-white">
                   <Image
-                    src="/Light.svg"
                     alt="Bklit Logo: Light"
-                    width={473}
+                    className="h-full w-full object-contain"
                     height={256}
-                    className="w-full h-full object-contain"
+                    src="/Light.svg"
+                    width={473}
                   />
                 </div>
               </CardContent>
@@ -120,56 +120,56 @@ export default function BrandingPage() {
           </div>
         </div>
 
-        <Card className="bg-transparent border-none">
+        <Card className="border-none bg-transparent">
           <CardHeader>
             <CardTitle>App logos</CardTitle>
             <CardDescription>
               The logos for the Bklit extension.
             </CardDescription>
             <CardAction>
-              <Button variant="outline" asChild>
-                <a href="/branding.zip" download>
+              <Button asChild variant="outline">
+                <a download href="/branding.zip">
                   Download Zip
                 </a>
               </Button>
             </CardAction>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
               <div className="col-span-1">
                 <Image
+                  alt="Bklit Logo: Dark"
+                  className="h-full w-full object-contain"
+                  height={256}
                   src="/branding/extension-icon-light-mono.svg"
-                  alt="Bklit Logo: Dark"
                   width={256}
-                  height={256}
-                  className="w-full h-full object-contain"
                 />
               </div>
               <div className="col-span-1">
                 <Image
+                  alt="Bklit Logo: Dark"
+                  className="h-full w-full object-contain"
+                  height={256}
                   src="/branding/extension-icon-dark-mono.svg"
-                  alt="Bklit Logo: Dark"
                   width={256}
-                  height={256}
-                  className="w-full h-full object-contain"
                 />
               </div>
               <div className="col-span-1">
                 <Image
+                  alt="Bklit Logo: Dark"
+                  className="h-full w-full object-contain"
+                  height={256}
                   src="/branding/extension-icon-dark-green.svg"
-                  alt="Bklit Logo: Dark"
                   width={256}
-                  height={256}
-                  className="w-full h-full object-contain"
                 />
               </div>
               <div className="col-span-1">
                 <Image
-                  src="/branding/extension-icon-light-blue.svg"
                   alt="Bklit Logo: Dark"
-                  width={256}
+                  className="h-full w-full object-contain"
                   height={256}
-                  className="w-full h-full object-contain"
+                  src="/branding/extension-icon-light-blue.svg"
+                  width={256}
                 />
               </div>
             </div>

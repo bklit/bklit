@@ -43,14 +43,16 @@ export default async function RedirectBillingPage({
             hasActiveSubscription: subscriptions.result.items.length > 0,
             subscriptionCreatedAt,
           };
-        }),
+        })
       );
 
       // Find org with most recent subscription
       const upgradedOrg = orgsWithSubscriptions
         .filter((org) => org.hasActiveSubscription)
         .sort((a, b) => {
-          if (!a.subscriptionCreatedAt || !b.subscriptionCreatedAt) return 0;
+          if (!(a.subscriptionCreatedAt && b.subscriptionCreatedAt)) {
+            return 0;
+          }
           return (
             b.subscriptionCreatedAt.getTime() -
             a.subscriptionCreatedAt.getTime()
@@ -65,7 +67,9 @@ export default async function RedirectBillingPage({
     organization = organizations[0];
   }
 
-  if (!organization) redirect(`/`);
+  if (!organization) {
+    redirect("/");
+  }
 
   if (showSuccessMessage && organization) {
     // Redirect to organization-specific billing page

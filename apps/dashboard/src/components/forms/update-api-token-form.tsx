@@ -55,13 +55,13 @@ export function UpdateApiTokenForm({
   const queryClient = useQueryClient();
 
   const { data: tokens } = useQuery(
-    trpc.apiToken.list.queryOptions({ organizationId }),
+    trpc.apiToken.list.queryOptions({ organizationId })
   );
 
   const token = tokens?.find((t) => t.id === tokenId);
 
   const { data: organization } = useQuery(
-    trpc.organization.fetch.queryOptions({ id: organizationId }),
+    trpc.organization.fetch.queryOptions({ id: organizationId })
   );
 
   const updateToken = useMutation(
@@ -76,7 +76,7 @@ export function UpdateApiTokenForm({
       onError: (error) => {
         toast.error(`Failed to update token: ${error.message}`);
       },
-    }),
+    })
   );
 
   const form = useForm({
@@ -124,11 +124,11 @@ export function UpdateApiTokenForm({
       form.setFieldValue("description", token.description || "");
       form.setFieldValue(
         "allowedDomains",
-        token.allowedDomains?.join("\n") || "",
+        token.allowedDomains?.join("\n") || ""
       );
       form.setFieldValue(
         "projectIds",
-        token.projects.map((p) => p.id),
+        token.projects.map((p) => p.id)
       );
     }
   }, [token, form]);
@@ -145,9 +145,9 @@ export function UpdateApiTokenForm({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={isOpen}>
       <DialogContent className="sm:max-w-[600px]">
-        <FormPermissions requiredRole={MemberRole.ADMIN} inModal>
+        <FormPermissions inModal requiredRole={MemberRole.ADMIN}>
           <DialogHeader>
             <DialogTitle>Edit API Token</DialogTitle>
             <DialogDescription>
@@ -157,12 +157,12 @@ export function UpdateApiTokenForm({
           </DialogHeader>
 
           <form
+            className="space-y-4"
             id="update-api-token-form"
             onSubmit={(e) => {
               e.preventDefault();
               form.handleSubmit();
             }}
-            className="space-y-4"
           >
             <FieldGroup>
               <form.Field name="name">
@@ -173,14 +173,14 @@ export function UpdateApiTokenForm({
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Name</FieldLabel>
                       <Input
+                        aria-invalid={isInvalid}
+                        autoComplete="off"
                         id={field.name}
                         name={field.name}
-                        value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={isInvalid}
                         placeholder="Production Token"
-                        autoComplete="off"
+                        value={field.state.value}
                       />
                       <FieldDescription>
                         A descriptive name for this token.
@@ -203,11 +203,11 @@ export function UpdateApiTokenForm({
                       <Textarea
                         id={field.name}
                         name={field.name}
-                        value={field.state.value || ""}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="Token for production environment"
                         rows={3}
+                        value={field.state.value || ""}
                       />
                       <FieldDescription>
                         An optional description for this token.
@@ -227,11 +227,11 @@ export function UpdateApiTokenForm({
                       <Textarea
                         id={field.name}
                         name={field.name}
-                        value={field.state.value || ""}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="example.com&#10;www.example.com&#10;app.example.com"
                         rows={3}
+                        value={field.state.value || ""}
                       />
                       <FieldDescription>
                         Restrict this token to specific domains. Enter one
@@ -255,18 +255,18 @@ export function UpdateApiTokenForm({
                       </FieldDescription>
                       <div className="space-y-2 rounded-md border p-4">
                         {organization?.projects?.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             No projects available.
                           </p>
                         ) : (
                           organization?.projects?.map((project) => (
                             <label
+                              className="flex cursor-pointer items-center space-x-2"
                               key={project.id}
-                              className="flex items-center space-x-2 cursor-pointer"
                             >
                               <input
-                                type="checkbox"
                                 checked={field.state.value.includes(project.id)}
+                                className="rounded border-gray-300"
                                 onChange={(e) => {
                                   const current = field.state.value;
                                   if (e.target.checked) {
@@ -276,11 +276,11 @@ export function UpdateApiTokenForm({
                                     ]);
                                   } else {
                                     field.handleChange(
-                                      current.filter((id) => id !== project.id),
+                                      current.filter((id) => id !== project.id)
                                     );
                                   }
                                 }}
-                                className="rounded border-gray-300"
+                                type="checkbox"
                               />
                               <span className="text-sm">{project.name}</span>
                             </label>
@@ -299,16 +299,16 @@ export function UpdateApiTokenForm({
 
           <DialogFooter>
             <Button
-              variant="outline"
-              onClick={handleClose}
               disabled={updateToken.isPending}
+              onClick={handleClose}
+              variant="outline"
             >
               Cancel
             </Button>
             <Button
-              type="submit"
-              form="update-api-token-form"
               disabled={updateToken.isPending}
+              form="update-api-token-form"
+              type="submit"
             >
               {updateToken.isPending ? "Updating..." : "Update Token"}
             </Button>

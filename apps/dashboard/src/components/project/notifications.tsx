@@ -10,10 +10,10 @@ export const ProjectNotifications = ({
   organizationId,
 }: ProjectNotificationsProps) => {
   return (
-    <div className="space-y-6 prose dark:prose-invert max-w-none">
+    <div className="prose dark:prose-invert max-w-none space-y-6">
       <UpdateNotificationPreferencesForm
-        projectId={projectId}
         organizationId={organizationId}
+        projectId={projectId}
       />
     </div>
   );

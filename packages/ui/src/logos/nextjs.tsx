@@ -6,7 +6,7 @@ interface NextProps {
 
 export const Next = ({ height = "30px", className }: NextProps) => {
   return (
-    <svg height={height} viewBox="0 0 150 30" fill="none" className={className}>
+    <svg className={className} fill="none" height={height} viewBox="0 0 150 30">
       <title>Next.js Logo</title>
       <g>
         <path
@@ -26,10 +26,10 @@ export const Next = ({ height = "30px", className }: NextProps) => {
           fill="currentColor"
         />
         <path
-          fillRule="evenodd"
           clipRule="evenodd"
           d="M30.8022 30.1287L6.47783 0H0V30.1162H5.18227V6.43732L24.2919 30.1287H30.8022Z"
           fill="currentColor"
+          fillRule="evenodd"
         />
         <path
           d="M127.008 29.9449C126.628 29.9449 126.306 29.8138 126.035 29.5515C125.765 29.2892 125.631 28.9716 125.635 28.5955C125.631 28.2296 125.765 27.9155 126.035 27.6532C126.306 27.3909 126.628 27.2598 127.008 27.2598C127.373 27.2598 127.693 27.3909 127.963 27.6532C128.237 27.9155 128.374 28.2296 128.377 28.5955C128.374 28.8439 128.31 29.0717 128.184 29.2753C128.054 29.4824 127.889 29.6447 127.682 29.762C127.478 29.8828 127.254 29.9449 127.008 29.9449Z"

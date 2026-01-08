@@ -43,7 +43,7 @@ export function ExtensionCard({
   icon,
 }: ExtensionCardProps) {
   return (
-    <Card className="flex flex-col relative overflow-hidden">
+    <Card className="relative flex flex-col overflow-hidden">
       {/* 
        ** Felt cute might add back later
       {icon && (
@@ -57,29 +57,29 @@ export function ExtensionCard({
       )} */}
       <CardHeader className="relative">
         <CardTitle className="flex items-center gap-2">
-          <div className="flex size-10 items-center justify-center rounded-md border bg-muted overflow-hidden">
+          <div className="flex size-10 items-center justify-center overflow-hidden rounded-md border bg-muted">
             {icon ? (
               <Image
-                src={`/extensions/${id}/${icon.replace("./", "")}`}
                 alt={displayName}
-                width={40}
-                height={40}
                 className="size-10 object-cover"
+                height={40}
+                src={`/extensions/${id}/${icon.replace("./", "")}`}
+                width={40}
               />
             ) : (
               <Puzzle className="size-5" />
             )}
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-semibold">{displayName}</span>
+            <span className="font-semibold text-lg">{displayName}</span>
             {isPro && (
-              <Badge variant="default" className="text-xs">
+              <Badge className="text-xs" variant="default">
                 Pro
               </Badge>
             )}
           </div>
         </CardTitle>
-        <CardDescription className="text-xs mt-1 flex items-center gap-1.5"></CardDescription>
+        <CardDescription className="mt-1 flex items-center gap-1.5 text-xs" />
         <CardAction>
           <Button asChild size="sm" variant="secondary">
             <Link href={`/${organizationId}/extensions/${id}`}>
@@ -89,7 +89,7 @@ export function ExtensionCard({
         </CardAction>
       </CardHeader>
       <CardContent className="relative">
-        <p className="text-sm text-muted-foreground mb-4 flex-1">
+        <p className="mb-4 flex-1 text-muted-foreground text-sm">
           {description}
         </p>
       </CardContent>
@@ -97,17 +97,17 @@ export function ExtensionCard({
         <div className="flex items-center gap-2">
           <Avatar className="size-4">
             <AvatarImage
-              src={`https://github.com/${author}.png`}
               alt={author}
+              src={`https://github.com/${author}.png`}
             />
             <AvatarFallback className="text-[8px]">
               {author.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-semibold">{author}</span>
+          <span className="font-semibold text-sm">{author}</span>
         </div>
         <Separator orientation="vertical" />
-        <Badge variant="secondary" className="text-xs">
+        <Badge className="text-xs" variant="secondary">
           {category}
         </Badge>
       </CardFooter>

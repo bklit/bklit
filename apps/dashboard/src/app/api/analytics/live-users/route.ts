@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     if (!projectId) {
       return NextResponse.json(
         { error: "projectId parameter is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     console.error("Error getting live users count:", error);
     return NextResponse.json(
       { error: "Failed to get live users count" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

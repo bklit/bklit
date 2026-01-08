@@ -9,13 +9,6 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import type { ChartConfig } from "@bklit/ui/components/chart";
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@bklit/ui/components/chart";
 import { PieDonut } from "@bklit/ui/components/charts/pie-donut";
 import {
   Empty,
@@ -44,7 +37,6 @@ import {
 import Link from "next/link";
 import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { TimeSeriesChart } from "@/components/charts/time-series-chart";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
@@ -76,12 +68,16 @@ export function EventDetail({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -97,7 +93,7 @@ export function EventDetail({
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   const timelineChartConfig = {
@@ -133,7 +129,7 @@ export function EventDetail({
 
   // Calculate previous period dates for comparison
   const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
-    if (!compare || !startDate || !endDate) {
+    if (!(compare && startDate && endDate)) {
       return { startDate: undefined, endDate: undefined };
     }
     return getPreviousPeriod(startDate, endDate);
@@ -157,13 +153,13 @@ export function EventDetail({
       : "0";
 
   // Show empty state if no event found and not loading
-  if (!event && !isLoading) {
+  if (!(event || isLoading)) {
     return (
       <>
-        <PageHeader title="Event Not Found" description="">
+        <PageHeader description="" title="Event Not Found">
           <div className="flex items-center gap-2">
             <Link href={`/${organizationId}/${projectId}/events`}>
-              <Button variant="ghost" size="lg">
+              <Button size="lg" variant="ghost">
                 <ArrowLeft />
                 Back to Events
               </Button>
@@ -194,12 +190,12 @@ export function EventDetail({
   return (
     <>
       <PageHeader
-        title={event?.name || "Loading..."}
         description={event?.description || "Event analytics and details"}
+        title={event?.name || "Loading..."}
       >
         <div className="flex items-center gap-2">
           <Link href={`/${organizationId}/${projectId}/events`}>
-            <Button variant="ghost" size="lg">
+            <Button size="lg" variant="ghost">
               <ArrowLeft />
               Back to Events
             </Button>
@@ -209,38 +205,38 @@ export function EventDetail({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="secondary" size="lg">
+              <Button size="lg" variant="secondary">
                 <SquareCode className="size-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-fit max-w-[300px]"
               align="end"
+              className="w-fit max-w-[300px]"
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="mt-2 text-muted-foreground text-xs">
                   All interaction types (click, impression, hover) are tracked
                   automatically!
                 </p>
                 <div>
-                  <p className="text-sm font-medium mb-2">Data attribute:</p>
+                  <p className="mb-2 font-medium text-sm">Data attribute:</p>
                   <CopyInput
                     value={`<button data-bklit-event="${trackingId}">Click Me</button>`}
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">ID attribute:</p>
+                  <p className="mb-2 font-medium text-sm">ID attribute:</p>
                   <CopyInput
                     value={`<button id="bklit-event-${trackingId}">Click Me</button>`}
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">Programmatic (JS):</p>
+                  <p className="mb-2 font-medium text-sm">Programmatic (JS):</p>
                   <CopyInput
                     value={`window.trackEvent("${trackingId}", "custom_event");`}
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="mt-2 text-muted-foreground text-xs">
                     Programmatic events are triggered via code (e.g. SDK calls).
                   </p>
                 </div>
@@ -250,7 +246,7 @@ export function EventDetail({
         </div>
       </PageHeader>
 
-      <div className="container flex flex-col mx-auto gap-4">
+      <div className="container mx-auto flex flex-col gap-4">
         {/* Key Metrics */}
         <Stats
           items={[
@@ -288,7 +284,7 @@ export function EventDetail({
                 !Number.isNaN(prevEvent.conversionRate) && {
                   ...calculateChange(
                     event.conversionRate,
-                    prevEvent.conversionRate,
+                    prevEvent.conversionRate
                   ),
                 }),
               ...(compare &&
@@ -305,7 +301,7 @@ export function EventDetail({
                 event && {
                   ...calculateChange(
                     event.sessionsWithEvent,
-                    prevEvent.sessionsWithEvent,
+                    prevEvent.sessionsWithEvent
                   ),
                 }),
               ...(compare &&
@@ -321,8 +317,8 @@ export function EventDetail({
                 prevEvent &&
                 event && {
                   ...calculateChange(
-                    parseFloat(avgTriggersPerSession),
-                    parseFloat(prevAvgTriggersPerSession),
+                    Number.parseFloat(avgTriggersPerSession),
+                    Number.parseFloat(prevAvgTriggersPerSession)
                   ),
                 }),
               ...(compare &&
@@ -333,7 +329,7 @@ export function EventDetail({
           ]}
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
           {/* Conversion Pie Chart */}
           <Card className="col-span-1 sm:col-span-3">
             <CardHeader>
@@ -342,21 +338,21 @@ export function EventDetail({
                 Sessions with vs without this event
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex justify-center relative">
+            <CardContent className="relative flex justify-center">
               {event && event.totalSessions === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+                  <p className="text-muted-foreground text-sm">
                     No session data available
                   </p>
                 </div>
               )}
               <PieDonut
-                data={conversionData}
-                variant="positive-negative"
                 centerLabel={{ showTotal: true, suffix: "sessions" }}
+                className="min-h-[250px] w-full"
+                data={conversionData}
                 innerRadius={46}
                 outerRadius={80}
-                className="min-h-[250px] w-full"
+                variant="positive-negative"
               />
             </CardContent>
           </Card>
@@ -371,21 +367,21 @@ export function EventDetail({
             </CardHeader>
             <CardContent className="relative">
               {event && event.timeSeriesData.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+                  <p className="text-muted-foreground text-sm">
                     No data available
                   </p>
                 </div>
               )}
               <TimeSeriesChart
-                projectId={projectId}
-                data={event?.timeSeriesData || []}
                 chartConfig={timelineChartConfig}
-                startDate={startDate}
+                data={event?.timeSeriesData || []}
                 endDate={endDate}
-                isLoading={isLoading}
-                showDeployments={true}
                 height={300}
+                isLoading={isLoading}
+                projectId={projectId}
+                showDeployments={true}
+                startDate={startDate}
               />
             </CardContent>
           </Card>

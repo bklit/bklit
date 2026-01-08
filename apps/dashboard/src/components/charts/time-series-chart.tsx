@@ -20,7 +20,6 @@ import {
   Item,
   ItemActions,
   ItemContent,
-  ItemDescription,
   ItemMedia,
   ItemTitle,
 } from "@bklit/ui/components/item";
@@ -84,11 +83,13 @@ export function TimeSeriesChart({
 
   // Only show deployments if GitHub or Vercel extension is enabled
   const hasDeploymentExtension = useMemo(() => {
-    if (!projectExtensions) return false;
+    if (!projectExtensions) {
+      return false;
+    }
     return projectExtensions.some(
       (ext) =>
         (ext.extensionId === "github" || ext.extensionId === "vercel") &&
-        ext.enabled === true,
+        ext.enabled === true
     );
   }, [projectExtensions]);
 
@@ -104,14 +105,18 @@ export function TimeSeriesChart({
 
   // Group deployments by date
   const deploymentsByDate = useMemo(() => {
-    if (!deployments) return new Map();
+    if (!deployments) {
+      return new Map();
+    }
 
-    const grouped = new Map<string, Array<(typeof deployments)[number]>>();
+    const grouped = new Map<string, (typeof deployments)[number][]>();
     for (const deployment of deployments) {
       const dateKey = new Date(deployment.deployedAt)
         .toISOString()
         .split("T")[0];
-      if (!dateKey) continue;
+      if (!dateKey) {
+        continue;
+      }
       const existing = grouped.get(dateKey);
       if (existing) {
         existing.push(deployment);
@@ -139,7 +144,7 @@ export function TimeSeriesChart({
         status: string;
         githubRepository?: string | null;
       }>,
-      dateKey: string,
+      dateKey: string
     ) => {
       const { viewBox } = props;
       const x = viewBox?.x ?? 0;
@@ -158,18 +163,18 @@ export function TimeSeriesChart({
 
       return (
         <motion.g
-          key={`deployment-marker-${dateKey}`}
-          initial={
-            hasAnimated
-              ? false
-              : { opacity: 0, y: -15, scale: 0.9, filter: "blur(2px)" }
-          }
           animate={{
             opacity: 1,
             y: [0, -4, 0],
             scale: 1,
             filter: "blur(0px)",
           }}
+          initial={
+            hasAnimated
+              ? false
+              : { opacity: 0, y: -15, scale: 0.9, filter: "blur(2px)" }
+          }
+          key={`deployment-marker-${dateKey}`}
           transition={{
             opacity: hasAnimated
               ? {}
@@ -196,8 +201,8 @@ export function TimeSeriesChart({
             <linearGradient
               id={`deployment-gradient-${deploymentsForDate[0]?.id || "default"}`}
               x1="0"
-              y1="0"
               x2="0"
+              y1="0"
               y2="1"
             >
               <stop
@@ -213,12 +218,12 @@ export function TimeSeriesChart({
             </linearGradient>
           </defs>
           <rect
+            fill={`url(#deployment-gradient-${deploymentsForDate[0]?.id || "default"})`}
+            height={80}
+            rx={1.5}
+            width={3}
             x={x - 1.5}
             y={y + avatarSize}
-            width={3}
-            height={80}
-            fill={`url(#deployment-gradient-${deploymentsForDate[0]?.id || "default"})`}
-            rx={1.5}
           />
 
           {/* Avatar circles */}
@@ -235,8 +240,8 @@ export function TimeSeriesChart({
                 <circle
                   cx={cx}
                   cy={cy}
-                  r={avatarSize / 2 + 1.5}
                   fill="var(--bklit-300)"
+                  r={avatarSize / 2 + 1.5}
                   stroke="none"
                 />
 
@@ -249,25 +254,25 @@ export function TimeSeriesChart({
 
                 {/* Avatar image */}
                 <image
+                  clipPath={`url(#clip-avatar-${deployment.id})`}
+                  height={avatarSize - 2}
                   href={
                     deployment.authorAvatar ||
                     `https://github.com/${deployment.author}.png`
                   }
+                  style={{ cursor: "pointer" }}
+                  width={avatarSize - 2}
                   x={cx - avatarSize / 2 + 1}
                   y={cy - avatarSize / 2 + 1}
-                  width={avatarSize - 2}
-                  height={avatarSize - 2}
-                  clipPath={`url(#clip-avatar-${deployment.id})`}
-                  style={{ cursor: "pointer" }}
                 />
                 {/* Invisible click area for avatar */}
                 <circle
                   cx={cx}
                   cy={cy}
-                  r={avatarSize / 2}
                   fill="transparent"
-                  style={{ cursor: "pointer" }}
                   onPointerDown={() => setSelectedDate(dateKey)}
+                  r={avatarSize / 2}
+                  style={{ cursor: "pointer" }}
                 />
               </g>
             );
@@ -286,26 +291,26 @@ export function TimeSeriesChart({
                   <circle
                     cx={badgeCx}
                     cy={badgeCy}
-                    r={avatarSize / 2 + 1.5}
                     fill="var(--bklit-300)"
+                    r={avatarSize / 2 + 1.5}
                     stroke="none"
                   />
                   <circle
                     cx={badgeCx}
                     cy={badgeCy}
-                    r={avatarSize / 2}
                     fill="hsl(var(--muted))"
+                    r={avatarSize / 2}
                     stroke="none"
                   />
                   <text
-                    x={badgeCx}
-                    y={badgeCy}
-                    textAnchor="middle"
                     dominantBaseline="central"
+                    fill="hsl(var(--muted-foreground))"
                     fontSize="10"
                     fontWeight="600"
-                    fill="hsl(var(--muted-foreground))"
                     style={{ cursor: "pointer", pointerEvents: "none" }}
+                    textAnchor="middle"
+                    x={badgeCx}
+                    y={badgeCy}
                   >
                     +{remainingCount}
                   </text>
@@ -313,10 +318,10 @@ export function TimeSeriesChart({
                   <circle
                     cx={badgeCx}
                     cy={badgeCy}
-                    r={avatarSize / 2}
                     fill="transparent"
-                    style={{ cursor: "pointer" }}
                     onPointerDown={() => setSelectedDate(dateKey)}
+                    r={avatarSize / 2}
+                    style={{ cursor: "pointer" }}
                   />
                 </g>
               );
@@ -324,22 +329,24 @@ export function TimeSeriesChart({
         </motion.g>
       );
     },
-    [height, setSelectedDate],
+    []
   );
 
   // Custom tooltip content that includes deployments
   const CustomTooltipContent = ({ active, payload, label }: any) => {
-    if (!active || !payload || !label) return null;
+    if (!(active && payload && label)) {
+      return null;
+    }
 
     // Get deployments for this date
     const dateKey = String(label); // This is the date string from the chart data
     const deploymentsForDate = deploymentsByDate.get(dateKey) || [];
 
     return (
-      <div className="rounded-lg border bg-background p-3 shadow-xl z-900">
+      <div className="z-900 rounded-lg border bg-background p-3 shadow-xl">
         {/* Date header */}
         <div className="mb-3 border-b pb-2">
-          <p className="text-xs font-medium">
+          <p className="font-medium text-xs">
             {new Date(label).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -349,37 +356,39 @@ export function TimeSeriesChart({
         </div>
 
         {/* Chart metrics */}
-        <div className="space-y-2 mb-3">
+        <div className="mb-3 space-y-2">
           {payload.map(
             (entry: { dataKey: string; value: number; color: string }) => {
               const config = chartConfig[entry.dataKey];
-              if (!config) return null;
+              if (!config) {
+                return null;
+              }
 
               return (
                 <div
-                  key={entry.dataKey}
                   className="flex items-center justify-between gap-4"
+                  key={entry.dataKey}
                 >
                   <div className="flex items-center gap-2">
                     <div
                       className="size-2.5 rounded-full"
                       style={{ backgroundColor: entry.color }}
                     />
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {config.label}
                     </span>
                   </div>
-                  <span className="text-xs font-semibold">{entry.value}</span>
+                  <span className="font-semibold text-xs">{entry.value}</span>
                 </div>
               );
-            },
+            }
           )}
         </div>
 
         {/* Deployments section */}
         {deploymentsForDate.length > 0 && (
-          <div className="border-t pt-3 mt-3">
-            <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+          <div className="mt-3 border-t pt-3">
+            <p className="mb-2 flex items-center gap-1.5 font-semibold text-xs">
               {deploymentsForDate.length === 1
                 ? "Deployment"
                 : `${deploymentsForDate.length} Deployments`}
@@ -389,13 +398,13 @@ export function TimeSeriesChart({
                 .slice(0, 2)
                 .map((deployment: (typeof deploymentsForDate)[number]) => {
                   const time = new Date(
-                    deployment.deployedAt,
+                    deployment.deployedAt
                   ).toLocaleTimeString("en-US", {
                     hour: "numeric",
                     minute: "2-digit",
                   });
                   return (
-                    <div key={deployment.id} className="space-y-1">
+                    <div className="space-y-1" key={deployment.id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="size-4">
                           <AvatarImage
@@ -408,12 +417,12 @@ export function TimeSeriesChart({
                             {deployment.author[0]?.toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {time}
                         </span>
                         <Badge
+                          className="px-1.5 text-[10px]"
                           variant="secondary"
-                          className="text-[10px] px-1.5"
                         >
                           {deployment.platform}
                         </Badge>
@@ -431,7 +440,7 @@ export function TimeSeriesChart({
   // Auto-generate gradients from chartConfig
   const gradients = useMemo(() => {
     return Object.keys(chartConfig).map((key) => (
-      <linearGradient key={key} id={`fill${key}`} x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id={`fill${key}`} key={key} x1="0" x2="0" y1="0" y2="1">
         <stop offset="5%" stopColor={`var(--color-${key})`} stopOpacity={0.8} />
         <stop
           offset="95%"
@@ -450,23 +459,23 @@ export function TimeSeriesChart({
 
       return (
         <Area
-          key={key}
-          dataKey={key}
-          type="linear"
-          fill={`url(#fill${key})`}
-          stroke={`var(--color-${key})`}
-          strokeWidth={2}
-          dot={false}
-          fillOpacity={shouldDim ? 0.1 : undefined}
-          strokeOpacity={shouldDim ? 0.3 : undefined}
           activeDot={{
             r: 6,
             style: { fill: `var(--color-${key})`, opacity: 0.8 },
           }}
+          dataKey={key}
+          dot={false}
+          fill={`url(#fill${key})`}
+          fillOpacity={shouldDim ? 0.1 : undefined}
+          key={key}
+          stroke={`var(--color-${key})`}
+          strokeOpacity={shouldDim ? 0.3 : undefined}
+          strokeWidth={2}
           style={{
             transition:
               "fill-opacity 0.18s ease-in-out, stroke-opacity 0.18s ease-in-out",
           }}
+          type="linear"
         />
       );
     });
@@ -476,10 +485,10 @@ export function TimeSeriesChart({
   if (isLoading) {
     return (
       <div
-        className="flex items-center justify-center bg-muted/50 rounded-lg animate-pulse"
+        className="flex animate-pulse items-center justify-center rounded-lg bg-muted/50"
         style={{ height }}
       >
-        <p className="text-sm text-muted-foreground">Loading chart...</p>
+        <p className="text-muted-foreground text-sm">Loading chart...</p>
       </div>
     );
   }
@@ -488,10 +497,10 @@ export function TimeSeriesChart({
   if (!data || data.length === 0) {
     return (
       <div
-        className="flex items-center justify-center bg-muted/50 rounded-lg"
+        className="flex items-center justify-center rounded-lg bg-muted/50"
         style={{ height }}
       >
-        <p className="text-sm text-muted-foreground">No data available</p>
+        <p className="text-muted-foreground text-sm">No data available</p>
       </div>
     );
   }
@@ -499,8 +508,8 @@ export function TimeSeriesChart({
   return (
     <>
       <ChartContainer
-        config={chartConfig}
         className="aspect-auto w-full overflow-visible"
+        config={chartConfig}
         style={{ height }}
       >
         <AreaChart data={data} margin={{ left: 12, right: 12, top: 32 }}>
@@ -512,10 +521,8 @@ export function TimeSeriesChart({
           />
 
           <XAxis
-            dataKey="date"
-            tickLine={false}
             axisLine={false}
-            tickMargin={8}
+            dataKey="date"
             minTickGap={32}
             tickFormatter={(value) => {
               const date = new Date(value);
@@ -524,9 +531,11 @@ export function TimeSeriesChart({
                 day: "numeric",
               });
             }}
+            tickLine={false}
+            tickMargin={8}
           />
 
-          <ChartTooltip cursor={false} content={CustomTooltipContent} />
+          <ChartTooltip content={CustomTooltipContent} cursor={false} />
 
           {/* Deployment markers */}
           {showDeployments &&
@@ -534,13 +543,13 @@ export function TimeSeriesChart({
               ([date, deploymentsForDate]) => (
                 <ReferenceLine
                   key={date}
-                  x={date}
-                  stroke="none"
                   label={(props) =>
                     renderDeploymentLabel(props, deploymentsForDate, date)
                   }
+                  stroke="none"
+                  x={date}
                 />
-              ),
+              )
             )}
 
           {/* Render all areas */}
@@ -550,26 +559,28 @@ export function TimeSeriesChart({
 
       {/* Custom Legend */}
       {showLegend && (
-        <div className="flex justify-center items-start mt-4">
-          <div className="group flex items-center justify-center gap-0 flex-wrap">
+        <div className="mt-4 flex items-start justify-center">
+          <div className="group flex flex-wrap items-center justify-center gap-0">
             {Object.keys(chartConfig).map((key) => {
               const config = chartConfig[key];
-              if (!config) return null;
+              if (!config) {
+                return null;
+              }
 
               const isHovered = hoverKey === key;
               const shouldDim = hoverKey && !isHovered;
 
               return (
                 <button
-                  key={key}
-                  type="button"
                   className={cn(
-                    "flex items-center py-1 px-1.5 gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-all duration-100 group-has-[button:hover]:opacity-50 hover:opacity-100!",
+                    "flex items-center gap-1.5 px-1.5 py-1 text-muted-foreground text-sm transition-all duration-100 hover:text-foreground hover:opacity-100! group-has-[button:hover]:opacity-50",
                     shouldDim && "opacity-50",
-                    isHovered && "opacity-100! text-foreground",
+                    isHovered && "text-foreground opacity-100!"
                   )}
+                  key={key}
                   onMouseEnter={() => setHoverKey(key)}
                   onMouseLeave={() => setHoverKey(undefined)}
+                  type="button"
                 >
                   <div
                     className="size-2 shrink-0 rounded-[2px]"
@@ -586,7 +597,7 @@ export function TimeSeriesChart({
       )}
 
       {/* Deployments Dialog */}
-      <Dialog open={!!selectedDate} onOpenChange={() => setSelectedDate(null)}>
+      <Dialog onOpenChange={() => setSelectedDate(null)} open={!!selectedDate}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
@@ -608,7 +619,7 @@ export function TimeSeriesChart({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          <div className="max-h-96 space-y-3 overflow-y-auto">
             {selectedDate &&
               deploymentsByDate
                 .get(selectedDate)
@@ -626,16 +637,16 @@ export function TimeSeriesChart({
                     githubRepository?: string | null;
                   }) => {
                     const time = new Date(
-                      deployment.deployedAt,
+                      deployment.deployedAt
                     ).toLocaleTimeString("en-US", {
                       hour: "numeric",
                       minute: "2-digit",
                     });
 
                     return (
-                      <Item key={deployment.id} variant="outline" size="sm">
+                      <Item key={deployment.id} size="sm" variant="outline">
                         <ItemMedia>
-                          <Avatar className="size-10 mt-1">
+                          <Avatar className="mt-1 size-10">
                             <AvatarImage
                               src={
                                 deployment.authorAvatar ||
@@ -654,7 +665,7 @@ export function TimeSeriesChart({
                               {deployment.platform}
                             </Badge>
                             {deployment.status === "success" && (
-                              <Badge variant="secondary" className="gap-1.5">
+                              <Badge className="gap-1.5" variant="secondary">
                                 <span className="size-2 rounded-full bg-teal-500" />
                                 Deployed
                               </Badge>
@@ -664,15 +675,15 @@ export function TimeSeriesChart({
                         <ItemActions>
                           {deployment.githubRepository && (
                             <Button
-                              variant="outline"
-                              size="sm"
                               asChild
                               className="text-xs"
+                              size="sm"
+                              variant="outline"
                             >
                               <a
                                 href={`https://github.com/${deployment.githubRepository}/commit/${deployment.commitSha}`}
-                                target="_blank"
                                 rel="noopener noreferrer"
+                                target="_blank"
                               >
                                 <GitCommitHorizontal className="size-3" />{" "}
                                 {deployment.commitSha.slice(0, 7)}
@@ -682,7 +693,7 @@ export function TimeSeriesChart({
                         </ItemActions>
                       </Item>
                     );
-                  },
+                  }
                 )}
           </div>
         </DialogContent>

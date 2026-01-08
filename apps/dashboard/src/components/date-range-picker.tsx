@@ -37,7 +37,9 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   });
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
     return undefined;
   }, [dateParams.startDate]);
 
@@ -76,16 +78,22 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
 
   // Calculate display text
   const displayText = useMemo(() => {
-    if (!startDate || !endDate) return "Select dates";
+    if (!(startDate && endDate)) {
+      return "Select dates";
+    }
     return formatDateRangeDisplay(startDate, endDate);
   }, [startDate, endDate]);
 
   // Check if current dates match default
   const isDefaultRange = useMemo(() => {
-    if (!startDate || !endDate) return false;
+    if (!(startDate && endDate)) {
+      return false;
+    }
 
     const defaultPreset = DATE_PRESETS[0]; // "Last 30 days"
-    if (!defaultPreset) return false;
+    if (!defaultPreset) {
+      return false;
+    }
 
     const { startDate: defaultStart, endDate: defaultEnd } =
       defaultPreset.getValue();
@@ -127,7 +135,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
     });
     onRangeChange?.(
       normalizedStartDate ?? undefined,
-      normalizedEndDate ?? undefined,
+      normalizedEndDate ?? undefined
     );
     setIsCalendarOpen(false);
   };
@@ -135,7 +143,9 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   // Clear filters (reset to default)
   const clearFilters = () => {
     const defaultPreset = DATE_PRESETS[0]; // "Last 30 days"
-    if (!defaultPreset) return;
+    if (!defaultPreset) {
+      return;
+    }
 
     const { startDate: defaultStart, endDate: defaultEnd } =
       defaultPreset.getValue();
@@ -152,11 +162,11 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
   };
 
   const handleCalendarOpenChange = (open: boolean) => {
-    if (!open) {
-      // Reset local state if popover is closed without applying
+    if (open) {
+      // Sync local state with current filters when opening
       setLocalRange({ from: startDate, to: endDate });
     } else {
-      // Sync local state with current filters when opening
+      // Reset local state if popover is closed without applying
       setLocalRange({ from: startDate, to: endDate });
     }
     setIsCalendarOpen(open);
@@ -168,17 +178,17 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
-            size="lg"
             className="justify-start text-left font-normal"
+            size="lg"
+            variant="outline"
           >
-            <span className="hidden sm:inline text-sm">{displayText}</span>
-            <span className="sm:hidden text-sm">
+            <span className="hidden text-sm sm:inline">{displayText}</span>
+            <span className="text-sm sm:hidden">
               {displayText.length > 15
                 ? `${displayText.substring(0, 15)}...`
                 : displayText}
             </span>
-            <ChevronDown className="size-4 ml-1" />
+            <ChevronDown className="ml-1 size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
@@ -194,30 +204,30 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
       </DropdownMenu>
 
       {/* Calendar Picker */}
-      <Popover open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
+      <Popover onOpenChange={handleCalendarOpenChange} open={isCalendarOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="lg">
+          <Button size="lg" variant="outline">
             <CalendarIcon className="size-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent align="end" className="w-auto p-0">
           <div className="flex flex-col">
             <CalendarComponent
-              mode="range"
-              selected={localRange}
-              onSelect={setLocalRange}
-              numberOfMonths={2}
               initialFocus
+              mode="range"
+              numberOfMonths={2}
+              onSelect={setLocalRange}
+              selected={localRange}
             />
-            <div className="flex items-center justify-end gap-2 p-3 border-t">
+            <div className="flex items-center justify-end gap-2 border-t p-3">
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => setIsCalendarOpen(false)}
+                size="sm"
+                variant="ghost"
               >
                 Cancel
               </Button>
-              <Button size="sm" onClick={applyDateRange}>
+              <Button onClick={applyDateRange} size="sm">
                 Apply
               </Button>
             </div>
@@ -227,17 +237,17 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
 
       {/* Comparison Toggle */}
       <Button
-        variant={compare ? "secondary" : "outline"}
-        size="lg"
-        onClick={() => setDateParams({ compare: !compare })}
         aria-label="Toggle comparison"
+        onClick={() => setDateParams({ compare: !compare })}
+        size="lg"
+        variant={compare ? "secondary" : "outline"}
       >
         <GitCompare className="size-4" />
       </Button>
 
       {/* Clear filters button */}
       {hasActiveFilters && (
-        <Button variant="secondary" size="lg" onClick={clearFilters}>
+        <Button onClick={clearFilters} size="lg" variant="secondary">
           Clear
         </Button>
       )}

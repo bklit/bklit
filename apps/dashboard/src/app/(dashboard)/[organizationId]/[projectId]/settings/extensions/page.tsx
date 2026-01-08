@@ -20,8 +20,8 @@ export default async function ProjectExtensionsPage({
   return (
     <>
       <PageHeader
-        title="Extensions"
         description="Configure extensions for this project."
+        title="Extensions"
       >
         <SubNavigation
           configKey="projectSettings"

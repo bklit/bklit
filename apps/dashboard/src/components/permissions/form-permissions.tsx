@@ -28,7 +28,7 @@ export function FormPermissions({
 }: FormPermissionsProps) {
   const workspace = useWorkspace();
   const userRole = workspace.activeOrganization?.members.find(
-    (member) => member.userId === workspace.session.user.id,
+    (member) => member.userId === workspace.session.user.id
   )?.role;
 
   const hasAccess = hasPermission(userRole, requiredRole);
@@ -39,10 +39,10 @@ export function FormPermissions({
 
   return (
     <Permissions
-      hasAccess={hasAccess}
       asChild={asChild}
-      overlayMessage={defaultMessage}
+      hasAccess={hasAccess}
       inModal={inModal}
+      overlayMessage={defaultMessage}
     >
       {children}
     </Permissions>

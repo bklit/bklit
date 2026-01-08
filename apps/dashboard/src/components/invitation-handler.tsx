@@ -40,7 +40,7 @@ export function InvitationHandler() {
         if (data.isDemoProject && data.organizationId) {
           // For demo project, fetch the organization to get project info
           const orgQueryResult = await queryClient.fetchQuery(
-            trpc.organization.fetch.queryOptions({ id: data.organizationId }),
+            trpc.organization.fetch.queryOptions({ id: data.organizationId })
           );
 
           const demoProject = orgQueryResult?.projects[0];
@@ -64,7 +64,7 @@ export function InvitationHandler() {
         // Clear invitation params from URL on error
         router.push("/");
       },
-    }),
+    })
   );
 
   useEffect(() => {

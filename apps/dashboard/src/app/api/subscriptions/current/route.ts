@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     if (!organizationId) {
       return NextResponse.json(
         { error: "Missing organizationId" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -39,12 +39,12 @@ export async function GET(request: NextRequest) {
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found or no access" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
     // If Polar is not configured, return null subscription
-    if (!polarClient || !("subscriptions" in auth.api)) {
+    if (!(polarClient && "subscriptions" in auth.api)) {
       return NextResponse.json({ subscription: null });
     }
 
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching subscription:", error);
     return NextResponse.json(
       { error: "Failed to fetch subscription" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

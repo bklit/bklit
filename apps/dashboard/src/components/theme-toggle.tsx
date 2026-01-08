@@ -12,32 +12,34 @@ export function ThemeToggle() {
 
   return (
     <ToggleGroup
-      type="single"
-      value={theme}
       onValueChange={(value) => {
-        if (value) setTheme(value);
+        if (value) {
+          setTheme(value);
+        }
       }}
       size="sm"
+      type="single"
+      value={theme}
       variant="outline"
     >
       <ToggleGroupItem
-        value="light"
         aria-label="Toggle light mode"
         className="p-3"
+        value="light"
       >
         <Sun className="size-3" />
       </ToggleGroupItem>
       <ToggleGroupItem
-        value="dark"
         aria-label="Toggle dark mode"
         className="p-3"
+        value="dark"
       >
         <Moon className="size-3" />
       </ToggleGroupItem>
       <ToggleGroupItem
-        value="system"
         aria-label="Toggle system mode"
         className="p-3"
+        value="system"
       >
         <Monitor className="size-3" />
       </ToggleGroupItem>

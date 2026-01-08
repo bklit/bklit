@@ -16,4 +16,6 @@ export const prisma =
     log: ["query", "info", "warn", "error"],
   }).$extends(withAccelerate());
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}

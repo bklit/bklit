@@ -29,12 +29,16 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -74,7 +78,7 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
             Loading chart...
           </div>
         </CardContent>
@@ -92,7 +96,7 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
             No data available
           </div>
         </CardContent>
@@ -110,14 +114,14 @@ export function FunnelsChart({ organizationId, projectId }: FunnelsChartProps) {
       </CardHeader>
       <CardContent>
         <TimeSeriesChart
-          projectId={projectId}
-          data={timeSeriesData.timeSeriesData}
           chartConfig={chartConfig}
-          startDate={startDate}
+          data={timeSeriesData.timeSeriesData}
           endDate={endDate}
-          isLoading={isLoading}
-          showDeployments={true}
           height={400}
+          isLoading={isLoading}
+          projectId={projectId}
+          showDeployments={true}
+          startDate={startDate}
         />
       </CardContent>
     </Card>

@@ -16,8 +16,8 @@ export default async function Layout({
       {children}
       {modal}
       <LiveVisitorToasts
-        projectId={projectId}
         organizationId={organizationId}
+        projectId={projectId}
       />
     </>
   );

@@ -37,28 +37,28 @@ export function FunnelSuccessDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="items-center text-center">
-          <CheckCircle className="size-12 text-green-500 mb-2" />
-          <DialogTitle className="text-2xl font-bold">
+          <CheckCircle className="mb-2 size-12 text-green-500" />
+          <DialogTitle className="font-bold text-2xl">
             Funnel Created
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground text-center mt-2">
+          <DialogDescription className="mt-2 text-center text-muted-foreground">
             Your funnel <strong>&quot;{funnelName}&quot;</strong> has been
             successfully created.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+        <DialogFooter className="mt-4 flex-col gap-2 sm:flex-row">
           <Button
+            className="w-full sm:w-auto"
+            onClick={handleContinueAdding}
             type="button"
             variant="outline"
-            onClick={handleContinueAdding}
-            className="w-full sm:w-auto"
           >
             Continue Adding Another Funnel
           </Button>
-          <Button type="button" asChild className="w-full sm:w-auto">
+          <Button asChild className="w-full sm:w-auto" type="button">
             <Link
               href={`/${organizationId}/${projectId}/funnels/${funnelId}`}
               onClick={() => onOpenChange(false)}

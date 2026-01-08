@@ -71,11 +71,11 @@ export function FunnelsTable({
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" key={i} />
             ))}
           </div>
         ) : funnels.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             No funnels found
           </div>
         ) : (
@@ -94,8 +94,8 @@ export function FunnelsTable({
                   <TableRow key={funnel.id}>
                     <TableCell className="font-medium">
                       <Link
-                        href={`/${organizationId}/${projectId}/funnels/${funnel.id}`}
                         className="hover:underline"
+                        href={`/${organizationId}/${projectId}/funnels/${funnel.id}`}
                       >
                         {funnel.name}
                       </Link>
@@ -118,27 +118,27 @@ export function FunnelsTable({
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
+                        className={
+                          pagination.hasPreviousPage
+                            ? "cursor-pointer"
+                            : "pointer-events-none opacity-50"
+                        }
                         onClick={() => {
                           if (pagination.hasPreviousPage) {
                             onPageChange(pagination.page - 1);
                           }
                         }}
-                        className={
-                          !pagination.hasPreviousPage
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
                       />
                     </PaginationItem>
                     {Array.from(
                       { length: pagination.totalPages },
-                      (_, i) => i + 1,
+                      (_, i) => i + 1
                     ).map((page) => (
                       <PaginationItem key={page}>
                         <PaginationLink
-                          onClick={() => onPageChange(page)}
-                          isActive={page === pagination.page}
                           className="cursor-pointer"
+                          isActive={page === pagination.page}
+                          onClick={() => onPageChange(page)}
                         >
                           {page}
                         </PaginationLink>
@@ -146,16 +146,16 @@ export function FunnelsTable({
                     ))}
                     <PaginationItem>
                       <PaginationNext
+                        className={
+                          pagination.hasNextPage
+                            ? "cursor-pointer"
+                            : "pointer-events-none opacity-50"
+                        }
                         onClick={() => {
                           if (pagination.hasNextPage) {
                             onPageChange(pagination.page + 1);
                           }
                         }}
-                        className={
-                          !pagination.hasNextPage
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
                       />
                     </PaginationItem>
                   </PaginationContent>

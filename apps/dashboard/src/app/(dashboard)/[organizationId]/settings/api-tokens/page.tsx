@@ -21,8 +21,8 @@ export default async function ApiTokensSettingsPage({
   return (
     <>
       <PageHeader
-        title="API Tokens"
         description="Manage API tokens for authenticating your tracking requests."
+        title="API Tokens"
       >
         <SubNavigation
           configKey="organizationSettings"

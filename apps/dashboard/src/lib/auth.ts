@@ -13,7 +13,7 @@ export const authenticated = async (options?: { callbackUrl?: string }) => {
     return redirect(
       callbackUrl
         ? `/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`
-        : "/signin",
+        : "/signin"
     );
   }
 

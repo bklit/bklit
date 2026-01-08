@@ -22,28 +22,28 @@ export const AddStepNode = memo(function AddStepNode({ id, data }: NodeProps) {
   return (
     <button
       className={cn(
-        "relative bg-card border-2 rounded-xl border-dashed border-primary p-4 min-w-[240px] max-w-[320px]",
-        "shadow-sm hover:shadow-md transition-all duration-200 hover:cursor-pointer active:cursor-grabbing",
+        "relative min-w-[240px] max-w-[320px] rounded-xl border-2 border-primary border-dashed bg-card p-4",
+        "shadow-sm transition-all duration-200 hover:cursor-pointer hover:shadow-md active:cursor-grabbing",
         "group",
-        isEditing && "border-solid",
+        isEditing && "border-solid"
       )}
       onClick={() => nodeData.onConfigure(id)}
       type="button"
     >
       {!isFirstNode && (
         <Handle
-          type="target"
+          className="size-3 border-background bg-primary"
           position={Position.Left}
-          className="bg-primary border-background size-3"
+          type="target"
         />
       )}
 
-      <div className="flex flex-col w-full items-center gap-3 relative">
-        <span className="flex items-center justify-center size-12 bg-bklit-600 text-primary rounded-full">
+      <div className="relative flex w-full flex-col items-center gap-3">
+        <span className="flex size-12 items-center justify-center rounded-full bg-bklit-600 text-primary">
           <Plus size={16} />
         </span>
 
-        <div className="block text-sm font-medium w-0 min-w-full truncate text-center">
+        <div className="block w-0 min-w-full truncate text-center font-medium text-sm">
           Add Step
         </div>
 
@@ -52,9 +52,9 @@ export const AddStepNode = memo(function AddStepNode({ id, data }: NodeProps) {
 
       {!isFirstNode && (
         <Handle
-          type="source"
+          className="size-3 border-background bg-primary"
           position={Position.Right}
-          className="bg-primary border-background size-3"
+          type="source"
         />
       )}
     </button>

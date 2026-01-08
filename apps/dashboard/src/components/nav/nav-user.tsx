@@ -69,29 +69,29 @@ export function NavUser({
       <DropdownMenu>
         <DropdownMenuTrigger>
           <Avatar className="size-9">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage alt={user.name} src={user.avatar} />
             <AvatarFallback className="rounded-lg">
               {user.name?.[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent
+          align="end"
           className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
           side="bottom"
-          align="end"
           sideOffset={4}
         >
           <DropdownMenuLabel className="p-0 font-normal">
-            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm ">
+            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
               <Avatar className="size-9 border border-input">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage alt={user.name} src={user.avatar} />
                 <AvatarFallback className="rounded-lg">
                   {user.name?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-muted-foreground text-xs">
                   {user.email}
                 </span>
               </div>
@@ -137,13 +137,13 @@ export function NavUser({
     <Sheet>
       <SheetTrigger asChild>
         <Avatar className="size-9">
-          <AvatarImage src={user.avatar} alt={user.name} />
+          <AvatarImage alt={user.name} src={user.avatar} />
           <AvatarFallback className="rounded-lg">
             {user.name?.[0]?.toUpperCase()}
           </AvatarFallback>
         </Avatar>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[calc(80vw-2rem)]">
+      <SheetContent className="w-[calc(80vw-2rem)]" side="right">
         <SheetHeader>
           <Item>
             <ItemContent>
@@ -152,7 +152,7 @@ export function NavUser({
             </ItemContent>
             <ItemActions>
               <Avatar className="size-4">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage alt={user.name} src={user.avatar} />
                 <AvatarFallback className="rounded-lg">
                   {user.name?.[0]?.toUpperCase()}
                 </AvatarFallback>

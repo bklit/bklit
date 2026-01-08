@@ -33,12 +33,16 @@ export function SessionsChart({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -91,7 +95,7 @@ export function SessionsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
             Loading chart...
           </div>
         </CardContent>
@@ -109,7 +113,7 @@ export function SessionsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
             No data available
           </div>
         </CardContent>
@@ -131,19 +135,19 @@ export function SessionsChart({
         <div className="flex flex-col sm:grid sm:grid-cols-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
-              mobile={statsData?.mobileSessions || 0}
               desktop={statsData?.desktopSessions || 0}
+              mobile={statsData?.mobileSessions || 0}
             />
           </div>
           <div className="col-span-3">
             <TimeSeriesChart
-              projectId={projectId}
-              data={timeSeriesData.timeSeriesData}
               chartConfig={chartConfig}
-              startDate={startDate}
+              data={timeSeriesData.timeSeriesData}
               endDate={endDate}
               isLoading={isLoading}
+              projectId={projectId}
               showDeployments={true}
+              startDate={startDate}
             />
           </div>
         </div>

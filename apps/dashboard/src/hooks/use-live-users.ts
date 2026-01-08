@@ -24,8 +24,8 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
         organizationId,
       },
       {
-        refetchInterval: 15000, // Poll every 15 seconds (less aggressive)
-        staleTime: 10000, // Consider data stale after 10 seconds
+        refetchInterval: 15_000, // Poll every 15 seconds (less aggressive)
+        staleTime: 10_000, // Consider data stale after 10 seconds
         refetchOnWindowFocus: false, // Don't refetch when window gains focus
         refetchOnMount: true, // Refetch when component mounts
         retry: (failureCount, error) => {
@@ -35,7 +35,7 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
           }
           return failureCount < 3;
         },
-      },
+      }
     ),
     enabled,
   });

@@ -12,7 +12,7 @@ interface BklitOptions {
 
 let currentSessionId: string | null = null; // Keep track of current session
 let lastTrackedUrl: string | null = null; // Track last URL to prevent duplicates
-let lastTrackedTime: number = 0; // Track last tracking time
+let lastTrackedTime = 0; // Track last tracking time
 const TRACKING_DEBOUNCE_MS = 1000; // Debounce tracking by 1 second
 const SESSION_STORAGE_KEY = "bklit_session_id";
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
@@ -125,7 +125,7 @@ export function initBklit(options: BklitOptions): void {
       const data = {
         url: currentUrl,
         timestamp: new Date().toISOString(),
-        projectId: projectId,
+        projectId,
         userAgent: navigator.userAgent,
         sessionId: currentSessionId,
         referrer: document.referrer || undefined,
@@ -134,7 +134,7 @@ export function initBklit(options: BklitOptions): void {
         utmCampaign: utmCampaign || undefined,
         utmTerm: utmTerm || undefined,
         utmContent: utmContent || undefined,
-        environment: environment,
+        environment,
       };
 
       if (debug) {
@@ -166,13 +166,13 @@ export function initBklit(options: BklitOptions): void {
         }
       } else {
         console.error(
-          `❌ Bklit SDK: Failed to track page view for site ${projectId}. Status: ${response.statusText}`,
+          `❌ Bklit SDK: Failed to track page view for site ${projectId}. Status: ${response.statusText}`
         );
       }
     } catch (error) {
       console.error(
         `❌ Bklit SDK: Error tracking page view for site ${projectId}:`,
-        error,
+        error
       );
     }
   }
@@ -191,7 +191,7 @@ export function initBklit(options: BklitOptions): void {
         if (debug) {
           console.log("🔄 Bklit SDK: Ending session on page unload...", {
             sessionId: currentSessionId,
-            projectId: projectId,
+            projectId,
           });
         }
 
@@ -201,8 +201,8 @@ export function initBklit(options: BklitOptions): void {
           headers: buildHeaders(apiKey),
           body: JSON.stringify({
             sessionId: currentSessionId,
-            projectId: projectId,
-            environment: environment,
+            projectId,
+            environment,
           }),
           keepalive: true, // Important for sending data before page unloads
         });
@@ -282,11 +282,15 @@ function generateSessionId(): string {
 
 // Helper function to get session ID from storage
 function getStoredSessionId(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") {
+    return null;
+  }
 
   try {
     const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (!stored) return null;
+    if (!stored) {
+      return null;
+    }
 
     const { sessionId, timestamp } = JSON.parse(stored);
     const now = Date.now();
@@ -306,7 +310,9 @@ function getStoredSessionId(): string | null {
 
 // Helper function to store session ID
 function storeSessionId(sessionId: string): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
 
   try {
     const data = {
@@ -323,7 +329,7 @@ function storeSessionId(sessionId: string): void {
 export function trackPageView() {
   if (typeof window === "undefined") {
     console.warn(
-      "❌ Bklit SDK: trackPageView can only be called in browser environment",
+      "❌ Bklit SDK: trackPageView can only be called in browser environment"
     );
     return;
   }
@@ -333,7 +339,7 @@ export function trackPageView() {
     return;
   }
 
-  const debug = window.bklitDebug || false;
+  const debug = window.bklitDebug;
 
   if (debug) {
     console.log("🎯 Bklit SDK: Manual page view tracking triggered");
@@ -408,22 +414,22 @@ export function trackEvent(
   trackingId: string,
   eventType: string,
   metadata?: Record<string, unknown>,
-  triggerMethod?: "automatic" | "manual",
+  triggerMethod?: "automatic" | "manual"
 ) {
   if (typeof window === "undefined") {
     console.warn(
-      "❌ Bklit SDK: trackEvent can only be called in browser environment",
+      "❌ Bklit SDK: trackEvent can only be called in browser environment"
     );
     return;
   }
 
   const projectId = window.bklitprojectId;
   const apiHost = window.bklitApiHost;
-  const debug = window.bklitDebug || false;
+  const debug = window.bklitDebug;
 
   if (!projectId) {
     console.warn(
-      "❌ Bklit SDK: No projectId configured. Call initBklit() first.",
+      "❌ Bklit SDK: No projectId configured. Call initBklit() first."
     );
     return;
   }
@@ -453,7 +459,7 @@ export function trackEvent(
     ? apiHost.replace("/api/track", "/api/track-event")
     : getDefaultConfig(window.bklitEnvironment).apiHost.replace(
         "/api/track",
-        "/api/track-event",
+        "/api/track-event"
       );
 
   const apiKey = window.bklitApiKey;
@@ -488,13 +494,17 @@ export function trackEvent(
 
 // Auto-track events with data attributes and IDs
 function setupEventTracking() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
 
-  const debug = window.bklitDebug || false;
+  const debug = window.bklitDebug;
   const trackedElements = new WeakSet<Element>();
 
   function attachEventListeners(element: Element) {
-    if (trackedElements.has(element)) return;
+    if (trackedElements.has(element)) {
+      return;
+    }
     trackedElements.add(element);
 
     const dataEventAttr = element.getAttribute("data-bklit-event");
@@ -508,7 +518,9 @@ function setupEventTracking() {
       trackingId = elementId.replace("bklit-event-", "");
     }
 
-    if (!trackingId) return;
+    if (!trackingId) {
+      return;
+    }
 
     if (debug && trackingId) {
       console.log("🔗 Bklit SDK: Setting up event tracking (all types)", {
@@ -544,14 +556,16 @@ function setupEventTracking() {
           }
         }
       },
-      { threshold: 0.5 },
+      { threshold: 0.5 }
     );
     viewObserver.observe(element);
 
     // Track hover events
     let hoverTimeout: NodeJS.Timeout | null = null;
     element.addEventListener("mouseenter", () => {
-      if (hoverTimeout) clearTimeout(hoverTimeout);
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+      }
       hoverTimeout = setTimeout(() => {
         if (debug) {
           console.log("🖱️ Bklit SDK: Hover event detected", {
@@ -592,7 +606,7 @@ function setupEventTracking() {
             const childDataAttrElements =
               element.querySelectorAll("[data-bklit-event]");
             const childIdElements = element.querySelectorAll(
-              "[id^='bklit-event-']",
+              "[id^='bklit-event-']"
             );
 
             childDataAttrElements.forEach(attachEventListeners);
@@ -625,7 +639,9 @@ function setupEventTracking() {
 
 // Global function to clear session (useful for testing)
 export function clearBklitSession(): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
 
   currentSessionId = null;
   lastTrackedUrl = null;
@@ -661,7 +677,7 @@ declare global {
       trackingId: string,
       eventType: string,
       metadata?: Record<string, unknown>,
-      triggerMethod?: "automatic" | "manual",
+      triggerMethod?: "automatic" | "manual"
     ) => void;
     clearBklitSession?: () => void;
     bklitprojectId?: string;

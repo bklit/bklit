@@ -39,21 +39,21 @@ export const BklitInvitationEmail = ({
         <Preview>
           You've been invited to join {organizationName} on Bklit Analytics
         </Preview>
-        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
-          <div className="block w-full bg-black rounded-lg overflow-clip">
+        <Container className="mx-auto max-w-480px px-8 pt-12 pb-12">
+          <div className="block w-full overflow-clip rounded-lg bg-black">
             <Img
-              src={`${baseUrl}/react-email-header.jpg`}
               alt="Bklit"
-              width="100%"
               height="auto"
+              src={`${baseUrl}/react-email-header.jpg`}
+              width="100%"
             />
           </div>
 
-          <Text className="text-2xl font-semibold">
+          <Text className="font-semibold text-2xl">
             You've been invited to {organizationName}
           </Text>
 
-          <Section className="p-4 border border-gray-200 rounded-md bg-white">
+          <Section className="rounded-md border border-gray-200 bg-white p-4">
             <Text className="text-left text-lg">
               <strong>{inviterName}</strong> has invited you to join{" "}
               <strong>{organizationName}</strong> on Bklit.com as a {role}.
@@ -67,17 +67,17 @@ export const BklitInvitationEmail = ({
             </Text>
 
             <Button
-              className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+              className="inline-block rounded-md bg-lime-500 px-5 py-3 text-center font-bold text-base text-white"
               href={inviteLink}
             >
               Sign in to Accept
             </Button>
 
-            <Text className="text-sm text-red-400">
+            <Text className="text-red-400 text-sm">
               This invitation expires in 7 days.
             </Text>
 
-            <Text className="text-xs text-gray-400">
+            <Text className="text-gray-400 text-xs">
               If you weren't expecting this invitation, you can ignore this
               email.
             </Text>
@@ -88,7 +88,7 @@ export const BklitInvitationEmail = ({
               {links?.map((link) => (
                 <Column key={link.title}>
                   <Link
-                    className="text-xs font-bold text-black"
+                    className="font-bold text-black text-xs"
                     href={link.href}
                   >
                     {link.title}

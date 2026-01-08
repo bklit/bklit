@@ -53,7 +53,7 @@ export function DeleteApiTokenForm({
       onError: (error) => {
         toast.error(`Failed to delete token: ${error.message}`);
       },
-    }),
+    })
   );
 
   const handleDelete = async () => {
@@ -69,9 +69,9 @@ export function DeleteApiTokenForm({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={isOpen}>
       <DialogContent className="sm:max-w-[425px]">
-        <FormPermissions requiredRole={MemberRole.ADMIN} inModal>
+        <FormPermissions inModal requiredRole={MemberRole.ADMIN}>
           <DialogHeader>
             <DialogTitle>Delete API Token: {tokenName}</DialogTitle>
             <DialogDescription>
@@ -82,32 +82,32 @@ export function DeleteApiTokenForm({
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label
+                className="sr-only text-right"
                 htmlFor="token-name-confirmation"
-                className="text-right sr-only"
               >
                 Token Name
               </Label>
               <Input
+                className="col-span-4"
                 id="token-name-confirmation"
-                value={confirmationInput}
                 onChange={(e) => setConfirmationInput(e.target.value)}
                 placeholder={tokenName}
-                className="col-span-4"
+                value={confirmationInput}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline" disabled={deleteToken.isPending}>
+              <Button disabled={deleteToken.isPending} variant="outline">
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              variant="destructive"
-              onClick={handleDelete}
               disabled={
                 deleteToken.isPending || confirmationInput !== tokenName
               }
+              onClick={handleDelete}
+              variant="destructive"
             >
               {deleteToken.isPending ? "Deleting..." : "Delete Token"}
             </Button>

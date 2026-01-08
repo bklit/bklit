@@ -24,19 +24,19 @@ export function BklitLogo({
   return (
     <div
       className={cn(
-        "w-full h-full aspect-square min-w-4 min-h-4 relative",
-        className,
+        "relative aspect-square h-full min-h-4 w-full min-w-4",
+        className
       )}
       style={{ width: size, height: size }}
     >
       <svg
-        viewBox="0 0 112 179"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
         className={cn(
-          "w-full h-auto max-w-full max-h-full",
-          theme === "light" ? "text-black" : "text-white",
+          "h-auto max-h-full w-full max-w-full",
+          theme === "light" ? "text-black" : "text-white"
         )}
+        fill="none"
+        viewBox="0 0 112 179"
+        xmlns="http://www.w3.org/2000/svg"
       >
         <title>Bklit Logo</title>
         <path
@@ -76,60 +76,60 @@ export function BklitLogo({
         <defs>
           {/* Eye */}
           <linearGradient
+            gradientUnits="objectBoundingBox"
             id={`paint1_radial_${id}`}
             x1="0"
-            y1="0"
             x2="1"
+            y1="0"
             y2="0"
-            gradientUnits="objectBoundingBox"
           >
             <stop offset="0" stopColor={`rgba(${rgbColor})`} />
             <stop offset="0.5" stopColor={`rgba(${rgbColor}, 0.8)`} />
             <stop offset="1" stopColor={`rgba(${rgbColor})`} />
           </linearGradient>
           <linearGradient
+            gradientUnits="userSpaceOnUse"
             id={`paint2_linear_${id}`}
             x1="55.4062"
-            y1="177.3"
             x2="110.813"
+            y1="177.3"
             y2="66.6642"
-            gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="currentColor" />
             <stop offset="1" stopColor={`rgba(${rgbColor}, 0.5)`} />
           </linearGradient>
           <linearGradient
+            gradientUnits="userSpaceOnUse"
             id={`paint3_linear_${id}`}
             x1="55.4063"
-            y1="177.3"
             x2="-8.65898e-06"
+            y1="177.3"
             y2="66.6642"
-            gradientUnits="userSpaceOnUse"
           >
-            <stop stopOpacity="0" stopColor="currentColor" />
-            <stop offset="0.745192" stopColor={`rgba(120,120,120, 0.5)`} />
+            <stop stopColor="currentColor" stopOpacity="0" />
+            <stop offset="0.745192" stopColor={"rgba(120,120,120, 0.5)"} />
           </linearGradient>
           <linearGradient
+            gradientUnits="userSpaceOnUse"
             id={`paint4_linear_${id}`}
             x1="55.4063"
-            y1="-8.79084e-05"
             x2="-1.0581e-05"
+            y1="-8.79084e-05"
             y2="110.636"
-            gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="currentColor" />
             <stop offset="1" stopColor={`rgba(${rgbColor}, 0.5)`} />
           </linearGradient>
           <linearGradient
+            gradientUnits="userSpaceOnUse"
             id={`paint5_linear_${id}`}
             x1="55.4063"
-            y1="-8.79084e-05"
             x2="110.813"
+            y1="-8.79084e-05"
             y2="110.636"
-            gradientUnits="userSpaceOnUse"
           >
-            <stop stopOpacity="0" stopColor="currentColor" />
-            <stop offset="0.75" stopColor={`rgba(120,120,120, 0.5)`} />
+            <stop stopColor="currentColor" stopOpacity="0" />
+            <stop offset="0.75" stopColor={"rgba(120,120,120, 0.5)"} />
           </linearGradient>
         </defs>
       </svg>

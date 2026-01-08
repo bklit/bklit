@@ -22,7 +22,7 @@ export const githubRouter = createTRPCRouter({
       console.log("[GITHUB SAVE] Accounts in session:", session.user.accounts);
       console.log(
         "[GITHUB SAVE] Accounts length:",
-        session.user.accounts?.length,
+        session.user.accounts?.length
       );
 
       if (!session) {
@@ -31,16 +31,16 @@ export const githubRouter = createTRPCRouter({
 
       // Find GitHub account
       const githubAccount = session.user.accounts?.find(
-        (acc) => acc.providerId === "github",
+        (acc) => acc.providerId === "github"
       );
 
       console.log("[GITHUB SAVE] GitHub account found:", !!githubAccount);
 
-      if (!githubAccount || !githubAccount.accessToken) {
+      if (!githubAccount?.accessToken) {
         // Try fetching from Account table directly
         console.log(
           "[GITHUB SAVE] Checking Account table for user:",
-          session.user.id,
+          session.user.id
         );
 
         // Wait a moment for Better Auth to create the account (it might be processing)
@@ -57,17 +57,17 @@ export const githubRouter = createTRPCRouter({
           "[GITHUB SAVE] Account from DB:",
           !!accountFromDb,
           "Has token:",
-          !!accountFromDb?.accessToken,
+          !!accountFromDb?.accessToken
         );
 
-        if (!accountFromDb || !accountFromDb.accessToken) {
+        if (!accountFromDb?.accessToken) {
           throw new Error(
-            "GitHub account linking in progress - please refresh the page in a moment",
+            "GitHub account linking in progress - please refresh the page in a moment"
           );
         }
 
         // Use account from DB
-        const installation = await prisma.gitHubInstallation.upsert({
+        const _installation = await prisma.gitHubInstallation.upsert({
           where: {
             organizationId_githubUserId: {
               organizationId: input.organizationId,
@@ -121,23 +121,27 @@ export const githubRouter = createTRPCRouter({
       z.object({
         organizationId: z.string(),
         repository: z.string(),
-      }),
+      })
     )
     .query(async ({ input }) => {
-      if (!input.repository) return null;
+      if (!input.repository) {
+        return null;
+      }
 
       const installation = await prisma.gitHubInstallation.findFirst({
         where: { organizationId: input.organizationId },
       });
 
-      if (!installation) return null;
+      if (!installation) {
+        return null;
+      }
 
       const [owner, repo] = input.repository.split("/");
       const client = new GitHubClient(installation.accessToken);
 
       const webhooks = await client.listWebhooks(owner, repo);
       const bklitWebhook = webhooks.find((hook) =>
-        hook.config?.url?.includes("/api/webhooks/github"),
+        hook.config?.url?.includes("/api/webhooks/github")
       );
 
       return bklitWebhook || null;
@@ -150,7 +154,9 @@ export const githubRouter = createTRPCRouter({
         where: { organizationId: input.organizationId },
       });
 
-      if (!installation) throw new Error("GitHub not connected");
+      if (!installation) {
+        throw new Error("GitHub not connected");
+      }
 
       const client = new GitHubClient(installation.accessToken);
       return await client.listRepositories();
@@ -161,14 +167,16 @@ export const githubRouter = createTRPCRouter({
       z.object({
         organizationId: z.string(),
         repository: z.string(),
-      }),
+      })
     )
     .query(async ({ input }) => {
       const installation = await prisma.gitHubInstallation.findFirst({
         where: { organizationId: input.organizationId },
       });
 
-      if (!installation) throw new Error("GitHub not connected");
+      if (!installation) {
+        throw new Error("GitHub not connected");
+      }
 
       const [owner, repo] = input.repository.split("/");
       const client = new GitHubClient(installation.accessToken);
@@ -180,10 +188,10 @@ export const githubRouter = createTRPCRouter({
           const runs = await client.getRecentWorkflowRuns(
             owner,
             repo,
-            workflow.id,
+            workflow.id
           );
           return { ...workflow, recentRuns: runs };
-        }),
+        })
       );
 
       return workflowsWithRuns;
@@ -195,14 +203,16 @@ export const githubRouter = createTRPCRouter({
         organizationId: z.string(),
         projectId: z.string(),
         repository: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input }) => {
       const installation = await prisma.gitHubInstallation.findFirst({
         where: { organizationId: input.organizationId },
       });
 
-      if (!installation) throw new Error("GitHub not connected");
+      if (!installation) {
+        throw new Error("GitHub not connected");
+      }
 
       const [owner, repo] = input.repository.split("/");
       const client = new GitHubClient(installation.accessToken);
@@ -243,14 +253,14 @@ export const githubRouter = createTRPCRouter({
           enabled: true,
           config: {
             repository: input.repository,
-            webhookSecret: webhookSecret,
+            webhookSecret,
           },
         },
         update: {
           config: {
             ...(existingExtension?.config as object),
             repository: input.repository,
-            webhookSecret: webhookSecret,
+            webhookSecret,
           },
         },
       });

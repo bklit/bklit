@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 
 export class GitHubClient {
-  private octokit: Octokit;
+  private readonly octokit: Octokit;
 
   constructor(accessToken: string) {
     this.octokit = new Octokit({ auth: accessToken });
@@ -17,7 +17,7 @@ export class GitHubClient {
 
     console.log(
       "[GITHUB API] Total repos (including org repos):",
-      personalRepos.data.length,
+      personalRepos.data.length
     );
     console.log("[GITHUB API] Repo owners:", [
       ...new Set(personalRepos.data.map((r) => r.owner.login)),
@@ -76,12 +76,12 @@ export class GitHubClient {
     owner: string,
     repo: string,
     webhookUrl: string,
-    secret: string,
+    secret: string
   ) {
     // Check if webhook already exists
     const existingWebhooks = await this.listWebhooks(owner, repo);
     const existingWebhook = existingWebhooks.find(
-      (hook) => hook.config?.url === webhookUrl,
+      (hook) => hook.config?.url === webhookUrl
     );
 
     if (existingWebhook) {

@@ -29,12 +29,13 @@ import {
 const env = authEnv();
 
 // Validate Polar configuration if enabled
-if (env.POLAR_ACCESS_TOKEN) {
-  if (!env.POLAR_WEBHOOK_SECRET || !env.POLAR_ORGANIZATION_ID) {
-    throw new Error(
-      "POLAR_WEBHOOK_SECRET and POLAR_ORGANIZATION_ID are required when POLAR_ACCESS_TOKEN is set",
-    );
-  }
+if (
+  env.POLAR_ACCESS_TOKEN &&
+  !(env.POLAR_WEBHOOK_SECRET && env.POLAR_ORGANIZATION_ID)
+) {
+  throw new Error(
+    "POLAR_WEBHOOK_SECRET and POLAR_ORGANIZATION_ID are required when POLAR_ACCESS_TOKEN is set"
+  );
 }
 
 // No static plans - all pricing fetched from Polar API
@@ -137,7 +138,7 @@ export function initAuth(options: {
             // If session was created within 5 seconds of user creation, treat as new signup
             const timeDiff = Math.abs(
               new Date(newSession.session.createdAt).getTime() -
-                user.createdAt.getTime(),
+                user.createdAt.getTime()
             );
             const isNewUser = timeDiff < 5000;
 
@@ -190,7 +191,7 @@ export function initAuth(options: {
                         },
                       });
 
-                    if (!existingMember && !existingInvitation) {
+                    if (!(existingMember || existingInvitation)) {
                       // Create invitation
                       const invitation = await prisma.invitation.create({
                         data: {
@@ -200,7 +201,7 @@ export function initAuth(options: {
                           role: "member",
                           status: "pending",
                           expiresAt: new Date(
-                            Date.now() + 30 * 24 * 60 * 60 * 1000,
+                            Date.now() + 30 * 24 * 60 * 60 * 1000
                           ), // 30 days
                           inviterId: user.id, // Self-invitation from system
                         },
@@ -216,16 +217,16 @@ export function initAuth(options: {
                         // In development, prominently display the invite link
                         if (process.env.NODE_ENV === "development") {
                           console.log(
-                            "\n🎉 ==========================================",
+                            "\n🎉 =========================================="
                           );
                           console.log("📬 DEMO PROJECT INVITATION");
                           console.log(`👤 User: ${user.email}`);
                           console.log(
-                            `🏢 Organization: ${project.organization.name}`,
+                            `🏢 Organization: ${project.organization.name}`
                           );
                           console.log(`🔗 Invite Link: ${inviteLink}`);
                           console.log(
-                            "==========================================\n",
+                            "==========================================\n"
                           );
                         }
 
@@ -235,7 +236,7 @@ export function initAuth(options: {
                             organizationName: project.organization.name,
                             inviteLink,
                             role: "member",
-                          }),
+                          })
                         );
 
                         await sendEmail({
@@ -247,7 +248,7 @@ export function initAuth(options: {
                       } catch (emailError) {
                         console.error(
                           "Failed to send auto-invite email:",
-                          emailError,
+                          emailError
                         );
                         // Don't fail the whole process if email fails
                       }
@@ -336,7 +337,7 @@ export function initAuth(options: {
                 webhooks({
                   secret: env.POLAR_WEBHOOK_SECRET,
                   onSubscriptionActive: async (
-                    payload: PolarWebhookPayload,
+                    payload: PolarWebhookPayload
                   ) => {
                     logWebhookPayload("subscription.active", payload);
                     const referenceId = payload.data?.reference_id;
@@ -345,7 +346,7 @@ export function initAuth(options: {
                     }
                   },
                   onSubscriptionCanceled: async (
-                    payload: PolarWebhookPayload,
+                    payload: PolarWebhookPayload
                   ) => {
                     logWebhookPayload("subscription.canceled", payload);
                     const referenceId = payload.data?.reference_id;
@@ -354,7 +355,7 @@ export function initAuth(options: {
                     }
                   },
                   onSubscriptionRevoked: async (
-                    payload: PolarWebhookPayload,
+                    payload: PolarWebhookPayload
                   ) => {
                     logWebhookPayload("subscription.revoked", payload);
                     const referenceId = payload.data?.reference_id;

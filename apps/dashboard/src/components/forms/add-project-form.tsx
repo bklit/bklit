@@ -32,7 +32,7 @@ export function AddProjectForm({
 }: AddProjectFormProps) {
   console.log(
     "🔍 AddProjectForm - received organizationId prop:",
-    organizationId,
+    organizationId
   );
 
   const [state, formAction] = useActionState(createProjectAction, initialState);
@@ -62,7 +62,7 @@ export function AddProjectForm({
       // Validation: organizationId is required
       if (!value.organizationId) {
         toast.error(
-          "No active organization found. Please select an organization.",
+          "No active organization found. Please select an organization."
         );
         return;
       }
@@ -110,17 +110,17 @@ export function AddProjectForm({
 
   return (
     <form
+      className="space-y-6"
       id="add-project-form"
       onSubmit={(e) => {
         e.preventDefault();
         console.log(
           "📝 Form submit triggered, current values:",
-          form.state.values,
+          form.state.values
         );
         console.log("📝 Form validation errors:", form.state.errors);
         form.handleSubmit();
       }}
-      className="space-y-6"
     >
       <FieldGroup>
         <form.Field name="name">
@@ -131,14 +131,14 @@ export function AddProjectForm({
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
                 <Input
+                  aria-invalid={isInvalid}
+                  autoComplete="off"
                   id={field.name}
                   name={field.name}
-                  value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
                   placeholder="My Awesome Project"
-                  autoComplete="off"
+                  value={field.state.value}
                 />
                 <FieldDescription>
                   A descriptive name for your website or application.
@@ -156,15 +156,15 @@ export function AddProjectForm({
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>Domain</FieldLabel>
                 <Input
+                  aria-invalid={isInvalid}
+                  autoComplete="url"
                   id={field.name}
                   name={field.name}
-                  value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
                   placeholder="https://example.com"
                   type="url"
-                  autoComplete="url"
+                  value={field.state.value}
                 />
                 <FieldDescription>
                   <code>localhost</code> is automatically detected.
@@ -176,17 +176,17 @@ export function AddProjectForm({
         </form.Field>
       </FieldGroup>
       <Button
-        type="submit"
-        form="add-project-form"
-        disabled={isPending || form.state.isSubmitting}
         className="w-full sm:w-auto"
+        disabled={isPending || form.state.isSubmitting}
+        form="add-project-form"
+        type="submit"
       >
         {isPending || form.state.isSubmitting
           ? "Creating Project..."
           : "Create Project"}
       </Button>
       {state.message && !state.success && !state.errors && (
-        <p className="text-sm font-medium text-destructive">{state.message}</p>
+        <p className="font-medium text-destructive text-sm">{state.message}</p>
       )}
     </form>
   );

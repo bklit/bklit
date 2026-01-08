@@ -44,14 +44,14 @@ program
         if (error.stderr?.includes("already exists")) {
           console.log(
             chalk.yellow(
-              `\nDirectory '${answers.projectName}' already exists. Using existing directory.`,
-            ),
+              `\nDirectory '${answers.projectName}' already exists. Using existing directory.`
+            )
           );
           try {
             process.chdir(answers.projectName);
           } catch {
             console.error(
-              chalk.red(`Cannot access directory '${answers.projectName}'`),
+              chalk.red(`Cannot access directory '${answers.projectName}'`)
             );
             process.exit(1);
           }
@@ -67,11 +67,11 @@ program
       const nodeVersion = process.version;
       const majorVersion = Number.parseInt(
         nodeVersion.slice(1).split(".")[0],
-        10,
+        10
       );
       const minorVersion = Number.parseInt(
         nodeVersion.slice(1).split(".")[1],
-        10,
+        10
       );
 
       if (majorVersion < 22) {
@@ -86,7 +86,7 @@ program
       const dockerAvailable = await isDockerAvailable();
       const dockerComposeAvailable = await isDockerComposeAvailable();
 
-      if (answers.useDocker && (!dockerAvailable || !dockerComposeAvailable)) {
+      if (answers.useDocker && !(dockerAvailable && dockerComposeAvailable)) {
         spinner.warn("Docker not available - using manual database setup");
         answers.useDocker = false;
       }
@@ -163,8 +163,12 @@ program
         } catch (error: any) {
           spinner.fail("Database schema setup failed");
           console.log(chalk.red("\nError output:"));
-          if (error.stderr) console.log(error.stderr);
-          if (error.stdout) console.log(error.stdout);
+          if (error.stderr) {
+            console.log(error.stderr);
+          }
+          if (error.stdout) {
+            console.log(error.stdout);
+          }
           throw error;
         }
 
@@ -178,8 +182,12 @@ program
         } catch (error: any) {
           spinner.fail("ClickHouse setup failed");
           console.log(chalk.red("\nError output:"));
-          if (error.stderr) console.log(error.stderr);
-          if (error.stdout) console.log(error.stdout);
+          if (error.stderr) {
+            console.log(error.stderr);
+          }
+          if (error.stdout) {
+            console.log(error.stdout);
+          }
           throw error;
         }
       }
@@ -193,45 +201,43 @@ program
       if (!answers.setupEmail) {
         console.log(chalk.yellow("📧 Email Configuration:"));
         console.log(
-          chalk.white("   You skipped email setup. In development mode:"),
+          chalk.white("   You skipped email setup. In development mode:")
         );
         console.log(
-          chalk.cyan("   • Login OTP codes will appear in your terminal"),
+          chalk.cyan("   • Login OTP codes will appear in your terminal")
         );
         console.log(
-          chalk.cyan("   • Welcome emails will be logged (not sent)"),
+          chalk.cyan("   • Welcome emails will be logged (not sent)")
         );
         console.log(
           chalk.gray(
-            "   • Add RESEND_API_KEY to .env later to send real emails\n",
-          ),
+            "   • Add RESEND_API_KEY to .env later to send real emails\n"
+          )
         );
       }
 
-      if (!answers.setupOAuth && !answers.setupEmail) {
+      if (!(answers.setupOAuth || answers.setupEmail)) {
         console.log(chalk.yellow("🔐 Authentication:"));
         console.log(
           chalk.white(
-            "   Email authentication is enabled (magic links via OTP)",
-          ),
+            "   Email authentication is enabled (magic links via OTP)"
+          )
         );
         console.log(chalk.cyan("   • OTP codes will display in your terminal"));
         console.log(
-          chalk.gray(
-            "   • Add OAuth providers later for GitHub/Google login\n",
-          ),
+          chalk.gray("   • Add OAuth providers later for GitHub/Google login\n")
         );
       }
 
       if (!answers.setupBilling) {
         console.log(chalk.yellow("💳 Billing:"));
         console.log(
-          chalk.white("   Billing is disabled (all users have free tier)"),
+          chalk.white("   Billing is disabled (all users have free tier)")
         );
         console.log(
           chalk.gray(
-            "   • Add Polar.sh credentials later to enable paid plans\n",
-          ),
+            "   • Add Polar.sh credentials later to enable paid plans\n"
+          )
         );
       }
 
@@ -240,7 +246,7 @@ program
       if (answers.runDev) {
         console.log(chalk.yellow("Starting development server...\n"));
         console.log(
-          chalk.cyan("💡 IMPORTANT: Watch this terminal for login codes!\n"),
+          chalk.cyan("💡 IMPORTANT: Watch this terminal for login codes!\n")
         );
         await execa("pnpm", ["dev"], { stdio: "inherit" });
       } else {
@@ -250,7 +256,7 @@ program
         console.log(chalk.cyan("     http://localhost:3000\n"));
         console.log(chalk.white("  3. Create your first account!"));
         console.log(
-          chalk.yellow("     💡 Watch your terminal for the OTP code\n"),
+          chalk.yellow("     💡 Watch your terminal for the OTP code\n")
         );
       }
 

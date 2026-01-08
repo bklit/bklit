@@ -41,10 +41,14 @@ export function getDeviceIcon(device: string) {
 }
 
 export function getDeviceTypeFromUserAgent(userAgent: string | null): string {
-  if (!userAgent) return "Unknown";
+  if (!userAgent) {
+    return "Unknown";
+  }
 
   for (const config of DEVICE_CONFIG) {
-    if (userAgent.includes(config.pattern)) return config.name;
+    if (userAgent.includes(config.pattern)) {
+      return config.name;
+    }
   }
 
   return DEFAULT_DEVICE.name;

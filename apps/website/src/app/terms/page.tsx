@@ -10,18 +10,18 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="w-full min-h-screen flex flex-col gap-32">
+    <main className="flex min-h-screen w-full flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-6xl flex flex-col px-4 py-48 space-y-12">
+      <div className="container mx-auto flex max-w-6xl flex-col space-y-12 px-4 py-48">
         <SectionHeader
-          title="Terms of Use"
           description="Terms of Use for Bklit analytics platform"
+          title="Terms of Use"
         >
           <p className="text-muted-foreground">
             Last updated: December 28, 2025
           </p>
         </SectionHeader>
-        <div className="prose prose-neutral dark:prose-invert max-w-4xl mx-auto space-y-8 text-sm">
+        <div className="prose prose-neutral dark:prose-invert mx-auto max-w-4xl space-y-8 text-sm">
           <section className="page-content">
             <h2>1. Acceptance of Terms</h2>
             <p>
@@ -157,8 +157,8 @@ export default function TermsPage() {
             <p>
               For questions about these terms, please contact us at{" "}
               <a
-                href="mailto:support@bklit.com"
                 className="text-primary hover:underline"
+                href="mailto:support@bklit.com"
               >
                 support@bklit.com
               </a>

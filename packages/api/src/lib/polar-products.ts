@@ -43,7 +43,9 @@ export async function getProProduct(): Promise<ProProduct | null> {
 
     if (activeProduct.prices && activeProduct.prices.length > 0) {
       for (const price of activeProduct.prices) {
-        if (!price.recurringInterval) continue;
+        if (!price.recurringInterval) {
+          continue;
+        }
 
         if (price.amountType === "fixed" && price.priceAmount) {
           fixedPrice = price.priceAmount;

@@ -22,7 +22,7 @@ export default async function EventDetailPage({ params }: PageProps) {
       trackingId,
       projectId,
       organizationId,
-    }),
+    })
   );
 
   return (

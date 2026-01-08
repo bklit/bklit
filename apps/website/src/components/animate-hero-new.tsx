@@ -7,29 +7,19 @@ import { Hero } from "@/components/hero";
 
 const FakeDashboard = dynamic(
   () => import("@/components/fake-dashboard").then((mod) => mod.FakeDashboard),
-  { ssr: false },
+  { ssr: false }
 );
 
 export function AnimateHeroNew() {
   const [rotationComplete, setRotationComplete] = useState(false);
 
   return (
-    <div className="flex flex-col relative max-h-[1200px] overflow-hidden">
-      <div className="container mx-auto max-w-6xl px-4 overflow-visible">
-        <div className="w-full h-[1283px] grid grid-cols-1 grid-rows-1">
+    <div className="relative flex max-h-[1200px] flex-col overflow-hidden">
+      <div className="container mx-auto max-w-6xl overflow-visible px-4">
+        <div className="grid h-[1283px] w-full grid-cols-1 grid-rows-1">
           <div className="col-start-1 row-start-1 pt-32">
-            <div className="w-full h-full perspective-4000 perspective-origin-top-right preserve-3d relative overflow-visible">
+            <div className="perspective-4000 perspective-origin-top-right preserve-3d relative h-full w-full overflow-visible">
               <motion.div
-                className="backface-hidden rounded-xl overflow-hidden w-[1942px] h-[1283px] absolute inset-0 mt-24"
-                style={{ transformStyle: "preserve-3d" }}
-                initial={{
-                  rotateX: 0,
-                  rotateY: 0,
-                  rotateZ: 0,
-                  scale: 1,
-                  translateZ: 0,
-                  y: 300,
-                }}
                 animate={{
                   rotateX: 35,
                   rotateY: 10,
@@ -38,24 +28,34 @@ export function AnimateHeroNew() {
                   translateZ: 20,
                   y: 0,
                 }}
+                className="backface-hidden absolute inset-0 mt-24 h-[1283px] w-[1942px] overflow-hidden rounded-xl"
+                initial={{
+                  rotateX: 0,
+                  rotateY: 0,
+                  rotateZ: 0,
+                  scale: 1,
+                  translateZ: 0,
+                  y: 300,
+                }}
+                onAnimationComplete={() => setRotationComplete(true)}
+                style={{ transformStyle: "preserve-3d" }}
                 transition={{
                   duration: 1.2,
                   ease: "easeInOut",
                   delay: 0.1,
                 }}
-                onAnimationComplete={() => setRotationComplete(true)}
               >
                 <FakeDashboard animationStarted={rotationComplete} />
               </motion.div>
             </div>
           </div>
-          <div className="col-start-1 row-start-1 relative">
+          <div className="relative col-start-1 row-start-1">
             <Hero />
           </div>
         </div>
       </div>
-      <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-transparent bg-linear-to-b pointer-events-none" />
-      <div className="absolute top-0 left-0 w-full h-full from-transparent to-background via-transparent bg-linear-to-r pointer-events-none" />
+      <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-b from-transparent via-transparent to-background" />
+      <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-r from-transparent via-transparent to-background" />
     </div>
   );
 }

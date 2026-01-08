@@ -34,11 +34,11 @@ export const ModuleWorkspaces = () => {
 
   // Fetch organizations client-side
   const { data: organizations = [] } = useQuery(
-    trpc.organization.list.queryOptions(),
+    trpc.organization.list.queryOptions()
   );
 
   const activeOrganization = organizations.find(
-    (org) => org.id === organizationId,
+    (org) => org.id === organizationId
   );
 
   return (
@@ -53,25 +53,25 @@ export const ModuleWorkspaces = () => {
 
             return (
               <CommandItem
-                value={organization.name}
+                className="h-10 cursor-pointer"
                 key={organization.id}
                 onSelect={() => onChangeOrganization(organization.id)}
-                className="cursor-pointer h-10"
+                value={organization.name}
               >
-                <div className="flex items-center justify-between w-full">
+                <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Avatar
                       className={cn(
                         "size-4",
                         isCurrent &&
-                          "ring-1 ring-white ring-offset-2 ring-offset-background",
+                          "ring-1 ring-white ring-offset-2 ring-offset-background"
                       )}
                     >
                       <AvatarImage src={organization.logo || ""} />
                       <AvatarFallback
                         className={cn(
                           getThemeGradient(organization.theme),
-                          isCurrent && "ring-2 ring-ring",
+                          isCurrent && "ring-2 ring-ring"
                         )}
                       />
                     </Avatar>
@@ -84,9 +84,9 @@ export const ModuleWorkspaces = () => {
               </CommandItem>
             );
           })}
-          <CommandItem asChild className="cursor-pointer h-10 group">
+          <CommandItem asChild className="group h-10 cursor-pointer">
             <Link href="/organizations/create">
-              <CirclePlus className="transition duration-100 size-4 text-brand-300 group-hover:text-white" />
+              <CirclePlus className="size-4 text-brand-300 transition duration-100 group-hover:text-white" />
               Create new workspace
             </Link>
           </CommandItem>

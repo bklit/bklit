@@ -68,13 +68,13 @@ export const Features = () => {
         <div className="grid grid-cols-1 md:grid-cols-3">
           {features.map((feature, index) => (
             <div
+              className="relative flex flex-col gap-2 nth-[3n+3]:border-r-0 border-b p-6 sm:border-r sm:nth-last-[-n+3]:border-b-0 sm:p-12"
               key={index}
-              className="flex flex-col gap-2 relative border-b sm:border-r p-6 sm:p-12 nth-[3n+3]:border-r-0 sm:nth-last-[-n+3]:border-b-0"
             >
               <div className="flex flex-col gap-2">
-                <h3 className="text-xl font-bold">{feature.title}</h3>
+                <h3 className="font-bold text-xl">{feature.title}</h3>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {feature.description}
               </p>
             </div>

@@ -13,7 +13,7 @@ export const pageviewRouter = createTRPCRouter({
         endDate: z.date().optional(),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(20),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -32,11 +32,7 @@ export const pageviewRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -104,18 +100,18 @@ export const pageviewRouter = createTRPCRouter({
             lastViewed: Date;
             firstViewed: Date;
           }
-        >,
+        >
       );
 
       // Convert to array and sort by view count
       const pageGroupsArray = Object.values(pageGroups).sort(
-        (a, b) => b.viewCount - a.viewCount,
+        (a, b) => b.viewCount - a.viewCount
       );
 
       // Apply pagination
       const paginatedPages = pageGroupsArray.slice(
         (input.page - 1) * input.limit,
-        input.page * input.limit,
+        input.page * input.limit
       );
 
       // Transform data to include user metrics
@@ -132,7 +128,7 @@ export const pageviewRouter = createTRPCRouter({
           path: page.path,
           viewCount: page.viewCount,
           uniqueUserCount,
-          avgViewsPerUser: parseFloat(avgViewsPerUser),
+          avgViewsPerUser: Number.parseFloat(avgViewsPerUser),
           lastViewed: page.lastViewed,
           firstViewed: page.firstViewed,
         };
@@ -159,7 +155,7 @@ export const pageviewRouter = createTRPCRouter({
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -178,11 +174,7 @@ export const pageviewRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -224,7 +216,7 @@ export const pageviewRouter = createTRPCRouter({
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -243,11 +235,7 @@ export const pageviewRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -291,7 +279,7 @@ export const pageviewRouter = createTRPCRouter({
         endDate: z.date().optional(),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(20),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check project access
@@ -311,11 +299,7 @@ export const pageviewRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -373,7 +357,7 @@ export const pageviewRouter = createTRPCRouter({
             timestamp: Date;
             mobile: boolean | null;
           }>
-        >,
+        >
       );
 
       const entryPageGroups = sessions.reduce(
@@ -383,7 +367,11 @@ export const pageviewRouter = createTRPCRouter({
           const startedAt = parseClickHouseDate(session.started_at);
           const pageViews = pageviewsBySession[session.session_id] || [];
 
-          if (!acc[entryPage]) {
+          if (acc[entryPage]) {
+            if (startedAt > acc[entryPage].lastVisited) {
+              acc[entryPage].url = originalUrl;
+            }
+          } else {
             acc[entryPage] = {
               url: originalUrl,
               sessions: 0,
@@ -396,27 +384,24 @@ export const pageviewRouter = createTRPCRouter({
               mobileSessions: 0,
               desktopSessions: 0,
             };
-          } else {
-            if (startedAt > acc[entryPage].lastVisited) {
-              acc[entryPage].url = originalUrl;
-            }
           }
 
           acc[entryPage].sessions += 1;
           acc[entryPage].totalPageviews += pageViews.length;
           acc[entryPage].uniqueSessions.add(session.session_id);
           acc[entryPage].lastVisited = new Date(
-            Math.max(acc[entryPage].lastVisited.getTime(), startedAt.getTime()),
+            Math.max(acc[entryPage].lastVisited.getTime(), startedAt.getTime())
           );
           acc[entryPage].firstVisited = new Date(
-            Math.min(
-              acc[entryPage].firstVisited.getTime(),
-              startedAt.getTime(),
-            ),
+            Math.min(acc[entryPage].firstVisited.getTime(), startedAt.getTime())
           );
 
-          if (session.country) acc[entryPage].countries.add(session.country);
-          if (session.city) acc[entryPage].cities.add(session.city);
+          if (session.country) {
+            acc[entryPage].countries.add(session.country);
+          }
+          if (session.city) {
+            acc[entryPage].cities.add(session.city);
+          }
 
           const isMobile =
             pageViews.some((pv) => pv.mobile) ||
@@ -445,7 +430,7 @@ export const pageviewRouter = createTRPCRouter({
             mobileSessions: number;
             desktopSessions: number;
           }
-        >,
+        >
       );
 
       // Convert to array and format
@@ -466,13 +451,13 @@ export const pageviewRouter = createTRPCRouter({
 
       // Sort by sessions count
       const sortedEntryPages = entryPages.sort(
-        (a, b) => b.sessions - a.sessions,
+        (a, b) => b.sessions - a.sessions
       );
 
       // Apply pagination
       const paginatedPages = sortedEntryPages.slice(
         (input.page - 1) * input.limit,
-        input.page * input.limit,
+        input.page * input.limit
       );
 
       return {
@@ -497,7 +482,7 @@ export const pageviewRouter = createTRPCRouter({
         startDate: z.date().optional(),
         endDate: z.date().optional(),
         limit: z.number().min(1).max(10).default(5),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -516,11 +501,7 @@ export const pageviewRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -566,7 +547,7 @@ export const pageviewRouter = createTRPCRouter({
 
           return acc;
         },
-        {} as Record<string, Record<string, number>>,
+        {} as Record<string, Record<string, number>>
       );
 
       // Get top pages by total views
@@ -579,7 +560,7 @@ export const pageviewRouter = createTRPCRouter({
             title,
             totalViews: Object.values(dailyViews).reduce(
               (sum, count) => sum + count,
-              0,
+              0
             ),
             dailyViews,
           };
@@ -643,7 +624,7 @@ export const pageviewRouter = createTRPCRouter({
         startDate: z.date().optional(),
         endDate: z.date().optional(),
         limit: z.number().min(1).max(10).default(5),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -662,11 +643,7 @@ export const pageviewRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -712,7 +689,7 @@ export const pageviewRouter = createTRPCRouter({
 
           return acc;
         },
-        {} as Record<string, Record<string, number>>,
+        {} as Record<string, Record<string, number>>
       );
 
       // Get top entry points by total sessions
@@ -724,7 +701,7 @@ export const pageviewRouter = createTRPCRouter({
             title,
             totalSessions: Object.values(dailySessions).reduce(
               (sum, count) => sum + count,
-              0,
+              0
             ),
             dailySessions,
           };
@@ -795,16 +772,18 @@ function extractPageTitle(url: string): string {
     // Remove leading slash and split by slashes
     const segments = pathname.replace(/^\//, "").split("/").filter(Boolean);
 
-    if (segments.length === 0) return "Home";
+    if (segments.length === 0) {
+      return "Home";
+    }
 
     // Take the last segment and format it
-    const lastSegment = segments[segments.length - 1];
+    const lastSegment = segments.at(-1);
 
     // Handle numeric segments (like product IDs)
     if (lastSegment && /^\d+$/.test(lastSegment)) {
       // If it's a number, use the parent segment or a generic name
       if (segments.length > 1) {
-        const parentSegment = segments[segments.length - 2];
+        const parentSegment = segments.at(-2);
         return `${formatSegment(parentSegment ?? "")} #${lastSegment}`;
       }
       return `Page #${lastSegment}`;
@@ -821,7 +800,9 @@ function extractPageTitle(url: string): string {
 }
 
 function formatSegment(segment: string): string {
-  if (!segment) return "Unknown Page";
+  if (!segment) {
+    return "Unknown Page";
+  }
 
   // Handle common patterns
   const commonMappings: Record<string, string> = {

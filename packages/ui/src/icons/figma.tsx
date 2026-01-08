@@ -1,9 +1,9 @@
 export function FigmaIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
+      aria-label="Figma"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Figma"
       {...props}
     >
       <title>Figma</title>

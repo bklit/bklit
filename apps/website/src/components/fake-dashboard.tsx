@@ -37,23 +37,23 @@ import { useEffect, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 
 const mockBrowsers = [
-  { name: "chrome", value: 48230 },
-  { name: "safari", value: 32140 },
-  { name: "firefox", value: 18920 },
-  { name: "edge", value: 12450 },
+  { name: "chrome", value: 48_230 },
+  { name: "safari", value: 32_140 },
+  { name: "firefox", value: 18_920 },
+  { name: "edge", value: 12_450 },
   { name: "other", value: 8760 },
 ];
 
 const mockCountries = [
-  { country: "United States", countryCode: "us", views: 45230, change: 12.5 },
-  { country: "United Kingdom", countryCode: "gb", views: 28340, change: 8.3 },
-  { country: "Germany", countryCode: "de", views: 19250, change: -3.2 },
-  { country: "France", countryCode: "fr", views: 16890, change: 15.7 },
-  { country: "Canada", countryCode: "ca", views: 12450, change: 5.1 },
+  { country: "United States", countryCode: "us", views: 45_230, change: 12.5 },
+  { country: "United Kingdom", countryCode: "gb", views: 28_340, change: 8.3 },
+  { country: "Germany", countryCode: "de", views: 19_250, change: -3.2 },
+  { country: "France", countryCode: "fr", views: 16_890, change: 15.7 },
+  { country: "Canada", countryCode: "ca", views: 12_450, change: 5.1 },
 ];
 
 const mockPageviews = [
-  { path: "/", views: 12450, change: 18.2 },
+  { path: "/", views: 12_450, change: 18.2 },
   { path: "/pricing", views: 8340, change: -5.4 },
   { path: "/docs", views: 6890, change: 22.7 },
   { path: "/blog", views: 4230, change: 9.1 },
@@ -69,13 +69,13 @@ const mockSessions = [
 ];
 
 const mockMobileDesktop = [
-  { name: "desktop", value: 22401, label: "Desktop" },
-  { name: "mobile", value: 12056, label: "Mobile" },
+  { name: "desktop", value: 22_401, label: "Desktop" },
+  { name: "mobile", value: 12_056, label: "Mobile" },
 ];
 
 const mockBounceRate = [
-  { name: "engaged", value: 19872, label: "Engaged" },
-  { name: "bounced", value: 14585, label: "Bounced" },
+  { name: "engaged", value: 19_872, label: "Engaged" },
+  { name: "bounced", value: 14_585, label: "Bounced" },
 ];
 
 const getBrowserIcon = (browser: string) => {
@@ -105,9 +105,9 @@ function DashboardContent() {
   useEffect(() => {
     // Animate numbers in on page load
     const timer = setTimeout(() => {
-      setTotalSessions(34567);
+      setTotalSessions(34_567);
       setBounceRate(42);
-      setUniqueVisitors(12345);
+      setUniqueVisitors(12_345);
       setConversions(1234);
     }, 2000);
 
@@ -115,24 +115,24 @@ function DashboardContent() {
   }, []);
 
   return (
-    <main className="flex flex-col dark:bg-bklit-800 bg-zinc-50 border border-border rounded-xl overflow-auto h-full relative p-8">
+    <main className="relative flex h-full flex-col overflow-auto rounded-xl border border-border bg-zinc-50 p-8 dark:bg-bklit-800">
       {/* Page Header */}
-      <div className="flex flex-row justify-between items-center w-[1400px] mx-auto mb-6 gap-4">
-        <div className="flex flex-col gap-2 w-full">
-          <h1 className="text-xl font-bold">Welcome back, Matt!</h1>
+      <div className="mx-auto mb-6 flex w-[1400px] flex-row items-center justify-between gap-4">
+        <div className="flex w-full flex-col gap-2">
+          <h1 className="font-bold text-xl">Welcome back, Matt!</h1>
           <p className="text-base text-muted-foreground">Quick insights...</p>
         </div>
-        <div className="flex items-center gap-2 justify-end w-auto">
+        <div className="flex w-auto items-center justify-end gap-2">
           <ButtonGroup>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="outline"
-                  size="lg"
                   className="justify-start text-left font-normal"
+                  size="lg"
+                  variant="outline"
                 >
                   <span className="text-sm">Last 30 days</span>
-                  <ChevronDown className="size-4 ml-1" />
+                  <ChevronDown className="ml-1 size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
@@ -142,13 +142,13 @@ function DashboardContent() {
                 <DropdownMenuItem>Last 90 days</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" size="lg">
+            <Button size="lg" variant="outline">
               <CalendarIcon className="size-4" />
             </Button>
             <Button
-              variant="secondary"
-              size="lg"
               aria-label="Toggle comparison"
+              size="lg"
+              variant="secondary"
             >
               <GitCompare className="size-4" />
             </Button>
@@ -156,9 +156,9 @@ function DashboardContent() {
         </div>
       </div>
 
-      <div className="w-[1400px] mx-auto flex flex-col gap-4">
+      <div className="mx-auto flex w-[1400px] flex-col gap-4">
         {/* Row 1: Stats Cards */}
-        <div className="grid gap-4 grid-cols-3">
+        <div className="grid grid-cols-3 gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Quick Stats</CardTitle>
@@ -166,45 +166,45 @@ function DashboardContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold flex items-center gap-2">
+                    <div className="flex items-center gap-2 font-bold text-2xl">
                       <NumberFlow value={totalSessions} />
                       <ChangeIndicator change={8.3} uniqueKey="sessions" />
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       Total Sessions
                     </div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold flex items-center gap-2">
-                      <NumberFlow value={bounceRate} suffix="%" />
+                    <div className="flex items-center gap-2 font-bold text-2xl">
+                      <NumberFlow suffix="%" value={bounceRate} />
                       <ChangeIndicator change={-5.4} uniqueKey="bounce-rate" />
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       Bounce Rate
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t">
+                <div className="flex items-center justify-between border-t pt-2">
                   <div>
-                    <div className="text-2xl font-bold flex items-center gap-2">
+                    <div className="flex items-center gap-2 font-bold text-2xl">
                       <NumberFlow value={uniqueVisitors} />
                       <ChangeIndicator
                         change={12.5}
                         uniqueKey="unique-visits"
                       />
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       Unique Visitors
                     </div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold flex items-center gap-2">
+                    <div className="flex items-center gap-2 font-bold text-2xl">
                       <NumberFlow value={conversions} />
                       <ChangeIndicator change={15.7} uniqueKey="conversions" />
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       Conversions
                     </div>
                   </div>
@@ -227,18 +227,18 @@ function DashboardContent() {
                       : 0;
                   return (
                     <ProgressRow
-                      key={country.countryCode}
-                      label={country.country}
-                      value={country.views}
-                      percentage={percentage}
                       change={country.change}
                       changeUniqueKey={`country-${country.countryCode}`}
                       icon={
                         <CircleFlag
-                          countryCode={country.countryCode.toLowerCase()}
                           className="size-4"
+                          countryCode={country.countryCode.toLowerCase()}
                         />
                       }
+                      key={country.countryCode}
+                      label={country.country}
+                      percentage={percentage}
+                      value={country.views}
                     />
                   );
                 })}
@@ -267,13 +267,13 @@ function DashboardContent() {
                       : 0;
                   return (
                     <ProgressRow
-                      key={page.path}
-                      variant="secondary"
-                      label={page.path}
-                      value={page.views}
-                      percentage={percentage}
                       change={page.change}
                       changeUniqueKey={`page-${page.path}`}
+                      key={page.path}
+                      label={page.path}
+                      percentage={percentage}
+                      value={page.views}
+                      variant="secondary"
                     />
                   );
                 })}
@@ -283,26 +283,26 @@ function DashboardContent() {
         </div>
 
         {/* Row 2: Map & Sessions */}
-        <div className="grid gap-4 grid-cols-12">
+        <div className="grid grid-cols-12 gap-4">
           <div className="col-span-8">
-            <Card className="p-0 relative h-full overflow-visible z-30">
-              <CardHeader className="absolute grid top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl">
+            <Card className="relative z-30 h-full overflow-visible p-0">
+              <CardHeader className="absolute top-0 z-10 grid w-full rounded-t-xl bg-card-background pt-6 pb-4 backdrop-blur-xl">
                 <CardTitle>Visitors by Country</CardTitle>
                 <CardDescription>
                   A map of the world with the number of unique visitors per
                   country.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="h-full w-full p-0 overflow-visible min-h-[300px]">
-                <div className="relative w-full h-full">
+              <CardContent className="h-full min-h-[300px] w-full overflow-visible p-0">
+                <div className="relative h-full w-full">
                   <Image
-                    src="/mockup/map.svg"
                     alt="World Map"
-                    width={840}
+                    className="h-auto w-full rounded-xl"
                     height={460}
-                    className="w-full h-auto rounded-xl"
                     priority
+                    src="/mockup/map.svg"
                     unoptimized
+                    width={840}
                   />
                 </div>
               </CardContent>
@@ -319,8 +319,8 @@ function DashboardContent() {
                 <div className="flex flex-col">
                   {mockSessions.map((session, i) => (
                     <div
+                      className="flex items-center justify-between border-b px-2 py-1.5 transition-colors last-of-type:border-b-0 hover:bg-accent/50"
                       key={i}
-                      className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex flex-col">
                         <div className="flex items-center gap-3">
@@ -335,7 +335,7 @@ function DashboardContent() {
                           <span className="text-sm">{session.pages} pages</span>
                         </div>
                       </div>
-                      <div className="gap-2 text-xs text-muted-foreground">
+                      <div className="gap-2 text-muted-foreground text-xs">
                         {session.time}
                       </div>
                     </div>
@@ -347,7 +347,7 @@ function DashboardContent() {
         </div>
 
         {/* Row 3: Chart Cards */}
-        <div className="grid gap-4 grid-cols-3">
+        <div className="grid grid-cols-3 gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Browser Usage</CardTitle>
@@ -355,11 +355,11 @@ function DashboardContent() {
             </CardHeader>
             <CardContent>
               <PieDonut
-                data={mockBrowsers}
                 centerLabel={{
                   showTotal: true,
                   suffix: "page views",
                 }}
+                data={mockBrowsers}
               />
             </CardContent>
           </Card>
@@ -373,9 +373,9 @@ function DashboardContent() {
             </CardHeader>
             <CardContent>
               <PieDonut
-                data={mockMobileDesktop}
-                className="min-h-[250px] w-full"
                 centerLabel={{ showTotal: true, suffix: "unique visits" }}
+                className="min-h-[250px] w-full"
+                data={mockMobileDesktop}
               />
             </CardContent>
           </Card>
@@ -389,10 +389,10 @@ function DashboardContent() {
             </CardHeader>
             <CardContent>
               <PieDonut
+                centerLabel={{ showTotal: true, suffix: "sessions" }}
+                className="min-h-[250px] w-full"
                 data={mockBounceRate}
                 variant="positive-negative"
-                className="min-h-[250px] w-full"
-                centerLabel={{ showTotal: true, suffix: "sessions" }}
               />
             </CardContent>
           </Card>
@@ -414,20 +414,13 @@ export function FakeDashboard({
   }, []);
 
   if (!mounted) {
-    return <div className="w-[1942px] h-[1283px] bg-background rounded-xl" />;
+    return <div className="h-[1283px] w-[1942px] rounded-xl bg-background" />;
   }
 
   return (
-    <div className="w-[1942px] h-[1283px] relative pointer-events-none border rounded-xl">
+    <div className="pointer-events-none relative h-[1283px] w-[1942px] rounded-xl border">
       {/* Header SVG */}
       <motion.div
-        initial={{
-          opacity: 0,
-          filter: "blur(5px)",
-          z: 100,
-          y: -100,
-          x: 100,
-        }}
         animate={
           animationStarted
             ? {
@@ -439,6 +432,13 @@ export function FakeDashboard({
               }
             : {}
         }
+        initial={{
+          opacity: 0,
+          filter: "blur(5px)",
+          z: 100,
+          y: -100,
+          x: 100,
+        }}
         transition={{
           delay: 0.1,
           duration: 0.8,
@@ -446,25 +446,18 @@ export function FakeDashboard({
         }}
       >
         <Image
-          src="/mockup/site-header.svg"
           alt="Dashboard Header"
-          width={1942}
+          className="absolute top-0 right-0 left-0 z-50"
           height={60}
-          className="absolute top-0 left-0 right-0 z-50"
           priority
+          src="/mockup/site-header.svg"
           unoptimized
+          width={1942}
         />
       </motion.div>
 
       {/* Sidebar SVG */}
       <motion.div
-        initial={{
-          opacity: 0,
-          filter: "blur(5px)",
-          z: 100,
-          y: -100,
-          x: 100,
-        }}
         animate={
           animationStarted
             ? {
@@ -476,6 +469,13 @@ export function FakeDashboard({
               }
             : {}
         }
+        initial={{
+          opacity: 0,
+          filter: "blur(5px)",
+          z: 100,
+          y: -100,
+          x: 100,
+        }}
         transition={{
           delay: 0.3,
           duration: 0.8,
@@ -483,26 +483,18 @@ export function FakeDashboard({
         }}
       >
         <Image
-          src="/mockup/sidebar.svg"
           alt="Dashboard Sidebar"
-          width={190}
-          height={326}
           className="absolute top-[80px] left-[20px] z-40"
+          height={326}
           priority
+          src="/mockup/sidebar.svg"
           unoptimized
+          width={190}
         />
       </motion.div>
 
       {/* Content Area */}
       <motion.div
-        className="absolute top-[80px] left-[230px] right-6 bottom-6"
-        initial={{
-          opacity: 0,
-          filter: "blur(5px)",
-          z: 100,
-          y: -100,
-          x: 100,
-        }}
         animate={
           animationStarted
             ? {
@@ -514,6 +506,14 @@ export function FakeDashboard({
               }
             : {}
         }
+        className="absolute top-[80px] right-6 bottom-6 left-[230px]"
+        initial={{
+          opacity: 0,
+          filter: "blur(5px)",
+          z: 100,
+          y: -100,
+          x: 100,
+        }}
         transition={{
           delay: 0,
           duration: 0.8,

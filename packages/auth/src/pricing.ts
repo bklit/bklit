@@ -22,7 +22,7 @@ export interface PricingPlan {
  */
 export function getPricingPlans(): PricingPlan[] {
   console.warn(
-    "getPricingPlans() is deprecated - use Polar API /api/pricing/products instead",
+    "getPricingPlans() is deprecated - use Polar API /api/pricing/products instead"
   );
   return [];
 }
@@ -32,7 +32,7 @@ export function getPricingPlanBySlug(_slug: string): PricingPlan | undefined {
 }
 
 export function getPricingPlanByEventLimit(
-  _eventLimit: number,
+  _eventLimit: number
 ): PricingPlan | undefined {
   return undefined;
 }
@@ -43,7 +43,7 @@ export function getProductIdForPlan(_slug: string): string | null {
 
 export function getRecommendedUpgradeTier(
   _currentEventLimit: number,
-  _currentUsage: number,
+  _currentUsage: number
 ): PricingPlan | undefined {
   return undefined;
 }

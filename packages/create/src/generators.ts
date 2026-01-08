@@ -4,7 +4,7 @@ import crypto from "node:crypto";
  * Generate secure random secrets
  */
 
-export function generateSecret(length: number = 32): string {
+export function generateSecret(length = 32): string {
   return crypto.randomBytes(length).toString("base64url");
 }
 

@@ -27,13 +27,15 @@ export const OrganizationSettings = ({
 }: {
   organization: Organization;
 }) => {
-  if (!organization) return <div>Organization not found</div>;
+  if (!organization) {
+    return <div>Organization not found</div>;
+  }
 
   return (
-    <div className="space-y-6 prose dark:prose-invert max-w-none">
+    <div className="prose dark:prose-invert max-w-none space-y-6">
       <UpdateOrganizationNameForm
-        organizationId={organization.id}
         currentName={organization.name}
+        organizationId={organization.id}
       />
       <Card>
         <CardHeader>
@@ -47,15 +49,15 @@ export const OrganizationSettings = ({
           <div className="flex items-center gap-4">
             <Avatar className="size-24">
               <AvatarImage
-                src={organization.logo || ""}
                 alt={organization.name || ""}
+                src={organization.logo || ""}
               />
               <AvatarFallback
                 className={getThemeGradient(organization.theme)}
               />
             </Avatar>
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {organization.logo
                   ? "Avatar uploaded. Theme selection is disabled when an avatar is present."
                   : "No avatar uploaded. You can select a theme below."}
@@ -67,16 +69,16 @@ export const OrganizationSettings = ({
 
       {!organization.logo && (
         <UpdateOrganizationThemeForm
-          organizationId={organization.id}
           currentTheme={
             organization.theme ||
             (organization.metadata
               ? JSON.parse(organization.metadata)?.theme
               : null)
           }
+          organizationId={organization.id}
         />
       )}
-      <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
+      <FormPermissions asChild requiredRole={MemberRole.ADMIN}>
         <Card variant="destructive">
           <CardHeader>
             <CardTitle>Delete organization</CardTitle>

@@ -18,8 +18,8 @@ export default async function OrganizationSettingsPage({
   return (
     <>
       <PageHeader
-        title="Settings"
         description="Manage your organization settings."
+        title="Settings"
       >
         <SubNavigation
           configKey="organizationSettings"

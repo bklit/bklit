@@ -50,7 +50,7 @@ export function UpdateOrganizationNameForm({
     onSubmit: async ({ value }) => {
       const result = await updateOrganizationNameAction(
         organizationId,
-        value.name,
+        value.name
       );
 
       if (result.success) {
@@ -63,7 +63,7 @@ export function UpdateOrganizationNameForm({
   });
 
   return (
-    <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
+    <FormPermissions asChild requiredRole={MemberRole.ADMIN}>
       <Card>
         <CardHeader>
           <CardTitle>Team name</CardTitle>
@@ -91,14 +91,14 @@ export function UpdateOrganizationNameForm({
                         Organization name
                       </FieldLabel>
                       <Input
+                        aria-invalid={isInvalid}
+                        autoComplete="off"
                         id={field.name}
                         name={field.name}
-                        value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        aria-invalid={isInvalid}
                         placeholder="Enter organization name"
-                        autoComplete="off"
+                        value={field.state.value}
                       />
                       <FieldDescription>
                         Choose a name that represents your team or organization.
@@ -114,8 +114,8 @@ export function UpdateOrganizationNameForm({
           </form>
         </CardContent>
         <CardFooter>
-          <Field orientation="horizontal" className="justify-between">
-            <Button type="submit" form="update-organization-name-form">
+          <Field className="justify-between" orientation="horizontal">
+            <Button form="update-organization-name-form" type="submit">
               Update name
             </Button>
           </Field>

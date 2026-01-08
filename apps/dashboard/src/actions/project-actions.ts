@@ -12,11 +12,11 @@ export type FormState = ProjectFormState;
 
 export async function createProjectAction(
   _prevState: FormState,
-  formData: FormData,
+  formData: FormData
 ): Promise<FormState> {
   const session = await authenticated();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!session?.user?.id) {
     return {
       success: false,
       message: "User not authenticated.",
@@ -103,11 +103,11 @@ export async function createProjectAction(
 // New action to delete a project
 export async function deleteProjectAction(
   _prevState: FormState,
-  formData: FormData,
+  formData: FormData
 ): Promise<FormState> {
   const session = await authenticated();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!session?.user?.id) {
     return {
       success: false,
       message: "User not authenticated.",
@@ -117,7 +117,7 @@ export async function deleteProjectAction(
   const projectId = formData.get("projectId") as string;
   const confirmedProjectName = formData.get("confirmedProjectName") as string;
 
-  if (!projectId || !confirmedProjectName) {
+  if (!(projectId && confirmedProjectName)) {
     return {
       success: false,
       message: "Missing site ID or project name for confirmation.",

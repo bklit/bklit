@@ -25,7 +25,7 @@ interface CreateProjectStepFormProps {
   onSuccess: (
     projectId: string,
     projectName: string,
-    projectDomain: string,
+    projectDomain: string
   ) => void;
   onLoadingChange?: (isLoading: boolean) => void;
 }
@@ -42,7 +42,7 @@ export function CreateProjectStepForm({
     defaultValues: {
       name: "",
       domain: "",
-      organizationId: organizationId,
+      organizationId,
     },
     validators: {
       onSubmit: addProjectSchema,
@@ -97,12 +97,12 @@ export function CreateProjectStepForm({
 
   return (
     <form
+      className="space-y-6"
       id="create-project-form"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
       }}
-      className="space-y-6"
     >
       <FieldGroup>
         <form.Field name="name">
@@ -113,14 +113,14 @@ export function CreateProjectStepForm({
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
                 <Input
+                  aria-invalid={isInvalid}
+                  autoComplete="off"
                   id={field.name}
                   name={field.name}
-                  value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
                   placeholder="My Awesome Project"
-                  autoComplete="off"
+                  value={field.state.value}
                 />
                 <FieldDescription>
                   A descriptive name for your website or application.
@@ -138,15 +138,15 @@ export function CreateProjectStepForm({
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>Domain</FieldLabel>
                 <Input
+                  aria-invalid={isInvalid}
+                  autoComplete="url"
                   id={field.name}
                   name={field.name}
-                  value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
                   placeholder="https://foo.com"
                   type="url"
-                  autoComplete="url"
+                  value={field.state.value}
                 />
                 <FieldDescription>
                   Your primary domain, <code>localhost</code> is automatically
@@ -159,7 +159,7 @@ export function CreateProjectStepForm({
         </form.Field>
       </FieldGroup>
       {state.message && !state.success && !state.errors && (
-        <p className="text-sm font-medium text-destructive">{state.message}</p>
+        <p className="font-medium text-destructive text-sm">{state.message}</p>
       )}
     </form>
   );

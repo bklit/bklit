@@ -23,20 +23,20 @@ export const ButtonHealth = async () => {
 
   return (
     <Button
-      variant="outline"
-      className={cn("gap-2 cursor-pointer hover:bg-accent transition-colors")}
-      size="lg"
       asChild
+      className={cn("cursor-pointer gap-2 transition-colors hover:bg-accent")}
+      size="lg"
+      variant="outline"
     >
       <Link
+        aria-label="View system status"
         href="/status"
         title="View system status"
-        aria-label="View system status"
       >
         <span
           className={cn(
             "inline-flex size-2 rounded-full",
-            isHealthy ? "bg-teal-700" : "bg-destructive",
+            isHealthy ? "bg-teal-700" : "bg-destructive"
           )}
         />
         {isHealthy ? "Systems normal" : "Issues detected"}

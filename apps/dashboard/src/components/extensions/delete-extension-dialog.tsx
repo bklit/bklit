@@ -44,7 +44,7 @@ export function DeleteExtensionDialog({
       onError: (error) => {
         toast.error(error.message);
       },
-    }),
+    })
   );
 
   const handleConfirmRemove = () => {
@@ -61,7 +61,7 @@ export function DeleteExtensionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog onOpenChange={onClose} open={open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Remove Extension: {extension?.name}</DialogTitle>
@@ -75,21 +75,21 @@ export function DeleteExtensionDialog({
           <Label htmlFor="confirmation">Extension Name</Label>
           <Input
             id="confirmation"
-            value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
             placeholder={extension?.name}
+            value={confirmation}
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button onClick={onClose} variant="outline">
             Cancel
           </Button>
           <Button
-            variant="destructive"
-            onClick={handleConfirmRemove}
             disabled={
               removeMutation.isPending || confirmation !== extension?.name
             }
+            onClick={handleConfirmRemove}
+            variant="destructive"
           >
             {removeMutation.isPending ? "Removing..." : "Remove Extension"}
           </Button>

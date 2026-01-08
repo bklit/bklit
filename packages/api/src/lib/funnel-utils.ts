@@ -51,7 +51,7 @@ function normalizePath(path: string): string {
  */
 export function matchPageviewToStep(
   pageviewUrl: string,
-  stepUrl: string,
+  stepUrl: string
 ): boolean {
   const pageviewPath = normalizePath(extractPathname(pageviewUrl));
   const stepPath = normalizePath(extractPathname(stepUrl));
@@ -79,7 +79,7 @@ export async function buildEventDefinitionMap(
     };
   },
   projectId: string,
-  trackingIds: string[],
+  trackingIds: string[]
 ): Promise<Map<string, string>> {
   if (trackingIds.length === 0) {
     return new Map();
@@ -132,7 +132,7 @@ export function matchSessionToFunnel(
     type: "pageview" | "event";
     url?: string | null;
     eventName?: string | null;
-  }>,
+  }>
 ): StepCompletion[] {
   // Sort steps by stepOrder (clone to avoid mutating external state)
   const sortedSteps = [...steps].sort((a, b) => a.stepOrder - b.stepOrder);
@@ -185,15 +185,13 @@ export function matchSessionToFunnel(
           stepMatched = true;
         }
       }
-    } else if (currentStep.type === "event") {
-      if (event.type === "event") {
-        // Match event step
-        if (
-          currentStep.eventName &&
-          event.eventTrackingId === currentStep.eventName
-        ) {
-          stepMatched = true;
-        }
+    } else if (currentStep.type === "event" && event.type === "event") {
+      // Match event step
+      if (
+        currentStep.eventName &&
+        event.eventTrackingId === currentStep.eventName
+      ) {
+        stepMatched = true;
       }
     }
 

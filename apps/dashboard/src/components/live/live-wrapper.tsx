@@ -12,8 +12,8 @@ interface LiveWrapperProps {
 export function LiveWrapper({ projectId, organizationId }: LiveWrapperProps) {
   return (
     <LiveMapProvider>
-      <LiveMap projectId={projectId} organizationId={organizationId} />
-      <Live projectId={projectId} organizationId={organizationId} />
+      <LiveMap organizationId={organizationId} projectId={projectId} />
+      <Live organizationId={organizationId} projectId={projectId} />
     </LiveMapProvider>
   );
 }

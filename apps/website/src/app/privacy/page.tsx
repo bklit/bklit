@@ -10,18 +10,18 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="w-full min-h-screen flex flex-col gap-32">
+    <main className="flex min-h-screen w-full flex-col gap-32">
       <PageHeader />
-      <div className="container mx-auto max-w-6xl flex flex-col px-4 py-48 space-y-12">
+      <div className="container mx-auto flex max-w-6xl flex-col space-y-12 px-4 py-48">
         <SectionHeader
-          title="Privacy Policy"
           description="Privacy Policy for Bklit analytics platform"
+          title="Privacy Policy"
         >
           <p className="text-muted-foreground">
             Last updated: December 28, 2025
           </p>
         </SectionHeader>
-        <div className="prose prose-neutral dark:prose-invert max-w-4xl mx-auto space-y-8 text-sm">
+        <div className="prose prose-neutral dark:prose-invert mx-auto max-w-4xl space-y-8 text-sm">
           <section className="page-content">
             <h2>1. Information We Collect</h2>
             <h3>Account Information</h3>
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
               <li>Opt out of marketing communications</li>
               <li>Cancel your subscription at any time</li>
             </ul>
-            <p className="mt-4 text-sm text-muted-foreground">
+            <p className="mt-4 text-muted-foreground text-sm">
               Note: Analytics data (pageviews, events, session data) collected
               through our Service is owned by Bklit and is not available for
               export. Deleting your account removes your personal information
@@ -167,8 +167,8 @@ export default function PrivacyPage() {
               For privacy-related questions or to exercise your rights, contact
               us at{" "}
               <a
-                href="mailto:support@bklit.com"
                 className="text-primary hover:underline"
+                href="mailto:support@bklit.com"
               >
                 privacy@bklit.com
               </a>

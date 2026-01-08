@@ -1,10 +1,10 @@
 export function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
+      aria-label="GitHub"
+      fill="currentColor"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-      aria-label="GitHub"
       {...props}
     >
       <title>GitHub</title>

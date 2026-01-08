@@ -25,7 +25,7 @@ export const funnelRouter = {
         limit: z.number().min(1).max(100).default(20),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -44,11 +44,7 @@ export const funnelRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -116,7 +112,7 @@ export const funnelRouter = {
         funnelId: z.string(),
         projectId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -135,11 +131,7 @@ export const funnelRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -173,7 +165,7 @@ export const funnelRouter = {
         organizationId: z.string(),
         steps: z.array(stepSchema).min(1),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -192,17 +184,13 @@ export const funnelRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
       // Sort steps by positionX (left to right) to calculate stepOrder
       const sortedSteps = [...input.steps].sort(
-        (a, b) => a.positionX - b.positionX,
+        (a, b) => a.positionX - b.positionX
       );
 
       return ctx.prisma.funnel.create({
@@ -244,7 +232,7 @@ export const funnelRouter = {
         description: z.string().optional(),
         steps: z.array(stepSchema).optional(),
         endDate: z.date().optional().nullable(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -263,11 +251,7 @@ export const funnelRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -286,7 +270,7 @@ export const funnelRouter = {
       if (input.steps) {
         // Sort steps by positionX to calculate stepOrder
         const sortedSteps = [...input.steps].sort(
-          (a, b) => a.positionX - b.positionX,
+          (a, b) => a.positionX - b.positionX
         );
 
         // Delete all existing steps and create new ones atomically
@@ -340,7 +324,7 @@ export const funnelRouter = {
       z.object({
         funnelId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user has access through organization
@@ -390,7 +374,7 @@ export const funnelRouter = {
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -409,11 +393,7 @@ export const funnelRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -457,7 +437,7 @@ export const funnelRouter = {
       const effectiveEndDate = funnel.endDate
         ? normalizedEndDate
           ? new Date(
-              Math.min(funnel.endDate.getTime(), normalizedEndDate.getTime()),
+              Math.min(funnel.endDate.getTime(), normalizedEndDate.getTime())
             )
           : funnel.endDate
         : normalizedEndDate;
@@ -466,7 +446,7 @@ export const funnelRouter = {
       const sessionsData = await ctx.analytics.getSessionsForFunnel(
         input.projectId,
         normalizedStartDate || new Date(0),
-        effectiveEndDate || new Date(),
+        effectiveEndDate || new Date()
       );
 
       // Get event definitions for tracking IDs
@@ -481,7 +461,7 @@ export const funnelRouter = {
       });
 
       const trackingIdMap = new Map(
-        eventDefinitions.map((ed) => [ed.id, ed.trackingId]),
+        eventDefinitions.map((ed) => [ed.id, ed.trackingId])
       );
 
       // Transform to match expected format
@@ -512,7 +492,7 @@ export const funnelRouter = {
           completions.map((c) => ({
             stepId: c.stepId,
             stepOrder: c.stepOrder,
-          })),
+          }))
         );
       }
 
@@ -520,9 +500,9 @@ export const funnelRouter = {
       const stepStats = funnel.steps.map((step, index) => {
         // Count sessions that completed this step
         const conversions = Array.from(
-          stepCompletionsBySession.values(),
+          stepCompletionsBySession.values()
         ).filter((completions) =>
-          completions.some((c) => c.stepId === step.id),
+          completions.some((c) => c.stepId === step.id)
         ).length;
 
         // Count drop-offs: sessions that completed previous step but not this one
@@ -530,9 +510,9 @@ export const funnelRouter = {
         if (index > 0) {
           const previousStep = funnel.steps[index - 1];
           const previousStepCompletions = Array.from(
-            stepCompletionsBySession.values(),
+            stepCompletionsBySession.values()
           ).filter((completions) =>
-            completions.some((c) => c.stepId === previousStep.id),
+            completions.some((c) => c.stepId === previousStep.id)
           ).length;
           dropOffs = previousStepCompletions - conversions;
         }
@@ -545,9 +525,9 @@ export const funnelRouter = {
         } else {
           const previousStep = funnel.steps[index - 1];
           const previousStepConversions = Array.from(
-            stepCompletionsBySession.values(),
+            stepCompletionsBySession.values()
           ).filter((completions) =>
-            completions.some((c) => c.stepId === previousStep.id),
+            completions.some((c) => c.stepId === previousStep.id)
           ).length;
           if (previousStepConversions > 0) {
             conversionRate = (conversions / previousStepConversions) * 100;
@@ -567,10 +547,10 @@ export const funnelRouter = {
       const firstStepConversions =
         stepStats.length > 0 ? stepStats[0]?.conversions : 0;
       const lastStepConversions =
-        stepStats.length > 0 ? stepStats[stepStats.length - 1]?.conversions : 0;
+        stepStats.length > 0 ? stepStats.at(-1)?.conversions : 0;
       const totalDropOffs = stepStats.reduce(
         (sum, stat) => sum + stat.dropOffs,
-        0,
+        0
       );
       const overallConversionRate =
         firstStepConversions > 0
@@ -590,17 +570,17 @@ export const funnelRouter = {
         });
 
         const matchingSessions = allSessions.filter((s) =>
-          sessionIds.includes(s.id),
+          sessionIds.includes(s.id)
         );
 
         if (matchingSessions.length > 0) {
           matchingSessions.sort(
             (a, b) =>
               parseClickHouseDate(b.started_at).getTime() -
-              parseClickHouseDate(a.started_at).getTime(),
+              parseClickHouseDate(a.started_at).getTime()
           );
           lastSessionTimestamp = parseClickHouseDate(
-            matchingSessions[0].started_at,
+            matchingSessions[0].started_at
           );
         }
       }
@@ -622,7 +602,7 @@ export const funnelRouter = {
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -641,11 +621,7 @@ export const funnelRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -701,7 +677,7 @@ export const funnelRouter = {
       const sessionsData = await ctx.analytics.getSessionsForFunnel(
         input.projectId,
         normalizedStartDate || new Date(0),
-        normalizedEndDate || new Date(),
+        normalizedEndDate || new Date()
       );
 
       // Get event definitions for tracking IDs
@@ -716,7 +692,7 @@ export const funnelRouter = {
       });
 
       const trackingIdMap = new Map(
-        eventDefinitions.map((ed) => [ed.id, ed.trackingId]),
+        eventDefinitions.map((ed) => [ed.id, ed.trackingId])
       );
 
       // Transform to match expected format
@@ -742,21 +718,23 @@ export const funnelRouter = {
       >();
 
       for (const funnel of funnels) {
-        if (funnel.steps.length === 0) continue;
+        if (funnel.steps.length === 0) {
+          continue;
+        }
 
         const firstStep = funnel.steps[0];
-        const lastStep = funnel.steps[funnel.steps.length - 1];
+        const lastStep = funnel.steps.at(-1);
 
         for (const session of sessions) {
           const completions = matchSessionToFunnel(session, funnel.steps);
 
           // Check if session matched first step (funnel session)
           const matchedFirstStep = completions.some(
-            (c) => c.stepId === firstStep.id,
+            (c) => c.stepId === firstStep.id
           );
           // Check if session completed last step (conversion)
           const matchedLastStep = completions.some(
-            (c) => c.stepId === lastStep.id,
+            (c) => c.stepId === lastStep.id
           );
 
           if (matchedFirstStep) {

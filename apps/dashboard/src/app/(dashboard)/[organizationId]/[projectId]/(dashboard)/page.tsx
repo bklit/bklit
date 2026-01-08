@@ -66,24 +66,21 @@ export default async function AnalyticsPage({
   return (
     <>
       <PageHeader
-        title={`Welcome back, ${session.user.name}!`}
         description="Quick insights..."
+        title={`Welcome back, ${session.user.name}!`}
       >
         <DateRangePicker />
       </PageHeader>
       <div className="container mx-auto flex flex-col gap-4">
-        <div
-          className="grid gap-4 
-      md:grid-cols-2 lg:grid-cols-3"
-        >
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Suspense fallback={<AnalyticsCardSkeleton />}>
             <QuickStatsCard
-              projectId={projectId}
-              organizationId={organizationId}
-              userId={session.user.id}
-              initialStats={initialStats}
-              initialSessionData={initialSessionData}
               initialConversions={initialConversions}
+              initialSessionData={initialSessionData}
+              initialStats={initialStats}
+              organizationId={organizationId}
+              projectId={projectId}
+              userId={session.user.id}
             />
           </Suspense>
           <Suspense fallback={<AnalyticsCardSkeleton />}>
@@ -91,22 +88,22 @@ export default async function AnalyticsPage({
           </Suspense>
           <Suspense fallback={<AnalyticsCardSkeleton />}>
             <RecentPageViewsCard
-              projectId={projectId}
               organizationId={organizationId}
+              projectId={projectId}
               userId={session.user.id}
             />
           </Suspense>
         </div>
 
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-12">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
           <div className="col-span-1 md:col-span-8">
             <VisitorsMap key={projectId} projectId={projectId} />
           </div>
           <div className="col-span-1 md:col-span-4">
             <Suspense fallback={<AnalyticsCardSkeleton />}>
               <SessionAnalyticsCard
-                projectId={projectId}
                 organizationId={organizationId}
+                projectId={projectId}
               />
             </Suspense>
           </div>
@@ -124,7 +121,7 @@ export default async function AnalyticsPage({
           </Suspense>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2"></div>
+        <div className="grid gap-4 md:grid-cols-2" />
       </div>
     </>
   );

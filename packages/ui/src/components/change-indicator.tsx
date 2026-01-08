@@ -16,7 +16,9 @@ export function ChangeIndicator({
   size = 14,
   uniqueKey = "change",
 }: ChangeIndicatorProps) {
-  if (change === null || change === 0) return null;
+  if (change === null || change === 0) {
+    return null;
+  }
 
   const isPositive = change > 0;
   const Icon = isPositive ? ChevronUp : ChevronDown;
@@ -38,14 +40,14 @@ export function ChangeIndicator({
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={`${uniqueKey}-${change.toFixed(2)}`}
-        initial="initial"
         animate="animate"
         exit="exit"
-        variants={variants}
+        initial="initial"
+        key={`${uniqueKey}-${change.toFixed(2)}`}
         transition={{ duration: 0.2, ease: "easeInOut" }}
+        variants={variants}
       >
-        <Icon size={size} className={colorClass} />
+        <Icon className={colorClass} size={size} />
       </motion.div>
     </AnimatePresence>
   );

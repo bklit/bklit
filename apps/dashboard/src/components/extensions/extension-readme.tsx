@@ -32,7 +32,9 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
   useEffect(() => {
     fetch(`/extensions/${extensionId}/README.md`)
       .then((res) => {
-        if (!res.ok) throw new Error("README not found");
+        if (!res.ok) {
+          throw new Error("README not found");
+        }
         return res.text();
       })
       .then((text) => {
@@ -46,7 +48,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         <div className="space-y-3">
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-full" />
@@ -62,7 +64,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
   }
 
   return (
-    <div className="markdown-block space-y-4 bg-card border border-border rounded-lg p-6">
+    <div className="markdown-block space-y-4 rounded-lg border border-border bg-card p-6">
       {content.map((block, index) => {
         if (block.type === "code" && block.language) {
           return (
@@ -73,7 +75,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
         }
         return (
           <div
-            key={index}
+            className="space-y-4"
             dangerouslySetInnerHTML={{
               __html: DOMPurify.sanitize(block.content, {
                 ALLOWED_TAGS: [
@@ -92,7 +94,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
                 ALLOWED_ATTR: ["class", "href", "target", "rel"],
               }),
             }}
-            className="space-y-4"
+            key={index}
           />
         );
       })}
@@ -146,11 +148,11 @@ function convertMarkdownToHtml(markdown: string): string {
   // Headers
   html = html.replace(
     /^### (.*$)/gim,
-    '<h3 class="text-lg font-semibold">$1</h3>',
+    '<h3 class="text-lg font-semibold">$1</h3>'
   );
   html = html.replace(
     /^## (.*$)/gim,
-    '<h2 class="text-xl font-bold mt-2">$1</h2>',
+    '<h2 class="text-xl font-bold mt-2">$1</h2>'
   );
   html = html.replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold">$1</h1>');
 
@@ -160,13 +162,13 @@ function convertMarkdownToHtml(markdown: string): string {
   // Inline code
   html = html.replace(
     /`([^`]+)`/g,
-    '<code class="px-2 py-1.5 bg-bklit-800/50 rounded text-sm font-mono text-primary">$1</code>',
+    '<code class="px-2 py-1.5 bg-bklit-800/50 rounded text-sm font-mono text-primary">$1</code>'
   );
 
   // Links
   html = html.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">$1</a>',
+    '<a href="$2" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">$1</a>'
   );
 
   // Process lists line by line to handle nesting
@@ -178,33 +180,37 @@ function convertMarkdownToHtml(markdown: string): string {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) continue;
+    if (!line) {
+      continue;
+    }
     const nextLine = lines[i + 1];
 
     // Numbered list items
     if (/^\d+\.\s/.test(line)) {
       if (!inOrderedList) {
         processed.push(
-          '<ol class="list-decimal list-inside space-y-2 my-3 ml-4">',
+          '<ol class="list-decimal list-inside space-y-2 my-3 ml-4">'
         );
         inOrderedList = true;
       }
       const content = line?.replace(/^\d+\.\s/, "") || "";
       processed.push(
-        `<li class="leading-relaxed text-muted-foreground">${content}</li>`,
+        `<li class="leading-relaxed text-muted-foreground">${content}</li>`
       );
 
       // Check if next line is a nested list
       if (nextLine && /^\s{2,}-\s/.test(nextLine)) {
         processed.push(
-          '<ul class="list-disc list-inside space-y-1 ml-6 mt-1">',
+          '<ul class="list-disc list-inside space-y-1 ml-6 mt-1">'
         );
         inNestedList = true;
       }
 
       if (
-        !nextLine ||
-        (!nextLine.match(/^\d+\.\s/) && !nextLine.match(/^\s{2,}-\s/))
+        !(
+          nextLine &&
+          (nextLine.match(/^\d+\.\s/) || nextLine.match(/^\s{2,}-\s/))
+        )
       ) {
         if (inNestedList) {
           processed.push("</ul>");
@@ -220,10 +226,10 @@ function convertMarkdownToHtml(markdown: string): string {
     else if (line && /^\s{2,}-\s/.test(line)) {
       const content = line?.replace(/^\s{2,}-\s/, "") || "";
       processed.push(
-        `<li class="text-sm leading-relaxed text-muted-foreground">${content}</li>`,
+        `<li class="text-sm leading-relaxed text-muted-foreground">${content}</li>`
       );
 
-      if (!nextLine || !nextLine.match(/^\s{2,}-\s/)) {
+      if (!nextLine?.match(/^\s{2,}-\s/)) {
         processed.push("</ul>");
         inNestedList = false;
       }
@@ -232,16 +238,16 @@ function convertMarkdownToHtml(markdown: string): string {
     else if (line && /^-\s/.test(line)) {
       if (!inUnorderedList) {
         processed.push(
-          '<ul class="list-disc list-inside space-y-2 my-3 ml-4">',
+          '<ul class="list-disc list-inside space-y-2 my-3 ml-4">'
         );
         inUnorderedList = true;
       }
       const content = line?.replace(/^-\s/, "") || "";
       processed.push(
-        `<li class="leading-relaxed text-muted-foreground">${content}</li>`,
+        `<li class="leading-relaxed text-muted-foreground">${content}</li>`
       );
 
-      if (!nextLine || !nextLine.match(/^-\s/)) {
+      if (!nextLine?.match(/^-\s/)) {
         processed.push("</ul>");
         inUnorderedList = false;
       }
@@ -250,7 +256,7 @@ function convertMarkdownToHtml(markdown: string): string {
     else if (line) {
       if (line.trim() !== "" && !line.match(/^<[hpul]/)) {
         processed.push(
-          `<p class="leading-relaxed text-muted-foreground">${line}</p>`,
+          `<p class="leading-relaxed text-muted-foreground">${line}</p>`
         );
       } else if (line.match(/^<[hpul]/)) {
         processed.push(line);

@@ -49,14 +49,14 @@ export const Organization = ({
   const { data: organization } = useSuspenseQuery(
     trpc.organization.fetch.queryOptions({
       id: organizationId,
-    }),
+    })
   );
 
   return (
     <>
       <PageHeader
-        title={organization.name}
         description="Manage your team and projects."
+        title={organization.name}
       >
         {organization.userMembership.role === "owner" && (
           <Button asChild>
@@ -68,7 +68,7 @@ export const Organization = ({
         )}
       </PageHeader>
 
-      <div className="w-full flex flex-col gap-4">
+      <div className="flex w-full flex-col gap-4">
         <div className="space-y-4">
           {organization.projects.length === 0 ? (
             <Card>
@@ -99,8 +99,8 @@ export const Organization = ({
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {organization.projects.map((site) => (
                 <Card
+                  className="transition-shadow hover:shadow-md"
                   key={site.id}
-                  className="hover:shadow-md transition-shadow"
                 >
                   <CardHeader className="flex items-center justify-between">
                     <div className="flex flex-col gap-1">
@@ -132,9 +132,9 @@ export const Organization = ({
 
         <div className="space-y-4">
           <div>
-            <h2 className="text-base font-semibold">Usage & Billing</h2>
+            <h2 className="font-semibold text-base">Usage & Billing</h2>
           </div>
-          <div className="w-full flex flex-col gap-4 sm:grid sm:grid-cols-2">
+          <div className="flex w-full flex-col gap-4 sm:grid sm:grid-cols-2">
             <BillingSnapshotCard organizationId={organizationId} />
 
             <Card>
@@ -143,16 +143,16 @@ export const Organization = ({
                 <CardDescription>Manage your team.</CardDescription>
                 <CardAction>
                   <Button
-                    variant="outline"
-                    onClick={() => setInviteDialogOpen(true)}
                     aria-label="Invite member"
+                    onClick={() => setInviteDialogOpen(true)}
+                    variant="outline"
                   >
                     Invite member
                   </Button>
                 </CardAction>
               </CardHeader>
               <CardContent>
-                <div className="bg-bklit-600/30 rounded-md p-4 space-y-px border">
+                <div className="space-y-px rounded-md border bg-bklit-600/30 p-4">
                   {organization.members.slice(0, 5).map((member) => (
                     <Item key={member.id} size="sm">
                       <ItemMedia>
@@ -185,9 +185,9 @@ export const Organization = ({
       </div>
 
       <InviteMemberForm
-        organizationId={organizationId}
         isOpen={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
+        organizationId={organizationId}
       />
     </>
   );

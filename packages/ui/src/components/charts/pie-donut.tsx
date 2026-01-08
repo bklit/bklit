@@ -7,7 +7,11 @@ import { Cell, Pie, PieChart, Sector } from "recharts";
 import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import { type ChartConfig, ChartContainer } from "../chart";
 
-type PieDatum = { name: string; value: number; label?: string };
+interface PieDatum {
+  name: string;
+  value: number;
+  label?: string;
+}
 
 interface PieDonutProps {
   data: PieDatum[];
@@ -38,12 +42,14 @@ export function PieDonut({
 
   const total = useMemo(
     () => data.reduce((acc, d) => acc + (Number(d.value) || 0), 0),
-    [data],
+    [data]
   );
 
   // Calculate active index based on hoverKey
   const activeIndex = useMemo(() => {
-    if (!hoverKey) return undefined;
+    if (!hoverKey) {
+      return undefined;
+    }
     const index = data.findIndex((d) => d.name === hoverKey);
     return index >= 0 ? index : undefined;
   }, [hoverKey, data]);
@@ -54,17 +60,25 @@ export function PieDonut({
   }, [total]);
 
   const resolvedColors = useMemo(() => {
-    if (colors) return colors;
+    if (colors) {
+      return colors;
+    }
     // Assign shadcn chart-1..9 by order; for positive-negative, use --chart-1 and --chart-negative
     const map: Record<string, string> = {};
     if (variant === "positive-negative" && data.length >= 2) {
       const first = data[0]?.name;
       const second = data[1]?.name;
-      if (first) map[first] = "var(--chart-1)";
-      if (second) map[second] = "var(--chart-negative)";
+      if (first) {
+        map[first] = "var(--chart-1)";
+      }
+      if (second) {
+        map[second] = "var(--chart-negative)";
+      }
       for (let i = 2; i < data.length; i++) {
         const key = data[i]?.name;
-        if (key) map[key] = `var(--chart-${((i % 9) + 1) as number})`;
+        if (key) {
+          map[key] = `var(--chart-${((i % 9) + 1) as number})`;
+        }
       }
       return map;
     }
@@ -112,26 +126,26 @@ export function PieDonut({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-1 grid-rows-1 mx-auto justify-center items-center">
+      <div className="mx-auto grid grid-cols-1 grid-rows-1 items-center justify-center">
         {/* Chart */}
-        <div className="col-start-1 row-start-1 flex justify-center items-center">
+        <div className="col-start-1 row-start-1 flex items-center justify-center">
           <ChartContainer
-            id={chartId}
+            className={cn("h-[220px] w-full", className)}
             config={chartConfig}
-            className={cn("w-full h-[220px]", className)}
+            id={chartId}
           >
             <PieChart accessibilityLayer>
               <Pie
                 data={data}
                 dataKey="value"
-                nameKey="name"
                 innerRadius={innerRadius}
+                nameKey="name"
                 outerRadius={outerRadius}
                 strokeWidth={0}
                 {...({
                   activeIndex: activeIndex ?? -1,
                   shape: (
-                    props: PieSectorDataItem & { isActive?: boolean },
+                    props: PieSectorDataItem & { isActive?: boolean }
                   ) => {
                     const radius = props.isActive
                       ? (props.outerRadius ?? outerRadius) + 10
@@ -139,10 +153,6 @@ export function PieDonut({
                     return <Sector {...props} outerRadius={radius} />;
                   },
                 } as Record<string, unknown>)}
-                onMouseLeave={() => {
-                  setHoverKey(undefined);
-                  setDisplayValue(total);
-                }}
                 onMouseEnter={(payload: { name?: string }) => {
                   const name = payload?.name;
                   if (name) {
@@ -150,10 +160,14 @@ export function PieDonut({
                     const hovered = data.find((d) => d.name === name);
                     if (hovered && total > 0) {
                       setDisplayValue(
-                        Math.round((hovered.value / total) * 100),
+                        Math.round((hovered.value / total) * 100)
                       );
                     }
                   }
+                }}
+                onMouseLeave={() => {
+                  setHoverKey(undefined);
+                  setDisplayValue(total);
                 }}
                 onMouseMove={(_: unknown, index: number) => {
                   const d = data[index];
@@ -167,10 +181,10 @@ export function PieDonut({
               >
                 {data.map((d) => (
                   <Cell
-                    key={`cell-${d.name}`}
+                    className="transition"
                     fill={`var(--color-${d.name})`}
                     fillOpacity={hoverKey ? (d.name === hoverKey ? 1 : 0.4) : 1}
-                    className="transition"
+                    key={`cell-${d.name}`}
                   />
                 ))}
               </Pie>
@@ -178,20 +192,20 @@ export function PieDonut({
           </ChartContainer>
         </div>
         {/* Center Label */}
-        <div className="col-start-1 row-start-1 flex flex-col justify-center items-center text-2xl font-bold">
+        <div className="col-start-1 row-start-1 flex flex-col items-center justify-center font-bold text-2xl">
           <NumberFlow
             format={{ notation: "compact" }}
-            value={displayValue}
             suffix={displaySuffix}
+            value={displayValue}
           />
-          <div className="text-muted-foreground pb-4.5 font-normal text-xs">
+          <div className="pb-4.5 font-normal text-muted-foreground text-xs">
             {centerLabel.suffix}
           </div>
         </div>
       </div>
-      <div className="flex justify-center items-start">
+      <div className="flex items-start justify-center">
         {showLegend ? (
-          <div className="group flex items-center justify-center gap-0 pt-3 flex-wrap">
+          <div className="group flex flex-wrap items-center justify-center gap-0 pt-3">
             {data.map((item) => {
               const key = item.name;
               const label = chartConfig[key]?.label || item.name;
@@ -201,15 +215,15 @@ export function PieDonut({
 
               return (
                 <button
-                  key={key}
-                  type="button"
                   className={cn(
-                    "flex items-center py-1 px-1.5 gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-all duration-100 group-has-[button:hover]:opacity-50 hover:opacity-100!",
+                    "flex items-center gap-1.5 px-1.5 py-1 text-muted-foreground text-sm transition-all duration-100 hover:text-foreground hover:opacity-100! group-has-[button:hover]:opacity-50",
                     shouldDim && "opacity-50",
-                    isHovered && "opacity-100! text-foreground",
+                    isHovered && "text-foreground opacity-100!"
                   )}
+                  key={key}
                   onMouseEnter={() => onLegendEnter(key)}
                   onMouseLeave={onLegendLeave}
+                  type="button"
                 >
                   <div
                     className="size-2 shrink-0 rounded-[2px]"

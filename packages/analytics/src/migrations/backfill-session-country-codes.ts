@@ -23,7 +23,7 @@ async function backfillSessionCountryCodes() {
 
     if (totalToUpdate === 0) {
       console.log(
-        "✓ All sessions already have country_code, nothing to backfill",
+        "✓ All sessions already have country_code, nothing to backfill"
       );
       await client.close();
       return;
@@ -55,7 +55,7 @@ async function backfillSessionCountryCodes() {
     }>;
 
     console.log(
-      `Found ${mappingData.length} sessions with country codes in pageviews`,
+      `Found ${mappingData.length} sessions with country codes in pageviews`
     );
 
     if (mappingData.length === 0) {
@@ -78,13 +78,13 @@ async function backfillSessionCountryCodes() {
           acc[`country_code_${idx}`] = item.country_code;
           return acc;
         },
-        {} as Record<string, string>,
+        {} as Record<string, string>
       );
 
       const caseStatements = batch
         .map(
           (_, idx) =>
-            `WHEN {session_id_${idx}:String} THEN {country_code_${idx}:String}`,
+            `WHEN {session_id_${idx}:String} THEN {country_code_${idx}:String}`
         )
         .join("\n          ");
 
@@ -106,7 +106,7 @@ async function backfillSessionCountryCodes() {
 
       updated += batch.length;
       console.log(
-        `  Updated batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(mappingData.length / batchSize)} (${updated}/${mappingData.length})`,
+        `  Updated batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(mappingData.length / batchSize)} (${updated}/${mappingData.length})`
       );
     }
 
@@ -129,7 +129,7 @@ async function backfillSessionCountryCodes() {
     }>;
     const totalUpdated = Number(updatedData[0]?.updated || 0);
 
-    console.log(`✓ Successfully backfilled country_code for sessions`);
+    console.log("✓ Successfully backfilled country_code for sessions");
     console.log(`  Total sessions with country_code: ${totalUpdated}`);
 
     // Check remaining without country_code
@@ -149,7 +149,7 @@ async function backfillSessionCountryCodes() {
 
     if (remaining > 0) {
       console.log(
-        `  Note: ${remaining} sessions still without country_code (likely no matching pageview data)`,
+        `  Note: ${remaining} sessions still without country_code (likely no matching pageview data)`
       );
     }
 

@@ -62,7 +62,7 @@ export async function GET() {
         totalUniqueUsers: 0,
         totalConversions: 0,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

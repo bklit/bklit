@@ -24,11 +24,15 @@ const RESEND_COOLDOWN_KEY = "verify-email-resend-cooldown";
 const RESEND_COOLDOWN_SECONDS = 60;
 
 function getResendCooldownRemaining(): number {
-  if (typeof window === "undefined") return 0;
+  if (typeof window === "undefined") {
+    return 0;
+  }
   const cooldownStart = localStorage.getItem(RESEND_COOLDOWN_KEY);
-  if (!cooldownStart) return 0;
+  if (!cooldownStart) {
+    return 0;
+  }
 
-  const elapsed = Date.now() - parseInt(cooldownStart, 10);
+  const elapsed = Date.now() - Number.parseInt(cooldownStart, 10);
   const remaining = RESEND_COOLDOWN_SECONDS * 1000 - elapsed;
 
   return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
@@ -40,7 +44,7 @@ function VerifyEmailPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(
-    getResendCooldownRemaining(),
+    getResendCooldownRemaining()
   );
   const email = searchParams.get("email");
 
@@ -53,7 +57,9 @@ function VerifyEmailPage() {
   }, [email, router]);
 
   useEffect(() => {
-    if (resendCooldown <= 0) return;
+    if (resendCooldown <= 0) {
+      return;
+    }
 
     const timer = setInterval(() => {
       const remaining = getResendCooldownRemaining();
@@ -72,10 +78,10 @@ function VerifyEmailPage() {
     return (
       <div className="flex flex-col gap-6">
         <div className="text-center">
-          <h1 className="text-2xl font-normal">
+          <h1 className="font-normal text-2xl">
             Invalid <span className="font-bold">verification link</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground text-sm">
             Email address is missing. Redirecting to sign up...
           </p>
         </div>
@@ -108,8 +114,7 @@ function VerifyEmailPage() {
 
         if (verifyResult.error) {
           toast.error(
-            verifyResult.error.message ||
-              "Invalid or expired verification code",
+            verifyResult.error.message || "Invalid or expired verification code"
           );
           setIsLoading(false);
           return;
@@ -154,7 +159,7 @@ function VerifyEmailPage() {
 
       if (result.error) {
         toast.error(
-          result.error.message || "Failed to resend verification code",
+          result.error.message || "Failed to resend verification code"
         );
       } else {
         toast.success("Verification code sent! Check your email.");
@@ -170,21 +175,21 @@ function VerifyEmailPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <h1 className="text-2xl font-normal">
+        <h1 className="font-normal text-2xl">
           Verify your <span className="font-bold">email</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="mt-2 text-muted-foreground text-sm">
           Verification code for{" "}
           <span className="font-medium">{email || "your email"}</span>
         </p>
       </div>
 
       <form
+        className="mx-auto flex w-sm max-w-full flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-4 max-w-full w-sm mx-auto"
       >
         <FieldGroup>
           <form.Field name="code">
@@ -193,41 +198,41 @@ function VerifyEmailPage() {
                 field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field data-invalid={isInvalid}>
-                  <FieldLabel htmlFor={field.name} className="sr-only">
+                  <FieldLabel className="sr-only" htmlFor={field.name}>
                     Verification Code
                   </FieldLabel>
                   <InputOTP
-                    maxLength={6}
-                    value={field.state.value}
-                    onChange={(value) => field.handleChange(value)}
-                    onBlur={field.handleBlur}
-                    disabled={isLoading}
                     aria-invalid={isInvalid}
+                    disabled={isLoading}
+                    maxLength={6}
+                    onBlur={field.handleBlur}
+                    onChange={(value) => field.handleChange(value)}
+                    value={field.state.value}
                   >
-                    <InputOTPGroup className="flex justify-center w-full items-stretch">
+                    <InputOTPGroup className="flex w-full items-stretch justify-center">
                       <InputOTPSlot
+                        className="aspect-square size-auto flex-1"
                         index={0}
-                        className="size-auto flex-1 aspect-square"
                       />
                       <InputOTPSlot
+                        className="aspect-square size-auto flex-1"
                         index={1}
-                        className="size-auto flex-1 aspect-square"
                       />
                       <InputOTPSlot
+                        className="aspect-square size-auto flex-1"
                         index={2}
-                        className="size-auto flex-1 aspect-square"
                       />
                       <InputOTPSlot
+                        className="aspect-square size-auto flex-1"
                         index={3}
-                        className="size-auto flex-1 aspect-square"
                       />
                       <InputOTPSlot
+                        className="aspect-square size-auto flex-1"
                         index={4}
-                        className="size-auto flex-1 aspect-square"
                       />
                       <InputOTPSlot
+                        className="aspect-square size-auto flex-1"
                         index={5}
-                        className="size-auto flex-1 aspect-square"
                       />
                     </InputOTPGroup>
                   </InputOTP>
@@ -239,10 +244,10 @@ function VerifyEmailPage() {
         </FieldGroup>
 
         <Button
-          type="submit"
-          size="lg"
           className="w-full"
           disabled={isLoading || form.state.isSubmitting}
+          size="lg"
+          type="submit"
         >
           {isLoading || form.state.isSubmitting
             ? "Verifying..."
@@ -251,20 +256,20 @@ function VerifyEmailPage() {
       </form>
 
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Didn't receive the code?{" "}
           <button
-            type="button"
-            onClick={handleResendCode}
+            className="inline-flex cursor-pointer items-center gap-1 font-medium text-card-foreground transition-all hover:text-primary disabled:opacity-50"
             disabled={isResending || resendCooldown > 0}
-            className="text-card-foreground hover:text-primary transition-all font-medium disabled:opacity-50 inline-flex items-center gap-1 cursor-pointer"
+            onClick={handleResendCode}
+            type="button"
           >
             {isResending ? (
               "Sending..."
             ) : resendCooldown > 0 ? (
               <>
                 Wait{" "}
-                <NumberFlow value={resendCooldown} className="tabular-nums" />s
+                <NumberFlow className="tabular-nums" value={resendCooldown} />s
               </>
             ) : (
               "Resend"

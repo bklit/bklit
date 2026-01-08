@@ -34,11 +34,13 @@ export function RecentPageViewsCard({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return startOfDay(dateParams.startDate);
+    if (dateParams.startDate) {
+      return startOfDay(dateParams.startDate);
+    }
     // Default to 30 days ago if no start date is provided
     const date = startOfDay(new Date());
     date.setDate(date.getDate() - 30);
@@ -94,8 +96,8 @@ export function RecentPageViewsCard({
           <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">Loading...</div>
           </div>
         </CardContent>
       </Card>
@@ -105,8 +107,8 @@ export function RecentPageViewsCard({
   if (!topPages || topPages.length === 0) {
     return (
       <NoDataCard
-        title="Popular Pages"
         description="The most popular pages by views."
+        title="Popular Pages"
       />
     );
   }
@@ -116,9 +118,11 @@ export function RecentPageViewsCard({
   // Calculate changes
   const calculateChange = (
     currentCount: number,
-    pagePath: string,
+    pagePath: string
   ): number | null => {
-    if (!dateParams.compare || !previousTopPages) return null;
+    if (!(dateParams.compare && previousTopPages)) {
+      return null;
+    }
     const previousPage = previousTopPages.find((p) => p.path === pagePath);
     const previousCount = previousPage ? previousPage.count : 0;
     if (previousCount === 0) {
@@ -146,13 +150,13 @@ export function RecentPageViewsCard({
             const change = calculateChange(page.count, page.path);
             return (
               <ProgressRow
-                key={page.path}
-                variant="secondary"
-                label={page.path}
-                value={page.count}
-                percentage={(page.count / totalViews) * 100}
                 change={change}
                 changeUniqueKey={`page-${page.path}`}
+                key={page.path}
+                label={page.path}
+                percentage={(page.count / totalViews) * 100}
+                value={page.count}
+                variant="secondary"
               />
             );
           })}

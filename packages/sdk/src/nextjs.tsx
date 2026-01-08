@@ -18,8 +18,12 @@ interface BklitComponentProps {
 }
 
 const stringify = (value: unknown): string => {
-  if (value === undefined) return "undefined";
-  if (typeof value === "string") return JSON.stringify(value);
+  if (value === undefined) {
+    return "undefined";
+  }
+  if (typeof value === "string") {
+    return JSON.stringify(value);
+  }
   return JSON.stringify(value);
 };
 
@@ -50,12 +54,12 @@ export function BklitComponent({
 
   return (
     <Script
-      id="bklit-init"
-      strategy="afterInteractive"
-      // biome-ignore lint: dangerouslySetInnerHTML is fine here
       dangerouslySetInnerHTML={{
         __html: initCode,
       }}
+      id="bklit-init"
+      // biome-ignore lint: dangerouslySetInnerHTML is fine here
+      strategy="afterInteractive"
     />
   );
 }

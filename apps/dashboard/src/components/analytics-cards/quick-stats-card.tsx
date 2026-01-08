@@ -49,11 +49,13 @@ export function QuickStatsCard({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return startOfDay(dateParams.startDate);
+    if (dateParams.startDate) {
+      return startOfDay(dateParams.startDate);
+    }
     const date = startOfDay(new Date());
     date.setDate(date.getDate() - 30);
     return date;
@@ -157,7 +159,9 @@ export function QuickStatsCard({
 
   // Calculate changes
   const calculateChange = (current: number, previous: number | undefined) => {
-    if (previous === undefined) return null;
+    if (previous === undefined) {
+      return null;
+    }
     if (previous === 0) {
       // If previous was 0 and current is positive, show as increase
       // If previous was 0 and current is 0, no change (null)
@@ -169,7 +173,7 @@ export function QuickStatsCard({
   const sessionsChange = dateParams.compare
     ? calculateChange(
         sessionStats.totalSessions,
-        previousSessionData?.totalSessions,
+        previousSessionData?.totalSessions
       )
     : null;
   const bounceRateChange = dateParams.compare
@@ -191,52 +195,52 @@ export function QuickStatsCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold flex items-center gap-2">
+              <div className="flex items-center gap-2 font-bold text-2xl">
                 <NumberFlow value={sessionStats.totalSessions} />
                 <ChangeIndicator change={sessionsChange} uniqueKey="sessions" />
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 Total Sessions
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold flex items-center gap-2">
+              <div className="flex items-center gap-2 font-bold text-2xl">
                 <NumberFlow
-                  value={Math.round(sessionStats.bounceRate)}
                   suffix="%"
+                  value={Math.round(sessionStats.bounceRate)}
                 />
                 <ChangeIndicator
                   change={bounceRateChange}
                   uniqueKey="bounce-rate"
                 />
               </div>
-              <div className="text-sm text-muted-foreground">Bounce Rate</div>
+              <div className="text-muted-foreground text-sm">Bounce Rate</div>
             </div>
           </div>
-          <div className="flex justify-between items-center pt-2 border-t">
+          <div className="flex items-center justify-between border-t pt-2">
             <div>
-              <div className="text-2xl font-bold flex items-center gap-2">
+              <div className="flex items-center gap-2 font-bold text-2xl">
                 <NumberFlow value={displayStats.uniqueVisits} />
                 <ChangeIndicator
                   change={uniqueVisitsChange}
                   uniqueKey="unique-visits"
                 />
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 Unique Visitors
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold flex items-center gap-2">
+              <div className="flex items-center gap-2 font-bold text-2xl">
                 <NumberFlow value={currentConversions} />
                 <ChangeIndicator
                   change={conversionsChange}
                   uniqueKey="conversions"
                 />
               </div>
-              <div className="text-sm text-muted-foreground">Conversions</div>
+              <div className="text-muted-foreground text-sm">Conversions</div>
             </div>
           </div>
         </div>

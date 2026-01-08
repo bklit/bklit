@@ -1,7 +1,7 @@
 import type { Extension, ExtensionMetadata } from "./schema";
 
 class ExtensionRegistry {
-  private extensions = new Map<string, Extension>();
+  private readonly extensions = new Map<string, Extension>();
 
   register<TConfig = unknown>(extension: Extension<TConfig>): void {
     this.extensions.set(extension.id, extension as Extension);
