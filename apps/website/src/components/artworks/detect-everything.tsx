@@ -394,11 +394,11 @@ export const DetectEverything = () => {
   };
 
   return (
-    <div className="flex flex-col sm:grid sm:grid-cols-2 gap-8">
+    <div className="flex flex-col sm:grid sm:grid-cols-2 gap-0 sm:gap-8">
       <div className="col-span-1 sm:border-l">
         <button
           type="button"
-          className={`flex flex-col gap-2 p-6 sm:p-14 border-b cursor-pointer transition-colors text-left w-full ${
+          className={`flex flex-col gap-2 p-4 sm:p-14 border-b cursor-pointer transition-colors text-left w-full ${
             isActive("browsers")
               ? "bg-accent/30 hover:bg-accent/40"
               : "hover:bg-accent/50"
@@ -406,8 +406,8 @@ export const DetectEverything = () => {
           onMouseEnter={() => bringToFront("browsers")}
           onMouseLeave={handleMouseLeave}
         >
-          <h2 className="text-xl font-bold">Browser Usage</h2>
-          <p className="text-lg text-muted-foreground">
+          <h2 className="text-md sm:text-xl font-bold">Browser Usage</h2>
+          <p className="text-xs sm:text-lg text-muted-foreground">
             Gain insight into which browsers your visitors are using and how
             they're interacting with your website.
           </p>
@@ -415,7 +415,7 @@ export const DetectEverything = () => {
         <button
           type="button"
           className={cn(
-            "flex flex-col gap-2 p-6 sm:p-14 border-b cursor-pointer transition-colors text-left w-full",
+            "flex flex-col gap-2 p-4 sm:p-14 border-b cursor-pointer transition-colors text-left w-full",
             isActive("sessions")
               ? "bg-accent/30 hover:bg-accent/40"
               : "hover:bg-accent/50",
@@ -423,8 +423,8 @@ export const DetectEverything = () => {
           onMouseEnter={() => bringToFront("sessions")}
           onMouseLeave={handleMouseLeave}
         >
-          <h3 className="text-xl font-bold">Recent Sessions</h3>
-          <p className="text-lg text-muted-foreground">
+          <h3 className="text-md sm:text-xl font-bold">Recent Sessions</h3>
+          <p className="text-xs sm:text-lg text-muted-foreground">
             Understand your users' behavior and how they flow through your
             website.
           </p>
@@ -432,7 +432,7 @@ export const DetectEverything = () => {
         <button
           type="button"
           className={cn(
-            "flex flex-col gap-2 p-6 sm:p-14 cursor-pointer transition-colors text-left w-full",
+            "flex flex-col gap-2 p-4 sm:p-14 cursor-pointer transition-colors text-left w-full",
             isActive("countries")
               ? "bg-accent/30 hover:bg-accent/40"
               : "hover:bg-accent/50",
@@ -440,8 +440,8 @@ export const DetectEverything = () => {
           onMouseEnter={() => bringToFront("countries")}
           onMouseLeave={handleMouseLeave}
         >
-          <h3 className="text-xl font-bold">Top Countries</h3>
-          <p className="text-lg text-muted-foreground">
+          <h3 className="text-md sm:text-xl font-bold">Top Countries</h3>
+          <p className="text-xs sm:text-lg text-muted-foreground">
             Gain insight into where your visitors are coming from and what
             timezones they're in.
           </p>
@@ -450,7 +450,7 @@ export const DetectEverything = () => {
       <div className="col-span-1 flex flex-col space-y-4">
         <section
           aria-label="Interactive card showcase"
-          className="flex flex-col items-center justify-center pt-12"
+          className="flex flex-col items-center justify-center pt-4 sm:pt-12"
           onMouseEnter={() => setIsHovering("cards" as CardType)}
           onMouseLeave={handleMouseLeave}
         >
@@ -459,6 +459,7 @@ export const DetectEverything = () => {
             style={{
               perspective: "2000px",
               transformStyle: "preserve-3d",
+              transform: window.innerWidth >= 640 ? "scale(1)" : "scale(0.7)",
             }}
           >
             {["countries", "sessions", "browsers"].map((cardType) =>
