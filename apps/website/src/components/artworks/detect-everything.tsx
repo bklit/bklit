@@ -15,6 +15,8 @@ import { FirefoxIcon } from "@bklit/ui/icons/firefox";
 import { SafariIcon } from "@bklit/ui/icons/safari";
 import { Monitor, Smartphone } from "lucide-react";
 import { CircleFlag } from "react-circle-flags";
+import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect, useRef } from "react";
 
 interface CountryData {
   country: string;
@@ -160,14 +162,11 @@ export const DetectEverything = () => {
       </div>
       <div className="col-span-1 hidden sm:flex items-start justify-center">
         <div className="flex flex-col items-center justify-center ">
-          <div className="perspective-[2000px] group -translate-x-20 translate-y-10 scale-50 sm:scale-90">
+          <div className="perspective-[2000px] group translate-x-0 translate-y-0 scale-50 sm:scale-90">
+            {/* Back */}
             <div
-              className="card-0 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
-            translate-z-0 translate-x-0 translate-y-0
-            group-hover:translate-z-0 group-hover:-translate-x-12 group-hover:translate-y-0
-            hover:-translate-y-5!
-            group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm
-            group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
+              className="card-0 w-[400px] skew-y-[0] rotate-x-10 rotate-y-0 preserve-3d transition-all duration-300 ease-out
+            translate-z-0 translate-x-0 translate-y-0"
             >
               <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
                 <CardHeader>
@@ -204,13 +203,10 @@ export const DetectEverything = () => {
               </Card>
             </div>
 
+            {/* Middle */}
             <div
-              className="card-1 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
-            translate-z-20 translate-x-20 translate-y-20
-            group-hover:translate-z-20 group-hover:translate-x-20 group-hover:translate-y-20
-            hover:translate-y-15!
-            group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
-            group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
+              className="card-1 w-[400px] skew-y-[0] rotate-x-10 rotate-y-0 preserve-3d transition-all duration-300 ease-out
+            translate-z-20 translate-x-0 translate-y-10"
             >
               <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
                 <CardHeader>
@@ -245,13 +241,10 @@ export const DetectEverything = () => {
               </Card>
             </div>
 
+            {/* Front */}
             <div
-              className="card-2 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
-            translate-z-40 translate-x-40 translate-y-40
-            group-hover:translate-z-40 group-hover:translate-x-52 group-hover:translate-y-40
-            hover:translate-y-35!
-            group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
-            group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm"
+              className="card-2 w-[400px] skew-y-[0] rotate-x-10 rotate-y-0 preserve-3d transition-all duration-300 ease-out
+            translate-z-40 translate-x-0 translate-y-20"
             >
               <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
                 <CardHeader>

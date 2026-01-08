@@ -51,6 +51,7 @@ import { Stats } from "@/components/stats";
 import { getPreviousPeriod } from "@/lib/date-utils";
 import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
+import { TimeSeriesChart } from "@/components/charts/time-series-chart";
 import { SessionEventsTable } from "./session-events-table";
 
 interface EventDetailProps {
@@ -382,7 +383,7 @@ export function EventDetail({
                 chartConfig={timelineChartConfig}
                 startDate={startDate}
                 endDate={endDate}
-                isLoading={isLoadingEvents}
+                isLoading={isLoading}
                 showDeployments={true}
                 height={300}
               />
