@@ -28,7 +28,7 @@ function createCorsResponse(
   return response;
 }
 
-export async function OPTIONS() {
+export function OPTIONS() {
   return createCorsResponse({ message: "CORS preflight OK" }, 200);
 }
 

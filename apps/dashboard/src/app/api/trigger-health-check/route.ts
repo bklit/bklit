@@ -3,6 +3,9 @@ import type { NextRequest } from "next/server";
 import { env } from "@/env";
 import type { healthCheckTask } from "../../../../trigger/health-check";
 
+// Regex for extracting Bearer token from Authorization header
+const BEARER_TOKEN_REGEX = /^Bearer\s+/i;
+
 /**
  * Validates the health check secret from the request
  * Accepts secret from Authorization header (Bearer token) or X-Health-Check-Secret header
@@ -20,7 +23,7 @@ function validateHealthCheckSecret(request: NextRequest): boolean {
   // Check Authorization header (Bearer token format)
   const authHeader = request.headers.get("authorization");
   if (authHeader) {
-    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const token = authHeader.replace(BEARER_TOKEN_REGEX, "").trim();
     if (token === expectedSecret) {
       return true;
     }

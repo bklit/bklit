@@ -6,10 +6,10 @@ import type { SessionData } from "@/types/geo";
 
 // DEPRECATED: This function is no longer used - all session operations now go through ClickHouse
 // Kept for backward compatibility but should not be called
-export async function createOrUpdateSession(
+export function createOrUpdateSession(
   _data: SessionData,
   _prismaClient: typeof prisma = prisma
-) {
+): Promise<never> {
   console.warn(
     "createOrUpdateSession is deprecated - use ClickHouse directly via AnalyticsService"
   );
@@ -20,7 +20,7 @@ export async function createOrUpdateSession(
 
 // DEPRECATED: This function is no longer used - all session operations now go through ClickHouse
 // Kept for backward compatibility but should not be called
-export async function endSession(_sessionId: string) {
+export function endSession(_sessionId: string): Promise<never> {
   console.warn(
     "endSession is deprecated - use ClickHouse directly via AnalyticsService"
   );

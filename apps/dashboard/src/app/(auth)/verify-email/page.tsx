@@ -73,22 +73,7 @@ function VerifyEmailPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  // Early return if email is missing (will redirect in useEffect above)
-  if (!email || email.trim() === "") {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="text-center">
-          <h1 className="font-normal text-2xl">
-            Invalid <span className="font-bold">verification link</span>
-          </h1>
-          <p className="mt-2 text-muted-foreground text-sm">
-            Email address is missing. Redirecting to sign up...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  // Initialize form before any conditional returns (Rules of Hooks)
   const form = useForm({
     defaultValues: {
       code: "",
@@ -131,6 +116,23 @@ function VerifyEmailPage() {
       }
     },
   });
+
+  // Early return if email is missing (will redirect in useEffect above)
+  // Note: This comes AFTER all hooks to comply with Rules of Hooks
+  if (!email || email.trim() === "") {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="text-center">
+          <h1 className="font-normal text-2xl">
+            Invalid <span className="font-bold">verification link</span>
+          </h1>
+          <p className="mt-2 text-muted-foreground text-sm">
+            Email address is missing. Redirecting to sign up...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleResendCode = async () => {
     // Guard: ensure email exists before proceeding
@@ -264,16 +266,21 @@ function VerifyEmailPage() {
             onClick={handleResendCode}
             type="button"
           >
-            {isResending ? (
-              "Sending..."
-            ) : resendCooldown > 0 ? (
-              <>
-                Wait{" "}
-                <NumberFlow className="tabular-nums" value={resendCooldown} />s
-              </>
-            ) : (
-              "Resend"
-            )}
+            {(() => {
+              if (isResending) {
+                return "Sending...";
+              }
+              if (resendCooldown > 0) {
+                return (
+                  <>
+                    Wait{" "}
+                    <NumberFlow className="tabular-nums" value={resendCooldown} />
+                    s
+                  </>
+                );
+              }
+              return "Resend";
+            })()}
           </button>
         </p>
       </div>

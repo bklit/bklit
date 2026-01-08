@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export function GET() {
   return NextResponse.json({
     message: "Test webhook endpoint is working",
     timestamp: new Date().toISOString(),

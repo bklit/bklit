@@ -207,18 +207,24 @@ export default function ForgotPasswordPage() {
           size="lg"
           type="submit"
         >
-          {isLoading || form.state.isSubmitting ? (
-            "Sending..."
-          ) : cooldownSeconds > 0 ? (
-            <span className="flex items-center gap-1.5">
-              Wait{" "}
-              <NumberFlow className="tabular-nums" value={cooldownSeconds} />s
-            </span>
-          ) : getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR ? (
-            "Too many attempts"
-          ) : (
-            "Send reset link"
-          )}
+          {(() => {
+            if (isLoading || form.state.isSubmitting) {
+              return "Sending...";
+            }
+            if (cooldownSeconds > 0) {
+              return (
+                <span className="flex items-center gap-1.5">
+                  Wait{" "}
+                  <NumberFlow className="tabular-nums" value={cooldownSeconds} />
+                  s
+                </span>
+              );
+            }
+            if (getAttemptsInLastHour() >= MAX_ATTEMPTS_PER_HOUR) {
+              return "Too many attempts";
+            }
+            return "Send reset link";
+          })()}
         </Button>
       </form>
 

@@ -272,7 +272,7 @@ export async function getVisitsByCountry(
       // Get city breakdown for each country
       const countriesWithCities = await Promise.all(
         countriesWithVisits.map(
-          async (country: CountryWithVisits): Promise<CountryWithCities> => {
+          (country: CountryWithVisits): CountryWithCities => {
             const countryPageviews = pageviews.filter(
               (p) => p.country === country.country && p.city
             );
@@ -480,7 +480,7 @@ export async function getCountryVisitorStats(
       );
 
       const countriesWithStats = await Promise.all(
-        Object.entries(sessionsByCountry).map(async ([country, count]) => {
+        Object.entries(sessionsByCountry).map(([country, count]) => {
           const samplePageView = pageviews.find(
             (p) => p.country === country && p.country_code
           );
