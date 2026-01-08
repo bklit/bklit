@@ -190,6 +190,10 @@ export const DetectEverything = () => {
     setIsHovering(null);
   };
 
+  const isActive = (cardType: CardType) => {
+    return cardOrder[2] === cardType;
+  };
+
   const getCardPosition = (cardType: CardType): CardPosition => {
     const index = cardOrder.indexOf(cardType);
     if (index === 0) return positions.back as CardPosition;
@@ -375,10 +379,14 @@ export const DetectEverything = () => {
 
   return (
     <div className="flex flex-col sm:grid sm:grid-cols-2 gap-8">
-      <div className="col-span-1 space-y-6 sm:border-l">
+      <div className="col-span-1 sm:border-l">
         <button
           type="button"
-          className="flex flex-col gap-2 p-6 sm:p-12 border-b cursor-pointer transition-colors hover:bg-accent/50 text-left w-full"
+          className={`flex flex-col gap-2 p-6 sm:p-14 border-b cursor-pointer transition-colors text-left w-full ${
+            isActive("browsers")
+              ? "bg-accent/30 hover:bg-accent/40"
+              : "hover:bg-accent/50"
+          }`}
           onMouseEnter={() => bringToFront("browsers")}
           onMouseLeave={handleMouseLeave}
         >
@@ -390,7 +398,11 @@ export const DetectEverything = () => {
         </button>
         <button
           type="button"
-          className="flex flex-col gap-2 p-6 sm:p-12 border-b cursor-pointer transition-colors hover:bg-accent/50 text-left w-full"
+          className={`flex flex-col gap-2 p-6 sm:p-14 border-b cursor-pointer transition-colors text-left w-full ${
+            isActive("sessions")
+              ? "bg-accent/30 hover:bg-accent/40"
+              : "hover:bg-accent/50"
+          }`}
           onMouseEnter={() => bringToFront("sessions")}
           onMouseLeave={handleMouseLeave}
         >
@@ -402,7 +414,11 @@ export const DetectEverything = () => {
         </button>
         <button
           type="button"
-          className="flex flex-col gap-2 p-6 sm:p-12 cursor-pointer transition-colors hover:bg-accent/50 text-left w-full"
+          className={`flex flex-col gap-2 p-6 sm:p-14 cursor-pointer transition-colors text-left w-full ${
+            isActive("countries")
+              ? "bg-accent/30 hover:bg-accent/40"
+              : "hover:bg-accent/50"
+          }`}
           onMouseEnter={() => bringToFront("countries")}
           onMouseLeave={handleMouseLeave}
         >
