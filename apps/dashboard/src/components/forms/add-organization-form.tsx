@@ -47,7 +47,7 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
     validators: {
       onSubmit: createOrganizationSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       const formData = new FormData();
       formData.append("name", value.name);
       if (value.description) {

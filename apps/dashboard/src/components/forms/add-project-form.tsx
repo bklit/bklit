@@ -56,7 +56,7 @@ export function AddProjectForm({
         return undefined;
       },
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       console.log("📝 Add Project Form: Submitting with values:", value);
 
       // Validation: organizationId is required

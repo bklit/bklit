@@ -91,7 +91,7 @@ export function CreateApiTokenForm({
       // Parse domains from comma or newline separated string
       const domains = value.allowedDomains
         ? value.allowedDomains
-            .split(/[,\n]/)
+            .split(DOMAIN_SEPARATOR_REGEX)
             .map((d) => d.trim())
             .filter((d) => d.length > 0)
             .map((d) => {

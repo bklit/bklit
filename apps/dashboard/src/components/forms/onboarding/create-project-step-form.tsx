@@ -47,7 +47,7 @@ export function CreateProjectStepForm({
     validators: {
       onSubmit: addProjectSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       const formData = new FormData();
       Object.entries(value).forEach(([key, val]) => {
         if (val !== undefined && val !== null) {

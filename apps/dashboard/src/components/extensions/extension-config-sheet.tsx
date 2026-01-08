@@ -134,7 +134,9 @@ export function ExtensionConfigSheet({
 
                 <EventSelector
                   events={eventDefinitions || []}
-                  onCreateEvent={() => {}}
+                  onCreateEvent={() => {
+                    // Event creation handled externally
+                  }}
                   onSelectionChange={setSelectedEvents}
                   selectedEventIds={selectedEvents}
                 />
