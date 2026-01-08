@@ -2,8 +2,8 @@ import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
 import { ArrowRight, Check } from "lucide-react";
 import type { Metadata } from "next";
+import { AnimateHeroNew } from "@/components/animate-hero-new";
 import { AnimatedGlobalStats } from "@/components/animated-global-stats";
-import { AnimatedHeroVisual } from "@/components/animated-hero-visual";
 import { DetectEverything } from "@/components/artworks/detect-everything";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
 import { SankeyDemo } from "@/components/artworks/sankey-demo";
@@ -11,7 +11,6 @@ import { SDKs } from "@/components/artworks/sdks";
 import { FAQ } from "@/components/faq";
 import { Features as SectionFeatures } from "@/components/features";
 import { Footer } from "@/components/footer";
-import { Hero } from "@/components/hero";
 import { PageHeader } from "@/components/page-header";
 import { PageviewsView } from "@/components/pageviews-view";
 import { SectionBasic } from "@/components/section-basic";
@@ -27,17 +26,13 @@ export default function MarketingHomePage() {
   return (
     <>
       <PageHeader />
-      <Hero />
 
       <div className="flex flex-col space-y-16 sm:space-y-64">
         <div className={cn("relative w-full sm:min-h-[400px]")}>
           <div className="container mx-auto max-w-full sm:max-w-[1600px] px-4">
             <div className="grid grid-cols-1 grid-rows-1">
-              <div className="col-start-1 row-start-1">
-                <AnimatedHeroVisual />
-              </div>
-              <div className="col-start-1 row-start-1 flex items-center justify-center relative bg-linear-to-b from-transparent via-background/10 to-background" />
-              <div className="col-start-1 row-start-1 flex items-end justify-center relative">
+              <AnimateHeroNew />
+              <div className="container mx-auto max-w-6xl px-4">
                 <AnimatedGlobalStats />
               </div>
             </div>

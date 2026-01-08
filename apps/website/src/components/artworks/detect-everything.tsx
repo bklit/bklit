@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Card,
   CardContent,
@@ -13,7 +12,10 @@ import { ChromeIcon } from "@bklit/ui/icons/chrome";
 import { EdgeIcon } from "@bklit/ui/icons/edge";
 import { FirefoxIcon } from "@bklit/ui/icons/firefox";
 import { SafariIcon } from "@bklit/ui/icons/safari";
+import { cn } from "@bklit/ui/lib/utils";
 import { Monitor, Smartphone } from "lucide-react";
+import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 
 interface CountryData {
@@ -127,146 +129,387 @@ const getDeviceIcon = (device: string) => {
   return <Monitor size={16} />;
 };
 
+type CardType = "countries" | "sessions" | "browsers";
+
+interface CardPosition {
+  z: number;
+  y: number;
+  scale: number;
+  overlayOpacity: number;
+}
+
+const positions: Record<string, CardPosition> = {
+  back: { z: 0, y: -80, scale: 0.85, overlayOpacity: 0.8 },
+  middle: { z: 30, y: -40, scale: 0.92, overlayOpacity: 0.5 },
+  front: { z: 60, y: 0, scale: 1, overlayOpacity: 0 },
+  hidden: { z: -30, y: -120, scale: 0.75, overlayOpacity: 1 },
+};
+
 export const DetectEverything = () => {
   const totalCountryViews = mockCountries.reduce(
     (sum, country) => sum + country.views,
     0,
   );
 
+  const [cardOrder, setCardOrder] = useState<CardType[]>([
+    "countries",
+    "sessions",
+    "browsers",
+  ]);
+  const [isHovering, setIsHovering] = useState<CardType | null>(null);
+  const [showPulse, setShowPulse] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const cycleCards = () => {
+    if (isHovering) return;
+    setCardOrder((prev) => {
+      const newOrder = [...prev];
+      const last = newOrder.pop();
+      if (last) newOrder.unshift(last);
+      return newOrder;
+    });
+  };
+
+  useEffect(() => {
+    intervalRef.current = setInterval(cycleCards, 3000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isHovering]);
+
+  useEffect(() => {
+    if (isHovering) {
+      pulseTimeoutRef.current = setTimeout(() => {
+        setShowPulse(true);
+      }, 200);
+    } else {
+      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+      setShowPulse(false);
+    }
+    return () => {
+      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+    };
+  }, [isHovering]);
+
+  const bringToFront = (cardType: CardType) => {
+    setIsHovering(cardType);
+    const currentIndex = cardOrder.indexOf(cardType);
+    if (currentIndex === 2) return;
+
+    const newOrder = cardOrder.filter((c) => c !== cardType);
+    newOrder.push(cardType);
+    setCardOrder(newOrder);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(null);
+  };
+
+  const isActive = (cardType: CardType) => {
+    return cardOrder[2] === cardType;
+  };
+
+  const getCardPosition = (cardType: CardType): CardPosition => {
+    const index = cardOrder.indexOf(cardType);
+    if (index === 0) return positions.back as CardPosition;
+    if (index === 1) return positions.middle as CardPosition;
+    if (index === 2) return positions.front as CardPosition;
+    return positions.hidden as CardPosition;
+  };
+
+  const renderCard = (cardType: CardType) => {
+    const pos = getCardPosition(cardType);
+    const zIndex = Math.round(pos.z);
+
+    switch (cardType) {
+      case "countries":
+        return (
+          <motion.div
+            key={cardType}
+            className="w-[400px] absolute top-0 left-0"
+            style={{
+              transformStyle: "preserve-3d",
+              transform: "rotateX(10deg)",
+              zIndex,
+            }}
+            animate={{
+              translateZ: pos.z,
+              translateY: pos.y,
+              scale: pos.scale,
+            }}
+            transition={{
+              duration: 0.6,
+              ease: [0.4, 0, 0.2, 1],
+            }}
+          >
+            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-background pointer-events-none"
+                animate={{ opacity: pos.overlayOpacity }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
+              <CardHeader>
+                <CardTitle>Top Countries</CardTitle>
+                <CardDescription>Top countries by page views.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col">
+                  {mockCountries.map((country) => {
+                    const percentage =
+                      totalCountryViews > 0
+                        ? ((Number(country.views) || 0) / totalCountryViews) *
+                          100
+                        : 0;
+                    return (
+                      <ProgressRow
+                        key={country.countryCode}
+                        label={country.country}
+                        value={country.views}
+                        percentage={percentage}
+                        icon={
+                          <CircleFlag
+                            countryCode={country.countryCode.toLowerCase()}
+                            className="size-4"
+                          />
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+
+      case "sessions":
+        return (
+          <motion.div
+            key={cardType}
+            className="w-[400px] absolute top-0 left-0"
+            style={{
+              transformStyle: "preserve-3d",
+              transform: "rotateX(10deg)",
+              zIndex,
+            }}
+            animate={{
+              translateZ: pos.z,
+              translateY: pos.y,
+              scale: pos.scale,
+            }}
+            transition={{
+              duration: 0.6,
+              ease: [0.4, 0, 0.2, 1],
+            }}
+          >
+            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-background pointer-events-none"
+                animate={{ opacity: pos.overlayOpacity }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
+              <CardHeader>
+                <CardTitle>Recent Sessions</CardTitle>
+                <CardDescription>The most recent sessions.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col">
+                  {mockSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-3">
+                          <span>{getBrowserIcon(session.browser)}</span>
+                          <span className="text-muted-foreground">
+                            {getDeviceIcon(session.device)}
+                          </span>
+                          <span className="text-sm">
+                            {session.pageCount} pages
+                          </span>
+                        </div>
+                      </div>
+                      <div className="gap-2 text-xs text-muted-foreground">
+                        {session.timeAgo}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+
+      case "browsers":
+        return (
+          <motion.div
+            key={cardType}
+            className="w-[400px] absolute top-0 left-0"
+            style={{
+              transformStyle: "preserve-3d",
+              transform: "rotateX(10deg)",
+              zIndex,
+            }}
+            animate={{
+              translateZ: pos.z,
+              translateY: pos.y,
+              scale: pos.scale,
+            }}
+            transition={{
+              duration: 0.6,
+              ease: [0.4, 0, 0.2, 1],
+            }}
+          >
+            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-background pointer-events-none"
+                animate={{ opacity: pos.overlayOpacity }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
+              <CardHeader>
+                <CardTitle>Browser Usage</CardTitle>
+                <CardDescription>Page visits by browser.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PieDonut
+                  data={mockBrowsers}
+                  centerLabel={{ showTotal: true, suffix: "page views" }}
+                  className=""
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+    }
+  };
+
   return (
-    <div className="flex flex-col sm:grid sm:grid-cols-2 gap-8">
-      <div className="col-span-1 space-y-6 sm:border-l">
-        <div className="flex flex-col gap-2 p-6 sm:p-12 border-b">
-          <h2 className="text-xl font-bold">Browser Usage</h2>
-          <p className="text-lg text-muted-foreground">
+    <div className="flex flex-col sm:grid sm:grid-cols-2 gap-0 sm:gap-8">
+      <div className="col-span-1 sm:border-l">
+        <button
+          type="button"
+          className={`flex flex-col gap-2 p-4 sm:p-14 border-b cursor-pointer transition-colors text-left w-full ${
+            isActive("browsers")
+              ? "bg-accent/30 hover:bg-accent/40"
+              : "hover:bg-accent/50"
+          }`}
+          onMouseEnter={() => bringToFront("browsers")}
+          onMouseLeave={handleMouseLeave}
+        >
+          <h2 className="text-md sm:text-xl font-bold">Browser Usage</h2>
+          <p className="text-xs sm:text-lg text-muted-foreground">
             Gain insight into which browsers your visitors are using and how
             they're interacting with your website.
           </p>
-        </div>
-        <div className="flex flex-col gap-2 p-6 sm:p-12 border-b">
-          <h3 className="text-xl font-bold">Recent Sessions</h3>
-          <p className="text-lg text-muted-foreground">
+        </button>
+        <button
+          type="button"
+          className={cn(
+            "flex flex-col gap-2 p-4 sm:p-14 border-b cursor-pointer transition-colors text-left w-full",
+            isActive("sessions")
+              ? "bg-accent/30 hover:bg-accent/40"
+              : "hover:bg-accent/50",
+          )}
+          onMouseEnter={() => bringToFront("sessions")}
+          onMouseLeave={handleMouseLeave}
+        >
+          <h3 className="text-md sm:text-xl font-bold">Recent Sessions</h3>
+          <p className="text-xs sm:text-lg text-muted-foreground">
             Understand your users' behavior and how they flow through your
             website.
           </p>
-        </div>
-        <div className="flex flex-col gap-2 p-6 sm:p-12">
-          <h3 className="text-xl font-bold">Top Countries</h3>
-          <p className="text-lg text-muted-foreground">
+        </button>
+        <button
+          type="button"
+          className={cn(
+            "flex flex-col gap-2 p-4 sm:p-14 cursor-pointer transition-colors text-left w-full",
+            isActive("countries")
+              ? "bg-accent/30 hover:bg-accent/40"
+              : "hover:bg-accent/50",
+          )}
+          onMouseEnter={() => bringToFront("countries")}
+          onMouseLeave={handleMouseLeave}
+        >
+          <h3 className="text-md sm:text-xl font-bold">Top Countries</h3>
+          <p className="text-xs sm:text-lg text-muted-foreground">
             Gain insight into where your visitors are coming from and what
             timezones they're in.
           </p>
-        </div>
+        </button>
       </div>
-      <div className="col-span-1 hidden sm:flex items-start justify-center">
-        <div className="flex flex-col items-center justify-center ">
-          <div className="perspective-[2000px] group -translate-x-20 translate-y-10 scale-50 sm:scale-90">
-            <div
-              className="card-0 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
-            translate-z-0 translate-x-0 translate-y-0
-            group-hover:translate-z-0 group-hover:-translate-x-12 group-hover:translate-y-0
-            hover:-translate-y-5!
-            group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm
-            group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
-            >
-              <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
-                <CardHeader>
-                  <CardTitle>Top Countries</CardTitle>
-                  <CardDescription>
-                    Top countries by page views.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col">
-                    {mockCountries.map((country) => {
-                      const percentage =
-                        totalCountryViews > 0
-                          ? ((Number(country.views) || 0) / totalCountryViews) *
-                            100
-                          : 0;
-                      return (
-                        <ProgressRow
-                          key={country.countryCode}
-                          label={country.country}
-                          value={country.views}
-                          percentage={percentage}
-                          icon={
-                            <CircleFlag
-                              countryCode={country.countryCode.toLowerCase()}
-                              className="size-4"
-                            />
-                          }
-                        />
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div
-              className="card-1 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
-            translate-z-20 translate-x-20 translate-y-20
-            group-hover:translate-z-20 group-hover:translate-x-20 group-hover:translate-y-20
-            hover:translate-y-15!
-            group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
-            group-has-[.card-2:hover]:opacity-30 group-has-[.card-2:hover]:blur-sm"
-            >
-              <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
-                <CardHeader>
-                  <CardTitle>Recent Sessions</CardTitle>
-                  <CardDescription>The most recent sessions.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col">
-                    {mockSessions.map((session) => (
-                      <div
-                        key={session.id}
-                        className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-3">
-                            <span>{getBrowserIcon(session.browser)}</span>
-                            <span className="text-muted-foreground">
-                              {getDeviceIcon(session.device)}
-                            </span>
-                            <span className="text-sm">
-                              {session.pageCount} pages
-                            </span>
-                          </div>
-                        </div>
-                        <div className="gap-2 text-xs text-muted-foreground">
-                          {session.timeAgo}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div
-              className="card-2 w-[400px] skew-y-[-4deg] rotate-x-[-14deg] rotate-y-20 preserve-3d transition-all duration-300 ease-out
-            translate-z-40 translate-x-40 translate-y-40
-            group-hover:translate-z-40 group-hover:translate-x-52 group-hover:translate-y-40
-            hover:translate-y-35!
-            group-has-[.card-0:hover]:opacity-30 group-has-[.card-0:hover]:blur-sm
-            group-has-[.card-1:hover]:opacity-30 group-has-[.card-1:hover]:blur-sm"
-            >
-              <Card className="w-full h-fit shadow-2xl absolute inset-0 bg-card">
-                <CardHeader>
-                  <CardTitle>Browser Usage</CardTitle>
-                  <CardDescription>Page visits by browser.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <PieDonut
-                    data={mockBrowsers}
-                    centerLabel={{ showTotal: true, suffix: "page views" }}
-                    className=""
-                  />
-                </CardContent>
-              </Card>
-            </div>
+      <div className="col-span-1 flex flex-col space-y-4">
+        <section
+          aria-label="Interactive card showcase"
+          className="flex flex-col items-center justify-center pt-4 sm:pt-12"
+          onMouseEnter={() => setIsHovering("cards" as CardType)}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div
+            className="relative h-[400px] w-[400px]"
+            style={{
+              perspective: "2000px",
+              transformStyle: "preserve-3d",
+              transform:
+                typeof window !== "undefined" && window.innerWidth >= 640
+                  ? "scale(1)"
+                  : "scale(0.7)",
+            }}
+          >
+            {["countries", "sessions", "browsers"].map((cardType) =>
+              renderCard(cardType as CardType),
+            )}
+          </div>
+        </section>
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "size-4 rounded relative",
+              showPulse ? "overflow-visible" : "overflow-clip",
+            )}
+          >
+            <motion.div
+              className="size-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              style={{
+                background:
+                  "conic-gradient(from 0deg, transparent, var(--bklit-400) 360deg, transparent 360deg)",
+              }}
+              animate={{
+                rotate: isHovering ? 0 : 360,
+                opacity: isHovering ? 0 : 1,
+              }}
+              transition={{
+                rotate: {
+                  duration: 3,
+                  ease: "linear",
+                  repeat: Infinity,
+                },
+                opacity: {
+                  duration: 0.2,
+                },
+              }}
+            />
+            <motion.div
+              className="absolute inset-px rounded-[3px] bg-bklit-700"
+              animate={{
+                scale: showPulse ? [1, 1.2, 1] : 1,
+                opacity: showPulse ? [1, 0.5, 1] : 1,
+              }}
+              transition={{
+                duration: showPulse ? 0.9 : 0,
+                ease: "easeOut",
+                repeat: showPulse ? Infinity : 0,
+              }}
+            />
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { prisma } from "@bklit/db/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -11,7 +12,28 @@ export const deploymentRouter = createTRPCRouter({
         endDate: z.date().optional(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Check if user has access to this project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organization: {
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+              },
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have access to this project",
+        });
+      }
+
       return await prisma.deployment.findMany({
         where: {
           projectId: input.projectId,
@@ -45,7 +67,28 @@ export const deploymentRouter = createTRPCRouter({
 
   getStats: protectedProcedure
     .input(z.object({ projectId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Check if user has access to this project
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organization: {
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+              },
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have access to this project",
+        });
+      }
+
       const [total, recent] = await Promise.all([
         prisma.deployment.count({
           where: { projectId: input.projectId },
