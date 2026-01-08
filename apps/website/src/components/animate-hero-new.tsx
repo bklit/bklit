@@ -1,9 +1,14 @@
 "use client";
 
 import { motion } from "motion/react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
-import { FakeDashboard } from "@/components/fake-dashboard";
 import { Hero } from "@/components/hero";
+
+const FakeDashboard = dynamic(
+  () => import("@/components/fake-dashboard").then((mod) => mod.FakeDashboard),
+  { ssr: false },
+);
 
 export function AnimateHeroNew() {
   const [rotationComplete, setRotationComplete] = useState(false);
