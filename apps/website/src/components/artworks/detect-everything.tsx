@@ -216,7 +216,6 @@ export const DetectEverything = () => {
             animate={{
               translateZ: pos.z,
               translateY: pos.y,
-              opacity: pos.opacity,
               scale: pos.scale,
             }}
             transition={{
@@ -224,7 +223,15 @@ export const DetectEverything = () => {
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            <Card className="w-full h-fit shadow-2xl bg-card">
+            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-background pointer-events-none"
+                animate={{ opacity: pos.overlayOpacity }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
               <CardHeader>
                 <CardTitle>Top Countries</CardTitle>
                 <CardDescription>Top countries by page views.</CardDescription>
@@ -271,7 +278,6 @@ export const DetectEverything = () => {
             animate={{
               translateZ: pos.z,
               translateY: pos.y,
-              opacity: pos.opacity,
               scale: pos.scale,
             }}
             transition={{
@@ -279,7 +285,15 @@ export const DetectEverything = () => {
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            <Card className="w-full h-fit shadow-2xl bg-card">
+            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-background pointer-events-none"
+                animate={{ opacity: pos.overlayOpacity }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
               <CardHeader>
                 <CardTitle>Recent Sessions</CardTitle>
                 <CardDescription>The most recent sessions.</CardDescription>
@@ -326,7 +340,6 @@ export const DetectEverything = () => {
             animate={{
               translateZ: pos.z,
               translateY: pos.y,
-              opacity: pos.opacity,
               scale: pos.scale,
             }}
             transition={{
@@ -334,7 +347,15 @@ export const DetectEverything = () => {
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            <Card className="w-full h-fit shadow-2xl bg-card">
+            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-background pointer-events-none"
+                animate={{ opacity: pos.overlayOpacity }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
               <CardHeader>
                 <CardTitle>Browser Usage</CardTitle>
                 <CardDescription>Page visits by browser.</CardDescription>
