@@ -414,9 +414,7 @@ export function FakeDashboard({
   }, []);
 
   if (!mounted) {
-    return (
-      <div className="w-[1942px] h-[1283px] bg-background rounded-xl" />
-    );
+    return <div className="w-[1942px] h-[1283px] bg-background rounded-xl" />;
   }
 
   return (
