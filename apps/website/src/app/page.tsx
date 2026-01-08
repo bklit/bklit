@@ -26,7 +26,6 @@ export default function MarketingHomePage() {
   return (
     <>
       <PageHeader />
-      {/* <Hero /> */}
 
       <div className="flex flex-col space-y-16 sm:space-y-64">
         <div className={cn("relative w-full sm:min-h-[400px]")}>

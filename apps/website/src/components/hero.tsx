@@ -50,7 +50,7 @@ export const Hero = () => {
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
         >
-          Purpose built Analytics
+          Beautiful Analytics
         </motion.h1>
         <motion.div
           className="flex items-center gap-2 text-base font-medium dark:text-muted-foreground"
