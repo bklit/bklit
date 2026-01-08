@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Card,
   CardContent,
@@ -13,6 +12,7 @@ import { ChromeIcon } from "@bklit/ui/icons/chrome";
 import { EdgeIcon } from "@bklit/ui/icons/edge";
 import { FirefoxIcon } from "@bklit/ui/icons/firefox";
 import { SafariIcon } from "@bklit/ui/icons/safari";
+import { cn } from "@bklit/ui/lib/utils";
 import { Monitor, Smartphone } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -157,7 +157,9 @@ export const DetectEverything = () => {
     "browsers",
   ]);
   const [isHovering, setIsHovering] = useState<CardType | null>(null);
+  const [showPulse, setShowPulse] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const cycleCards = () => {
     if (isHovering) return;
@@ -173,6 +175,20 @@ export const DetectEverything = () => {
     intervalRef.current = setInterval(cycleCards, 3000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isHovering]);
+
+  useEffect(() => {
+    if (isHovering) {
+      pulseTimeoutRef.current = setTimeout(() => {
+        setShowPulse(true);
+      }, 200);
+    } else {
+      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+      setShowPulse(false);
+    }
+    return () => {
+      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
     };
   }, [isHovering]);
 
@@ -398,11 +414,12 @@ export const DetectEverything = () => {
         </button>
         <button
           type="button"
-          className={`flex flex-col gap-2 p-6 sm:p-14 border-b cursor-pointer transition-colors text-left w-full ${
+          className={cn(
+            "flex flex-col gap-2 p-6 sm:p-14 border-b cursor-pointer transition-colors text-left w-full",
             isActive("sessions")
               ? "bg-accent/30 hover:bg-accent/40"
-              : "hover:bg-accent/50"
-          }`}
+              : "hover:bg-accent/50",
+          )}
           onMouseEnter={() => bringToFront("sessions")}
           onMouseLeave={handleMouseLeave}
         >
@@ -414,11 +431,12 @@ export const DetectEverything = () => {
         </button>
         <button
           type="button"
-          className={`flex flex-col gap-2 p-6 sm:p-14 cursor-pointer transition-colors text-left w-full ${
+          className={cn(
+            "flex flex-col gap-2 p-6 sm:p-14 cursor-pointer transition-colors text-left w-full",
             isActive("countries")
               ? "bg-accent/30 hover:bg-accent/40"
-              : "hover:bg-accent/50"
-          }`}
+              : "hover:bg-accent/50",
+          )}
           onMouseEnter={() => bringToFront("countries")}
           onMouseLeave={handleMouseLeave}
         >
@@ -429,10 +447,15 @@ export const DetectEverything = () => {
           </p>
         </button>
       </div>
-      <div className="col-span-1 hidden sm:flex items-start justify-center">
-        <div className="flex flex-col items-center justify-center">
+      <div className="col-span-1 flex flex-col space-y-4">
+        <section
+          aria-label="Interactive card showcase"
+          className="flex flex-col items-center justify-center pt-12"
+          onMouseEnter={() => setIsHovering("cards" as CardType)}
+          onMouseLeave={handleMouseLeave}
+        >
           <div
-            className="relative h-[450px] w-[400px] scale-50 sm:scale-90"
+            className="relative h-[400px] w-[400px]"
             style={{
               perspective: "2000px",
               transformStyle: "preserve-3d",
@@ -441,6 +464,48 @@ export const DetectEverything = () => {
             {["countries", "sessions", "browsers"].map((cardType) =>
               renderCard(cardType as CardType),
             )}
+          </div>
+        </section>
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "size-4 rounded relative",
+              showPulse ? "overflow-visible" : "overflow-clip",
+            )}
+          >
+            <motion.div
+              className="size-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              style={{
+                background:
+                  "conic-gradient(from 0deg, transparent, var(--bklit-400) 360deg, transparent 360deg)",
+              }}
+              animate={{
+                rotate: isHovering ? 0 : 360,
+                opacity: isHovering ? 0 : 1,
+              }}
+              transition={{
+                rotate: {
+                  duration: 3,
+                  ease: "linear",
+                  repeat: Infinity,
+                },
+                opacity: {
+                  duration: 0.2,
+                },
+              }}
+            />
+            <motion.div
+              className="absolute inset-px rounded-[3px] bg-bklit-700"
+              animate={{
+                scale: showPulse ? [1, 1.2, 1] : 1,
+                opacity: showPulse ? [1, 0.5, 1] : 1,
+              }}
+              transition={{
+                duration: showPulse ? 0.9 : 0,
+                ease: "easeOut",
+                repeat: showPulse ? Infinity : 0,
+              }}
+            />
           </div>
         </div>
       </div>

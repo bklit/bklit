@@ -84,7 +84,7 @@ export const Hero = () => {
           initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-          className="flex items-center justify-center"
+          className="flex items-center justify-center gap-2"
         >
           <Button
             variant="default"
