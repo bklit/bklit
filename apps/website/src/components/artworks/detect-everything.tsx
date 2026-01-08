@@ -459,7 +459,10 @@ export const DetectEverything = () => {
             style={{
               perspective: "2000px",
               transformStyle: "preserve-3d",
-              transform: window.innerWidth >= 640 ? "scale(1)" : "scale(0.7)",
+              transform:
+                typeof window !== "undefined" && window.innerWidth >= 640
+                  ? "scale(1)"
+                  : "scale(0.7)",
             }}
           >
             {["countries", "sessions", "browsers"].map((cardType) =>

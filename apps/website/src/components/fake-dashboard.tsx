@@ -407,6 +407,18 @@ export function FakeDashboard({
 }: {
   animationStarted?: boolean;
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="w-[1942px] h-[1283px] bg-background rounded-xl" />
+    );
+  }
+
   return (
     <div className="w-[1942px] h-[1283px] relative pointer-events-none border rounded-xl">
       {/* Header SVG */}
