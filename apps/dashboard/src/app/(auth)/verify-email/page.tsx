@@ -274,7 +274,10 @@ function VerifyEmailPage() {
                 return (
                   <>
                     Wait{" "}
-                    <NumberFlow className="tabular-nums" value={resendCooldown} />
+                    <NumberFlow
+                      className="tabular-nums"
+                      value={resendCooldown}
+                    />
                     s
                   </>
                 );

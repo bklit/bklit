@@ -38,7 +38,7 @@ function createCorsResponse(
 }
 
 // Handle OPTIONS requests for CORS preflight
-export async function OPTIONS() {
+export function OPTIONS() {
   return createCorsResponse({ message: "CORS preflight OK" }, 200);
 }
 
@@ -197,7 +197,9 @@ export async function POST(request: NextRequest) {
           let hash = 0;
           for (let i = 0; i < userAgent.length; i++) {
             const char = userAgent.charCodeAt(i);
+            // biome-ignore lint/suspicious/noBitwiseOperators: Intentional use for hash generation
             hash = (hash << 5) - hash + char;
+            // biome-ignore lint/suspicious/noBitwiseOperators: Intentional use for hash generation
             hash &= hash;
           }
           return Math.abs(hash).toString(36);
@@ -361,7 +363,9 @@ export async function POST(request: NextRequest) {
             console.error("Failed to fetch organization for Polar:", err);
           }
         })
-        .catch(() => {}); // Silently fail
+        .catch(() => {
+          // Silently fail - sending to Polar is non-critical
+        });
     }
 
     return createCorsResponse({ message: "Data received and stored" }, 200);

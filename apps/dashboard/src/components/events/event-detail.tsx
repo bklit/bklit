@@ -267,13 +267,18 @@ export function EventDetail({
             {
               icon: TrendingUp,
               name: "Conversion Rate",
-              stat:
-                isLoading || !event
-                  ? "..."
-                  : Number.isNaN(event.conversionRate) ||
-                      event.conversionRate === undefined
-                    ? 0
-                    : event.conversionRate,
+              stat: (() => {
+                if (isLoading || !event) {
+                  return "...";
+                }
+                if (
+                  Number.isNaN(event.conversionRate) ||
+                  event.conversionRate === undefined
+                ) {
+                  return 0;
+                }
+                return event.conversionRate;
+              })(),
               suffix: "%",
               ...(compare &&
                 prevEvent &&

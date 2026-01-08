@@ -215,7 +215,10 @@ export default function ForgotPasswordPage() {
               return (
                 <span className="flex items-center gap-1.5">
                   Wait{" "}
-                  <NumberFlow className="tabular-nums" value={cooldownSeconds} />
+                  <NumberFlow
+                    className="tabular-nums"
+                    value={cooldownSeconds}
+                  />
                   s
                 </span>
               );

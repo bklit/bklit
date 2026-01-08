@@ -20,6 +20,11 @@ import type {
   TopCountryResult,
 } from "@/types/geo";
 
+// Regex patterns for performance optimization
+const MOBILE_DEVICE_REGEX = /Mobile|Android|iPhone|iPad/;
+const USER_AGENT_MATCH_REGEX = /([a-z]+)\/(\d+)/;
+const WWW_PREFIX_REGEX = /^www\./;
+
 const getTopCountriesSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
@@ -513,7 +518,7 @@ export async function getCountryVisitorStats(
             const sessionPageviews = pageviewsBySession[s.session_id] || [];
             return (
               sessionPageviews.some((p) => p.mobile) ||
-              (s.user_agent && /Mobile|Android|iPhone|iPad/.test(s.user_agent))
+              (s.user_agent && MOBILE_DEVICE_REGEX.test(s.user_agent))
             );
           }).length;
 
@@ -521,7 +526,7 @@ export async function getCountryVisitorStats(
             const sessionPageviews = pageviewsBySession[s.session_id] || [];
             return (
               sessionPageviews.some((p) => p.mobile === false) ||
-              (s.user_agent && !/Mobile|Android|iPhone|iPad/.test(s.user_agent))
+              (s.user_agent && !MOBILE_DEVICE_REGEX.test(s.user_agent))
             );
           }).length;
 
@@ -656,7 +661,7 @@ export async function getUniqueVisitorsByCountry(
       );
 
       const visitorsData = await Promise.all(
-        Object.entries(sessionsByCountry).map(async ([country, count]) => {
+        Object.entries(sessionsByCountry).map(([country, count]) => {
           const samplePageView = pageviews.find(
             (p) => p.country === country && p.country_code
           );
@@ -686,7 +691,7 @@ export async function getUniqueVisitorsByCountry(
             );
             return (
               sessionPageviews.some((p) => p.mobile) ||
-              (s.user_agent && /Mobile|Android|iPhone|iPad/.test(s.user_agent))
+              (s.user_agent && MOBILE_DEVICE_REGEX.test(s.user_agent))
             );
           }).length;
           const desktopSessions = totalSessions - mobileSessions;
@@ -869,7 +874,9 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         let path = event.url;
         try {
           path = new URL(event.url).pathname;
-        } catch {}
+        } catch {
+          // Invalid URL, use the raw URL as path
+        }
         pathCounts[path] = (pathCounts[path] || 0) + 1;
       }
 
@@ -951,7 +958,7 @@ export async function getBrowserStats(
       // Parse user agents to extract browser information
       const browserStats: Record<string, number> = {};
 
-      pageViews.forEach((view) => {
+      for (const view of pageViews) {
         const userAgent = (view.user_agent || "").toLowerCase();
         let browser = "Unknown";
 
@@ -987,14 +994,14 @@ export async function getBrowserStats(
           browser = "Brave";
         } else if (userAgent.length > 0) {
           // If we have a user agent but couldn't identify it, try to extract a hint
-          const uaMatch = userAgent.match(/([a-z]+)\/(\d+)/);
+          const uaMatch = userAgent.match(USER_AGENT_MATCH_REGEX);
           if (uaMatch?.[1]) {
             browser = uaMatch[1].charAt(0).toUpperCase() + uaMatch[1].slice(1);
           }
         }
 
         browserStats[browser] = (browserStats[browser] || 0) + 1;
-      });
+      }
 
       // Convert to array format for easier consumption
       const browserData = Object.entries(browserStats)
@@ -1209,7 +1216,7 @@ export async function getTopReferrers(
         if (view.referrer) {
           try {
             const url = new URL(view.referrer);
-            referrer = url.hostname.replace(/^www\./, "");
+            referrer = url.hostname.replace(WWW_PREFIX_REGEX, "");
           } catch {
             referrer = view.referrer;
           }

@@ -222,7 +222,9 @@ export async function POST(request: NextRequest) {
             console.error("Failed to fetch organization for Polar:", err);
           }
         })
-        .catch(() => {}); // Silently fail
+        .catch(() => {
+          // Silently fail - sending to Polar is non-critical
+        });
     }
 
     // Deliver to extensions (fire-and-forget)

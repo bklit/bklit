@@ -135,13 +135,18 @@ export function BillingSnapshotCard({
       <CardHeader>
         <CardTitle>Usage</CardTitle>
         <CardDescription>
-          {daysRemaining !== null
-            ? daysRemaining === 0
-              ? "Cycle ends today"
-              : daysRemaining === 1
-                ? "1 day remaining in cycle"
-                : `${daysRemaining} days remaining in cycle`
-            : "Manage your subscription"}
+          {(() => {
+            if (daysRemaining === null) {
+              return "Manage your subscription";
+            }
+            if (daysRemaining === 0) {
+              return "Cycle ends today";
+            }
+            if (daysRemaining === 1) {
+              return "1 day remaining in cycle";
+            }
+            return `${daysRemaining} days remaining in cycle`;
+          })()}
         </CardDescription>
 
         {!hideViewBillingButton && (

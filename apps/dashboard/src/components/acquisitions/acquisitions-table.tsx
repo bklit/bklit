@@ -115,8 +115,8 @@ export function AcquisitionsTable({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton className="h-12 w-full" key={i} />
+            {Array.from({ length: 5 }).map((_, _i) => (
+              <Skeleton className="h-12 w-full" key={crypto.randomUUID()} />
             ))}
           </div>
         </CardContent>

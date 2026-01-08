@@ -100,9 +100,14 @@ export async function POST(req: Request) {
 }
 
 async function processWorkflowDeployment(
-  workflow_run: any,
-  repository: any,
-  prisma: any
+  workflow_run: {
+    id: number;
+    name: string;
+    conclusion: string;
+    html_url: string;
+  },
+  repository: { full_name: string },
+  prisma: typeof import("@bklit/db/client").prisma
 ) {
   try {
     console.log("[GITHUB WEBHOOK] Processing workflow deployment...");
@@ -202,10 +207,14 @@ async function processWorkflowDeployment(
 }
 
 async function processDeploymentStatus(
-  deployment: any,
-  deployment_status: any,
-  repository: any,
-  prisma: any
+  deployment: { id: number; environment: string },
+  deployment_status: {
+    state: string;
+    target_url?: string;
+    description?: string;
+  },
+  repository: { full_name: string },
+  prisma: typeof import("@bklit/db/client").prisma
 ) {
   try {
     console.log("[GITHUB WEBHOOK] Processing deployment status...");
