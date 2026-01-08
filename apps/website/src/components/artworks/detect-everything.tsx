@@ -455,14 +455,10 @@ export const DetectEverything = () => {
           onMouseLeave={handleMouseLeave}
         >
           <div
-            className="relative h-[400px] w-[400px]"
+            className="relative h-[400px] w-[400px] scale-80 sm:scale-95"
             style={{
               perspective: "2000px",
               transformStyle: "preserve-3d",
-              transform:
-                typeof window !== "undefined" && window.innerWidth >= 640
-                  ? "scale(1)"
-                  : "scale(0.7)",
             }}
           >
             {["countries", "sessions", "browsers"].map((cardType) =>
