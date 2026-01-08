@@ -64,13 +64,13 @@ export function AnimatedHeroVisual() {
           <img src="/Content.svg" alt="layout" />
         </motion.div>
         <motion.div
-          data-name="comp-content"
-          className="col-start-1 row-start-1 w-full h-auto aspect-1080/714 pt-[18px] pl-[340px] scale-150 origin-top-right text-[10px] text-muted-foreground"
+          data-name="comp-live-user"
+          className="col-start-1 row-start-1 w-full h-auto aspect-1080/714 scale-150 origin-top-right relative"
           initial={{
             opacity: 0,
             filter: "blur(10px)",
-            y: -10,
-            x: 290,
+            y: -60,
+            x: 300,
             rotateX: 40,
             rotateY: 20,
             rotateZ: 336,
@@ -86,17 +86,19 @@ export function AnimatedHeroVisual() {
           }}
           transition={{
             duration: 0.66,
-            delay: 2.6,
+            delay: 0.6,
             ease: "easeOut",
           }}
         >
-          <div className="flex items-center gap-2">
-            <div className="size-3 relative">
-              <div className="absolute top-0 left-0 size-3 rounded-full bg-red-400 animate-ping" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full bg-red-400" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-7 rounded-full bg-red-400 pointer-events-none blur-xl opacity-80" />
+          <div className="absolute top-[1.5%] left-[21.5%] text-[0.93cqw] text-muted-foreground">
+            <div className="flex items-center gap-[0.5em]">
+              <div className="size-2.5 relative">
+                <div className="absolute top-0 left-0 size-full rounded-full bg-red-400 animate-ping" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[66%] rounded-full bg-red-400" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[233%] rounded-full bg-red-400 pointer-events-none blur-xl opacity-80" />
+              </div>
+              <span className="text-[clamp(8px,0.68vw,11px)]">1 Live user</span>
             </div>
-            <span>1 Live user</span>
           </div>
         </motion.div>
 
