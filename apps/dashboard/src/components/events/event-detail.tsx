@@ -45,13 +45,13 @@ import Link from "next/link";
 import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { TimeSeriesChart } from "@/components/charts/time-series-chart";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageHeader } from "@/components/header/page-header";
 import { Stats } from "@/components/stats";
 import { getPreviousPeriod } from "@/lib/date-utils";
 import { calculateChange } from "@/lib/stats-utils";
 import { useTRPC } from "@/trpc/react";
-import { TimeSeriesChart } from "@/components/charts/time-series-chart";
 import { SessionEventsTable } from "./session-events-table";
 
 interface EventDetailProps {

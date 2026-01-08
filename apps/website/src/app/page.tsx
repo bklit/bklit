@@ -2,6 +2,7 @@ import { Button } from "@bklit/ui/components/button";
 import { cn } from "@bklit/ui/lib/utils";
 import { ArrowRight, Check } from "lucide-react";
 import type { Metadata } from "next";
+import { AnimateHeroNew } from "@/components/animate-hero-new";
 import { AnimatedGlobalStats } from "@/components/animated-global-stats";
 import { AnimatedHeroVisual } from "@/components/animated-hero-visual";
 import { DetectEverything } from "@/components/artworks/detect-everything";
@@ -27,17 +28,14 @@ export default function MarketingHomePage() {
   return (
     <>
       <PageHeader />
-      <Hero />
+      {/* <Hero /> */}
 
       <div className="flex flex-col space-y-16 sm:space-y-64">
         <div className={cn("relative w-full sm:min-h-[400px]")}>
           <div className="container mx-auto max-w-full sm:max-w-[1600px] px-4">
             <div className="grid grid-cols-1 grid-rows-1">
-              <div className="col-start-1 row-start-1">
-                <AnimatedHeroVisual />
-              </div>
-              <div className="col-start-1 row-start-1 flex items-center justify-center relative bg-linear-to-b from-transparent via-background/10 to-background" />
-              <div className="col-start-1 row-start-1 flex items-end justify-center relative">
+              <AnimateHeroNew />
+              <div className="container mx-auto max-w-6xl px-4">
                 <AnimatedGlobalStats />
               </div>
             </div>
