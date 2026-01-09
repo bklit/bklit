@@ -27,6 +27,9 @@ import { z } from "zod";
 import { FormPermissions } from "@/components/permissions/form-permissions";
 import { useTRPC } from "@/trpc/react";
 
+// Regex for parsing domain lists (comma or newline separated)
+const DOMAIN_SEPARATOR_REGEX = /[,\n]/;
+
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().max(500).nullable(),

@@ -75,7 +75,7 @@ export function FunnelSettingsSheet({
         return undefined;
       },
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       onSave({
         name: value.name.trim(),
         endDate: value.hasExpirationDate ? selectedDate || null : null,

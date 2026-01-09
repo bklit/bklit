@@ -109,7 +109,7 @@ export function StepConfigSheet({
     validators: {
       onSubmit: stepSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       if (value.type === "pageview") {
         onSave({
           type: "pageview",
@@ -303,7 +303,10 @@ export function StepConfigSheet({
                 {eventsLoading ? (
                   <div className="space-y-2">
                     {Array.from({ length: 3 }, (_, i) => (
-                      <Skeleton className="h-16 w-full" key={i} />
+                      <Skeleton
+                        className="h-16 w-full"
+                        key={crypto.randomUUID()}
+                      />
                     ))}
                   </div>
                 ) : !events || events.length === 0 ? (

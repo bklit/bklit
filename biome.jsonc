@@ -82,6 +82,40 @@
       "linter": {
         "enabled": false
       }
+    },
+    {
+      "includes": [
+        "**/pageviews-chart.tsx",
+        "**/pageviews-table.tsx",
+        "**/time-series-chart.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "warn",
+            "useAwait": "warn"
+          },
+          "performance": {
+            "useTopLevelRegex": "warn"
+          },
+          "style": {
+            "noExportedImports": "off"
+          },
+          "correctness": {
+            "noUnusedFunctionParameters": "warn"
+          }
+        }
+      }
     }
   ]
 }
