@@ -96,8 +96,8 @@ export function getMDXComponents(): MDXComponents {
         className="my-8 w-full rounded-lg"
         height={448}
         src={src || ""}
-        width={896}
         unoptimized
+        width={896}
         {...props}
       />
     ),

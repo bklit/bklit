@@ -6,14 +6,14 @@ import {
 import { Badge } from "@bklit/ui/components/badge";
 import { format } from "date-fns";
 import type { Metadata } from "next";
-import { MDXRemote } from "next-mdx-remote/rsc";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MDXRemote } from "next-mdx-remote/rsc";
 import { CopyLinkButton } from "@/components/copy-link-button";
-import { getMDXComponents } from "@/lib/mdx-components";
 import { SectionHeader } from "@/components/section-header";
 import { UpdatesMonthTicker } from "@/components/updates-month-ticker";
+import { getMDXComponents } from "@/lib/mdx-components";
 import { getAllUpdates } from "@/lib/updates";
 
 interface PageProps {
@@ -92,7 +92,7 @@ export default async function UpdatesPagePaginated(props: PageProps) {
                 : `${process.env.BKLIT_WEBSITE_URL}/updates/${update.slug}`;
 
             return (
-              <article key={update.slug} id={update.slug} className="space-y-6">
+              <article className="space-y-6" id={update.slug} key={update.slug}>
                 {/* Tags */}
                 <div className="flex flex-wrap items-center gap-2">
                   <time
@@ -127,8 +127,8 @@ export default async function UpdatesPagePaginated(props: PageProps) {
                 {/* Content */}
                 <div className="prose prose-neutral dark:prose-invert max-w-none">
                   <MDXRemote
-                    source={update.content}
                     components={getMDXComponents()}
+                    source={update.content}
                   />
                 </div>
 

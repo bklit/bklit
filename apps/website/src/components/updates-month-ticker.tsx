@@ -108,16 +108,16 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
   return (
     <>
       {/* Invisible ref element to track header */}
-      <div ref={headerRef} className="absolute top-0 left-0 h-[100px] w-full" />
+      <div className="absolute top-0 left-0 h-[100px] w-full" ref={headerRef} />
 
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            key="updates-ticker"
-            className="-translate-x-1/2 fixed bottom-4 left-1/2 z-50"
-            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
             exit={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 20 }}
+            key="updates-ticker"
             transition={{
               duration: 0.31,
               ease: [0, 0.667, 0.463, 1.005],
@@ -125,32 +125,41 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
           >
             <div className="relative overflow-clip rounded-full border bg-background/10 py-2 shadow-lg backdrop-blur-sm">
               <div className="relative h-4 w-[160px] overflow-hidden">
-                <AnimatePresence mode="popLayout" initial={false}>
+                <AnimatePresence initial={false} mode="popLayout">
                   {monthsToRender.map((month) => (
                     <motion.span
-                      key={month.id}
-                      layout
-                      initial={{
-                        x: getPosition(month.offset),
-                        opacity: 0,
-                      }}
                       animate={{
                         x: getPosition(month.offset),
                         opacity: 1,
                       }}
-                      exit={{
-                        x: getPosition(month.offset > 0 ? 3 : -3),
-                        opacity: 0,
-                      }}
-                      className={`-translate-x-1/2 absolute left-1/2 whitespace-nowrap text-xs ${
+                      className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs ${
                         month.offset === 0
                           ? "font-semibold text-foreground"
                           : "text-muted-foreground"
                       }`}
+                      exit={{
+                        x: getPosition(month.offset > 0 ? 3 : -3),
+                        opacity: 0,
+                      }}
+                      initial={{
+                        x: getPosition(month.offset),
+                        opacity: 0,
+                      }}
+                      key={month.id}
+                      layout="position"
                       transition={{
-                        type: "spring",
-                        visualDuration: 0.4,
-                        bounce: 0.2,
+                        x: {
+                          duration: 1.5,
+                          ease: [0, 0.667, 0.138, 1],
+                        },
+                        opacity: {
+                          duration: 0.3,
+                          ease: "easeInOut",
+                        },
+                        layout: {
+                          duration: 0.5,
+                          ease: [0, 0.667, 0.138, 1],
+                        },
                       }}
                     >
                       {month.label}

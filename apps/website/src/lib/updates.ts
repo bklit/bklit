@@ -59,4 +59,3 @@ export function getUpdateBySlug(slug: string): Update | null {
     return null;
   }
 }
-

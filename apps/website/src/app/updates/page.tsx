@@ -81,8 +81,8 @@ export default function UpdatesPage() {
                     className="w-full rounded-lg"
                     height={448}
                     src={update.frontmatter.image}
-                    width={896}
                     unoptimized
+                    width={896}
                   />
                 )}
 
