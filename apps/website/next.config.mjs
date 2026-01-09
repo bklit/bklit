@@ -1,3 +1,4 @@
+import { createMDX } from "fumadocs-mdx/next";
 import { createJiti } from "jiti";
 
 const jiti = createJiti(import.meta.url);
@@ -14,4 +15,6 @@ const config = {
   typescript: { ignoreBuildErrors: true },
 };
 
-export default config;
+const withMDX = createMDX();
+
+export default withMDX(config);

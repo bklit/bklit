@@ -97,6 +97,19 @@ export const Footer = () => {
                   </span>
                 </Link>
               </li>
+              <li>
+                <Link
+                  className="group relative flex items-center gap-2 transition-all duration-200 hover:text-foreground"
+                  href="/updates"
+                >
+                  <span className="absolute left-0 text-lime-200 opacity-0 transition group-hover:opacity-100">
+                    ◑
+                  </span>
+                  <span className="transition-all duration-200 group-hover:translate-x-[20px]">
+                    Updates
+                  </span>
+                </Link>
+              </li>
             </ul>
           </div>
           <div className="col-span-1 space-y-4">

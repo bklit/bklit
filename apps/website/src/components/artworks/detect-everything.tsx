@@ -496,7 +496,7 @@ export const DetectEverything = () => {
                 rotate: isHovering ? 0 : 360,
                 opacity: isHovering ? 0 : 1,
               }}
-              className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 size-8"
+              className="absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2"
               style={{
                 background:
                   "conic-gradient(from 0deg, transparent, var(--bklit-400) 360deg, transparent 360deg)",

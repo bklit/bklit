@@ -50,7 +50,7 @@ export const TopCountriesDemo = () => {
   return (
     <div className="relative flex h-full w-full items-center justify-center p-16">
       <div className="perspective-[2000px] grid grid-cols-1 grid-rows-1">
-        <div className="-translate-x-10 hover:-translate-y-5 col-start-1 row-start-1 translate-y-0 rotate-x-0 rotate-y-0 transition-all duration-300 ease-in-out hover:z-2">
+        <div className="col-start-1 row-start-1 -translate-x-10 translate-y-0 rotate-x-0 rotate-y-0 transition-all duration-300 ease-in-out hover:z-2 hover:-translate-y-5">
           <Card className="min-w-[460px] shadow-0 hover:shadow-2xl">
             <CardHeader>
               <CardTitle>Top Countries</CardTitle>

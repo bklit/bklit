@@ -143,7 +143,7 @@ export function NotificationsPopover() {
               <Bell size={14} />
               {hasNotifications && (
                 <span
-                  className="-top-1.5 -right-1.5 absolute block size-3 rounded-full bg-primary text-[10px] text-white"
+                  className="absolute -top-1.5 -right-1.5 block size-3 rounded-full bg-primary text-[10px] text-white"
                   data-count={invitations.length}
                 />
               )}
@@ -236,7 +236,7 @@ export function NotificationsPopover() {
             <Bell size={14} />
             {hasNotifications && (
               <span
-                className="-top-1.5 -right-1.5 absolute block size-3 rounded-full bg-primary text-[10px] text-white"
+                className="absolute -top-1.5 -right-1.5 block size-3 rounded-full bg-primary text-[10px] text-white"
                 data-count={invitations.length}
               />
             )}
