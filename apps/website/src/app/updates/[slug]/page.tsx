@@ -117,6 +117,7 @@ export default async function UpdatePage(props: PageProps) {
               priority
               src={update.frontmatter.image}
               width={896}
+              unoptimized
             />
           )}
 

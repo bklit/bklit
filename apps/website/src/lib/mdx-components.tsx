@@ -93,10 +93,11 @@ export function getMDXComponents(): MDXComponents {
     img: ({ src, alt, ...props }) => (
       <Image
         alt={alt || ""}
-        className="my-8"
-        height={400}
+        className="my-8 w-full rounded-lg"
+        height={448}
         src={src || ""}
-        width={800}
+        width={896}
+        unoptimized
         {...props}
       />
     ),

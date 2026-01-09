@@ -13,13 +13,14 @@ import { notFound } from "next/navigation";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { getMDXComponents } from "@/lib/mdx-components";
 import { SectionHeader } from "@/components/section-header";
+import { UpdatesMonthTicker } from "@/components/updates-month-ticker";
 import { getAllUpdates } from "@/lib/updates";
 
 interface PageProps {
   params: Promise<{ page: string }>;
 }
 
-const UPDATES_PER_PAGE = 30;
+const UPDATES_PER_PAGE = 2;
 
 export async function generateStaticParams() {
   const allUpdates = getAllUpdates();
@@ -66,6 +67,12 @@ export default async function UpdatesPagePaginated(props: PageProps) {
 
   return (
     <main className="flex min-h-screen w-full flex-col gap-32">
+      <UpdatesMonthTicker
+        updates={updates.map((u) => ({
+          slug: u.slug,
+          date: u.frontmatter.date,
+        }))}
+      />
       <div className="container mx-auto flex max-w-4xl flex-col space-y-12 px-4 py-48">
         <SectionHeader
           description="Recent updates, releases and events."

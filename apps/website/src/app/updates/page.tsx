@@ -10,6 +10,7 @@ import Link from "next/link";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { SectionHeader } from "@/components/section-header";
+import { UpdatesMonthTicker } from "@/components/updates-month-ticker";
 import { getMDXComponents } from "@/lib/mdx-components";
 import { getAllUpdates } from "@/lib/updates";
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     "Stay up to date with the latest features, improvements, and updates to Bklit Analytics.",
 };
 
-const UPDATES_PER_PAGE = 2;
+const UPDATES_PER_PAGE = 30;
 
 export default function UpdatesPage() {
   const allUpdates = getAllUpdates();
@@ -28,6 +29,12 @@ export default function UpdatesPage() {
 
   return (
     <main className="flex min-h-screen w-full flex-col gap-32">
+      <UpdatesMonthTicker
+        updates={updates.map((u) => ({
+          slug: u.slug,
+          date: u.frontmatter.date,
+        }))}
+      />
       <div className="container mx-auto flex max-w-3xl flex-col space-y-12 px-4 py-48">
         <SectionHeader
           description="Recent updates, releases and events."
@@ -71,10 +78,11 @@ export default function UpdatesPage() {
                 {update.frontmatter.image && (
                   <Image
                     alt={update.frontmatter.title}
-                    className="w-full"
+                    className="w-full rounded-lg"
                     height={448}
                     src={update.frontmatter.image}
                     width={896}
+                    unoptimized
                   />
                 )}
 

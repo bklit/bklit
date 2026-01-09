@@ -1,0 +1,32 @@
+---
+title: "Migrated to Self-Hosted ClickHouse"
+date: "2025-03-15T00:00:00.000Z"
+author: "uixmat"
+tags: ["engineering"]
+image: "/updates/clickhouse.png"
+---
+
+I've migrated Bklit's analytics database from ClickHouse Cloud to a self-hosted ClickHouse instance on Hetzner. This change cuts infrastructure costs by over 75% while maintaining the same performance.
+
+## Why Self-Host?
+
+ClickHouse Cloud was costing $355/month for the scale we need. By moving to a dedicated Hetzner server (CCX33: 8 vCPU, 32GB RAM), the cost dropped to $76/month. Same performance, significantly lower cost.
+
+## Migration Process
+
+The migration involved:
+
+1. Setting up a new ClickHouse instance on Hetzner
+2. Exporting data from ClickHouse Cloud
+3. Importing into the new server
+4. Updating connection strings
+5. Testing all queries and dashboards
+
+Zero downtime during the transition. The entire process took about 3 hours.
+
+## Performance
+
+Query performance is actually slightly better on the dedicated server since we're not sharing resources with other tenants. Real-time analytics queries respond in under 100ms, and complex funnel analyses complete in under 500ms.
+
+The self-hosted setup also gives us more control over configuration, backup strategies, and scaling as needed.
+

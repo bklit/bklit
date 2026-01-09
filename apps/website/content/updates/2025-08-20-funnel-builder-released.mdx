@@ -1,0 +1,30 @@
+---
+title: "Visual Funnel Builder Released"
+date: "2024-11-05T00:00:00.000Z"
+author: "uixmat"
+tags: ["engineering", "update"]
+image: "/updates/funnel-builder.png"
+---
+
+I've just shipped the visual funnel builder—one of the most requested features. You can now create conversion funnels with a drag-and-drop interface powered by ReactFlow.
+
+## How It Works
+
+The funnel builder lets you:
+
+- Drag nodes to create funnel steps
+- Mix pageview and custom event steps
+- See drop-off rates between each step
+- Track conversion rates through the entire flow
+- Set time limits for campaign tracking
+
+## Why This Matters
+
+Understanding where users drop off in your conversion flow is critical. With the funnel builder, you can quickly identify friction points—whether it's a checkout process, onboarding flow, or feature adoption sequence.
+
+## Technical Implementation
+
+The builder uses ReactFlow for the visual interface, with funnels stored in PostgreSQL and analytics queries running against ClickHouse. When you view a funnel, Bklit calculates conversion rates in real-time based on your selected date range.
+
+All funnel data respects your project permissions, so team members only see funnels for projects they have access to.
+
