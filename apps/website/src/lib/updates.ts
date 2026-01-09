@@ -16,6 +16,8 @@ export interface Update {
   content: string;
 }
 
+export type { Update as default };
+
 const updatesDirectory = path.join(process.cwd(), "content/updates");
 
 export function getAllUpdates(): Update[] {
