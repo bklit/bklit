@@ -1,6 +1,7 @@
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import Link from "next/link";
+import { Mention } from "@/components/mention";
 
 export function getMDXComponents(): MDXComponents {
   return {
@@ -14,7 +15,7 @@ export function getMDXComponents(): MDXComponents {
     ),
     h2: ({ children, ...props }) => (
       <h2
-        className="mt-8 mb-4 scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0"
+        className="mt-8 mb-4 scroll-m-20 pb-2 font-semibold text-3xl tracking-tight first:mt-0"
         {...props}
       >
         {children}
@@ -92,7 +93,7 @@ export function getMDXComponents(): MDXComponents {
     img: ({ src, alt, ...props }) => (
       <Image
         alt={alt || ""}
-        className="my-8 rounded-lg"
+        className="my-8"
         height={400}
         src={src || ""}
         width={800}
@@ -142,5 +143,6 @@ export function getMDXComponents(): MDXComponents {
         {children}
       </td>
     ),
+    Mention,
   };
 }

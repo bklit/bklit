@@ -1,127 +1,157 @@
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@bklit/ui/components/avatar";
 import { Badge } from "@bklit/ui/components/badge";
+import { Button } from "@bklit/ui/components/button";
+import { format } from "date-fns";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import { CopyLinkButton } from "@/components/copy-link-button";
+import { SectionHeader } from "@/components/section-header";
 import { getMDXComponents } from "@/lib/mdx-components";
-import { updatesSource } from "@/lib/updates-source";
+import { getAllUpdates, getUpdateBySlug } from "@/lib/updates";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return updatesSource.getPages().map((page) => ({
-    slug: page.slugs.join("/"),
+  const updates = getAllUpdates();
+  return updates.map((update) => ({
+    slug: update.slug,
   }));
 }
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params;
-  const page = updatesSource.getPage([params.slug]);
+  const update = getUpdateBySlug(params.slug);
 
-  if (!page) {
+  if (!update) {
     return {
       title: "Update Not Found",
     };
   }
 
   return {
-    title: `${page.data.title} - Bklit Analytics`,
-    description: page.data.title,
+    title: `${update.frontmatter.title} - Bklit Analytics`,
+    description: update.frontmatter.title,
     openGraph: {
-      title: page.data.title,
-      description: page.data.title,
-      images: page.data.image ? [page.data.image] : [],
+      title: update.frontmatter.title,
+      description: update.frontmatter.title,
+      images: update.frontmatter.image ? [update.frontmatter.image] : [],
     },
   };
 }
 
 export default async function UpdatePage(props: PageProps) {
   const params = await props.params;
-  const page = updatesSource.getPage([params.slug]);
+  const update = getUpdateBySlug(params.slug);
 
-  if (!page) {
+  if (!update) {
     notFound();
   }
 
-  const MDX = page.data.body;
-  const date = new Date(page.data.date);
-  const formattedDate = date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = format(
+    new Date(update.frontmatter.date),
+    "MMMM d, yyyy"
+  );
+  const updateUrl =
+    process.env.NODE_ENV === "development"
+      ? `http://localhost:3001/updates/${update.slug}`
+      : `${process.env.BKLIT_WEBSITE_URL}/updates/${update.slug}`;
 
   return (
-    <div className="min-h-screen">
-      {/* Breadcrumb */}
-      <div className="border-b">
-        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Link
-              className="transition-colors hover:text-foreground"
-              href="/updates"
+    <main className="flex min-h-screen w-full flex-col gap-32">
+      <article className="container mx-auto flex max-w-3xl flex-col space-y-12 px-4 py-48">
+        <SectionHeader
+          // description={formattedDate}
+          title={update.frontmatter.title}
+        >
+          {(update.frontmatter.tags || ["update"]).map((tag) => (
+            <Badge
+              className="capitalize"
+              key={tag}
+              size="default"
+              variant="secondary"
             >
-              Updates
-            </Link>
-            <span>/</span>
-            <span className="text-foreground">{page.data.title}</span>
-          </nav>
-        </div>
-      </div>
+              {tag}
+            </Badge>
+          ))}
+          <div className="flex items-center gap-2">
+            <Avatar className="size-6">
+              <AvatarImage
+                alt={update.frontmatter.author}
+                src={`https://github.com/${update.frontmatter.author}.png`}
+              />
+              <AvatarFallback>
+                {update.frontmatter.author[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
-      {/* Article Header */}
-      <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <header className="mb-8">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground text-sm">
+              {update.frontmatter.author}
+            </span>
+          </div>
+        </SectionHeader>
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
             <time
               className="text-muted-foreground text-sm"
-              dateTime={page.data.date}
+              dateTime={update.frontmatter.date}
             >
               {formattedDate}
             </time>
-            {page.data.tags.map((tag) => (
-              <Badge key={tag} size="default" variant="secondary">
-                {tag}
-              </Badge>
-            ))}
           </div>
-          <h1 className="mb-4 font-bold text-4xl tracking-tight lg:text-5xl">
-            {page.data.title}
-          </h1>
-          <p className="text-muted-foreground">by {page.data.author}</p>
-        </header>
 
-        {/* Featured Image */}
-        {page.data.image && (
-          <div className="mb-8">
+          {/* Image */}
+          {update.frontmatter.image && (
             <Image
-              alt={page.data.title}
+              alt={update.frontmatter.title}
               className="w-full rounded-lg"
               height={448}
               priority
-              src={page.data.image}
+              src={update.frontmatter.image}
               width={896}
             />
+          )}
+
+          {/* Content */}
+          <div className="prose prose-neutral dark:prose-invert max-w-none">
+            <MDXRemote
+              components={getMDXComponents()}
+              source={update.content}
+            />
           </div>
-        )}
 
-        {/* MDX Content */}
-        <div className="prose prose-neutral dark:prose-invert max-w-none">
-          <MDX components={getMDXComponents()} />
+          {/* Footer: Avatar + Author + Copy Link */}
+          <div className="flex items-center justify-between border-t pt-4">
+            <div className="flex items-center gap-2">
+              <Avatar className="size-6">
+                <AvatarImage
+                  alt={update.frontmatter.author}
+                  src={`https://github.com/${update.frontmatter.author}.png`}
+                />
+                <AvatarFallback>
+                  {update.frontmatter.author[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-muted-foreground text-sm">
+                {update.frontmatter.author}
+              </span>
+            </div>
+            <CopyLinkButton url={updateUrl} />
+          </div>
+
+          <Button asChild variant="outline">
+            <Link href="/updates">More updates</Link>
+          </Button>
         </div>
-
-        {/* Footer */}
-        <footer className="mt-12 border-t pt-8">
-          <Link
-            className="inline-flex items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
-            href="/updates"
-          >
-            ← Back to all updates
-          </Link>
-        </footer>
       </article>
-    </div>
+    </main>
   );
 }

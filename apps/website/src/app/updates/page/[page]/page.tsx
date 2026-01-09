@@ -1,16 +1,19 @@
-import { Badge } from "@bklit/ui/components/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@bklit/ui/components/card";
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@bklit/ui/components/avatar";
+import { Badge } from "@bklit/ui/components/badge";
+import { format } from "date-fns";
 import type { Metadata } from "next";
+import { MDXRemote } from "next-mdx-remote/rsc";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { updatesSource } from "@/lib/updates-source";
+import { CopyLinkButton } from "@/components/copy-link-button";
+import { getMDXComponents } from "@/lib/mdx-components";
+import { SectionHeader } from "@/components/section-header";
+import { getAllUpdates } from "@/lib/updates";
 
 interface PageProps {
   params: Promise<{ page: string }>;
@@ -19,7 +22,7 @@ interface PageProps {
 const UPDATES_PER_PAGE = 30;
 
 export async function generateStaticParams() {
-  const allUpdates = updatesSource.getPages();
+  const allUpdates = getAllUpdates();
   const totalPages = Math.ceil(allUpdates.length / UPDATES_PER_PAGE);
 
   return Array.from({ length: totalPages }, (_, i) => ({
@@ -46,16 +49,8 @@ export default async function UpdatesPagePaginated(props: PageProps) {
     notFound();
   }
 
-  const allUpdates = updatesSource.getPages();
-
-  // Sort updates by date (newest first)
-  const sortedUpdates = allUpdates.sort((a, b) => {
-    const dateA = new Date(a.data.date).getTime();
-    const dateB = new Date(b.data.date).getTime();
-    return dateB - dateA;
-  });
-
-  const totalPages = Math.ceil(sortedUpdates.length / UPDATES_PER_PAGE);
+  const allUpdates = getAllUpdates();
+  const totalPages = Math.ceil(allUpdates.length / UPDATES_PER_PAGE);
 
   if (pageNum > totalPages) {
     notFound();
@@ -64,80 +59,91 @@ export default async function UpdatesPagePaginated(props: PageProps) {
   // Calculate pagination
   const startIndex = (pageNum - 1) * UPDATES_PER_PAGE;
   const endIndex = startIndex + UPDATES_PER_PAGE;
-  const updates = sortedUpdates.slice(startIndex, endIndex);
+  const updates = allUpdates.slice(startIndex, endIndex);
 
   const hasNewer = pageNum > 1;
   const hasOlder = pageNum < totalPages;
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="border-b">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h1 className="font-bold text-4xl tracking-tight lg:text-5xl">
-            Updates & Changelog
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Stay up to date with the latest features, improvements, and updates
-            to Bklit Analytics. (Page {pageNum} of {totalPages})
-          </p>
-        </div>
-      </div>
+    <main className="flex min-h-screen w-full flex-col gap-32">
+      <div className="container mx-auto flex max-w-4xl flex-col space-y-12 px-4 py-48">
+        <SectionHeader
+          description="Recent updates, releases and events."
+          title="Updates"
+        />
 
-      {/* Updates List */}
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-6">
+        {/* Updates List */}
+        <div className="space-y-16">
           {updates.map((update) => {
-            const date = new Date(update.data.date);
-            const formattedDate = date.toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            });
+            const formattedDate = format(
+              new Date(update.frontmatter.date),
+              "MMMM d, yyyy"
+            );
+            const updateUrl =
+              process.env.NODE_ENV === "development"
+                ? `http://localhost:3001/updates/${update.slug}`
+                : `${process.env.BKLIT_WEBSITE_URL}/updates/${update.slug}`;
 
             return (
-              <Link
-                className="group transition-transform hover:scale-[1.01]"
-                href={update.url}
-                key={update.url}
-              >
-                <Card>
-                  <CardHeader>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <time
-                          className="text-muted-foreground text-sm"
-                          dateTime={update.data.date}
-                        >
-                          {formattedDate}
-                        </time>
-                        {update.data.tags.map((tag) => (
-                          <Badge key={tag} size="default" variant="secondary">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <CardTitle className="transition-colors group-hover:text-primary">
-                        {update.data.title}
-                      </CardTitle>
-                      <CardDescription>
-                        by {update.data.author}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                  {update.data.image && (
-                    <CardContent>
-                      <Image
-                        alt={update.data.title}
-                        className="rounded-lg"
-                        height={400}
-                        src={update.data.image}
-                        width={800}
+              <article key={update.slug} id={update.slug} className="space-y-6">
+                {/* Tags */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <time
+                    className="text-muted-foreground text-sm"
+                    dateTime={update.frontmatter.date}
+                  >
+                    {formattedDate}
+                  </time>
+                  {(update.frontmatter.tags || ["update"]).map((tag) => (
+                    <Badge key={tag} size="default" variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+
+                {/* Title */}
+                <h2 className="font-bold text-3xl tracking-tight">
+                  {update.frontmatter.title}
+                </h2>
+
+                {/* Image */}
+                {update.frontmatter.image && (
+                  <Image
+                    alt={update.frontmatter.title}
+                    className="w-full rounded-lg"
+                    height={448}
+                    src={update.frontmatter.image}
+                    width={896}
+                  />
+                )}
+
+                {/* Content */}
+                <div className="prose prose-neutral dark:prose-invert max-w-none">
+                  <MDXRemote
+                    source={update.content}
+                    components={getMDXComponents()}
+                  />
+                </div>
+
+                {/* Footer: Avatar + Author + Copy Link */}
+                <div className="flex items-center justify-between border-t pt-4">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="size-6">
+                      <AvatarImage
+                        alt={update.frontmatter.author}
+                        src={`https://github.com/${update.frontmatter.author}.png`}
                       />
-                    </CardContent>
-                  )}
-                </Card>
-              </Link>
+                      <AvatarFallback>
+                        {update.frontmatter.author[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-muted-foreground text-sm">
+                      {update.frontmatter.author}
+                    </span>
+                  </div>
+                  <CopyLinkButton url={updateUrl} />
+                </div>
+              </article>
             );
           })}
         </div>
@@ -162,6 +168,6 @@ export default async function UpdatesPagePaginated(props: PageProps) {
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -5,13 +5,12 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "fumadocs-mdx:collections/*": ["./.source/*"]
+      "@/*": ["./src/*"]
     },
     "plugins": [{ "name": "next" }],
     "module": "esnext",
     "strictNullChecks": true
   },
-  "include": [".", ".next/types/**/*.ts", ".source/**/*.ts"],
+  "include": [".", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

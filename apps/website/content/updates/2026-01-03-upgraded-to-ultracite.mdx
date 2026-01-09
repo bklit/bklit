@@ -1,0 +1,21 @@
+---
+title: "Upgraded from Biome to Ultracite"
+date: "2026-01-03T00:00:00.000Z"
+author: "uixmat"
+tags: ["engineering"]
+---
+
+I've upgraded Bklit's linting and formatting tooling from Biome to <Mention url="https://ultracite.dev" github="haydenbleasel">Ultracite</Mention>, a newer tool built on top of Biome that adds some helpful features for monorepo projects.
+
+## What Changed?
+
+Ultracite wraps Biome and adds features specifically designed for monorepos like Bklit. It provides better workspace-aware linting, improved configuration merging, and smarter handling of shared configs across packages.
+
+The upgrade was straightforward—I replaced `@biomejs/biome` with `ultracite` in the package.json and updated the lint scripts. All the existing Biome rules and configurations continue to work since Ultracite is built on top of Biome.
+
+## Why Ultracite?
+
+Biome is excellent, but Ultracite adds the missing pieces for monorepo workflows. Since Bklit uses a Turborepo monorepo with 10+ packages, having tooling that understands workspace relationships makes maintenance easier.
+
+The performance is identical to Biome (it's using Biome under the hood), so there's no speed regression. It's purely additive improvements.
+

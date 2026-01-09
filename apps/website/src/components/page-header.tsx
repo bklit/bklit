@@ -37,6 +37,11 @@ export const PageHeader = () => {
               </li>
               <li>
                 <Button asChild variant="ghost">
+                  <Link href="/updates">Updates</Link>
+                </Button>
+              </li>
+              <li>
+                <Button asChild variant="ghost">
                   <a
                     href="https://docs.bklit.com"
                     rel="noopener noreferrer"
