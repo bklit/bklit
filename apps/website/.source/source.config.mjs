@@ -1,7 +1,17 @@
 // source.config.ts
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
+import { z } from "zod";
 var updates = defineDocs({
-  dir: "content/updates"
+  dir: "content/updates",
+  schema: {
+    frontmatter: z.object({
+      title: z.string(),
+      date: z.string(),
+      author: z.string(),
+      image: z.string().optional(),
+      tags: z.array(z.string()).default(["update"])
+    })
+  }
 });
 var source_config_default = defineConfig({
   mdxOptions: {

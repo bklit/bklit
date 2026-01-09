@@ -24,8 +24,8 @@ export default async function UpdatesPage() {
 
   // Sort updates by date (newest first)
   const sortedUpdates = allUpdates.sort((a, b) => {
-    const dateA = new Date(a.data.date as string).getTime();
-    const dateB = new Date(b.data.date as string).getTime();
+    const dateA = new Date(a.data.date).getTime();
+    const dateB = new Date(b.data.date).getTime();
     return dateB - dateA;
   });
 
@@ -52,7 +52,7 @@ export default async function UpdatesPage() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-6">
           {updates.map((update) => {
-            const date = new Date(update.data.date as string);
+            const date = new Date(update.data.date);
             const formattedDate = date.toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
@@ -71,26 +71,20 @@ export default async function UpdatesPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <time
                           className="text-muted-foreground text-sm"
-                          dateTime={update.data.date as string}
+                          dateTime={update.data.date}
                         >
                           {formattedDate}
                         </time>
-                        {update.data.tags &&
-                          Array.isArray(update.data.tags) &&
-                          update.data.tags.map((tag) => (
-                            <Badge key={tag} size="default" variant="secondary">
-                              {tag}
-                            </Badge>
-                          ))}
+                        {update.data.tags.map((tag) => (
+                          <Badge key={tag} size="default" variant="secondary">
+                            {tag}
+                          </Badge>
+                        ))}
                       </div>
                       <CardTitle className="transition-colors group-hover:text-primary">
                         {update.data.title}
                       </CardTitle>
-                      {update.data.author && (
-                        <CardDescription>
-                          by {update.data.author}
-                        </CardDescription>
-                      )}
+                      <CardDescription>by {update.data.author}</CardDescription>
                     </div>
                   </CardHeader>
                   {update.data.image && (
@@ -99,7 +93,7 @@ export default async function UpdatesPage() {
                         alt={update.data.title}
                         className="rounded-lg"
                         height={400}
-                        src={update.data.image as string}
+                        src={update.data.image}
                         width={800}
                       />
                     </CardContent>

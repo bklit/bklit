@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/footer";
-import { PageHeader } from "@/components/page-header";
 import { SectionHeader } from "@/components/section-header";
 
 export const metadata: Metadata = {
@@ -11,7 +9,6 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <main className="flex min-h-screen w-full flex-col gap-32">
-      <PageHeader />
       <div className="container mx-auto flex max-w-6xl flex-col space-y-12 px-4 py-48">
         <SectionHeader
           description="Terms of Use for Bklit analytics platform"
@@ -166,7 +163,6 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }

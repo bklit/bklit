@@ -28,11 +28,11 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
   return {
     title: `${page.data.title} - Bklit Analytics`,
-    description: page.data.description || page.data.title,
+    description: page.data.title,
     openGraph: {
       title: page.data.title,
-      description: page.data.description || page.data.title,
-      images: page.data.image ? [page.data.image as string] : [],
+      description: page.data.title,
+      images: page.data.image ? [page.data.image] : [],
     },
   };
 }
@@ -46,7 +46,7 @@ export default async function UpdatePage(props: PageProps) {
   }
 
   const MDX = page.data.body;
-  const date = new Date(page.data.date as string);
+  const date = new Date(page.data.date);
   const formattedDate = date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -77,24 +77,20 @@ export default async function UpdatePage(props: PageProps) {
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <time
               className="text-muted-foreground text-sm"
-              dateTime={page.data.date as string}
+              dateTime={page.data.date}
             >
               {formattedDate}
             </time>
-            {page.data.tags &&
-              Array.isArray(page.data.tags) &&
-              page.data.tags.map((tag) => (
-                <Badge key={tag} size="default" variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
+            {page.data.tags.map((tag) => (
+              <Badge key={tag} size="default" variant="secondary">
+                {tag}
+              </Badge>
+            ))}
           </div>
           <h1 className="mb-4 font-bold text-4xl tracking-tight lg:text-5xl">
             {page.data.title}
           </h1>
-          {page.data.author && (
-            <p className="text-muted-foreground">by {page.data.author}</p>
-          )}
+          <p className="text-muted-foreground">by {page.data.author}</p>
         </header>
 
         {/* Featured Image */}
@@ -105,7 +101,7 @@ export default async function UpdatePage(props: PageProps) {
               className="w-full rounded-lg"
               height={448}
               priority
-              src={page.data.image as string}
+              src={page.data.image}
               width={896}
             />
           </div>
