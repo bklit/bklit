@@ -79,8 +79,8 @@ export function LiveStatsCard({
         {isLoading ? (
           <div className="flex flex-col gap-3">
             <Skeleton className="h-4 w-24" />
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton className="h-10 w-full" key={i} />
+            {Array.from({ length: 3 }).map(() => (
+              <Skeleton className="h-10 w-full" key={crypto.randomUUID()} />
             ))}
           </div>
         ) : (

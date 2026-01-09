@@ -400,9 +400,13 @@ export function EventSheet({
               >
                 {(() => {
                   if (mode === "create") {
-                    return createMutation.isPending ? "Creating..." : "Create Event";
+                    return createMutation.isPending
+                      ? "Creating..."
+                      : "Create Event";
                   }
-                  return updateMutation.isPending ? "Saving..." : "Save Changes";
+                  return updateMutation.isPending
+                    ? "Saving..."
+                    : "Save Changes";
                 })()}
               </Button>
             </div>

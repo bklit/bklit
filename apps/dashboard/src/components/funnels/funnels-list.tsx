@@ -118,8 +118,8 @@ export function FunnelsList({
         </CardHeader>
         <CardContent>
           <ItemGroup>
-            {Array.from({ length: 5 }, (_, i) => (
-              <Item key={i}>
+            {Array.from({ length: 5 }).map(() => (
+              <Item key={crypto.randomUUID()}>
                 <ItemContent>
                   <Skeleton className="h-4 w-48" />
                   <Skeleton className="mt-2 h-3 w-64" />

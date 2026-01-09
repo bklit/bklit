@@ -50,15 +50,29 @@
   "linter": {
     "rules": {
       "performance": {
-        "noBarrelFile": "off"
+        "noBarrelFile": "off",
+        "noNamespaceImport": "warn"
       },
       "style": {
         "noEnum": "off",
-        "useBlockStatements": "warn"
+        "useBlockStatements": "warn",
+        "noNonNullAssertion": "warn",
+        "noNestedTernary": "warn"
       },
       "complexity": {
         "noExcessiveCognitiveComplexity": "warn",
-        "noForEach": "warn"
+        "noForEach": "warn",
+        "noVoid": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "warn"
+      },
+      "suspicious": {
+        "noEvolvingTypes": "warn"
+      },
+      "correctness": {
+        "useHookAtTopLevel": "error",
+        "noNestedComponentDefinitions": "error"
       }
     }
   },
