@@ -235,3 +235,15 @@
     @apply list-disc pl-4 space-y-2;
   }
 }
+
+.article {
+  @apply text-muted-foreground;
+
+  & h2 {
+    @apply text-card-foreground;
+  }
+
+  & h3 {
+    @apply text-card-foreground;
+  }
+}

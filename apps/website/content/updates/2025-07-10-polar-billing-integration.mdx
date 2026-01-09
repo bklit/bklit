@@ -1,0 +1,29 @@
+---
+title: "Billing Integration with Polar.sh"
+date: "2025-01-10T00:00:00.000Z"
+author: "uixmat"
+tags: ["update"]
+image: "/updates/polar.png"
+---
+
+I've integrated Polar.sh for billing and subscriptions. This powers the Pro plan with usage-based pricing for events beyond the base allocation.
+
+## Why Polar?
+
+Polar is purpose-built for developer tools and open-source projects. Their webhook-based approach integrates cleanly with Bklit's architecture, and their pricing is transparent and fair.
+
+## How Billing Works
+
+The Pro plan ($10/month) includes:
+
+- 100,000 events per month base
+- $0.0004 per event after that
+- Automatic overage handling
+- No surprise bills (you control the limits)
+
+Polar handles payment processing, invoicing, and subscription management. Webhooks keep Bklit's database in sync with subscription status, so upgrades and downgrades happen instantly.
+
+## Self-Hosted Users
+
+If you're self-hosting, billing is optional. You can remove all Polar-related code and run Bklit without any payment infrastructure. The platform works exactly the same—you just manage your own limits and access control.
+

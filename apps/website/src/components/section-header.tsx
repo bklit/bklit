@@ -2,7 +2,7 @@ import { cn } from "@bklit/ui/lib/utils";
 
 interface SectionHeaderProps {
   title: string;
-  description: string;
+  description?: string;
   children?: React.ReactNode;
   align?: "left" | "center" | "right";
 }
@@ -31,16 +31,18 @@ export const SectionHeader = ({
       >
         {title}
       </h2>
-      <p
-        className={cn(
-          "font-light text-lg text-muted-foreground sm:text-2xl",
-          align === "left" && "text-left",
-          align === "center" && "text-center",
-          align === "right" && "text-right"
-        )}
-      >
-        {description}
-      </p>
+      {description && (
+        <p
+          className={cn(
+            "font-light text-lg text-muted-foreground sm:text-2xl",
+            align === "left" && "text-left",
+            align === "center" && "text-center",
+            align === "right" && "text-right"
+          )}
+        >
+          {description}
+        </p>
+      )}
       {children && (
         <div
           className={cn(

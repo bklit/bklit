@@ -43,7 +43,7 @@ export function WelcomeModal() {
               Click the bell icon
               <div className="relative mx-2 inline-flex items-center justify-center">
                 <Bell className="inline-flex size-4 text-card-foreground dark:text-white" />{" "}
-                <span className="-top-1 -right-1 absolute size-1 rounded-full bg-primary" />
+                <span className="absolute -top-1 -right-1 size-1 rounded-full bg-primary" />
               </div>
               in the header to see your notifications and{" "}
               <b>accept the invitation</b>.

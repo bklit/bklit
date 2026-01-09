@@ -1,0 +1,40 @@
+---
+title: "CLI V1: Get Running in 90 Seconds"
+date: "2025-09-05T00:00:00.000Z"
+author: "uixmat"
+tags: ["engineering", "update"]
+---
+
+I've released the first version of the Bklit CLI, and it's designed to get you from zero to running in about 90 seconds.
+
+## One Command Setup
+
+Getting started with Bklit is now ridiculously simple:
+
+```bash
+npx @bklit/create
+```
+
+That's it. The CLI handles everything else.
+
+## What It Does
+
+The setup wizard walks you through the entire process:
+
+1. **Checks prerequisites** - Verifies you have Node.js 22+ and optionally Docker
+2. **Generates secrets** - Creates secure random secrets for authentication and API keys
+3. **Sets up databases** - Configures PostgreSQL and ClickHouse (Docker or manual)
+4. **Installs dependencies** - Runs pnpm install for all workspace packages
+5. **Migrates schema** - Sets up all database tables automatically
+6. **Starts dev server** - Launches the dashboard on localhost:3000
+
+## Optional Features
+
+The wizard asks about optional integrations (Polar.sh for billing, OAuth providers, Resend for email), but all of these can be skipped. Bklit works out of the box with just email authentication using magic links.
+
+## Why It Matters
+
+Before the CLI, setting up Bklit meant manually configuring environment variables, setting up databases, running migrations, and more. Now, anyone can try Bklit locally in less time than it takes to make coffee.
+
+The package is published to npm as `@bklit/create` and will be kept up to date with the latest configuration requirements.
+

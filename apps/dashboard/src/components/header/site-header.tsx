@@ -70,8 +70,8 @@ export function SiteHeader() {
               >
                 <div className="relative size-3">
                   <div className="absolute top-0 left-0 size-3 animate-ping rounded-full bg-red-400" />
-                  <div className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 size-2 rounded-full bg-red-400" />
-                  <div className="-translate-x-1/2 -translate-y-1/2 pointer-events-none absolute top-1/2 left-1/2 size-7 rounded-full bg-red-400 opacity-80 blur-xl" />
+                  <div className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-400" />
+                  <div className="pointer-events-none absolute top-1/2 left-1/2 size-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-400 opacity-80 blur-xl" />
                 </div>
                 <Link
                   className="flex items-center gap-2 font-medium text-muted-foreground text-xs"

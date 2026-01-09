@@ -10,8 +10,6 @@ import {
 } from "@bklit/ui/components/card";
 import { cn } from "@bklit/ui/lib/utils";
 import type { Metadata } from "next";
-import { Footer } from "@/components/footer";
-import { PageHeader } from "@/components/page-header";
 import { SectionHeader } from "@/components/section-header";
 import { StatusChart } from "@/components/status-chart";
 
@@ -151,8 +149,7 @@ export default async function StatusPage() {
 
   return (
     <main className="flex min-h-screen w-full flex-col gap-32">
-      <PageHeader />
-      <div className="container mx-auto flex max-w-3xl flex-col space-y-12 px-4 py-26">
+      <div className="container mx-auto flex max-w-6xl flex-col space-y-12 px-4 py-48">
         <SectionHeader
           description="Real-time health monitoring for our tracking APIs"
           title="API Status"
@@ -257,7 +254,6 @@ export default async function StatusPage() {
           </div>
         )}
       </div>
-      <Footer />
     </main>
   );
 }

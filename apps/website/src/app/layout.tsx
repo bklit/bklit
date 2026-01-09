@@ -2,6 +2,8 @@ import { Toaster } from "@bklit/ui/components/sonner";
 import "@bklit/ui/globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Footer } from "@/components/footer";
+import { PageHeader } from "@/components/page-header";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
@@ -30,7 +32,9 @@ export default async function RootLayout({
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <Providers>
+          <PageHeader />
           {children}
+          <Footer />
           <Toaster />
         </Providers>
       </body>
