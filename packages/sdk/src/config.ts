@@ -6,6 +6,9 @@ export interface BklitConfig {
   debug: boolean;
 }
 
+// Regex for removing trailing slash from URLs
+const TRAILING_SLASH_REGEX = /\/$/;
+
 // Get dashboard URL from environment and construct API endpoint
 const getDefaultApiHost = (env: "development" | "production"): string => {
   // Get dashboard URL from NEXT_PUBLIC_APP_URL
@@ -19,7 +22,7 @@ const getDefaultApiHost = (env: "development" | "production"): string => {
 
   if (dashboardUrl) {
     // Remove trailing slash and append /api/track
-    return `${dashboardUrl.replace(/\/$/, "")}/api/track`;
+    return `${dashboardUrl.replace(TRAILING_SLASH_REGEX, "")}/api/track`;
   }
 
   // Production: Use published production URL as fallback

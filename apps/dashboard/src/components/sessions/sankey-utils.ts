@@ -29,7 +29,7 @@ function extractPath(url: string): string {
     const pathname = urlObj.pathname;
     return pathname === "" ? "/" : pathname;
   } catch {
-    const match = url.match(/^https?:\/\/[^/]+(\/.*)?$/);
+    const match = url.match(URL_PATH_REGEX);
     if (match) {
       return match[1] || "/";
     }

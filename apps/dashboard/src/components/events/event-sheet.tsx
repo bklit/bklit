@@ -398,13 +398,12 @@ export function EventSheet({
                 type="submit"
                 variant="default"
               >
-                {mode === "create"
-                  ? createMutation.isPending
-                    ? "Creating..."
-                    : "Create Event"
-                  : updateMutation.isPending
-                    ? "Saving..."
-                    : "Save Changes"}
+                {(() => {
+                  if (mode === "create") {
+                    return createMutation.isPending ? "Creating..." : "Create Event";
+                  }
+                  return updateMutation.isPending ? "Saving..." : "Save Changes";
+                })()}
               </Button>
             </div>
           </SheetFooter>

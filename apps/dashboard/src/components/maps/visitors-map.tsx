@@ -330,11 +330,11 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
         mapGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
         mapGroup.setAttribute("class", "zoom-group");
 
-        Array.from(svg.children).forEach((child) => {
+        for (const child of Array.from(svg.children)) {
           if (child !== legendGroup) {
             mapGroup.appendChild(child);
           }
-        });
+        }
         svg.appendChild(mapGroup);
       }
 

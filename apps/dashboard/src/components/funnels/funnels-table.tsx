@@ -68,17 +68,24 @@ export function FunnelsTable({
         <CardTitle>Funnels</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton className="h-12 w-full" key={i} />
-            ))}
-          </div>
-        ) : funnels.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            No funnels found
-          </div>
-        ) : (
+        {(() => {
+          if (isLoading) {
+            return (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map(() => (
+                  <Skeleton className="h-12 w-full" key={crypto.randomUUID()} />
+                ))}
+              </div>
+            );
+          }
+          if (funnels.length === 0) {
+            return (
+              <div className="py-8 text-center text-muted-foreground">
+                No funnels found
+              </div>
+            );
+          }
+          return (
           <>
             <Table>
               <TableHeader>

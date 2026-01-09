@@ -1,3 +1,8 @@
+// Regex patterns for domain processing
+const PROTOCOL_REGEX = /^https?:\/\//;
+const DOMAIN_VALIDATION_REGEX =
+  /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
 export function getSourceFavicon(
   source: string,
   projectDomain?: string | null
@@ -14,7 +19,7 @@ export function getSourceFavicon(
         return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
       } catch {
         const domain = projectDomain
-          .replace(/^https?:\/\//, "")
+          .replace(PROTOCOL_REGEX, "")
           .split("/")[0]
           ?.split(":")[0];
         if (domain) {
@@ -25,7 +30,7 @@ export function getSourceFavicon(
     return "/globe.svg";
   }
 
-  let domain = normalizedSource.replace(/^https?:\/\//, "");
+  let domain = normalizedSource.replace(PROTOCOL_REGEX, "");
 
   domain = domain.split("/")[0]?.split("?")[0] || domain;
 
@@ -39,7 +44,7 @@ export function getSourceFavicon(
         return `https://icons.duckduckgo.com/ip3/${projectDomainName}.ico`;
       } catch {
         const projectDomainName = projectDomain
-          .replace(/^https?:\/\//, "")
+          .replace(PROTOCOL_REGEX, "")
           .split("/")[0]
           ?.split(":")[0];
         if (projectDomainName) {
@@ -62,9 +67,7 @@ export function getSourceFavicon(
     return "/globe.svg";
   }
 
-  const domainPattern =
-    /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  if (!domainPattern.test(domain)) {
+  if (!DOMAIN_VALIDATION_REGEX.test(domain)) {
     return "/globe.svg";
   }
 

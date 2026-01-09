@@ -34,7 +34,11 @@ interface GitHubConfigProps {
     productionWorkflows?: string[];
     productionBranch?: string;
   };
-  onChange: (config: any) => void;
+  onChange: (config: {
+    repository?: string;
+    productionWorkflows?: string[];
+    productionBranch?: string;
+  }) => void;
 }
 
 export function GitHubConfig({
@@ -283,11 +287,15 @@ export function GitHubConfig({
             size="lg"
             variant={webhookExists ? "outline" : "default"}
           >
-            {setupWebhook.isPending
-              ? "Setting up webhook..."
-              : webhookExists
-                ? "Recreate Webhook"
-                : "Setup GitHub Webhook"}
+            {(() => {
+              if (setupWebhook.isPending) {
+                return "Setting up webhook...";
+              }
+              if (webhookExists) {
+                return "Recreate Webhook";
+              }
+              return "Setup GitHub Webhook";
+            })()}
           </Button>
         </>
       )}

@@ -87,39 +87,37 @@ export function LiveVisitorToasts({
 
     const now = Date.now();
 
-    recentSessionsData.forEach(
-      (session: {
-        id: string;
-        sessionId: string;
-        startedAt: Date;
-        country: string | null;
-        city: string | null;
-        userAgent: string | null;
-        entryPage: string;
-      }) => {
-        if (seenSessionIds.has(session.sessionId)) {
-          return;
-        }
-
-        if (now - lastToastTime.current < toastDebounceMs) {
-          return;
-        }
-
-        setSeenSessionIds((prev) => new Set([...prev, session.sessionId]));
-        lastToastTime.current = now;
-
-        const isMobile = isMobileDevice(session.userAgent || "");
-        const deviceType = isMobile ? "mobile" : "desktop";
-        const location = session.country || "Unknown location";
-        const city = session.city ? `, ${session.city}` : "";
-        const countryCode = getCountryCodeForFlag(session.country || "");
-
-        toast(`New live visitor from ${location}${city}.`, {
-          description: `Viewing on ${deviceType}`,
-          icon: <CircleFlag className="size-4" countryCode={countryCode} />,
-        });
+    for (const session of recentSessionsData as Array<{
+      id: string;
+      sessionId: string;
+      startedAt: Date;
+      country: string | null;
+      city: string | null;
+      userAgent: string | null;
+      entryPage: string;
+    }>) {
+      if (seenSessionIds.has(session.sessionId)) {
+        continue;
       }
-    );
+
+      if (now - lastToastTime.current < toastDebounceMs) {
+        continue;
+      }
+
+      setSeenSessionIds((prev) => new Set([...prev, session.sessionId]));
+      lastToastTime.current = now;
+
+      const isMobile = isMobileDevice(session.userAgent || "");
+      const deviceType = isMobile ? "mobile" : "desktop";
+      const location = session.country || "Unknown location";
+      const city = session.city ? `, ${session.city}` : "";
+      const countryCode = getCountryCodeForFlag(session.country || "");
+
+      toast(`New live visitor from ${location}${city}.`, {
+        description: `Viewing on ${deviceType}`,
+        icon: <CircleFlag className="size-4" countryCode={countryCode} />,
+      });
+    }
   }, [recentSessionsData, preferences?.liveVisitorToasts, seenSessionIds]);
 
   useEffect(() => {
@@ -127,11 +125,11 @@ export function LiveVisitorToasts({
       () => {
         setSeenSessionIds((prev) => {
           const filtered = new Set<string>();
-          prev.forEach((sessionId) => {
+          for (const sessionId of prev) {
             if (Math.random() > 0.1) {
               filtered.add(sessionId);
             }
-          });
+          }
           return filtered;
         });
       },

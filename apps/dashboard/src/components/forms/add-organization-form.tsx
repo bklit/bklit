@@ -70,7 +70,7 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
       }
     } else if (state.message && !state.success) {
       if (state.errors) {
-        Object.entries(state.errors).forEach(([key, errors]) => {
+        for (const [key, errors] of Object.entries(state.errors)) {
           if (errors && errors.length > 0) {
             const fieldName = key as "name" | "description";
             form.setFieldMeta(fieldName, (prev) => ({
@@ -80,7 +80,7 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
               },
             }));
           }
-        });
+        }
       }
       if (state.message) {
         toast.error(state.message);

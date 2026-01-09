@@ -78,10 +78,13 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
 
   return (
     <div className="markdown-block space-y-4 rounded-lg border border-border bg-card p-6">
-      {content.map((block, index) => {
+      {content.map((block) => {
         if (block.type === "code" && block.language) {
           return (
-            <CodeBlockClient key={index} language={block.language as any}>
+            <CodeBlockClient
+              key={crypto.randomUUID()}
+              language={block.language}
+            >
               {block.content}
             </CodeBlockClient>
           );
@@ -107,7 +110,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
                 ALLOWED_ATTR: ["class", "href", "target", "rel"],
               }),
             }}
-            key={index}
+            key={crypto.randomUUID()}
           />
         );
       })}

@@ -49,11 +49,11 @@ export function CreateProjectStepForm({
     },
     onSubmit: ({ value }) => {
       const formData = new FormData();
-      Object.entries(value).forEach(([key, val]) => {
+      for (const [key, val] of Object.entries(value)) {
         if (val !== undefined && val !== null) {
           formData.append(key, String(val));
         }
-      });
+      }
 
       startTransition(() => {
         formAction(formData);
@@ -77,7 +77,7 @@ export function CreateProjectStepForm({
       }
     } else if (state.message && !state.success) {
       if (state.errors) {
-        Object.entries(state.errors).forEach(([key, errors]) => {
+        for (const [key, errors] of Object.entries(state.errors)) {
           if (errors && errors.length > 0) {
             const fieldName = key as "name" | "domain" | "organizationId";
             form.setFieldMeta(fieldName, (prev) => ({
@@ -87,7 +87,7 @@ export function CreateProjectStepForm({
               },
             }));
           }
-        });
+        }
       }
       if (state.message) {
         toast.error(state.message);

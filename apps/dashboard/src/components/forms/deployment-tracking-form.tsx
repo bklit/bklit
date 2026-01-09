@@ -130,13 +130,15 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
                   <Input
                     id="projectId"
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={
-                      form.state.values.platform === "vercel"
-                        ? "prj_xxxxxxxxxxxxx"
-                        : form.state.values.platform === "netlify"
-                          ? "site_xxxxxxxxxxxxx"
-                          : "Project ID from platform"
-                    }
+                    placeholder={(() => {
+                      if (form.state.values.platform === "vercel") {
+                        return "prj_xxxxxxxxxxxxx";
+                      }
+                      if (form.state.values.platform === "netlify") {
+                        return "site_xxxxxxxxxxxxx";
+                      }
+                      return "Project ID from platform";
+                    })()}
                     value={field.state.value}
                   />
                 </div>

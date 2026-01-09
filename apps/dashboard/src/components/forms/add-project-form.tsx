@@ -68,11 +68,11 @@ export function AddProjectForm({
       }
 
       const formData = new FormData();
-      Object.entries(value).forEach(([key, val]) => {
+      for (const [key, val] of Object.entries(value)) {
         if (val !== undefined && val !== null) {
           formData.append(key, String(val));
         }
-      });
+      }
 
       console.log("📝 Add Project Form: Starting transition...");
       startTransition(() => {
@@ -90,7 +90,7 @@ export function AddProjectForm({
       }
     } else if (state.message && !state.success) {
       if (state.errors) {
-        Object.entries(state.errors).forEach(([key, errors]) => {
+        for (const [key, errors] of Object.entries(state.errors)) {
           if (errors && errors.length > 0) {
             const fieldName = key as "name" | "domain" | "organizationId";
             form.setFieldMeta(fieldName, (prev) => ({
@@ -100,7 +100,7 @@ export function AddProjectForm({
               },
             }));
           }
-        });
+        }
       }
       if (state.message) {
         toast.error(state.message);

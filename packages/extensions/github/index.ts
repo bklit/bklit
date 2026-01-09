@@ -16,7 +16,9 @@ const githubExtension: Extension<GitHubConfig> = {
     isPro: metadata.isPro,
   },
   configSchema: githubConfigSchema,
-  handler: async () => {}, // Uses webhooks instead
+  handler: async () => {
+    // Uses webhooks instead - no periodic handler needed
+  },
 };
 
 // Register the extension

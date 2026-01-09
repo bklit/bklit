@@ -353,13 +353,15 @@ export function Events({ organizationId, projectId }: EventsProps) {
                         <TableCell className="font-mono">
                           <Badge
                             size="lg"
-                            variant={
-                              conversionRate > 75
-                                ? "success"
-                                : conversionRate > 35
-                                  ? "secondary"
-                                  : "destructive"
-                            }
+                            variant={(() => {
+                              if (conversionRate > 75) {
+                                return "success";
+                              }
+                              if (conversionRate > 35) {
+                                return "secondary";
+                              }
+                              return "destructive";
+                            })()}
                           >
                             {conversionRate.toFixed(0)}%
                           </Badge>

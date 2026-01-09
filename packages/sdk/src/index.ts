@@ -589,8 +589,12 @@ function setupEventTracking() {
     const dataAttrElements = document.querySelectorAll("[data-bklit-event]");
     const idElements = document.querySelectorAll("[id^='bklit-event-']");
 
-    dataAttrElements.forEach(attachEventListeners);
-    idElements.forEach(attachEventListeners);
+    for (const element of dataAttrElements) {
+      attachEventListeners(element);
+    }
+    for (const element of idElements) {
+      attachEventListeners(element);
+    }
   }
 
   scanForEventElements();
@@ -598,7 +602,7 @@ function setupEventTracking() {
   const mutationObserver = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === "childList") {
-        mutation.addedNodes.forEach((node) => {
+        for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as Element;
             attachEventListeners(element);
@@ -609,10 +613,14 @@ function setupEventTracking() {
               "[id^='bklit-event-']"
             );
 
-            childDataAttrElements.forEach(attachEventListeners);
-            childIdElements.forEach(attachEventListeners);
+            for (const child of childDataAttrElements) {
+              attachEventListeners(child);
+            }
+            for (const child of childIdElements) {
+              attachEventListeners(child);
+            }
           }
-        });
+        }
       } else if (mutation.type === "attributes") {
         const element = mutation.target as Element;
         if (

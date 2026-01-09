@@ -208,19 +208,27 @@ export function SessionEventsTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    {session.hasClick ? (
-                      <Badge size="lg" variant="success">
-                        Clicked
-                      </Badge>
-                    ) : session.hasView ? (
-                      <Badge size="lg" variant="secondary">
-                        Viewed
-                      </Badge>
-                    ) : (
-                      <Badge size="lg" variant="outline">
-                        -
-                      </Badge>
-                    )}
+                    {(() => {
+                      if (session.hasClick) {
+                        return (
+                          <Badge size="lg" variant="success">
+                            Clicked
+                          </Badge>
+                        );
+                      }
+                      if (session.hasView) {
+                        return (
+                          <Badge size="lg" variant="secondary">
+                            Viewed
+                          </Badge>
+                        );
+                      }
+                      return (
+                        <Badge size="lg" variant="outline">
+                          -
+                        </Badge>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     <Tooltip>
@@ -236,13 +244,18 @@ export function SessionEventsTable({
                         )}
                       </TooltipTrigger>
                       <TooltipContent>
-                        {session.hasClick
-                          ? "Event clicked"
-                          : session.hasHover
-                            ? "Event hovered (not clicked)"
-                            : session.hasView
-                              ? "Event seen (not clicked)"
-                              : "No interaction"}
+                        {(() => {
+                          if (session.hasClick) {
+                            return "Event clicked";
+                          }
+                          if (session.hasHover) {
+                            return "Event hovered (not clicked)";
+                          }
+                          if (session.hasView) {
+                            return "Event seen (not clicked)";
+                          }
+                          return "No interaction";
+                        })()}
                       </TooltipContent>
                     </Tooltip>
                   </TableCell>

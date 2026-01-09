@@ -23,7 +23,10 @@
       "!.pnpm-store",
       "!**/.pnpm-store",
       "!**/*.svg",
-      "!**/*.lock"
+      "!**/*.lock",
+      "!apps/docs/.source",
+      "!apps/playground",
+      "!packages/ui"
     ]
   },
   "formatter": {
@@ -52,6 +55,10 @@
       "style": {
         "noEnum": "off",
         "useBlockStatements": "warn"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "warn",
+        "noForEach": "warn"
       }
     }
   },

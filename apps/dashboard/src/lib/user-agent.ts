@@ -1,11 +1,13 @@
+// Regex for mobile device detection
+const MOBILE_DEVICE_REGEX =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
+
 export function isMobileDevice(userAgent: string | null | undefined): boolean {
   if (!userAgent) {
     return false;
   }
 
-  const mobileRegex =
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
-  return mobileRegex.test(userAgent);
+  return MOBILE_DEVICE_REGEX.test(userAgent);
 }
 
 export function detectDevice(

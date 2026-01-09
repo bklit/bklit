@@ -24,7 +24,7 @@ export function DemoProjectModal() {
   return (
     <Dialog onOpenChange={handleClose} open={open}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="relative -mx-9 -mt-9 flex aspect-1000/560 w-[calc(100%+4.5rem)] flex-col items-center justify-end space-y-3 rounded-t-xl p-9 text-center">
+        <DialogHeader className="-mx-9 -mt-9 relative flex aspect-1000/560 w-[calc(100%+4.5rem)] flex-col items-center justify-end space-y-3 rounded-t-xl p-9 text-center">
           <div className="absolute top-0 left-0 aspect-1000/560 w-full overflow-hidden rounded-t-xl">
             <Image
               alt="Playground"
