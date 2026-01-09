@@ -25,7 +25,7 @@ export async function sendEventToPolar(data: PolarEventData): Promise<void> {
     // Skip if no Polar customer ID (free tier users)
     if (!data.polarCustomerId) {
       console.log(
-        `⏭️  Skipping Polar event for org ${data.organizationId} (no Polar customer)`,
+        `⏭️  Skipping Polar event for org ${data.organizationId} (no Polar customer)`
       );
       return;
     }
@@ -38,7 +38,7 @@ export async function sendEventToPolar(data: PolarEventData): Promise<void> {
     });
 
     console.log(
-      `✅ Polar: Event sent for org ${data.organizationId} (${data.eventType})`,
+      `✅ Polar: Event sent for org ${data.organizationId} (${data.eventType})`
     );
   } catch (error) {
     // Log error but don't throw - don't fail event tracking if Polar is down
@@ -55,7 +55,7 @@ export async function sendEventToPolar(data: PolarEventData): Promise<void> {
  * Useful for backfilling or bulk operations
  */
 export async function sendEventsToPolarBatch(
-  events: PolarEventData[],
+  events: PolarEventData[]
 ): Promise<{ succeeded: number; failed: number }> {
   let succeeded = 0;
   let failed = 0;

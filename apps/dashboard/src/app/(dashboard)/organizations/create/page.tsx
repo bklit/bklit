@@ -11,8 +11,8 @@ export default function CreateOrganizationPage() {
   return (
     <>
       <PageHeader
-        title="Create Workspace"
         description="Create your new workspace"
+        title="Create Workspace"
       />
       <div className="container mx-auto flex gap-4">
         <Card className="w-full max-w-2xl">

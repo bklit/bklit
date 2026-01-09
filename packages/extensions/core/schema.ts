@@ -23,7 +23,7 @@ export interface Extension<TConfig = unknown> {
 
 export type ExtensionHandler<TConfig = unknown> = (
   config: TConfig,
-  event: EventData,
+  event: EventData
 ) => Promise<void>;
 
 export interface EventData {

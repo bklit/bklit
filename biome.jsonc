@@ -1,0 +1,121 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/next"
+  ],
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "useIgnoreFile": false
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "!**/.next",
+      "!.cursor",
+      "!.vscode",
+      "!.vercel",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/generated",
+      "!.pnpm-store",
+      "!**/.pnpm-store",
+      "!**/*.svg",
+      "!**/*.lock",
+      "!apps/docs/.source",
+      "!apps/playground",
+      "!packages/ui"
+    ]
+  },
+  "formatter": {
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "linter": {
+    "rules": {
+      "performance": {
+        "noBarrelFile": "off",
+        "noNamespaceImport": "warn"
+      },
+      "style": {
+        "noEnum": "off",
+        "useBlockStatements": "warn",
+        "noNonNullAssertion": "warn",
+        "noNestedTernary": "warn"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "warn",
+        "noForEach": "warn",
+        "noVoid": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "warn"
+      },
+      "suspicious": {
+        "noEvolvingTypes": "warn"
+      },
+      "correctness": {
+        "useHookAtTopLevel": "error",
+        "noNestedComponentDefinitions": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/public/tracker.js"],
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": [
+        "**/pageviews-chart.tsx",
+        "**/pageviews-table.tsx",
+        "**/time-series-chart.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "warn",
+            "useAwait": "warn"
+          },
+          "performance": {
+            "useTopLevelRegex": "warn"
+          },
+          "style": {
+            "noExportedImports": "off"
+          },
+          "correctness": {
+            "noUnusedFunctionParameters": "warn"
+          }
+        }
+      }
+    }
+  ]
+}

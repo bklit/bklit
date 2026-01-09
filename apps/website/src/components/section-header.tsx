@@ -15,28 +15,28 @@ export const SectionHeader = ({
   return (
     <div
       className={cn(
-        "container mx-auto max-w-6xl px-4 flex flex-col space-y-4",
+        "container mx-auto flex max-w-6xl flex-col space-y-4 px-4",
         align === "left" && "text-left",
         align === "center" && "text-center",
-        align === "right" && "text-right",
+        align === "right" && "text-right"
       )}
     >
       <h2
         className={cn(
-          "text-3xl sm:text-3xl font-regular",
+          "font-regular text-3xl sm:text-3xl",
           align === "left" && "text-left",
           align === "center" && "text-center",
-          align === "right" && "text-right",
+          align === "right" && "text-right"
         )}
       >
         {title}
       </h2>
       <p
         className={cn(
-          "text-lg sm:text-2xl font-light text-muted-foreground",
+          "font-light text-lg text-muted-foreground sm:text-2xl",
           align === "left" && "text-left",
           align === "center" && "text-center",
-          align === "right" && "text-right",
+          align === "right" && "text-right"
         )}
       >
         {description}
@@ -47,7 +47,7 @@ export const SectionHeader = ({
             "flex flex-col gap-4",
             align === "left" && "items-start",
             align === "center" && "items-center",
-            align === "right" && "items-end",
+            align === "right" && "items-end"
           )}
         >
           {children}

@@ -25,6 +25,19 @@ interface ParsedContent {
   language?: SupportedLanguage;
 }
 
+// Regex patterns for markdown parsing (performance optimization)
+const CODE_BLOCK_REGEX = /```(\w+)?\n([\s\S]*?)```/g;
+const H3_REGEX = /^### (.*$)/gim;
+const H2_REGEX = /^## (.*$)/gim;
+const H1_REGEX = /^# (.*$)/gim;
+const BOLD_REGEX = /\*\*(.*?)\*\*/g;
+const INLINE_CODE_REGEX = /`([^`]+)`/g;
+const LINK_REGEX = /\[([^\]]+)\]\(([^)]+)\)/g;
+const NUMBERED_LIST_REGEX = /^\d+\.\s/;
+const NESTED_LIST_REGEX = /^\s{2,}-\s/;
+const UNORDERED_LIST_REGEX = /^-\s/;
+const HTML_TAG_REGEX = /^<[hpul]/;
+
 export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
   const [content, setContent] = useState<ParsedContent[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +45,9 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
   useEffect(() => {
     fetch(`/extensions/${extensionId}/README.md`)
       .then((res) => {
-        if (!res.ok) throw new Error("README not found");
+        if (!res.ok) {
+          throw new Error("README not found");
+        }
         return res.text();
       })
       .then((text) => {
@@ -46,7 +61,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         <div className="space-y-3">
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-full" />
@@ -62,18 +77,21 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
   }
 
   return (
-    <div className="markdown-block space-y-4 bg-card border border-border rounded-lg p-6">
-      {content.map((block, index) => {
+    <div className="markdown-block space-y-4 rounded-lg border border-border bg-card p-6">
+      {content.map((block) => {
         if (block.type === "code" && block.language) {
           return (
-            <CodeBlockClient key={index} language={block.language as any}>
+            <CodeBlockClient
+              key={crypto.randomUUID()}
+              language={block.language}
+            >
               {block.content}
             </CodeBlockClient>
           );
         }
         return (
           <div
-            key={index}
+            className="space-y-4"
             dangerouslySetInnerHTML={{
               __html: DOMPurify.sanitize(block.content, {
                 ALLOWED_TAGS: [
@@ -92,7 +110,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
                 ALLOWED_ATTR: ["class", "href", "target", "rel"],
               }),
             }}
-            className="space-y-4"
+            key={crypto.randomUUID()}
           />
         );
       })}
@@ -103,7 +121,7 @@ export function ExtensionReadme({ extensionId }: ExtensionReadmeProps) {
 // Parse markdown into blocks (text and code)
 function parseMarkdown(markdown: string): ParsedContent[] {
   const blocks: ParsedContent[] = [];
-  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  const codeBlockRegex = CODE_BLOCK_REGEX;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null = codeBlockRegex.exec(markdown);
@@ -144,29 +162,23 @@ function convertMarkdownToHtml(markdown: string): string {
   let html = markdown;
 
   // Headers
-  html = html.replace(
-    /^### (.*$)/gim,
-    '<h3 class="text-lg font-semibold">$1</h3>',
-  );
-  html = html.replace(
-    /^## (.*$)/gim,
-    '<h2 class="text-xl font-bold mt-2">$1</h2>',
-  );
-  html = html.replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold">$1</h1>');
+  html = html.replace(H3_REGEX, '<h3 class="text-lg font-semibold">$1</h3>');
+  html = html.replace(H2_REGEX, '<h2 class="text-xl font-bold mt-2">$1</h2>');
+  html = html.replace(H1_REGEX, '<h1 class="text-2xl font-bold">$1</h1>');
 
   // Bold
-  html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(BOLD_REGEX, "<strong>$1</strong>");
 
   // Inline code
   html = html.replace(
-    /`([^`]+)`/g,
-    '<code class="px-2 py-1.5 bg-bklit-800/50 rounded text-sm font-mono text-primary">$1</code>',
+    INLINE_CODE_REGEX,
+    '<code class="px-2 py-1.5 bg-bklit-800/50 rounded text-sm font-mono text-primary">$1</code>'
   );
 
   // Links
   html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">$1</a>',
+    LINK_REGEX,
+    '<a href="$2" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">$1</a>'
   );
 
   // Process lists line by line to handle nesting
@@ -178,81 +190,86 @@ function convertMarkdownToHtml(markdown: string): string {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) continue;
+    if (!line) {
+      continue;
+    }
     const nextLine = lines[i + 1];
 
     // Numbered list items
-    if (/^\d+\.\s/.test(line)) {
+    if (NUMBERED_LIST_REGEX.test(line)) {
       if (!inOrderedList) {
         processed.push(
-          '<ol class="list-decimal list-inside space-y-2 my-3 ml-4">',
+          '<ol class="list-decimal list-inside space-y-2 my-3 ml-4">'
         );
         inOrderedList = true;
       }
-      const content = line?.replace(/^\d+\.\s/, "") || "";
+      const content = line?.replace(NUMBERED_LIST_REGEX, "") || "";
       processed.push(
-        `<li class="leading-relaxed text-muted-foreground">${content}</li>`,
+        `<li class="leading-relaxed text-muted-foreground">${content}</li>`
       );
 
       // Check if next line is a nested list
-      if (nextLine && /^\s{2,}-\s/.test(nextLine)) {
+      if (nextLine && NESTED_LIST_REGEX.test(nextLine)) {
         processed.push(
-          '<ul class="list-disc list-inside space-y-1 ml-6 mt-1">',
+          '<ul class="list-disc list-inside space-y-1 ml-6 mt-1">'
         );
         inNestedList = true;
       }
 
       if (
-        !nextLine ||
-        (!nextLine.match(/^\d+\.\s/) && !nextLine.match(/^\s{2,}-\s/))
+        !(
+          nextLine &&
+          (nextLine.match(NUMBERED_LIST_REGEX) ||
+            nextLine.match(NESTED_LIST_REGEX))
+        )
       ) {
         if (inNestedList) {
           processed.push("</ul>");
           inNestedList = false;
         }
-        if (!nextLine?.match(/^\d+\.\s/)) {
+        if (!nextLine?.match(NUMBERED_LIST_REGEX)) {
           processed.push("</ol>");
           inOrderedList = false;
         }
       }
     }
     // Nested list items (indented with spaces)
-    else if (line && /^\s{2,}-\s/.test(line)) {
-      const content = line?.replace(/^\s{2,}-\s/, "") || "";
+    else if (line && NESTED_LIST_REGEX.test(line)) {
+      const content = line?.replace(NESTED_LIST_REGEX, "") || "";
       processed.push(
-        `<li class="text-sm leading-relaxed text-muted-foreground">${content}</li>`,
+        `<li class="text-sm leading-relaxed text-muted-foreground">${content}</li>`
       );
 
-      if (!nextLine || !nextLine.match(/^\s{2,}-\s/)) {
+      if (!nextLine?.match(NESTED_LIST_REGEX)) {
         processed.push("</ul>");
         inNestedList = false;
       }
     }
     // Top-level unordered list items
-    else if (line && /^-\s/.test(line)) {
+    else if (line && UNORDERED_LIST_REGEX.test(line)) {
       if (!inUnorderedList) {
         processed.push(
-          '<ul class="list-disc list-inside space-y-2 my-3 ml-4">',
+          '<ul class="list-disc list-inside space-y-2 my-3 ml-4">'
         );
         inUnorderedList = true;
       }
-      const content = line?.replace(/^-\s/, "") || "";
+      const content = line?.replace(UNORDERED_LIST_REGEX, "") || "";
       processed.push(
-        `<li class="leading-relaxed text-muted-foreground">${content}</li>`,
+        `<li class="leading-relaxed text-muted-foreground">${content}</li>`
       );
 
-      if (!nextLine || !nextLine.match(/^-\s/)) {
+      if (!nextLine?.match(UNORDERED_LIST_REGEX)) {
         processed.push("</ul>");
         inUnorderedList = false;
       }
     }
     // Regular lines
     else if (line) {
-      if (line.trim() !== "" && !line.match(/^<[hpul]/)) {
+      if (line.trim() !== "" && !line.match(HTML_TAG_REGEX)) {
         processed.push(
-          `<p class="leading-relaxed text-muted-foreground">${line}</p>`,
+          `<p class="leading-relaxed text-muted-foreground">${line}</p>`
         );
-      } else if (line.match(/^<[hpul]/)) {
+      } else if (line.match(HTML_TAG_REGEX)) {
         processed.push(line);
       }
       // Skip empty lines entirely

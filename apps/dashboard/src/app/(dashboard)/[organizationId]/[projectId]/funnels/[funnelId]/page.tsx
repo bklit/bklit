@@ -25,14 +25,14 @@ export default async function FunnelDetailPage({ params }: PageProps) {
           funnelId,
           projectId,
           organizationId,
-        }),
+        })
       ),
       prefetch(
         trpc.funnel.getStats.queryOptions({
           funnelId,
           projectId,
           organizationId,
-        }),
+        })
       ),
     ]);
   } catch {
@@ -41,9 +41,9 @@ export default async function FunnelDetailPage({ params }: PageProps) {
 
   return (
     <FunnelDetails
+      funnelId={funnelId}
       organizationId={organizationId}
       projectId={projectId}
-      funnelId={funnelId}
     />
   );
 }

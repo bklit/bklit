@@ -34,7 +34,7 @@ interface AddOrganizationFormProps {
 export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
   const [state, formAction] = useActionState(
     createOrganizationAction,
-    initialState,
+    initialState
   );
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -47,7 +47,7 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
     validators: {
       onSubmit: createOrganizationSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       const formData = new FormData();
       formData.append("name", value.name);
       if (value.description) {
@@ -70,7 +70,7 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
       }
     } else if (state.message && !state.success) {
       if (state.errors) {
-        Object.entries(state.errors).forEach(([key, errors]) => {
+        for (const [key, errors] of Object.entries(state.errors)) {
           if (errors && errors.length > 0) {
             const fieldName = key as "name" | "description";
             form.setFieldMeta(fieldName, (prev) => ({
@@ -80,7 +80,7 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
               },
             }));
           }
-        });
+        }
       }
       if (state.message) {
         toast.error(state.message);
@@ -90,12 +90,12 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
 
   return (
     <form
+      className="space-y-6"
       id="add-organization-form"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
       }}
-      className="space-y-6"
     >
       <FieldGroup>
         <form.Field name="name">
@@ -106,14 +106,14 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>Organization Name</FieldLabel>
                 <Input
+                  aria-invalid={isInvalid}
+                  autoComplete="off"
                   id={field.name}
                   name={field.name}
-                  value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
                   placeholder="My Awesome Organization"
-                  autoComplete="off"
+                  value={field.state.value}
                 />
                 <FieldDescription>
                   A descriptive name for your organization.
@@ -133,14 +133,14 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
                   Description (Optional)
                 </FieldLabel>
                 <Textarea
+                  aria-invalid={isInvalid}
+                  autoComplete="off"
                   id={field.name}
                   name={field.name}
-                  value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
                   placeholder="What does your organization work on?"
-                  autoComplete="off"
+                  value={field.state.value}
                 />
                 <FieldDescription>
                   A brief description of your organization&apos;s purpose.
@@ -152,15 +152,15 @@ export function AddOrganizationForm({ onSuccess }: AddOrganizationFormProps) {
         </form.Field>
       </FieldGroup>
       <Button
-        type="submit"
-        form="add-organization-form"
-        disabled={isPending}
         className="w-full sm:w-auto"
+        disabled={isPending}
+        form="add-organization-form"
+        type="submit"
       >
         {isPending ? "Creating Organization..." : "Create Organization"}
       </Button>
       {state.message && !state.success && !state.errors && (
-        <p className="text-sm font-medium text-destructive">{state.message}</p>
+        <p className="font-medium text-destructive text-sm">{state.message}</p>
       )}
     </form>
   );

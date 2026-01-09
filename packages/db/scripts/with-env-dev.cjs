@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+"use strict";
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -14,7 +15,7 @@ const DATABASE_URL = process.env.DEV_DATABASE_URL ?? process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   console.error(
-    "Error: Neither DEV_DATABASE_URL nor DATABASE_URL is set in .env file",
+    "Error: Neither DEV_DATABASE_URL nor DATABASE_URL is set in .env file"
   );
   process.exit(1);
 }

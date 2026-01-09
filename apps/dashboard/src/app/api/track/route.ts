@@ -25,20 +25,20 @@ interface TrackingPayload {
 // Helper function to create a response with CORS headers
 function createCorsResponse(
   body: Record<string, unknown> | { message: string; error?: string },
-  status: number,
+  status: number
 ) {
   const response = NextResponse.json(body, { status });
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   response.headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization",
+    "Content-Type, Authorization"
   );
   return response;
 }
 
 // Handle OPTIONS requests for CORS preflight
-export async function OPTIONS() {
+export function OPTIONS() {
   return createCorsResponse({ message: "CORS preflight OK" }, 200);
 }
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!token) {
       return createCorsResponse(
         { message: "Authorization token is required" },
-        401,
+        401
       );
     }
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     if (!tokenValidation.valid) {
       return createCorsResponse(
         { message: tokenValidation.error || "Invalid token" },
-        401,
+        401
       );
     }
 
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       if (!requestDomain) {
         return createCorsResponse(
           { message: "Origin or Referer header required" },
-          403,
+          403
         );
       }
 
@@ -115,11 +115,15 @@ export async function POST(request: NextRequest) {
         const isAllowed = tokenValidation.allowedDomains.some(
           (allowedDomain) => {
             // Exact match
-            if (requestDomain === allowedDomain) return true;
+            if (requestDomain === allowedDomain) {
+              return true;
+            }
             // Subdomain match (e.g., www.example.com matches example.com)
-            if (requestDomain.endsWith(`.${allowedDomain}`)) return true;
+            if (requestDomain.endsWith(`.${allowedDomain}`)) {
+              return true;
+            }
             return false;
-          },
+          }
         );
 
         if (!isAllowed) {
@@ -127,7 +131,7 @@ export async function POST(request: NextRequest) {
             {
               message: `Domain ${requestDomain} is not allowed for this token`,
             },
-            403,
+            403
           );
         }
       }
@@ -144,7 +148,7 @@ export async function POST(request: NextRequest) {
             currentUsage: usageCheck.currentUsage,
             limit: usageCheck.limit,
           },
-          429,
+          429
         );
       }
     }
@@ -159,7 +163,7 @@ export async function POST(request: NextRequest) {
         locationData = await getLocationFromIP(clientIP, request);
         if (locationData) {
           console.log(
-            `Location data retrieved for IP ${clientIP}: ${locationData.city}, ${locationData.country}`,
+            `Location data retrieved for IP ${clientIP}: ${locationData.city}, ${locationData.country}`
           );
         }
       } catch (locationError) {
@@ -184,7 +188,7 @@ export async function POST(request: NextRequest) {
         // Check if session exists in ClickHouse
         const sessionExists = await analytics.sessionExists(
           sessionId,
-          payload.projectId,
+          payload.projectId
         );
         const isNewSession = !sessionExists;
 
@@ -193,8 +197,10 @@ export async function POST(request: NextRequest) {
           let hash = 0;
           for (let i = 0; i < userAgent.length; i++) {
             const char = userAgent.charCodeAt(i);
+            // biome-ignore lint/suspicious/noBitwiseOperators: Intentional use for hash generation
             hash = (hash << 5) - hash + char;
-            hash = hash & hash;
+            // biome-ignore lint/suspicious/noBitwiseOperators: Intentional use for hash generation
+            hash &= hash;
           }
           return Math.abs(hash).toString(36);
         };
@@ -219,7 +225,7 @@ export async function POST(request: NextRequest) {
           timezone: locationData?.timezone,
           isp: locationData?.isp,
           mobile: isMobileDevice(payload.userAgent),
-          sessionId: sessionId,
+          sessionId,
           referrer: payload.referrer,
           utmSource: payload.utmSource,
           utmMedium: payload.utmMedium,
@@ -239,12 +245,12 @@ export async function POST(request: NextRequest) {
 
           await analytics.createTrackedSession({
             id: sessionDbId,
-            sessionId: sessionId,
+            sessionId,
             startedAt: new Date(payload.timestamp),
             endedAt: null,
             duration: null,
             didBounce: true, // Will be updated if they visit more pages
-            visitorId: visitorId,
+            visitorId,
             entryPage: payload.url,
             exitPage: payload.url,
             userAgent: payload.userAgent,
@@ -255,7 +261,7 @@ export async function POST(request: NextRequest) {
           });
 
           console.log("✅ API: New session created in ClickHouse", {
-            sessionId: sessionId,
+            sessionId,
             projectId: payload.projectId,
           });
         } else {
@@ -266,7 +272,7 @@ export async function POST(request: NextRequest) {
           });
 
           console.log("✅ API: Session updated in ClickHouse", {
-            sessionId: sessionId,
+            sessionId,
             projectId: payload.projectId,
           });
         }
@@ -357,7 +363,9 @@ export async function POST(request: NextRequest) {
             console.error("Failed to fetch organization for Polar:", err);
           }
         })
-        .catch(() => {}); // Silently fail
+        .catch(() => {
+          // Silently fail - sending to Polar is non-critical
+        });
     }
 
     return createCorsResponse({ message: "Data received and stored" }, 200);
@@ -374,7 +382,7 @@ export async function POST(request: NextRequest) {
         message: "Error processing request",
         error: error instanceof Error ? error.message : String(error),
       },
-      500,
+      500
     );
   }
 }

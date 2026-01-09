@@ -46,66 +46,66 @@ export function ExtensionHeader({
   isActivating,
 }: ExtensionHeaderProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 p-6 rounded-lg border bg-card">
+    <div className="grid grid-cols-2 gap-4 rounded-lg border bg-card p-6">
       <div className="flex flex-col gap-2">
-        <div className="flex size-16 items-center justify-center rounded-lg border bg-muted overflow-hidden">
+        <div className="flex size-16 items-center justify-center overflow-hidden rounded-lg border bg-muted">
           {icon ? (
             <Image
-              src={`/extensions/${extensionId}/${icon.replace("./", "")}`}
               alt={displayName}
-              width={64}
-              height={64}
               className="size-16 object-cover"
+              height={64}
+              src={`/extensions/${extensionId}/${icon.replace("./", "")}`}
+              width={64}
             />
           ) : (
             <Puzzle className="size-8" />
           )}
         </div>
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h1 className="text-2xl font-bold">{displayName}</h1>
+          <div className="mb-2 flex items-center gap-2">
+            <h1 className="font-bold text-2xl">{displayName}</h1>
             {isPro && <Badge variant="outline">Pro</Badge>}
-            <Badge variant="secondary" className="text-xs">
+            <Badge className="text-xs" variant="secondary">
               v{version}
             </Badge>
           </div>
-          <p className="text-muted-foreground mb-2">{description}</p>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <p className="mb-2 text-muted-foreground">{description}</p>
+          <div className="flex items-center gap-4 text-muted-foreground text-sm">
             <div className="flex items-center gap-2">
               <Avatar className="size-4">
                 <AvatarImage
-                  src={`https://github.com/${author}.png`}
                   alt={author}
+                  src={`https://github.com/${author}.png`}
                 />
                 <AvatarFallback className="text-[8px]">
                   {author.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-semibold">{author}</span>
+              <span className="font-semibold text-sm">{author}</span>
             </div>
             <Separator orientation="vertical" />
-            <Badge variant="secondary" className="text-xs capitalize">
+            <Badge className="text-xs capitalize" variant="secondary">
               {category}
             </Badge>
           </div>
         </div>
       </div>
       {projects && onActivate && (
-        <div className="flex flex-col bg-bklit-600 p-6 rounded-lg space-y-4">
+        <div className="flex flex-col space-y-4 rounded-lg bg-bklit-600 p-6">
           <div className="flex flex-col space-y-2">
-            <span className="text-base font-semibold">Activate Extension</span>
+            <span className="font-semibold text-base">Activate Extension</span>
 
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               Select which projects should use this extension.
             </span>
           </div>
 
           <ProjectSelector
-            projects={projects}
             activatedProjectIds={activatedProjectIds}
+            isLoading={isActivating}
             onActivate={onActivate}
             onRemove={onRemove}
-            isLoading={isActivating}
+            projects={projects}
           />
         </div>
       )}

@@ -6,7 +6,7 @@ interface ClickhouseProps {
 
 export const Clickhouse = ({ height = "30px", className }: ClickhouseProps) => {
   return (
-    <svg height={height} viewBox="0 0 328 63" fill="none" className={className}>
+    <svg className={className} fill="none" height={height} viewBox="0 0 328 63">
       <title>Clickhouse Logo</title>
       <path
         d="M10.1095 4.875H5.49033C5.15049 4.875 4.875 5.15049 4.875 5.49033V56.9079C4.875 57.2477 5.15049 57.5232 5.49033 57.5232H10.1095C10.4493 57.5232 10.7248 57.2477 10.7248 56.9079V5.49033C10.7248 5.15049 10.4493 4.875 10.1095 4.875Z"

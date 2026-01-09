@@ -88,7 +88,7 @@
   ["mousemove", "keydown", "scroll", "touchstart", "visibilitychange"].forEach(
     (event) => {
       window.addEventListener(event, resetInactivityTimer, { passive: true });
-    },
+    }
   );
 
   // End session on tab close

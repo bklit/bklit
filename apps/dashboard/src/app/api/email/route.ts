@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     await createTRPCContext({
       auth,
       headers: request.headers,
-    }),
+    })
   );
 
   // Call the tRPC email.send mutation

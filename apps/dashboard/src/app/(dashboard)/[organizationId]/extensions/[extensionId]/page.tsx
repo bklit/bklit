@@ -18,7 +18,7 @@ export default async function ExtensionDetailPage({
       trpc.extension.listForOrganization.queryOptions({
         organizationId,
         extensionId,
-      }),
+      })
     );
   } catch {
     notFound();
@@ -27,8 +27,8 @@ export default async function ExtensionDetailPage({
   return (
     <HydrateClient>
       <ExtensionDetail
-        organizationId={organizationId}
         extensionId={extensionId}
+        organizationId={organizationId}
       />
     </HydrateClient>
   );

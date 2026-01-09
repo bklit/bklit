@@ -56,12 +56,16 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -77,7 +81,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
       limit: 1000,
       startDate,
       endDate,
-    }),
+    })
   );
 
   const totalSessions = sessionsData?.totalCount || 0;
@@ -85,7 +89,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
 
   // Calculate previous period dates for comparison
   const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
-    if (!compare || !startDate || !endDate) {
+    if (!(compare && startDate && endDate)) {
       return { startDate: undefined, endDate: undefined };
     }
     return getPreviousPeriod(startDate, endDate);
@@ -122,7 +126,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
   }, [sankeyData]);
 
   const { entryPoints, exitPoints } = useMemo(() => {
-    if (!nivoSankeyData || !nivoSankeyData.links.length) {
+    if (!nivoSankeyData?.links.length) {
       return { entryPoints: [], exitPoints: [] };
     }
 
@@ -134,21 +138,21 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
       // Count incoming links
       incomingLinks.set(
         link.target,
-        (incomingLinks.get(link.target) || 0) + link.value,
+        (incomingLinks.get(link.target) || 0) + link.value
       );
       // Count outgoing links
       outgoingLinks.set(
         link.source,
-        (outgoingLinks.get(link.source) || 0) + link.value,
+        (outgoingLinks.get(link.source) || 0) + link.value
       );
       // Track total value for each node
       nodeValues.set(
         link.source,
-        (nodeValues.get(link.source) || 0) + link.value,
+        (nodeValues.get(link.source) || 0) + link.value
       );
       nodeValues.set(
         link.target,
-        (nodeValues.get(link.target) || 0) + link.value,
+        (nodeValues.get(link.target) || 0) + link.value
       );
     });
 
@@ -193,10 +197,10 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
   return (
     <>
       <PageHeader
-        title="Sessions"
         description={
           isLoading ? "Loading sessions..." : `${totalSessions} total sessions`
         }
+        title="Sessions"
       >
         <div className="flex items-center gap-2">
           <DateRangePicker />
@@ -226,7 +230,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                 prevSessionsData && {
                   ...calculateChange(
                     allSessions.filter((s) => !s.didBounce).length,
-                    prevAllSessions.filter((s) => !s.didBounce).length,
+                    prevAllSessions.filter((s) => !s.didBounce).length
                   ),
                 }),
               ...(compare &&
@@ -242,7 +246,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                 prevSessionsData && {
                   ...calculateChange(
                     allSessions.filter((s) => s.didBounce).length,
-                    prevAllSessions.filter((s) => s.didBounce).length,
+                    prevAllSessions.filter((s) => s.didBounce).length
                   ),
                 }),
               ...(compare &&
@@ -254,12 +258,14 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
               icon: Clock,
               name: "Avg Duration",
               stat: (() => {
-                if (allSessions.length === 0) return 0;
+                if (allSessions.length === 0) {
+                  return 0;
+                }
 
                 const avgSeconds =
                   allSessions.reduce(
                     (sum: number, s) => sum + (s.duration || 0),
-                    0,
+                    0
                   ) / allSessions.length;
 
                 return avgSeconds < 60
@@ -267,12 +273,14 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                   : Math.ceil(avgSeconds / 60);
               })(),
               suffix: (() => {
-                if (allSessions.length === 0) return "s";
+                if (allSessions.length === 0) {
+                  return "s";
+                }
 
                 const avgSeconds =
                   allSessions.reduce(
                     (sum: number, s) => sum + (s.duration || 0),
-                    0,
+                    0
                   ) / allSessions.length;
 
                 return avgSeconds < 60 ? "s" : "m";
@@ -281,27 +289,31 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                 prevSessionsData && {
                   ...calculateChange(
                     (() => {
-                      if (allSessions.length === 0) return 0;
+                      if (allSessions.length === 0) {
+                        return 0;
+                      }
                       const avgSeconds =
                         allSessions.reduce(
                           (sum: number, s) => sum + (s.duration || 0),
-                          0,
+                          0
                         ) / allSessions.length;
                       return avgSeconds < 60
                         ? Math.round(avgSeconds)
                         : Math.ceil(avgSeconds / 60);
                     })(),
                     (() => {
-                      if (prevAllSessions.length === 0) return 0;
+                      if (prevAllSessions.length === 0) {
+                        return 0;
+                      }
                       const avgSeconds =
                         prevAllSessions.reduce(
                           (sum: number, s) => sum + (s.duration || 0),
-                          0,
+                          0
                         ) / prevAllSessions.length;
                       return avgSeconds < 60
                         ? Math.round(avgSeconds)
                         : Math.ceil(avgSeconds / 60);
-                    })(),
+                    })()
                   ),
                 }),
               ...(compare &&
@@ -312,14 +324,14 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
           ]}
         />
 
-        <div className="flex flex-col sm:grid sm:grid-cols-12 gap-4">
+        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-12">
           <div className="col-span-3 flex flex-col gap-6">
             <ErrorBoundary
               FallbackComponent={(props) => (
                 <ErrorFallback
                   {...props}
-                  title="Entry & Exit Points Error"
                   description="Unable to display entry and exit points data"
+                  title="Entry & Exit Points Error"
                 />
               )}
               resetKeys={[isLoading, nivoSankeyData, entryPoints, exitPoints]}
@@ -333,11 +345,11 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {isLoading ? (
-                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                    <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
                       Loading data...
                     </div>
                   ) : !nivoSankeyData || nivoSankeyData.nodes.length === 0 ? (
-                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                    <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
                       No data available
                     </div>
                   ) : (
@@ -346,7 +358,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                         <div className="flex items-center justify-start gap-4 pb-3">
                           <div className="flex items-center gap-1.5">
                             <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-2" />
-                            <span className="text-xs font-medium">
+                            <span className="font-medium text-xs">
                               Entry Points
                             </span>
                           </div>
@@ -354,16 +366,16 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                         {entryPoints.length > 0 ? (
                           entryPoints.map((entry) => (
                             <ProgressRow
+                              color="var(--chart-2)"
                               key={entry.id}
                               label={entry.id}
-                              value={entry.value}
                               percentage={entry.percentage}
-                              color="var(--chart-2)"
+                              value={entry.value}
                               variant="secondary"
                             />
                           ))
                         ) : (
-                          <div className="text-sm text-muted-foreground py-2">
+                          <div className="py-2 text-muted-foreground text-sm">
                             No entry points
                           </div>
                         )}
@@ -373,7 +385,7 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                         <div className="flex items-center justify-start gap-4 pb-3">
                           <div className="flex items-center gap-1.5">
                             <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-3" />
-                            <span className="text-xs font-medium">
+                            <span className="font-medium text-xs">
                               Exit Points
                             </span>
                           </div>
@@ -381,16 +393,16 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                         {exitPoints.length > 0 ? (
                           exitPoints.map((exit) => (
                             <ProgressRow
+                              color="var(--chart-3)"
                               key={exit.id}
                               label={exit.id}
-                              value={exit.value}
                               percentage={exit.percentage}
-                              color="var(--chart-3)"
+                              value={exit.value}
                               variant="secondary"
                             />
                           ))
                         ) : (
-                          <div className="text-sm text-muted-foreground py-2">
+                          <div className="py-2 text-muted-foreground text-sm">
                             No exit points
                           </div>
                         )}
@@ -406,8 +418,8 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
               FallbackComponent={(props) => (
                 <ErrorFallback
                   {...props}
-                  title="User Journeys Error"
                   description="Unable to display user journey flow (circular path detected)"
+                  title="User Journeys Error"
                 />
               )}
               resetKeys={[isLoading, nivoSankeyData]}
@@ -421,11 +433,11 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                 </CardHeader>
                 <CardContent>
                   {isLoading ? (
-                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                    <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
                       Loading chart...
                     </div>
                   ) : !nivoSankeyData || nivoSankeyData.nodes.length === 0 ? (
-                    <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
+                    <div className="flex h-[400px] items-center justify-center text-muted-foreground text-sm">
                       No data available
                     </div>
                   ) : (
@@ -433,19 +445,19 @@ export function Sessions({ organizationId, projectId }: SessionsProps) {
                       <div className="flex items-center justify-start gap-4 pb-3">
                         <div className="flex items-center gap-1.5">
                           <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-2" />
-                          <span className="text-xs font-medium">
+                          <span className="font-medium text-xs">
                             Entry Points
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-1" />
-                          <span className="text-xs font-medium">
+                          <span className="font-medium text-xs">
                             Pass Through
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className="h-2 w-2 shrink-0 rounded-[2px] bg-chart-3" />
-                          <span className="text-xs font-medium">
+                          <span className="font-medium text-xs">
                             Exit Points
                           </span>
                         </div>

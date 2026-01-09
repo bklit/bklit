@@ -20,6 +20,11 @@ import type {
   TopCountryResult,
 } from "@/types/geo";
 
+// Regex patterns for performance optimization
+const MOBILE_DEVICE_REGEX = /Mobile|Android|iPhone|iPad/;
+const USER_AGENT_MATCH_REGEX = /([a-z]+)\/(\d+)/;
+const WWW_PREFIX_REGEX = /^www\./;
+
 const getTopCountriesSchema = z.object({
   projectId: z.string(),
   userId: z.string(),
@@ -28,7 +33,7 @@ const getTopCountriesSchema = z.object({
 });
 
 export async function getTopCountries(
-  params: z.infer<typeof getTopCountriesSchema>,
+  params: z.infer<typeof getTopCountriesSchema>
 ) {
   const validation = getTopCountriesSchema.safeParse(params);
 
@@ -80,7 +85,7 @@ export async function getTopCountries(
           country: c.country || "",
           countryCode: c.country_code || "",
           views: c.visits || 0,
-        }),
+        })
       );
     },
     [
@@ -91,7 +96,7 @@ export async function getTopCountries(
     {
       revalidate: 300,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -103,7 +108,7 @@ const getAnalyticsStatsSchema = z.object({
 });
 
 export async function getAnalyticsStats(
-  params: z.input<typeof getAnalyticsStatsSchema>,
+  params: z.input<typeof getAnalyticsStatsSchema>
 ) {
   const validation = getAnalyticsStatsSchema.safeParse(params);
 
@@ -169,7 +174,7 @@ export async function getAnalyticsStats(
     {
       revalidate: 300,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -180,7 +185,7 @@ const getRecentPageViewsSchema = z.object({
 });
 
 export async function getRecentPageViews(
-  params: z.input<typeof getRecentPageViewsSchema>,
+  params: z.input<typeof getRecentPageViewsSchema>
 ) {
   const validation = getRecentPageViewsSchema.safeParse(params);
 
@@ -214,7 +219,7 @@ export async function getRecentPageViews(
     {
       revalidate: 60, // 1 minute
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -224,7 +229,7 @@ const getVisitsByCountrySchema = z.object({
 });
 
 export async function getVisitsByCountry(
-  params: z.infer<typeof getVisitsByCountrySchema>,
+  params: z.infer<typeof getVisitsByCountrySchema>
 ) {
   const validation = getVisitsByCountrySchema.safeParse(params);
 
@@ -272,9 +277,9 @@ export async function getVisitsByCountry(
       // Get city breakdown for each country
       const countriesWithCities = await Promise.all(
         countriesWithVisits.map(
-          async (country: CountryWithVisits): Promise<CountryWithCities> => {
+          (country: CountryWithVisits): CountryWithCities => {
             const countryPageviews = pageviews.filter(
-              (p) => p.country === country.country && p.city,
+              (p) => p.country === country.country && p.city
             );
             const cityCounts = countryPageviews.reduce(
               (acc, p) => {
@@ -283,7 +288,7 @@ export async function getVisitsByCountry(
                 }
                 return acc;
               },
-              {} as Record<string, number>,
+              {} as Record<string, number>
             );
             const cities = Object.entries(cityCounts)
               .map(([city, count]) => ({
@@ -305,19 +310,19 @@ export async function getVisitsByCountry(
                 visits: city._count.city,
               })),
             };
-          },
-        ),
+          }
+        )
       );
 
       return countriesWithCities.filter(
-        (country: CountryWithCities) => country.coordinates !== null,
+        (country: CountryWithCities) => country.coordinates !== null
       );
     },
     [`${projectId}-visits-by-country`],
     {
       revalidate: 300, // 5 minutes
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -327,7 +332,7 @@ const getCountryVisitStatsSchema = z.object({
 });
 
 export async function getCountryVisitStats(
-  params: z.infer<typeof getCountryVisitStatsSchema>,
+  params: z.infer<typeof getCountryVisitStatsSchema>
 ) {
   const validation = getCountryVisitStatsSchema.safeParse(params);
 
@@ -380,17 +385,17 @@ export async function getCountryVisitStats(
               limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
             });
             const mobileVisits = countryPageviews.filter(
-              (p) => p.country === country.country && p.mobile === true,
+              (p) => p.country === country.country && p.mobile === true
             ).length;
 
             const desktopVisits = countryPageviews.filter(
-              (p) => p.country === country.country && p.mobile === false,
+              (p) => p.country === country.country && p.mobile === false
             ).length;
 
             const uniqueVisits = new Set(
               countryPageviews
                 .filter((p) => p.country === country.country && p.ip)
-                .map((p) => p.ip),
+                .map((p) => p.ip)
             ).size;
 
             return {
@@ -407,18 +412,18 @@ export async function getCountryVisitStats(
                   ])
                 : null,
             };
-          },
-        ),
+          }
+        )
       );
 
       // Filter out countries without coordinates and sort by visits
       const result = countriesWithStats
         .filter(
           (country: CountryStats) =>
-            country !== null && country.coordinates !== null,
+            country !== null && country.coordinates !== null
         )
         .sort(
-          (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits,
+          (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits
         );
 
       return result;
@@ -427,7 +432,7 @@ export async function getCountryVisitStats(
     {
       revalidate: 300, // 5 minutes
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -436,7 +441,7 @@ const getCountryVisitorStatsSchema = z.object({
 });
 
 export async function getCountryVisitorStats(
-  params: z.infer<typeof getCountryVisitorStatsSchema>,
+  params: z.infer<typeof getCountryVisitorStatsSchema>
 ) {
   const validation = getCountryVisitorStatsSchema.safeParse(params);
 
@@ -476,13 +481,13 @@ export async function getCountryVisitorStats(
           }
           return acc;
         },
-        {} as Record<string, number>,
+        {} as Record<string, number>
       );
 
       const countriesWithStats = await Promise.all(
-        Object.entries(sessionsByCountry).map(async ([country, count]) => {
+        Object.entries(sessionsByCountry).map(([country, count]) => {
           const samplePageView = pageviews.find(
-            (p) => p.country === country && p.country_code,
+            (p) => p.country === country && p.country_code
           );
 
           const countryCode = samplePageView?.country_code;
@@ -506,14 +511,14 @@ export async function getCountryVisitorStats(
               }
               return acc;
             },
-            {} as Record<string, typeof pageviews>,
+            {} as Record<string, typeof pageviews>
           );
 
           const mobileSessions = countrySessions.filter((s) => {
             const sessionPageviews = pageviewsBySession[s.session_id] || [];
             return (
               sessionPageviews.some((p) => p.mobile) ||
-              (s.user_agent && /Mobile|Android|iPhone|iPad/.test(s.user_agent))
+              (s.user_agent && MOBILE_DEVICE_REGEX.test(s.user_agent))
             );
           }).length;
 
@@ -521,7 +526,7 @@ export async function getCountryVisitorStats(
             const sessionPageviews = pageviewsBySession[s.session_id] || [];
             return (
               sessionPageviews.some((p) => p.mobile === false) ||
-              (s.user_agent && !/Mobile|Android|iPhone|iPad/.test(s.user_agent))
+              (s.user_agent && !MOBILE_DEVICE_REGEX.test(s.user_agent))
             );
           }).length;
 
@@ -539,17 +544,17 @@ export async function getCountryVisitorStats(
                 ])
               : null,
           };
-        }),
+        })
       );
 
       // Filter out countries without coordinates and sort by visits
       const result = countriesWithStats
         .filter(
           (country: CountryStats | null) =>
-            country !== null && country.coordinates !== null,
+            country !== null && country.coordinates !== null
         )
         .sort(
-          (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits,
+          (a: CountryStats, b: CountryStats) => b.totalVisits - a.totalVisits
         );
 
       return result;
@@ -558,12 +563,12 @@ export async function getCountryVisitorStats(
     {
       revalidate: 300, // 5 minutes
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
 export async function debugCountryCodes(
-  params: z.infer<typeof getCountryVisitStatsSchema>,
+  params: z.infer<typeof getCountryVisitStatsSchema>
 ) {
   const validation = getCountryVisitStatsSchema.safeParse(params);
 
@@ -601,7 +606,7 @@ export async function debugCountryCodes(
       country: c.country,
       countryCode: c.countryCode,
       count: c._count.countryCode,
-    })),
+    }))
   );
 
   return uniqueCountryCodes;
@@ -612,7 +617,7 @@ const getUniqueVisitorsByCountrySchema = z.object({
 });
 
 export async function getUniqueVisitorsByCountry(
-  params: z.infer<typeof getUniqueVisitorsByCountrySchema>,
+  params: z.infer<typeof getUniqueVisitorsByCountrySchema>
 ) {
   const validation = getUniqueVisitorsByCountrySchema.safeParse(params);
 
@@ -652,13 +657,13 @@ export async function getUniqueVisitorsByCountry(
           }
           return acc;
         },
-        {} as Record<string, number>,
+        {} as Record<string, number>
       );
 
       const visitorsData = await Promise.all(
-        Object.entries(sessionsByCountry).map(async ([country, count]) => {
+        Object.entries(sessionsByCountry).map(([country, count]) => {
           const samplePageView = pageviews.find(
-            (p) => p.country === country && p.country_code,
+            (p) => p.country === country && p.country_code
           );
 
           const countryCode = samplePageView?.country_code;
@@ -667,14 +672,14 @@ export async function getUniqueVisitorsByCountry(
           }
 
           const coordinates = findCountryCoordinates(countryCode);
-          if (!coordinates || !coordinates.alpha3Code) {
+          if (!coordinates?.alpha3Code) {
             return null;
           }
 
           const totalSessions = count;
           const countrySessions = sessions.filter((s) => s.country === country);
           const bouncedSessions = countrySessions.filter(
-            (s) => s.did_bounce,
+            (s) => s.did_bounce
           ).length;
 
           const bounceRate =
@@ -682,20 +687,20 @@ export async function getUniqueVisitorsByCountry(
 
           const mobileSessions = countrySessions.filter((s) => {
             const sessionPageviews = pageviews.filter(
-              (p) => p.session_id === s.session_id,
+              (p) => p.session_id === s.session_id
             );
             return (
               sessionPageviews.some((p) => p.mobile) ||
-              (s.user_agent && /Mobile|Android|iPhone|iPad/.test(s.user_agent))
+              (s.user_agent && MOBILE_DEVICE_REGEX.test(s.user_agent))
             );
           }).length;
           const desktopSessions = totalSessions - mobileSessions;
 
           const pageviewsForCountry = pageviews.filter(
-            (p) => p.country === country,
+            (p) => p.country === country
           );
           const uniqueVisitors = new Set(
-            pageviewsForCountry.filter((p) => p.ip).map((p) => p.ip),
+            pageviewsForCountry.filter((p) => p.ip).map((p) => p.ip)
           ).size;
 
           return {
@@ -712,7 +717,7 @@ export async function getUniqueVisitorsByCountry(
               number,
             ],
           };
-        }),
+        })
       );
 
       return visitorsData.filter((v) => v !== null);
@@ -721,7 +726,7 @@ export async function getUniqueVisitorsByCountry(
     {
       revalidate: 300, // 5 minutes
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -733,7 +738,7 @@ const getMobileDesktopStatsSchema = z.object({
 });
 
 export async function getMobileDesktopStats(
-  params: z.infer<typeof getMobileDesktopStatsSchema>,
+  params: z.infer<typeof getMobileDesktopStatsSchema>
 ) {
   const validation = getMobileDesktopStatsSchema.safeParse(params);
 
@@ -783,13 +788,13 @@ export async function getMobileDesktopStats(
       const uniqueMobileVisits = new Set(
         pageviews
           .filter((p) => p.mobile === true && p.ip)
-          .map((p) => `${p.session_id || ""}-${p.ip}`),
+          .map((p) => `${p.session_id || ""}-${p.ip}`)
       ).size;
 
       const uniqueDesktopVisits = new Set(
         pageviews
           .filter((p) => p.mobile === false && p.ip)
-          .map((p) => `${p.session_id || ""}-${p.ip}`),
+          .map((p) => `${p.session_id || ""}-${p.ip}`)
       ).size;
 
       return {
@@ -805,7 +810,7 @@ export async function getMobileDesktopStats(
     {
       revalidate: 300,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -869,7 +874,9 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         let path = event.url;
         try {
           path = new URL(event.url).pathname;
-        } catch {}
+        } catch {
+          // Invalid URL, use the raw URL as path
+        }
         pathCounts[path] = (pathCounts[path] || 0) + 1;
       }
 
@@ -889,7 +896,7 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
     {
       revalidate: 60,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -901,7 +908,7 @@ const getBrowserStatsSchema = z.object({
 });
 
 export async function getBrowserStats(
-  params: z.infer<typeof getBrowserStatsSchema>,
+  params: z.infer<typeof getBrowserStatsSchema>
 ) {
   const validation = getBrowserStatsSchema.safeParse(params);
 
@@ -951,7 +958,7 @@ export async function getBrowserStats(
       // Parse user agents to extract browser information
       const browserStats: Record<string, number> = {};
 
-      pageViews.forEach((view) => {
+      for (const view of pageViews) {
         const userAgent = (view.user_agent || "").toLowerCase();
         let browser = "Unknown";
 
@@ -987,14 +994,14 @@ export async function getBrowserStats(
           browser = "Brave";
         } else if (userAgent.length > 0) {
           // If we have a user agent but couldn't identify it, try to extract a hint
-          const uaMatch = userAgent.match(/([a-z]+)\/(\d+)/);
+          const uaMatch = userAgent.match(USER_AGENT_MATCH_REGEX);
           if (uaMatch?.[1]) {
             browser = uaMatch[1].charAt(0).toUpperCase() + uaMatch[1].slice(1);
           }
         }
 
         browserStats[browser] = (browserStats[browser] || 0) + 1;
-      });
+      }
 
       // Convert to array format for easier consumption
       const browserData = Object.entries(browserStats)
@@ -1011,7 +1018,7 @@ export async function getBrowserStats(
     {
       revalidate: 300,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -1023,7 +1030,7 @@ const getSessionAnalyticsSchema = z.object({
 });
 
 export async function getSessionAnalytics(
-  params: z.input<typeof getSessionAnalyticsSchema>,
+  params: z.input<typeof getSessionAnalyticsSchema>
 ) {
   const validation = getSessionAnalyticsSchema.safeParse(params);
 
@@ -1094,13 +1101,13 @@ export async function getSessionAnalytics(
         {} as Record<
           string,
           Array<{ id: string; url: string; timestamp: Date }>
-        >,
+        >
       );
 
       const sessionsWithPageviews = sessions.map((s) => ({
         ...s,
         pageViewEvents: (pageviewsBySession[s.session_id] || []).sort(
-          (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+          (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
         ),
         didBounce: s.did_bounce,
         duration: s.duration,
@@ -1110,7 +1117,7 @@ export async function getSessionAnalytics(
 
       const totalSessions = sessionsWithPageviews.length;
       const bouncedSessions = sessionsWithPageviews.filter(
-        (s) => s.didBounce,
+        (s) => s.didBounce
       ).length;
       const bounceRate =
         totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
@@ -1119,7 +1126,7 @@ export async function getSessionAnalytics(
         sessionsWithPageviews.length > 0
           ? sessionsWithPageviews.reduce(
               (sum, s) => sum + (s.duration || 0),
-              0,
+              0
             ) / sessionsWithPageviews.length
           : 0;
 
@@ -1127,7 +1134,7 @@ export async function getSessionAnalytics(
         sessionsWithPageviews.length > 0
           ? sessionsWithPageviews.reduce(
               (sum, s) => sum + s.pageViewEvents.length,
-              0,
+              0
             ) / sessionsWithPageviews.length
           : 0;
 
@@ -1148,7 +1155,7 @@ export async function getSessionAnalytics(
     {
       revalidate: 300,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -1161,7 +1168,7 @@ const getTopReferrersSchema = z.object({
 });
 
 export async function getTopReferrers(
-  params: z.input<typeof getTopReferrersSchema>,
+  params: z.input<typeof getTopReferrersSchema>
 ) {
   const validation = getTopReferrersSchema.safeParse(params);
 
@@ -1209,7 +1216,7 @@ export async function getTopReferrers(
         if (view.referrer) {
           try {
             const url = new URL(view.referrer);
-            referrer = url.hostname.replace(/^www\./, "");
+            referrer = url.hostname.replace(WWW_PREFIX_REGEX, "");
           } catch {
             referrer = view.referrer;
           }
@@ -1233,7 +1240,7 @@ export async function getTopReferrers(
     {
       revalidate: 300,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -1250,7 +1257,7 @@ const getConversionsSchema = z.object({
 });
 
 export async function getConversions(
-  params: z.infer<typeof getConversionsSchema>,
+  params: z.infer<typeof getConversionsSchema>
 ) {
   const validation = getConversionsSchema.safeParse(params);
 
@@ -1311,7 +1318,7 @@ export async function getConversions(
     {
       revalidate: 60,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }
 
@@ -1359,6 +1366,6 @@ export async function getLiveUsers(params: z.infer<typeof getLiveUsersSchema>) {
     {
       revalidate: 30,
       tags: [`${projectId}-analytics`],
-    },
+    }
   )();
 }

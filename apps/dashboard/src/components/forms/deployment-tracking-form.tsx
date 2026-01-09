@@ -43,7 +43,7 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
       onError: (error) => {
         toast.error(`Failed to save: ${error.message}`);
       },
-    }),
+    })
   );
 
   const toggleMutation = useMutation(
@@ -54,7 +54,7 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
         });
         toast.success("Deployment tracking updated");
       },
-    }),
+    })
   );
 
   const form = useForm({
@@ -94,20 +94,20 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
       </CardHeader>
       <CardContent>
         <form
+          className="space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="space-y-4"
         >
-          <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="flex flex-col items-start gap-4 sm:flex-row">
             <form.Field name="platform">
               {(field) => (
-                <div className="space-y-2 w-full max-w-full sm:max-w-xs">
+                <div className="w-full max-w-full space-y-2 sm:max-w-xs">
                   <Label htmlFor="platform">Platform</Label>
                   <Select
-                    value={field.state.value}
                     onValueChange={field.handleChange}
+                    value={field.state.value}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
@@ -125,19 +125,21 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
 
             <form.Field name="platformProjectId">
               {(field) => (
-                <div className="space-y-2 w-full">
+                <div className="w-full space-y-2">
                   <Label htmlFor="projectId">Project ID</Label>
                   <Input
                     id="projectId"
-                    value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={
-                      form.state.values.platform === "vercel"
-                        ? "prj_xxxxxxxxxxxxx"
-                        : form.state.values.platform === "netlify"
-                          ? "site_xxxxxxxxxxxxx"
-                          : "Project ID from platform"
-                    }
+                    placeholder={(() => {
+                      if (form.state.values.platform === "vercel") {
+                        return "prj_xxxxxxxxxxxxx";
+                      }
+                      if (form.state.values.platform === "netlify") {
+                        return "site_xxxxxxxxxxxxx";
+                      }
+                      return "Project ID from platform";
+                    })()}
+                    value={field.state.value}
                   />
                 </div>
               )}
@@ -147,19 +149,19 @@ export function DeploymentTrackingForm({ projectId }: { projectId: string }) {
           <div className="space-y-2">
             <Label htmlFor="webhookUrl">Webhook URL:</Label>
             <CopyInput
+              className="w-full"
               id="webhookUrl"
               value={`https://app.bklit.com/api/webhooks/${form.state.values.platform}`}
-              className="w-full"
             />
           </div>
 
           <Button
-            type="submit"
             disabled={
               !form.state.values.platformProjectId ||
               saveMutation.isPending ||
               form.state.isSubmitting
             }
+            type="submit"
           >
             {saveMutation.isPending || form.state.isSubmitting
               ? "Saving..."

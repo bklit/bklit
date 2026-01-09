@@ -244,7 +244,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
     async function loadGeoData() {
       try {
         const response = await fetch(
-          "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json",
+          "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
         );
         const topology: Topology<{ countries: GeometryCollection }> =
           await response.json();
@@ -295,7 +295,9 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
   }, [projectId]);
 
   useEffect(() => {
-    if (!isMounted || loading || !containerRef.current) return;
+    if (!isMounted || loading || !containerRef.current) {
+      return;
+    }
 
     const findSVG = () => {
       return containerRef.current?.querySelector("svg");
@@ -303,7 +305,9 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
 
     const timeoutId = setTimeout(() => {
       const svg = findSVG();
-      if (!svg) return;
+      if (!svg) {
+        return;
+      }
 
       const allGroups = Array.from(svg.querySelectorAll("g"));
 
@@ -314,24 +318,24 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
 
       let mapGroup = allGroups.find((g) => {
         const className = g.getAttribute("class") || "";
-        return !className.includes("legend") && !className.includes("Legend");
+        return !(className.includes("legend") || className.includes("Legend"));
       }) as SVGGElement;
 
-      if (!mapGroup) {
+      if (mapGroup) {
+        mapGroup.setAttribute(
+          "class",
+          `${mapGroup.getAttribute("class") || ""} zoom-group`.trim()
+        );
+      } else {
         mapGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
         mapGroup.setAttribute("class", "zoom-group");
 
-        Array.from(svg.children).forEach((child) => {
+        for (const child of Array.from(svg.children)) {
           if (child !== legendGroup) {
             mapGroup.appendChild(child);
           }
-        });
+        }
         svg.appendChild(mapGroup);
-      } else {
-        mapGroup.setAttribute(
-          "class",
-          `${mapGroup.getAttribute("class") || ""} zoom-group`.trim(),
-        );
       }
 
       const zoom = d3
@@ -362,10 +366,12 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [isMounted, loading, features, visitorsData]);
+  }, [isMounted, loading]);
 
   const handleZoomIn = () => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      return;
+    }
     const svg = containerRef.current.querySelector("svg");
     if (svg && zoomRef.current) {
       d3.select(svg)
@@ -376,7 +382,9 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
   };
 
   const handleZoomOut = () => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      return;
+    }
     const svg = containerRef.current.querySelector("svg");
     if (svg && zoomRef.current) {
       d3.select(svg)
@@ -475,32 +483,30 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
   }
 
   return (
-    <Card className="p-0 relative h-full overflow-visible z-30">
-      <CardHeader className="absolute hidden sm:grid top-0 w-full bg-card-background backdrop-blur-xl z-10 pt-6 pb-4 rounded-t-xl">
+    <Card className="relative z-30 h-full overflow-visible p-0">
+      <CardHeader className="absolute top-0 z-10 hidden w-full rounded-t-xl bg-card-background pt-6 pb-4 backdrop-blur-xl sm:grid">
         <CardTitle>Visitors by Country</CardTitle>
         <CardDescription>
           A map of the world with the number of unique visitors per country.
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-full w-full p-0 overflow-visible min-h-[460px]">
-        <div ref={containerRef} className="relative w-full h-full">
-          <div className="w-full h-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl [&_svg_path]:cursor-default">
+      <CardContent className="h-full min-h-[460px] w-full overflow-visible p-0">
+        <div className="relative h-full w-full" ref={containerRef}>
+          <div className="h-full w-full cursor-grab active:cursor-grabbing [&_svg]:rounded-xl [&_svg_path]:cursor-default">
             <ResponsiveChoropleth
-              key={`choropleth-${projectId}-${visitorsData.map((d) => d.id).join("-")}`}
-              data={visitorsData}
-              features={features}
-              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+              borderColor="var(--background)"
+              borderWidth={0.5}
               colors={customColors}
+              data={visitorsData}
               domain={[0, maxValue]}
-              unknownColor="var(--region)"
+              features={features}
+              key={`choropleth-${projectId}-${visitorsData.map((d) => d.id).join("-")}`}
               label="properties.name"
-              valueFormat=".2s"
-              projectionType="naturalEarth1"
+              legends={[]}
+              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
               projectionScale={185}
               projectionTranslation={[0.5, 0.65]}
-              borderWidth={0.5}
-              borderColor="var(--background)"
-              legends={[]}
+              projectionType="naturalEarth1"
               tooltip={({ feature: tooltipFeature }) => {
                 const feature = tooltipFeature as unknown as {
                   id?: string;
@@ -515,12 +521,12 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
                     ? countryName
                     : feature.properties?.name || featureId || "Unknown";
                 return (
-                  <Card className="w-80 bg-card/85 backdrop-blur-sm z-60">
+                  <Card className="z-60 w-80 bg-card/85 backdrop-blur-sm">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <CircleFlag
-                          countryCode={alpha2Code}
                           className="size-4"
+                          countryCode={alpha2Code}
                         />
                         {displayName}
                       </CardTitle>
@@ -530,7 +536,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
                         <>
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">
+                              <span className="font-medium text-sm">
                                 Unique visitors
                               </span>
                               <Badge variant="secondary">
@@ -538,7 +544,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
+                              <span className="text-muted-foreground text-sm">
                                 Bounce rate
                               </span>
                               <Badge
@@ -555,7 +561,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
                           <Separator />
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center justify-between">
-                              <span className="inline-flex gap-2 items-center text-sm text-muted-foreground">
+                              <span className="inline-flex items-center gap-2 text-muted-foreground text-sm">
                                 <Smartphone className="size-4" />
                                 Mobile
                               </span>
@@ -564,7 +570,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
                               </Badge>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="inline-flex gap-2 items-center text-sm text-muted-foreground">
+                              <span className="inline-flex items-center gap-2 text-muted-foreground text-sm">
                                 <Monitor className="size-4" />
                                 Desktop
                               </span>
@@ -575,7 +581,7 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
                           </div>
                         </>
                       ) : (
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-muted-foreground text-sm">
                           No data
                         </div>
                       )}
@@ -583,44 +589,46 @@ export function VisitorsMap({ projectId }: VisitorsMapProps) {
                   </Card>
                 );
               }}
+              unknownColor="var(--region)"
+              valueFormat=".2s"
             />
           </div>
 
           <div className="absolute bottom-4 left-6">
-            <div className="text-xs font-medium text-muted-foreground mb-2">
+            <div className="mb-2 font-medium text-muted-foreground text-xs">
               Unique Visitors
             </div>
             <div className="flex flex-col gap-1.5">
               {legendItems.map((item) => (
-                <div key={item.label} className="flex items-center gap-2">
-                  <div className="size-4 rounded-sm border border-border backdrop-blur-sm bg-background overflow-clip">
+                <div className="flex items-center gap-2" key={item.label}>
+                  <div className="size-4 overflow-clip rounded-sm border border-border bg-background backdrop-blur-sm">
                     <div
                       className="size-full bg-background"
                       style={{ backgroundColor: item.color }}
                     />
                   </div>
-                  <span className="text-xs text-foreground">{item.label}</span>
+                  <span className="text-foreground text-xs">{item.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="absolute bottom-4 right-6 flex flex-col gap-2">
+          <div className="absolute right-6 bottom-4 flex flex-col gap-2">
             <Button
+              aria-label="Zoom in"
+              className="shadow-lg"
+              onClick={handleZoomIn}
               size="icon"
               variant="secondary"
-              onClick={handleZoomIn}
-              className="shadow-lg"
-              aria-label="Zoom in"
             >
               <Plus className="size-4" />
             </Button>
             <Button
+              aria-label="Zoom out"
+              className="shadow-lg"
+              onClick={handleZoomOut}
               size="icon"
               variant="secondary"
-              onClick={handleZoomOut}
-              className="shadow-lg"
-              aria-label="Zoom out"
             >
               <Minus className="size-4" />
             </Button>

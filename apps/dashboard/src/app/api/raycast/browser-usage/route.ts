@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "projectId is required",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Authorization token is required",
         },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: tokenValidation.error || "Invalid token",
         },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -96,13 +96,13 @@ export async function POST(request: NextRequest) {
         success: false,
         error: "Internal server error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
 // OPTIONS handler for CORS preflight (if needed in future)
-export async function OPTIONS() {
+export function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {

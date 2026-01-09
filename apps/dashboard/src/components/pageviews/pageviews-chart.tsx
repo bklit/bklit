@@ -36,12 +36,16 @@ export function PageviewsChart({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -109,14 +113,15 @@ export function PageviewsChart({
       // For entry points, sum up mobile/desktop sessions from all entry points
       const totalMobile = entryPointsData.entryPages.reduce(
         (sum, page) => sum + (page.mobileSessions || 0),
-        0,
+        0
       );
       const totalDesktop = entryPointsData.entryPages.reduce(
         (sum, page) => sum + (page.desktopSessions || 0),
-        0,
+        0
       );
       return { mobile: totalMobile, desktop: totalDesktop };
-    } else if (viewMode === "all" && statsData) {
+    }
+    if (viewMode === "all" && statsData) {
       // For all pageviews, use the stats data
       return {
         mobile: statsData.mobileViews || 0,
@@ -172,8 +177,8 @@ export function PageviewsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">
               Loading chart...
             </div>
           </div>
@@ -196,8 +201,8 @@ export function PageviewsChart({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex h-[300px] items-center justify-center">
+            <div className="text-muted-foreground text-sm">
               No data available
             </div>
           </div>
@@ -227,22 +232,22 @@ export function PageviewsChart({
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <div className="flex flex-col sm:grid grid-cols-4 gap-4">
+        <div className="flex grid-cols-4 flex-col gap-4 sm:grid">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
-              mobile={mobileDesktopData.mobile}
               desktop={mobileDesktopData.desktop}
+              mobile={mobileDesktopData.mobile}
             />
           </div>
           <div className="col-span-3">
             <TimeSeriesChart
-              projectId={projectId}
-              data={chartData.timeSeriesData}
               chartConfig={chartConfig}
-              startDate={startDate}
+              data={chartData.timeSeriesData}
               endDate={endDate}
               isLoading={isLoading}
+              projectId={projectId}
               showDeployments={true}
+              startDate={startDate}
             />
           </div>
         </div>

@@ -33,12 +33,16 @@ export function AcquisitionsChart({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -53,7 +57,7 @@ export function AcquisitionsChart({
       startDate,
       endDate,
       limit: 5,
-    }),
+    })
   );
 
   // Get stats data for mobile/desktop breakdown
@@ -113,8 +117,8 @@ export function AcquisitionsChart({
             Top 5 traffic sources over the last 30 days
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[250px] flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Loading chart data...</p>
+        <CardContent className="flex h-[250px] items-center justify-center">
+          <p className="text-muted-foreground text-sm">Loading chart data...</p>
         </CardContent>
       </Card>
     );
@@ -129,8 +133,8 @@ export function AcquisitionsChart({
             Top 5 traffic sources over the last 30 days
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[250px] flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">
+        <CardContent className="flex h-[250px] items-center justify-center">
+          <p className="text-muted-foreground text-sm">
             No data available for this period.
           </p>
         </CardContent>
@@ -150,22 +154,22 @@ export function AcquisitionsChart({
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <div className="flex flex-col sm:grid sm:grid-cols-4 gap-4">
+        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-4">
           <div className="col-span-1 flex items-center justify-center">
             <MobileDesktopChart
-              mobile={mobileDesktopData.mobile}
               desktop={mobileDesktopData.desktop}
+              mobile={mobileDesktopData.mobile}
             />
           </div>
           <div className="col-span-3">
             <TimeSeriesChart
-              projectId={projectId}
-              data={chartData.timeSeriesData}
               chartConfig={chartConfig}
-              startDate={startDate}
+              data={chartData.timeSeriesData}
               endDate={endDate}
               isLoading={isLoading}
+              projectId={projectId}
               showDeployments={true}
+              startDate={startDate}
             />
           </div>
         </div>

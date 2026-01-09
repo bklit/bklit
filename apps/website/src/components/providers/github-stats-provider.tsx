@@ -20,7 +20,7 @@ interface GithubStatsContextType {
 }
 
 const GithubStatsContext = createContext<GithubStatsContextType | undefined>(
-  undefined,
+  undefined
 );
 
 export const GithubStatsProvider = ({
@@ -35,7 +35,7 @@ export const GithubStatsProvider = ({
     const fetchData = async () => {
       try {
         const repoResponse = await fetch(
-          "https://api.github.com/repos/bklit/bklit",
+          "https://api.github.com/repos/bklit/bklit"
         );
         const repoData = await repoResponse.json();
         setData(repoData);

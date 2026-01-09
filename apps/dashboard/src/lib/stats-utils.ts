@@ -5,7 +5,7 @@ interface ChangeResult {
 
 export function calculateChange(
   current: number,
-  previous: number,
+  previous: number
 ): ChangeResult {
   if (previous === 0 && current === 0) {
     return {

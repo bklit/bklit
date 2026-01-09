@@ -22,8 +22,9 @@ export function useSearchData() {
     currentOrganization: SearchGroup[];
     allOrganizations: SearchGroup[];
   } => {
-    if (!organizations)
+    if (!organizations) {
       return { currentOrganization: [], allOrganizations: [] };
+    }
 
     const currentOrgData: SearchGroup[] = activeOrganization
       ? [

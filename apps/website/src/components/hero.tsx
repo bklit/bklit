@@ -34,28 +34,28 @@ export const Hero = () => {
   }, [currentIndex]);
 
   return (
-    <div className="container mx-auto max-w-6xl flex flex-col px-4">
-      <div className="flex flex-col items-center justify-center text-center w-full space-y-4 pt-32 sm:pt-42 pb-0">
+    <div className="container mx-auto flex max-w-6xl flex-col px-4">
+      <div className="flex w-full flex-col items-center justify-center space-y-4 pt-32 pb-0 text-center sm:pt-42">
         <motion.div
-          className="hidden sm:flex items-center justify-center w-24 aspect-square bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 rounded-4xl sm:rounded-[300px] squircle"
-          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          className="squircle hidden aspect-square w-24 items-center justify-center rounded-4xl bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 sm:flex sm:rounded-[300px]"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <BklitLogo size={60} theme="light" variant="blended" />
         </motion.div>
         <motion.h1
-          className="text-3xl md:text-4xl font-regular leading-tight dark:bg-clip-text dark:text-transparent dark:bg-linear-to-b from-amber-100 to-emerald-100"
-          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          className="from-amber-100 to-emerald-100 font-regular text-3xl leading-tight md:text-4xl dark:bg-linear-to-b dark:bg-clip-text dark:text-transparent"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
         >
           Beautiful Analytics
         </motion.h1>
         <motion.div
-          className="flex items-center gap-2 text-base font-medium dark:text-muted-foreground"
-          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          className="flex items-center gap-2 font-medium text-base dark:text-muted-foreground"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           layout="position"
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
         >
@@ -68,12 +68,12 @@ export const Hero = () => {
             <span className="invisible">{competitors[widthIndex]}</span>
             <AnimatePresence mode="wait">
               <motion.span
-                key={currentIndex}
-                initial={{ opacity: 0, filter: "blur(10px)", y: -10 }}
                 animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                exit={{ opacity: 0, filter: "blur(10px)", y: 10 }}
-                transition={{ duration: 0.5 }}
                 className="absolute inset-0 text-card-foreground"
+                exit={{ opacity: 0, filter: "blur(10px)", y: 10 }}
+                initial={{ opacity: 0, filter: "blur(10px)", y: -10 }}
+                key={currentIndex}
+                transition={{ duration: 0.5 }}
               >
                 {competitors[currentIndex]}
               </motion.span>
@@ -81,35 +81,35 @@ export const Hero = () => {
           </motion.div>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
           className="flex items-center justify-center gap-2"
+          initial={{ opacity: 0, filter: "blur(10px)", y: 15 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
         >
           <Button
-            variant="default"
-            size="lg"
-            data-bklit-event="view-demo-button"
             asChild
+            data-bklit-event="view-demo-button"
+            size="lg"
+            variant="default"
           >
             <a
               href="https://app.bklit.com/signup?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
-              target="_blank"
               rel="noopener noreferrer"
+              target="_blank"
             >
               View Demo
             </a>
           </Button>
           <Button
-            variant="ghost"
-            size="lg"
-            data-bklit-event="sign-up-button"
             asChild
+            data-bklit-event="sign-up-button"
+            size="lg"
+            variant="ghost"
           >
             <a
               href="https://app.bklit.com/signup?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
-              target="_blank"
               rel="noopener noreferrer"
+              target="_blank"
             >
               Sign Up
             </a>

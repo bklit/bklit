@@ -38,20 +38,20 @@ interface SessionData {
 }
 
 const mockCountries: CountryData[] = [
-  { country: "United States", countryCode: "us", views: 45230 },
-  { country: "United Kingdom", countryCode: "gb", views: 28340 },
-  { country: "Germany", countryCode: "de", views: 19250 },
-  { country: "France", countryCode: "fr", views: 16890 },
-  { country: "Canada", countryCode: "ca", views: 12450 },
+  { country: "United States", countryCode: "us", views: 45_230 },
+  { country: "United Kingdom", countryCode: "gb", views: 28_340 },
+  { country: "Germany", countryCode: "de", views: 19_250 },
+  { country: "France", countryCode: "fr", views: 16_890 },
+  { country: "Canada", countryCode: "ca", views: 12_450 },
   { country: "Australia", countryCode: "au", views: 9870 },
   { country: "Japan", countryCode: "jp", views: 7650 },
 ];
 
 const mockBrowsers: BrowserData[] = [
-  { name: "chrome", value: 48230 },
-  { name: "safari", value: 32140 },
-  { name: "firefox", value: 18920 },
-  { name: "edge", value: 12450 },
+  { name: "chrome", value: 48_230 },
+  { name: "safari", value: 32_140 },
+  { name: "firefox", value: 18_920 },
+  { name: "edge", value: 12_450 },
   { name: "other", value: 8760 },
 ];
 
@@ -148,7 +148,7 @@ const positions: Record<string, CardPosition> = {
 export const DetectEverything = () => {
   const totalCountryViews = mockCountries.reduce(
     (sum, country) => sum + country.views,
-    0,
+    0
   );
 
   const [cardOrder, setCardOrder] = useState<CardType[]>([
@@ -162,11 +162,15 @@ export const DetectEverything = () => {
   const pulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const cycleCards = () => {
-    if (isHovering) return;
+    if (isHovering) {
+      return;
+    }
     setCardOrder((prev) => {
       const newOrder = [...prev];
       const last = newOrder.pop();
-      if (last) newOrder.unshift(last);
+      if (last) {
+        newOrder.unshift(last);
+      }
       return newOrder;
     });
   };
@@ -174,9 +178,11 @@ export const DetectEverything = () => {
   useEffect(() => {
     intervalRef.current = setInterval(cycleCards, 3000);
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, [isHovering]);
+  }, [cycleCards]);
 
   useEffect(() => {
     if (isHovering) {
@@ -184,18 +190,24 @@ export const DetectEverything = () => {
         setShowPulse(true);
       }, 200);
     } else {
-      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+      if (pulseTimeoutRef.current) {
+        clearTimeout(pulseTimeoutRef.current);
+      }
       setShowPulse(false);
     }
     return () => {
-      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+      if (pulseTimeoutRef.current) {
+        clearTimeout(pulseTimeoutRef.current);
+      }
     };
   }, [isHovering]);
 
   const bringToFront = (cardType: CardType) => {
     setIsHovering(cardType);
     const currentIndex = cardOrder.indexOf(cardType);
-    if (currentIndex === 2) return;
+    if (currentIndex === 2) {
+      return;
+    }
 
     const newOrder = cardOrder.filter((c) => c !== cardType);
     newOrder.push(cardType);
@@ -212,9 +224,15 @@ export const DetectEverything = () => {
 
   const getCardPosition = (cardType: CardType): CardPosition => {
     const index = cardOrder.indexOf(cardType);
-    if (index === 0) return positions.back as CardPosition;
-    if (index === 1) return positions.middle as CardPosition;
-    if (index === 2) return positions.front as CardPosition;
+    if (index === 0) {
+      return positions.back as CardPosition;
+    }
+    if (index === 1) {
+      return positions.middle as CardPosition;
+    }
+    if (index === 2) {
+      return positions.front as CardPosition;
+    }
     return positions.hidden as CardPosition;
   };
 
@@ -226,27 +244,27 @@ export const DetectEverything = () => {
       case "countries":
         return (
           <motion.div
-            key={cardType}
-            className="w-[400px] absolute top-0 left-0"
-            style={{
-              transformStyle: "preserve-3d",
-              transform: "rotateX(10deg)",
-              zIndex,
-            }}
             animate={{
               translateZ: pos.z,
               translateY: pos.y,
               scale: pos.scale,
+            }}
+            className="absolute top-0 left-0 w-[400px]"
+            key={cardType}
+            style={{
+              transformStyle: "preserve-3d",
+              transform: "rotateX(10deg)",
+              zIndex,
             }}
             transition={{
               duration: 0.6,
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+            <Card className="relative h-fit w-full overflow-hidden bg-card shadow-2xl">
               <motion.div
-                className="absolute inset-0 bg-background pointer-events-none"
                 animate={{ opacity: pos.overlayOpacity }}
+                className="pointer-events-none absolute inset-0 bg-background"
                 transition={{
                   duration: 0.6,
                   ease: [0.4, 0, 0.2, 1],
@@ -266,16 +284,16 @@ export const DetectEverything = () => {
                         : 0;
                     return (
                       <ProgressRow
-                        key={country.countryCode}
-                        label={country.country}
-                        value={country.views}
-                        percentage={percentage}
                         icon={
                           <CircleFlag
-                            countryCode={country.countryCode.toLowerCase()}
                             className="size-4"
+                            countryCode={country.countryCode.toLowerCase()}
                           />
                         }
+                        key={country.countryCode}
+                        label={country.country}
+                        percentage={percentage}
+                        value={country.views}
                       />
                     );
                   })}
@@ -288,27 +306,27 @@ export const DetectEverything = () => {
       case "sessions":
         return (
           <motion.div
-            key={cardType}
-            className="w-[400px] absolute top-0 left-0"
-            style={{
-              transformStyle: "preserve-3d",
-              transform: "rotateX(10deg)",
-              zIndex,
-            }}
             animate={{
               translateZ: pos.z,
               translateY: pos.y,
               scale: pos.scale,
+            }}
+            className="absolute top-0 left-0 w-[400px]"
+            key={cardType}
+            style={{
+              transformStyle: "preserve-3d",
+              transform: "rotateX(10deg)",
+              zIndex,
             }}
             transition={{
               duration: 0.6,
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+            <Card className="relative h-fit w-full overflow-hidden bg-card shadow-2xl">
               <motion.div
-                className="absolute inset-0 bg-background pointer-events-none"
                 animate={{ opacity: pos.overlayOpacity }}
+                className="pointer-events-none absolute inset-0 bg-background"
                 transition={{
                   duration: 0.6,
                   ease: [0.4, 0, 0.2, 1],
@@ -322,8 +340,8 @@ export const DetectEverything = () => {
                 <div className="flex flex-col">
                   {mockSessions.map((session) => (
                     <div
+                      className="flex items-center justify-between border-b px-2 py-1.5 transition-colors last-of-type:border-b-0 hover:bg-accent/50"
                       key={session.id}
-                      className="flex items-center justify-between border-b py-1.5 px-2 last-of-type:border-b-0 hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex flex-col">
                         <div className="flex items-center gap-3">
@@ -336,7 +354,7 @@ export const DetectEverything = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="gap-2 text-xs text-muted-foreground">
+                      <div className="gap-2 text-muted-foreground text-xs">
                         {session.timeAgo}
                       </div>
                     </div>
@@ -350,27 +368,27 @@ export const DetectEverything = () => {
       case "browsers":
         return (
           <motion.div
-            key={cardType}
-            className="w-[400px] absolute top-0 left-0"
-            style={{
-              transformStyle: "preserve-3d",
-              transform: "rotateX(10deg)",
-              zIndex,
-            }}
             animate={{
               translateZ: pos.z,
               translateY: pos.y,
               scale: pos.scale,
+            }}
+            className="absolute top-0 left-0 w-[400px]"
+            key={cardType}
+            style={{
+              transformStyle: "preserve-3d",
+              transform: "rotateX(10deg)",
+              zIndex,
             }}
             transition={{
               duration: 0.6,
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            <Card className="relative w-full h-fit shadow-2xl bg-card overflow-hidden">
+            <Card className="relative h-fit w-full overflow-hidden bg-card shadow-2xl">
               <motion.div
-                className="absolute inset-0 bg-background pointer-events-none"
                 animate={{ opacity: pos.overlayOpacity }}
+                className="pointer-events-none absolute inset-0 bg-background"
                 transition={{
                   duration: 0.6,
                   ease: [0.4, 0, 0.2, 1],
@@ -382,9 +400,9 @@ export const DetectEverything = () => {
               </CardHeader>
               <CardContent>
                 <PieDonut
-                  data={mockBrowsers}
                   centerLabel={{ showTotal: true, suffix: "page views" }}
                   className=""
+                  data={mockBrowsers}
                 />
               </CardContent>
             </Card>
@@ -394,54 +412,54 @@ export const DetectEverything = () => {
   };
 
   return (
-    <div className="flex flex-col sm:grid sm:grid-cols-2 gap-0 sm:gap-8">
+    <div className="flex flex-col gap-0 sm:grid sm:grid-cols-2 sm:gap-8">
       <div className="col-span-1 sm:border-l">
         <button
-          type="button"
-          className={`flex flex-col gap-2 p-4 sm:p-14 border-b cursor-pointer transition-colors text-left w-full ${
+          className={`flex w-full cursor-pointer flex-col gap-2 border-b p-4 text-left transition-colors sm:p-14 ${
             isActive("browsers")
               ? "bg-accent/30 hover:bg-accent/40"
               : "hover:bg-accent/50"
           }`}
           onMouseEnter={() => bringToFront("browsers")}
           onMouseLeave={handleMouseLeave}
+          type="button"
         >
-          <h2 className="text-md sm:text-xl font-bold">Browser Usage</h2>
-          <p className="text-xs sm:text-lg text-muted-foreground">
+          <h2 className="font-bold text-md sm:text-xl">Browser Usage</h2>
+          <p className="text-muted-foreground text-xs sm:text-lg">
             Gain insight into which browsers your visitors are using and how
             they're interacting with your website.
           </p>
         </button>
         <button
-          type="button"
           className={cn(
-            "flex flex-col gap-2 p-4 sm:p-14 border-b cursor-pointer transition-colors text-left w-full",
+            "flex w-full cursor-pointer flex-col gap-2 border-b p-4 text-left transition-colors sm:p-14",
             isActive("sessions")
               ? "bg-accent/30 hover:bg-accent/40"
-              : "hover:bg-accent/50",
+              : "hover:bg-accent/50"
           )}
           onMouseEnter={() => bringToFront("sessions")}
           onMouseLeave={handleMouseLeave}
+          type="button"
         >
-          <h3 className="text-md sm:text-xl font-bold">Recent Sessions</h3>
-          <p className="text-xs sm:text-lg text-muted-foreground">
+          <h3 className="font-bold text-md sm:text-xl">Recent Sessions</h3>
+          <p className="text-muted-foreground text-xs sm:text-lg">
             Understand your users' behavior and how they flow through your
             website.
           </p>
         </button>
         <button
-          type="button"
           className={cn(
-            "flex flex-col gap-2 p-4 sm:p-14 cursor-pointer transition-colors text-left w-full",
+            "flex w-full cursor-pointer flex-col gap-2 p-4 text-left transition-colors sm:p-14",
             isActive("countries")
               ? "bg-accent/30 hover:bg-accent/40"
-              : "hover:bg-accent/50",
+              : "hover:bg-accent/50"
           )}
           onMouseEnter={() => bringToFront("countries")}
           onMouseLeave={handleMouseLeave}
+          type="button"
         >
-          <h3 className="text-md sm:text-xl font-bold">Top Countries</h3>
-          <p className="text-xs sm:text-lg text-muted-foreground">
+          <h3 className="font-bold text-md sm:text-xl">Top Countries</h3>
+          <p className="text-muted-foreground text-xs sm:text-lg">
             Gain insight into where your visitors are coming from and what
             timezones they're in.
           </p>
@@ -462,32 +480,32 @@ export const DetectEverything = () => {
             }}
           >
             {["countries", "sessions", "browsers"].map((cardType) =>
-              renderCard(cardType as CardType),
+              renderCard(cardType as CardType)
             )}
           </div>
         </section>
         <div className="flex items-center justify-center">
           <div
             className={cn(
-              "size-4 rounded relative",
-              showPulse ? "overflow-visible" : "overflow-clip",
+              "relative size-4 rounded",
+              showPulse ? "overflow-visible" : "overflow-clip"
             )}
           >
             <motion.div
-              className="size-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              style={{
-                background:
-                  "conic-gradient(from 0deg, transparent, var(--bklit-400) 360deg, transparent 360deg)",
-              }}
               animate={{
                 rotate: isHovering ? 0 : 360,
                 opacity: isHovering ? 0 : 1,
+              }}
+              className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 size-8"
+              style={{
+                background:
+                  "conic-gradient(from 0deg, transparent, var(--bklit-400) 360deg, transparent 360deg)",
               }}
               transition={{
                 rotate: {
                   duration: 3,
                   ease: "linear",
-                  repeat: Infinity,
+                  repeat: Number.POSITIVE_INFINITY,
                 },
                 opacity: {
                   duration: 0.2,
@@ -495,15 +513,15 @@ export const DetectEverything = () => {
               }}
             />
             <motion.div
-              className="absolute inset-px rounded-[3px] bg-bklit-700"
               animate={{
                 scale: showPulse ? [1, 1.2, 1] : 1,
                 opacity: showPulse ? [1, 0.5, 1] : 1,
               }}
+              className="absolute inset-px rounded-[3px] bg-bklit-700"
               transition={{
                 duration: showPulse ? 0.9 : 0,
                 ease: "easeOut",
-                repeat: showPulse ? Infinity : 0,
+                repeat: showPulse ? Number.POSITIVE_INFINITY : 0,
               }}
             />
           </div>

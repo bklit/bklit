@@ -1,10 +1,10 @@
 export function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
+      aria-label="Google"
+      fill="currentColor"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-      aria-label="Google"
       {...props}
     >
       <title>Google</title>

@@ -52,7 +52,7 @@ export async function incrementRateLimit(extensionId: string): Promise<void> {
 }
 
 export async function resetDailyStats(
-  projectExtensionId: string,
+  projectExtensionId: string
 ): Promise<void> {
   await prisma.projectExtension.update({
     where: { id: projectExtensionId },
@@ -61,7 +61,7 @@ export async function resetDailyStats(
 }
 
 export async function updateExtensionStats(
-  projectExtensionId: string,
+  projectExtensionId: string
 ): Promise<void> {
   await prisma.projectExtension.update({
     where: { id: projectExtensionId },

@@ -44,38 +44,38 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col w-full bg-background">
-      <div className="flex relative w-full items-center justify-between px-4 lg:px-6 py-4">
+    <header className="fixed top-0 right-0 left-0 z-50 flex w-full flex-col bg-background">
+      <div className="relative flex w-full items-center justify-between px-4 py-4 lg:px-6">
         <div className="flex items-center gap-6">
           <BklitLogo
+            className="hidden text-black sm:inline-flex dark:text-white"
             size={32}
-            className="dark:text-white text-black hidden sm:inline-flex"
           />
           {user && <NavWorkspace user={user} />}
 
           <AnimatePresence mode="wait">
             {shouldShow && (
               <motion.div
-                key="live-users"
+                animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+                className="hidden items-center gap-2 font-medium text-muted-foreground text-xs sm:flex"
+                exit={{ opacity: 0, scale: 0.8, y: -10, filter: "blur(4px)" }}
                 initial={{
                   opacity: 0,
                   scale: 0.8,
                   y: -10,
                   filter: "blur(4px)",
                 }}
-                animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 0.8, y: -10, filter: "blur(4px)" }}
+                key="live-users"
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-medium"
               >
-                <div className="size-3 relative">
-                  <div className="absolute top-0 left-0 size-3 rounded-full bg-red-400 animate-ping" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full bg-red-400" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-7 rounded-full bg-red-400 pointer-events-none blur-xl opacity-80" />
+                <div className="relative size-3">
+                  <div className="absolute top-0 left-0 size-3 animate-ping rounded-full bg-red-400" />
+                  <div className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 size-2 rounded-full bg-red-400" />
+                  <div className="-translate-x-1/2 -translate-y-1/2 pointer-events-none absolute top-1/2 left-1/2 size-7 rounded-full bg-red-400 opacity-80 blur-xl" />
                 </div>
                 <Link
+                  className="flex items-center gap-2 font-medium text-muted-foreground text-xs"
                   href={`/${organizationId}/${projectId}/live`}
-                  className="flex items-center gap-2 text-xs text-muted-foreground font-medium"
                 >
                   <span>
                     <NumberFlow value={liveUsers} />
@@ -106,10 +106,10 @@ function SidebarToggle() {
 
   return (
     <Button
-      size="icon"
-      variant="ghost"
       className="relative cursor-pointer"
       onClick={toggleSidebar}
+      size="icon"
+      variant="ghost"
     >
       {state === "expanded" ? <PanelLeftIcon /> : <PanelRightIcon />}
     </Button>

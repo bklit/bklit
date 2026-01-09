@@ -34,7 +34,11 @@ interface GitHubConfigProps {
     productionWorkflows?: string[];
     productionBranch?: string;
   };
-  onChange: (config: any) => void;
+  onChange: (config: {
+    repository?: string;
+    productionWorkflows?: string[];
+    productionBranch?: string;
+  }) => void;
 }
 
 export function GitHubConfig({
@@ -56,7 +60,7 @@ export function GitHubConfig({
         });
         toast.success("GitHub account linked!");
       },
-    }),
+    })
   );
 
   // Handle return from GitHub OAuth (run once on mount if param exists)
@@ -71,7 +75,12 @@ export function GitHubConfig({
       window.history.replaceState({}, "", window.location.pathname);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
+  }, [
+    organizationId,
+    saveInstallation.isPending,
+    saveInstallation.mutate,
+    searchParams.get,
+  ]); // Run once on mount
 
   const { data: installation } = useQuery({
     ...trpc.github.getInstallation.queryOptions({ organizationId }),
@@ -110,14 +119,14 @@ export function GitHubConfig({
 
   const setupWebhook = useMutation(
     trpc.github.setupWebhook.mutationOptions({
-      onSuccess: (data) => {
+      onSuccess: (_data) => {
         toast.success("Webhook configured successfully!");
         setWebhookExists(true);
       },
       onError: (error) => {
         toast.error(`Failed to setup webhook: ${error.message}`);
       },
-    }),
+    })
   );
 
   const handleLinkGitHub = async () => {
@@ -134,7 +143,9 @@ export function GitHubConfig({
   };
 
   const handleSetupWebhook = () => {
-    if (!selectedRepo) return;
+    if (!selectedRepo) {
+      return;
+    }
 
     setupWebhook.mutate({
       organizationId,
@@ -155,12 +166,12 @@ export function GitHubConfig({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Badge variant="success" size="lg">
+        <Badge size="lg" variant="success">
           <GitHubIcon className="size-3" />
           Connected to GitHub
         </Badge>
 
-        <Button variant="secondary" size="sm" onClick={handleLinkGitHub}>
+        <Button onClick={handleLinkGitHub} size="sm" variant="secondary">
           <GitHubIcon className="size-3" /> Manage Permissions
         </Button>
       </div>
@@ -168,11 +179,11 @@ export function GitHubConfig({
       <div className="space-y-2">
         <Label>Repository</Label>
         <Select
-          value={selectedRepo}
           onValueChange={(value) => {
             setSelectedRepo(value);
             onChange({ ...config, repository: value });
           }}
+          value={selectedRepo}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select repository" />
@@ -191,22 +202,23 @@ export function GitHubConfig({
         <>
           <div className="space-y-2">
             <Label>Production Workflows</Label>
-            <p className="text-sm text-muted-foreground mb-2">
+            <p className="mb-2 text-muted-foreground text-sm">
               Select workflows that deploy to production
             </p>
-            <div className="space-y-2 bg-input/50 border border-border rounded-lg p-3 max-h-64 overflow-y-auto">
+            <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-border bg-input/50 p-3">
               {workflows.map((workflow) => (
                 <Label
-                  key={workflow.id}
+                  className="group flex cursor-pointer items-center justify-between font-medium text-sm"
                   htmlFor={`workflow-${workflow.id}`}
-                  className="font-medium cursor-pointer text-sm flex items-center justify-between group"
+                  key={workflow.id}
                 >
                   <div className="flex items-center gap-3">
                     <Checkbox
-                      id={`workflow-${workflow.id}`}
                       checked={config.productionWorkflows?.includes(
-                        workflow.name,
+                        workflow.name
                       )}
+                      className="group-hover:border-bklit-400"
+                      id={`workflow-${workflow.id}`}
                       onCheckedChange={(checked) => {
                         const current = config.productionWorkflows || [];
                         onChange({
@@ -216,11 +228,10 @@ export function GitHubConfig({
                             : current.filter((w) => w !== workflow.name),
                         });
                       }}
-                      className="group-hover:border-bklit-400"
                     />
                     {workflow.name}
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">
+                  <span className="font-mono text-muted-foreground text-xs">
                     {workflow.recentRuns?.length || 0} recent runs
                   </span>
                 </Label>
@@ -231,10 +242,10 @@ export function GitHubConfig({
           <div className="space-y-2">
             <Label>Production Branch</Label>
             <Select
-              value={config.productionBranch || "main"}
               onValueChange={(value) =>
                 onChange({ ...config, productionBranch: value })
               }
+              value={config.productionBranch || "main"}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -255,11 +266,11 @@ export function GitHubConfig({
                 Deployments will now be tracked automatically
               </AlertDescription>
               <AlertFooter>
-                <Button asChild variant="outline" size="lg">
+                <Button asChild size="lg" variant="outline">
                   <a
                     href={`https://github.com/${selectedRepo}/settings/hooks`}
-                    target="_blank"
                     rel="noopener noreferrer"
+                    target="_blank"
                   >
                     <GitHubIcon className="size-4" /> Manage {selectedRepo}{" "}
                     webhooks
@@ -270,17 +281,21 @@ export function GitHubConfig({
           )}
 
           <Button
-            onClick={handleSetupWebhook}
-            variant={webhookExists ? "outline" : "default"}
             className="w-full"
             disabled={setupWebhook.isPending}
+            onClick={handleSetupWebhook}
             size="lg"
+            variant={webhookExists ? "outline" : "default"}
           >
-            {setupWebhook.isPending
-              ? "Setting up webhook..."
-              : webhookExists
-                ? "Recreate Webhook"
-                : "Setup GitHub Webhook"}
+            {(() => {
+              if (setupWebhook.isPending) {
+                return "Setting up webhook...";
+              }
+              if (webhookExists) {
+                return "Recreate Webhook";
+              }
+              return "Setup GitHub Webhook";
+            })()}
           </Button>
         </>
       )}

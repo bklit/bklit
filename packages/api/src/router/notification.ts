@@ -7,7 +7,7 @@ export const notificationRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to the project
@@ -27,11 +27,7 @@ export const notificationRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -64,7 +60,7 @@ export const notificationRouter = createTRPCRouter({
         projectId: z.string(),
         organizationId: z.string(),
         liveVisitorToasts: z.boolean(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Check if user has access to the project
@@ -84,11 +80,7 @@ export const notificationRouter = createTRPCRouter({
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 

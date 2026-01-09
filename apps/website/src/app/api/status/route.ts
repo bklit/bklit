@@ -119,7 +119,14 @@ export async function GET() {
       // Track the last timestamp for each endpoint
       lastTimestampByEndpoint[check.endpoint] = check.timestamp;
 
-      if (!check.isHealthy) {
+      if (check.isHealthy) {
+        // Health recovered - close any open incident
+        const lastIncident =
+          incidents[check.endpoint][incidents[check.endpoint].length - 1];
+        if (lastIncident && !lastIncident.end) {
+          lastIncident.end = check.timestamp;
+        }
+      } else {
         const lastIncident =
           incidents[check.endpoint][incidents[check.endpoint].length - 1];
         if (!lastIncident || lastIncident.end) {
@@ -134,19 +141,12 @@ export async function GET() {
             lastIncident.error = check.errorMessage;
           }
         }
-      } else {
-        // Health recovered - close any open incident
-        const lastIncident =
-          incidents[check.endpoint][incidents[check.endpoint].length - 1];
-        if (lastIncident && !lastIncident.end) {
-          lastIncident.end = check.timestamp;
-        }
       }
     }
 
     // Close any open incidents with the last known timestamp for that endpoint
     for (const [endpoint, endpointIncidents] of Object.entries(incidents)) {
-      const lastIncident = endpointIncidents[endpointIncidents.length - 1];
+      const lastIncident = endpointIncidents.at(-1);
       if (lastIncident && !lastIncident.end) {
         const lastTimestamp = lastTimestampByEndpoint[endpoint];
         if (lastTimestamp) {
@@ -160,15 +160,15 @@ export async function GET() {
       const allDays = Object.values(dailyData);
       const totalChecks = allDays.reduce(
         (sum, day) => sum + day.totalChecks,
-        0,
+        0
       );
       const healthyChecks = allDays.reduce(
         (sum, day) => sum + day.healthyChecks,
-        0,
+        0
       );
       const unhealthyChecks = allDays.reduce(
         (sum, day) => sum + day.unhealthyChecks,
-        0,
+        0
       );
       const uptimePercentage =
         totalChecks > 0 ? (healthyChecks / totalChecks) * 100 : 100;
@@ -219,7 +219,7 @@ export async function GET() {
         error: "Failed to fetch status data",
         message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

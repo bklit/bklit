@@ -80,12 +80,16 @@ export function FunnelsList({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -102,7 +106,7 @@ export function FunnelsList({
         organizationId,
         startDate,
         endDate,
-      }),
+      })
     ),
   });
 
@@ -114,11 +118,11 @@ export function FunnelsList({
         </CardHeader>
         <CardContent>
           <ItemGroup>
-            {Array.from({ length: 5 }, (_, i) => (
-              <Item key={i}>
+            {Array.from({ length: 5 }).map(() => (
+              <Item key={crypto.randomUUID()}>
                 <ItemContent>
                   <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-64 mt-2" />
+                  <Skeleton className="mt-2 h-3 w-64" />
                 </ItemContent>
               </Item>
             ))}
@@ -135,7 +139,7 @@ export function FunnelsList({
           <CardTitle>Funnels</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             No funnels found
           </div>
         </CardContent>
@@ -156,7 +160,7 @@ export function FunnelsList({
             const lastSessionTimestamp = stats?.lastSessionTimestamp;
 
             return (
-              <Item key={funnel.id} asChild variant="outline">
+              <Item asChild key={funnel.id} variant="outline">
                 <Link
                   href={`/${organizationId}/${projectId}/funnels/${funnel.id}`}
                 >
@@ -174,7 +178,7 @@ export function FunnelsList({
                               new Date(lastSessionTimestamp),
                               {
                                 addSuffix: true,
-                              },
+                              }
                             )}
                           </span>
                         </>
@@ -183,8 +187,8 @@ export function FunnelsList({
                   </ItemContent>
                   <ItemActions className="flex flex-col items-end gap-1">
                     <Badge
-                      variant={conversionRate > 30 ? "success" : "destructive"}
                       size="lg"
+                      variant={conversionRate > 30 ? "success" : "destructive"}
                     >
                       {conversionRate > 0
                         ? conversionRate >= 99.995
@@ -202,12 +206,12 @@ export function FunnelsList({
       </CardContent>
       {pagination && pagination.totalPages > 1 && (
         <CardFooter>
-          <div className="flex justify-between items-center w-full gap-4">
-            <div className="text-sm text-muted-foreground shrink-0">
+          <div className="flex w-full items-center justify-between gap-4">
+            <div className="shrink-0 text-muted-foreground text-sm">
               Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
               {Math.min(
                 pagination.page * pagination.limit,
-                totalCount ?? funnels.length,
+                totalCount ?? funnels.length
               )}{" "}
               of {totalCount ?? funnels.length} results
             </div>
@@ -215,6 +219,11 @@ export function FunnelsList({
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
+                    className={
+                      pagination.hasPreviousPage
+                        ? "cursor-pointer"
+                        : "pointer-events-none opacity-50"
+                    }
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
@@ -222,11 +231,6 @@ export function FunnelsList({
                         onPageChange(pagination.page - 1);
                       }
                     }}
-                    className={
-                      !pagination.hasPreviousPage
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
                   />
                 </PaginationItem>
 
@@ -254,13 +258,13 @@ export function FunnelsList({
                         )}
                         <PaginationItem>
                           <PaginationLink
+                            className="cursor-pointer"
                             href="#"
+                            isActive={page === pagination.page}
                             onClick={(e) => {
                               e.preventDefault();
                               onPageChange(page);
                             }}
-                            isActive={page === pagination.page}
-                            className="cursor-pointer"
                           >
                             {page}
                           </PaginationLink>
@@ -271,6 +275,11 @@ export function FunnelsList({
 
                 <PaginationItem>
                   <PaginationNext
+                    className={
+                      pagination.hasNextPage
+                        ? "cursor-pointer"
+                        : "pointer-events-none opacity-50"
+                    }
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
@@ -278,11 +287,6 @@ export function FunnelsList({
                         onPageChange(pagination.page + 1);
                       }
                     }}
-                    className={
-                      !pagination.hasNextPage
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
                   />
                 </PaginationItem>
               </PaginationContent>

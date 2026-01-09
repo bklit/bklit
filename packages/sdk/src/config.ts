@@ -6,6 +6,9 @@ export interface BklitConfig {
   debug: boolean;
 }
 
+// Regex for removing trailing slash from URLs
+const TRAILING_SLASH_REGEX = /\/$/;
+
 // Get dashboard URL from environment and construct API endpoint
 const getDefaultApiHost = (env: "development" | "production"): string => {
   // Get dashboard URL from NEXT_PUBLIC_APP_URL
@@ -19,7 +22,7 @@ const getDefaultApiHost = (env: "development" | "production"): string => {
 
   if (dashboardUrl) {
     // Remove trailing slash and append /api/track
-    return `${dashboardUrl.replace(/\/$/, "")}/api/track`;
+    return `${dashboardUrl.replace(TRAILING_SLASH_REGEX, "")}/api/track`;
   }
 
   // Production: Use published production URL as fallback
@@ -28,7 +31,7 @@ const getDefaultApiHost = (env: "development" | "production"): string => {
       console.warn(
         "⚠️ Bklit SDK: No apiHost provided and NEXT_PUBLIC_APP_URL not set. " +
           "Using default production API: https://app.bklit.com/api/track. " +
-          "For better control, pass apiHost to initBklit().",
+          "For better control, pass apiHost to initBklit()."
       );
     }
     return "https://app.bklit.com/api/track";
@@ -37,7 +40,7 @@ const getDefaultApiHost = (env: "development" | "production"): string => {
   // Development fallback
   if (typeof window !== "undefined") {
     console.warn(
-      "NEXT_PUBLIC_APP_URL not set, using default: http://localhost:3000/api/track",
+      "NEXT_PUBLIC_APP_URL not set, using default: http://localhost:3000/api/track"
     );
   }
   return "http://localhost:3000/api/track";
@@ -75,7 +78,7 @@ export function validateConfig(config: Partial<BklitConfig>): void {
     !["development", "production"].includes(config.environment)
   ) {
     throw new Error(
-      `Invalid environment: ${config.environment}. Must be one of: development, production`,
+      `Invalid environment: ${config.environment}. Must be one of: development, production`
     );
   }
 }

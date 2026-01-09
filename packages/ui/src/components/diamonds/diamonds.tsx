@@ -8,7 +8,9 @@ import "./diamonds.modules.css";
 
 const MAX_COLORS = 8;
 const parseColor = (color: string) => {
-  if (typeof window === "undefined") return [0, 0, 0];
+  if (typeof window === "undefined") {
+    return [0, 0, 0];
+  }
 
   // Handle hex directly for precision/perf
   if (color.startsWith("#")) {
@@ -37,7 +39,7 @@ const parseColor = (color: string) => {
 
   // Handle standard rgb/rgba: rgb(r, g, b) or rgb(r g b)
   const rgbMatch = computed.match(
-    /rgba?\((\d+\.?\d*)[,\s]+(\d+\.?\d*)[,\s]+(\d+\.?\d*)/,
+    /rgba?\((\d+\.?\d*)[,\s]+(\d+\.?\d*)[,\s]+(\d+\.?\d*)/
   );
   if (rgbMatch && rgbMatch.length >= 4) {
     return [
@@ -49,7 +51,7 @@ const parseColor = (color: string) => {
 
   // Handle color(srgb r g b) format
   const colorMatch = computed.match(
-    /color\(\s*srgb\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/,
+    /color\(\s*srgb\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s+(\d+\.?\d*)/
   );
   if (colorMatch && colorMatch.length >= 4) {
     return [
@@ -66,11 +68,13 @@ const parseColor = (color: string) => {
 const prepStops = (stops?: string[]) => {
   const base = (stops?.length ? stops : ["#FF9FFC", "#5227FF"]).slice(
     0,
-    MAX_COLORS,
+    MAX_COLORS
   );
-  if (base.length === 1) base.push(base[0] || "#FF9FFC");
+  if (base.length === 1) {
+    base.push(base[0] || "#FF9FFC");
+  }
   while (base.length < MAX_COLORS) {
-    base.push(base[base.length - 1] || "#5227FF");
+    base.push(base.at(-1) || "#5227FF");
   }
 
   // Use parseColor instead of hexToRGB
@@ -164,7 +168,9 @@ export const Diamonds = ({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const renderer = new Renderer({
       dpr:
@@ -435,7 +441,9 @@ void main() {
     meshRef.current = mesh;
 
     const resize = () => {
-      if (!container) return;
+      if (!container) {
+        return;
+      }
       const rect = container.getBoundingClientRect();
       renderer.setSize(rect.width, rect.height);
       uniforms.iResolution.value = [
@@ -482,8 +490,9 @@ void main() {
     let animationId = 0;
     const loop = (t: number) => {
       animationId = requestAnimationFrame(loop);
-      if (!rendererRef.current || !programRef.current || !meshRef.current)
+      if (!(rendererRef.current && programRef.current && meshRef.current)) {
         return;
+      }
 
       if (uniforms?.iTime) {
         uniforms.iTime.value = t * 0.001;
@@ -491,12 +500,16 @@ void main() {
 
       const dampening = propsRef.current.mouseDampening;
       if (dampening > 0) {
-        if (!lastTimeRef.current) lastTimeRef.current = t;
+        if (!lastTimeRef.current) {
+          lastTimeRef.current = t;
+        }
         const dt = (t - lastTimeRef.current) / 1000;
         lastTimeRef.current = t;
         const tau = Math.max(1e-4, dampening);
         let factor = 1 - Math.exp(-dt / tau);
-        if (factor > 1) factor = 1;
+        if (factor > 1) {
+          factor = 1;
+        }
         const target = mouseTargetRef.current;
         const cur = uniforms.iMouse.value;
         if (
@@ -534,15 +547,40 @@ void main() {
         container.removeChild(canvas);
       }
 
-      if (programRef.current) programRef.current.remove();
-      if (geometryRef.current) geometryRef.current.remove();
+      if (programRef.current) {
+        programRef.current.remove();
+      }
+      if (geometryRef.current) {
+        geometryRef.current.remove();
+      }
 
       rendererRef.current = null;
       programRef.current = null;
       geometryRef.current = null;
       meshRef.current = null;
     };
-  }, [dpr, paused]);
+  }, [
+    dpr,
+    paused,
+    angle,
+    distortAmount,
+    gradientColors,
+    grainScale,
+    mirrorGradient,
+    noise,
+    refractionStrength,
+    shineDirection,
+    spotlightOpacity,
+    spotlightRadius,
+    spotlightSoftness,
+    tileCount,
+    tileMinSize,
+    turbulenceAmp,
+    turbulenceFreq,
+    turbulenceSpeed,
+    vignetteRadius,
+    vignetteStrength,
+  ]);
 
   useEffect(() => {
     propsRef.current = {
@@ -572,43 +610,82 @@ void main() {
       const p = propsRef.current;
       const uniforms = programRef.current.uniforms;
 
-      if (uniforms.uAngle) uniforms.uAngle.value = (p.angle * Math.PI) / 180;
-      if (uniforms.uNoise) uniforms.uNoise.value = p.noise ?? 0.1;
-      if (uniforms.uTurbFreq)
+      if (uniforms.uAngle) {
+        uniforms.uAngle.value = (p.angle * Math.PI) / 180;
+      }
+      if (uniforms.uNoise) {
+        uniforms.uNoise.value = p.noise ?? 0.1;
+      }
+      if (uniforms.uTurbFreq) {
         uniforms.uTurbFreq.value = p.turbulenceFreq ?? 3.0;
-      if (uniforms.uTurbAmp) uniforms.uTurbAmp.value = p.turbulenceAmp ?? 0.15;
-      if (uniforms.uTurbSpeed)
+      }
+      if (uniforms.uTurbAmp) {
+        uniforms.uTurbAmp.value = p.turbulenceAmp ?? 0.15;
+      }
+      if (uniforms.uTurbSpeed) {
         uniforms.uTurbSpeed.value = p.turbulenceSpeed ?? 0.5;
-      if (uniforms.uRefraction)
+      }
+      if (uniforms.uRefraction) {
         uniforms.uRefraction.value = p.refractionStrength ?? 0.1;
-      if (uniforms.uVignette)
+      }
+      if (uniforms.uVignette) {
         uniforms.uVignette.value = p.vignetteStrength ?? 0.0;
-      if (uniforms.uVignetteRadius)
+      }
+      if (uniforms.uVignetteRadius) {
         uniforms.uVignetteRadius.value = p.vignetteRadius ?? 1.0;
-      if (uniforms.uGrainScale)
+      }
+      if (uniforms.uGrainScale) {
         uniforms.uGrainScale.value = p.grainScale ?? 1.0;
-      if (uniforms.uTileCount)
+      }
+      if (uniforms.uTileCount) {
         uniforms.uTileCount.value = Math.max(1, p.tileCount ?? 3);
-      if (uniforms.uSpotlightRadius)
+      }
+      if (uniforms.uSpotlightRadius) {
         uniforms.uSpotlightRadius.value = p.spotlightRadius ?? 0.9;
-      if (uniforms.uSpotlightSoftness)
+      }
+      if (uniforms.uSpotlightSoftness) {
         uniforms.uSpotlightSoftness.value = p.spotlightSoftness ?? 0.4;
-      if (uniforms.uSpotlightOpacity)
+      }
+      if (uniforms.uSpotlightOpacity) {
         uniforms.uSpotlightOpacity.value = p.spotlightOpacity ?? 1.0;
-      if (uniforms.uMirror) uniforms.uMirror.value = p.mirrorGradient ? 1 : 0;
-      if (uniforms.uDistort) uniforms.uDistort.value = p.distortAmount ?? 15;
-      if (uniforms.uShineFlip)
+      }
+      if (uniforms.uMirror) {
+        uniforms.uMirror.value = p.mirrorGradient ? 1 : 0;
+      }
+      if (uniforms.uDistort) {
+        uniforms.uDistort.value = p.distortAmount ?? 15;
+      }
+      if (uniforms.uShineFlip) {
         uniforms.uShineFlip.value =
           p.shineDirection === "right" || p.shineDirection === "bottom" ? 1 : 0;
-      if (uniforms.uColorCount) uniforms.uColorCount.value = colorCount;
-      if (uniforms.uColor0) uniforms.uColor0.value = colorArr[0];
-      if (uniforms.uColor1) uniforms.uColor1.value = colorArr[1];
-      if (uniforms.uColor2) uniforms.uColor2.value = colorArr[2];
-      if (uniforms.uColor3) uniforms.uColor3.value = colorArr[3];
-      if (uniforms.uColor4) uniforms.uColor4.value = colorArr[4];
-      if (uniforms.uColor5) uniforms.uColor5.value = colorArr[5];
-      if (uniforms.uColor6) uniforms.uColor6.value = colorArr[6];
-      if (uniforms.uColor7) uniforms.uColor7.value = colorArr[7];
+      }
+      if (uniforms.uColorCount) {
+        uniforms.uColorCount.value = colorCount;
+      }
+      if (uniforms.uColor0) {
+        uniforms.uColor0.value = colorArr[0];
+      }
+      if (uniforms.uColor1) {
+        uniforms.uColor1.value = colorArr[1];
+      }
+      if (uniforms.uColor2) {
+        uniforms.uColor2.value = colorArr[2];
+      }
+      if (uniforms.uColor3) {
+        uniforms.uColor3.value = colorArr[3];
+      }
+      if (uniforms.uColor4) {
+        uniforms.uColor4.value = colorArr[4];
+      }
+      if (uniforms.uColor5) {
+        uniforms.uColor5.value = colorArr[5];
+      }
+      if (uniforms.uColor6) {
+        uniforms.uColor6.value = colorArr[6];
+      }
+      if (uniforms.uColor7) {
+        uniforms.uColor7.value = colorArr[7];
+      }
     }
   }, [
     gradientColors,
@@ -634,11 +711,11 @@ void main() {
 
   return (
     <div
-      ref={containerRef}
       className={cn("diamonds-container", className)}
+      ref={containerRef}
       style={{
         ...(mixBlendMode && {
-          mixBlendMode: mixBlendMode,
+          mixBlendMode,
         }),
       }}
     />

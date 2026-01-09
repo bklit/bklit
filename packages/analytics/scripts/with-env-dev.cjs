@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+"use strict";
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -19,15 +20,14 @@ const CLICKHOUSE_PASSWORD =
 
 // Validate required variables (password can be empty string for local Docker)
 if (
-  !CLICKHOUSE_HOST ||
-  !CLICKHOUSE_USERNAME ||
+  !(CLICKHOUSE_HOST && CLICKHOUSE_USERNAME) ||
   CLICKHOUSE_PASSWORD === undefined
 ) {
   console.error(
-    "Error: Missing required ClickHouse configuration in .env file",
+    "Error: Missing required ClickHouse configuration in .env file"
   );
   console.error(
-    "Required: CLICKHOUSE_HOST, CLICKHOUSE_USERNAME, CLICKHOUSE_PASSWORD",
+    "Required: CLICKHOUSE_HOST, CLICKHOUSE_USERNAME, CLICKHOUSE_PASSWORD"
   );
   console.error("Or their DEV_* equivalents for development");
   process.exit(1);

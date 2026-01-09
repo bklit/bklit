@@ -14,8 +14,8 @@ export default async function NotificationSettingsPage({
   return (
     <>
       <PageHeader
-        title="Notifications"
         description="Manage your notification preferences for this project."
+        title="Notifications"
       >
         <SubNavigation
           configKey="projectSettings"
@@ -24,8 +24,8 @@ export default async function NotificationSettingsPage({
         />
       </PageHeader>
       <ProjectNotifications
-        projectId={projectId}
         organizationId={organizationId}
+        projectId={projectId}
       />
     </>
   );

@@ -30,7 +30,7 @@ export async function deliverToExtensions(event: EventPayload): Promise<void> {
         const withinLimit = await checkRateLimit(ext.extensionId);
         if (!withinLimit) {
           console.log(
-            `⏭️  Extension ${ext.extensionId} rate limit exceeded, skipping`,
+            `⏭️  Extension ${ext.extensionId} rate limit exceeded, skipping`
           );
           continue;
         }
@@ -41,14 +41,14 @@ export async function deliverToExtensions(event: EventPayload): Promise<void> {
         // Validate config
         const config = extensionRegistry.validateConfig(
           ext.extensionId,
-          ext.config,
+          ext.config
         );
 
         // Execute handler
         await handler(config, event.eventData);
 
         console.log(
-          `✅ Extension ${ext.extensionId} delivered event ${event.eventData.trackingId}`,
+          `✅ Extension ${ext.extensionId} delivered event ${event.eventData.trackingId}`
         );
 
         // Update stats

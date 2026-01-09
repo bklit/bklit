@@ -41,10 +41,14 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
   const gridColsClass = getGridColsClass(items.length);
 
   const getChangeVariant = (
-    changeType?: "increase" | "decrease" | "neutral",
+    changeType?: "increase" | "decrease" | "neutral"
   ): "success" | "destructive" | "secondary" => {
-    if (changeType === "increase") return "success";
-    if (changeType === "decrease") return "destructive";
+    if (changeType === "increase") {
+      return "success";
+    }
+    if (changeType === "decrease") {
+      return "destructive";
+    }
     return "secondary";
   };
 
@@ -56,11 +60,11 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
 
         return (
           <Card
-            key={item.name}
             className={cn(
               "gap-0",
-              variant === "glass" && "bg-card/80 backdrop-blur-sm",
+              variant === "glass" && "bg-card/80 backdrop-blur-sm"
             )}
+            key={item.name}
           >
             <CardHeader className="pb-1">
               <div className="flex items-center gap-2">
@@ -71,14 +75,14 @@ export const Stats = ({ items, variant = "default" }: StatsProps) => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-row gap-3 items-center">
+              <div className="flex flex-row items-center gap-3">
                 {item.stat === "..." ? (
                   <Skeleton className="h-10 w-20" />
                 ) : (
-                  <div className="text-4xl font-semibold leading-9">
+                  <div className="font-semibold text-4xl leading-9">
                     <NumberFlow
-                      value={Number(item.stat)}
                       suffix={item.suffix || ""}
+                      value={Number(item.stat)}
                     />
                   </div>
                 )}

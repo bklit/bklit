@@ -44,7 +44,7 @@ export function HydrateClient(props: { children: React.ReactNode }) {
 
 // biome-ignore lint/suspicious/noExplicitAny: Sounds like a good idea?
 export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
-  queryOptions: T,
+  queryOptions: T
 ) {
   const queryClient = getQueryClient();
   if (queryOptions.queryKey[1]?.type === "infinite") {

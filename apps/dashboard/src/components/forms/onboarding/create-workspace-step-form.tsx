@@ -36,7 +36,7 @@ export function CreateWorkspaceStepForm({
 }: CreateWorkspaceStepFormProps) {
   const [state, formAction] = useActionState(
     createOrganizationAction,
-    initialState,
+    initialState
   );
   const [isPending, startTransition] = useTransition();
 
@@ -48,7 +48,7 @@ export function CreateWorkspaceStepForm({
     validators: {
       onSubmit: createOrganizationSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       const formData = new FormData();
       formData.append("name", value.name);
       if (value.description) {
@@ -74,7 +74,7 @@ export function CreateWorkspaceStepForm({
       }
     } else if (state.message && !state.success) {
       if (state.errors) {
-        Object.entries(state.errors).forEach(([key, errors]) => {
+        for (const [key, errors] of Object.entries(state.errors)) {
           if (errors && errors.length > 0) {
             const fieldName = key as "name" | "description";
             form.setFieldMeta(fieldName, (prev) => ({
@@ -84,23 +84,23 @@ export function CreateWorkspaceStepForm({
               },
             }));
           }
-        });
+        }
       }
       if (state.message) {
         toast.error(state.message);
       }
     }
-  }, [state, form, onSuccess, onLoadingChange]);
+  }, [state, form, onSuccess]);
 
   return (
     <>
       <form
+        className="space-y-6"
         id="create-workspace-form"
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-6"
       >
         <FieldGroup>
           <form.Field name="name">
@@ -111,14 +111,14 @@ export function CreateWorkspaceStepForm({
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={field.name}>Workspace Name</FieldLabel>
                   <Input
+                    aria-invalid={isInvalid}
+                    autoComplete="off"
                     id={field.name}
                     name={field.name}
-                    value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    aria-invalid={isInvalid}
                     placeholder="My Awesome Workspace"
-                    autoComplete="off"
+                    value={field.state.value}
                   />
                   <FieldDescription>
                     A descriptive name for your workspace.
@@ -138,14 +138,14 @@ export function CreateWorkspaceStepForm({
                     Description (Optional)
                   </FieldLabel>
                   <Textarea
+                    aria-invalid={isInvalid}
+                    autoComplete="off"
                     id={field.name}
                     name={field.name}
-                    value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    aria-invalid={isInvalid}
                     placeholder="What does your workspace focus on?"
-                    autoComplete="off"
+                    value={field.state.value}
                   />
                   <FieldDescription>
                     A brief description of your workspace&apos;s purpose.
@@ -157,12 +157,12 @@ export function CreateWorkspaceStepForm({
           </form.Field>
         </FieldGroup>
         {state.message && !state.success && !state.errors && (
-          <p className="text-sm font-medium text-destructive">
+          <p className="font-medium text-destructive text-sm">
             {state.message}
           </p>
         )}
       </form>
-      <input type="hidden" form="create-workspace-form" />
+      <input form="create-workspace-form" type="hidden" />
     </>
   );
 }

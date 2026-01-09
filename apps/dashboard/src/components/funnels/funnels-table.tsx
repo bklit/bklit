@@ -68,102 +68,110 @@ export function FunnelsTable({
         <CardTitle>Funnels</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        ) : funnels.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No funnels found
-          </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Steps</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Conversion Rate</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {funnels.map((funnel) => (
-                  <TableRow key={funnel.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/${organizationId}/${projectId}/funnels/${funnel.id}`}
-                        className="hover:underline"
-                      >
-                        {funnel.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{funnel.steps.length}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {format(new Date(funnel.createdAt), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      — {/* Placeholder for conversion rate */}
-                    </TableCell>
-                  </TableRow>
+        {(() => {
+          if (isLoading) {
+            return (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map(() => (
+                  <Skeleton className="h-12 w-full" key={crypto.randomUUID()} />
                 ))}
-              </TableBody>
-            </Table>
-
-            {pagination && pagination.totalPages > 1 && (
-              <div className="mt-4">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => {
-                          if (pagination.hasPreviousPage) {
-                            onPageChange(pagination.page - 1);
-                          }
-                        }}
-                        className={
-                          !pagination.hasPreviousPage
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from(
-                      { length: pagination.totalPages },
-                      (_, i) => i + 1,
-                    ).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => onPageChange(page)}
-                          isActive={page === pagination.page}
-                          className="cursor-pointer"
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => {
-                          if (pagination.hasNextPage) {
-                            onPageChange(pagination.page + 1);
-                          }
-                        }}
-                        className={
-                          !pagination.hasNextPage
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
               </div>
-            )}
-          </>
-        )}
+            );
+          }
+          if (funnels.length === 0) {
+            return (
+              <div className="py-8 text-center text-muted-foreground">
+                No funnels found
+              </div>
+            );
+          }
+          return (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Steps</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Conversion Rate</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {funnels.map((funnel) => (
+                    <TableRow key={funnel.id}>
+                      <TableCell className="font-medium">
+                        <Link
+                          className="hover:underline"
+                          href={`/${organizationId}/${projectId}/funnels/${funnel.id}`}
+                        >
+                          {funnel.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{funnel.steps.length}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(funnel.createdAt), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        — {/* Placeholder for conversion rate */}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {pagination && pagination.totalPages > 1 && (
+                <div className="mt-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          className={
+                            pagination.hasPreviousPage
+                              ? "cursor-pointer"
+                              : "pointer-events-none opacity-50"
+                          }
+                          onClick={() => {
+                            if (pagination.hasPreviousPage) {
+                              onPageChange(pagination.page - 1);
+                            }
+                          }}
+                        />
+                      </PaginationItem>
+                      {Array.from(
+                        { length: pagination.totalPages },
+                        (_, i) => i + 1
+                      ).map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            className="cursor-pointer"
+                            isActive={page === pagination.page}
+                            onClick={() => onPageChange(page)}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          className={
+                            pagination.hasNextPage
+                              ? "cursor-pointer"
+                              : "pointer-events-none opacity-50"
+                          }
+                          onClick={() => {
+                            if (pagination.hasNextPage) {
+                              onPageChange(pagination.page + 1);
+                            }
+                          }}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </CardContent>
     </Card>
   );

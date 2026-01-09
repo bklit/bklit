@@ -5,7 +5,7 @@ import { Funnel } from "@bklit/ui/components/charts/funnel";
 const data = [
   {
     id: "landing-page",
-    value: 10000,
+    value: 10_000,
     label: "Landing Page",
   },
   {

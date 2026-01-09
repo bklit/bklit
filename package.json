@@ -34,17 +34,19 @@
     "dev:full": "turbo watch dev dev:trigger --continue",
     "dev:docs": "pnpm -F @bklit/docs dev",
     "deploy:trigger": "pnpm -F @bklit/dashboard deploy:trigger",
-    "format-and-lint": "biome check .",
-    "format-and-lint:fix": "biome check . --write",
+    "format-and-lint": "ultracite check",
+    "format-and-lint:fix": "ultracite fix",
     "postinstall": "#pnpm lint:ws",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.2",
     "@turbo/gen": "^2.5.8",
+    "jsonc-parser": "^3.3.1",
     "prisma": "catalog:prisma",
     "turbo": "^2.5.8",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "ultracite": "^7.0.10"
   },
   "dependencies": {
     "@prisma/client": "catalog:prisma"

@@ -25,11 +25,11 @@ export function BklitProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       <BklitComponent
-        projectId="cmic3a5ap0003zxfjshgs688w"
-        apiKey={apiKey}
         apiHost={apiHost}
-        environment={isDevelopment ? "development" : "production"}
+        apiKey={apiKey}
         debug={isDevelopment}
+        environment={isDevelopment ? "development" : "production"}
+        projectId="cmic3a5ap0003zxfjshgs688w"
       />
       {children}
     </>

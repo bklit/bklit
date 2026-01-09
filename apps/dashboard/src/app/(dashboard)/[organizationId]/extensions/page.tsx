@@ -16,8 +16,8 @@ export default async function ExtensionsPage({
   return (
     <>
       <PageHeader
-        title="Extensions"
         description="Extend Bklit with powerful integrations and automations."
+        title="Extensions"
       />
       <div className="container mx-auto">
         {extensions.length === 0 ? (
@@ -30,15 +30,15 @@ export default async function ExtensionsPage({
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {extensions.map((extension) => (
               <ExtensionCard
-                key={extension.id}
-                id={extension.id}
-                displayName={extension.displayName}
-                description={extension.description}
                 author={extension.author}
                 category={extension.category}
-                isPro={extension.isPro}
-                organizationId={organizationId}
+                description={extension.description}
+                displayName={extension.displayName}
                 icon={extension.icon}
+                id={extension.id}
+                isPro={extension.isPro}
+                key={extension.id}
+                organizationId={organizationId}
               />
             ))}
           </div>

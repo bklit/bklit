@@ -38,7 +38,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navigationItems,
     organizationId,
     projectId,
-    userId,
+    userId
   );
 
   const isProjectLevel =
@@ -67,8 +67,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      collapsible="icon"
       className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+      collapsible="icon"
       {...props}
     >
       <SidebarContent>
@@ -81,15 +81,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
         {isProjectLevel ? (
           <NavProject
-            projectName={project?.name}
-            projectId={projectId}
-            organizationId={organizationId}
             items={resolvedItems}
+            organizationId={organizationId}
+            projectId={projectId}
+            projectName={project?.name}
           />
         ) : (
           <NavWorkspace
-            workspaceName={organization?.name}
             items={resolvedItems}
+            workspaceName={organization?.name}
           />
         )}
       </SidebarContent>

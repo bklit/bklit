@@ -69,7 +69,7 @@ export function ExtensionDetail({
       onError: (error) => {
         toast.error(error.message);
       },
-    }),
+    })
   );
 
   const removeMutation = useMutation(
@@ -90,7 +90,7 @@ export function ExtensionDetail({
       onError: (error) => {
         toast.error(error.message);
       },
-    }),
+    })
   );
 
   const handleActivate = (projectIds: string[]) => {
@@ -112,7 +112,7 @@ export function ExtensionDetail({
   if (extensionLoading || organizationLoading) {
     return (
       <>
-        <PageHeader title="Loading..." description="Please wait..." />
+        <PageHeader description="Please wait..." title="Loading..." />
         <div className="container mx-auto">Loading extension details...</div>
       </>
     );
@@ -121,7 +121,7 @@ export function ExtensionDetail({
   if (!extension) {
     return (
       <>
-        <PageHeader title="Not Found" description="Extension not found" />
+        <PageHeader description="Extension not found" title="Not Found" />
         <div className="container mx-auto">
           <p className="text-muted-foreground">
             This extension does not exist.
@@ -134,12 +134,12 @@ export function ExtensionDetail({
   return (
     <>
       <PageHeader
-        title={extension.displayName}
         description={extension.description}
+        title={extension.displayName}
       >
-        <Button variant="ghost" size="sm" asChild>
+        <Button asChild size="sm" variant="ghost">
           <Link href={`/${organizationId}/extensions`}>
-            <ArrowLeft className="size-4 mr-2" />
+            <ArrowLeft className="mr-2 size-4" />
             Back to Extensions
           </Link>
         </Button>
@@ -147,19 +147,19 @@ export function ExtensionDetail({
 
       <div className="container mx-auto space-y-6">
         <ExtensionHeader
-          extensionId={extensionId}
-          displayName={extension.displayName}
-          description={extension.description}
-          author={extension.author}
-          version={extension.version}
-          category={extension.category}
-          isPro={extension.isPro}
-          icon={extension.icon}
-          projects={projects}
           activatedProjectIds={activatedProjectIds}
+          author={extension.author}
+          category={extension.category}
+          description={extension.description}
+          displayName={extension.displayName}
+          extensionId={extensionId}
+          icon={extension.icon}
+          isActivating={activateMutation.isPending || removeMutation.isPending}
+          isPro={extension.isPro}
           onActivate={handleActivate}
           onRemove={handleRemove}
-          isActivating={activateMutation.isPending || removeMutation.isPending}
+          projects={projects}
+          version={extension.version}
         />
 
         <ExtensionReadme extensionId={extensionId} />

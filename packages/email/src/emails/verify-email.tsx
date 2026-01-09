@@ -30,21 +30,21 @@ export const BklitVerifyEmail = ({
       <Head />
       <Body style={main}>
         <Preview>Verify your email address for Bklit</Preview>
-        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
-          <div className="bg-black flex items-center justify-center rounded-lg overflow-clip">
+        <Container className="mx-auto max-w-480px px-8 pt-12 pb-12">
+          <div className="flex items-center justify-center overflow-clip rounded-lg bg-black">
             <Img
-              src={`${baseUrl}/react-email-header.jpg`}
               alt="Bklit"
-              width="100%"
               height="auto"
+              src={`${baseUrl}/react-email-header.jpg`}
+              width="100%"
             />
           </div>
 
-          <Text className="text-2xl font-semibold">
+          <Text className="font-semibold text-2xl">
             Verify your email address
           </Text>
 
-          <Section className="p-4 border border-gray-200 rounded-md bg-white">
+          <Section className="rounded-md border border-gray-200 bg-white p-4">
             <Text className="text-left text-lg">
               Welcome to <strong>Bklit</strong>!
             </Text>
@@ -53,23 +53,23 @@ export const BklitVerifyEmail = ({
               entering this verification code:
             </Text>
 
-            <div className="text-center p-4 bg-gray-100 rounded-md my-4">
-              <Text className="text-3xl font-bold tracking-wider m-0">
+            <div className="my-4 rounded-md bg-gray-100 p-4 text-center">
+              <Text className="m-0 font-bold text-3xl tracking-wider">
                 {verificationCode}
               </Text>
             </div>
 
-            <Text className="text-left text-sm text-gray-600">
+            <Text className="text-left text-gray-600 text-sm">
               This code will expire in 10 minutes.
             </Text>
 
             {verificationLink && (
               <>
-                <Text className="text-left text-sm text-gray-600">
+                <Text className="text-left text-gray-600 text-sm">
                   Or click the button below to verify automatically:
                 </Text>
                 <Button
-                  className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+                  className="inline-block rounded-md bg-lime-500 px-5 py-3 text-center font-bold text-base text-white"
                   href={verificationLink}
                 >
                   Verify Email
@@ -78,7 +78,7 @@ export const BklitVerifyEmail = ({
             )}
           </Section>
 
-          <Text className="text-sm text-gray-600 text-center mt-4">
+          <Text className="mt-4 text-center text-gray-600 text-sm">
             If you didn't create an account with Bklit, you can safely ignore
             this email.
           </Text>

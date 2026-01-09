@@ -10,7 +10,7 @@ export const deploymentRouter = createTRPCRouter({
         projectId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Check if user has access to this project

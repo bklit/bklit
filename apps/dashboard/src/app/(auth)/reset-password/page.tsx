@@ -46,7 +46,7 @@ function ResetPasswordPage() {
         if (result.error) {
           toast.error(
             result.error.message ||
-              "Failed to reset password. Token may be expired.",
+              "Failed to reset password. Token may be expired."
           );
           setIsLoading(false);
         } else {
@@ -65,10 +65,10 @@ function ResetPasswordPage() {
     return (
       <div className="flex flex-col gap-6">
         <div className="text-center">
-          <h1 className="text-2xl font-normal">
+          <h1 className="font-normal text-2xl">
             Invalid <span className="font-bold">reset link</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground text-sm">
             This password reset link is invalid or has expired.
           </p>
         </div>
@@ -82,20 +82,20 @@ function ResetPasswordPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <h1 className="text-2xl font-normal">
+        <h1 className="font-normal text-2xl">
           Reset your <span className="font-bold">password</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="mt-2 text-muted-foreground text-sm">
           Enter your new password below
         </p>
       </div>
 
       <form
+        className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-4"
       >
         <FieldGroup>
           <form.Field name="password">
@@ -106,16 +106,16 @@ function ResetPasswordPage() {
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={field.name}>New Password</FieldLabel>
                   <Input
-                    id={field.name}
-                    name={field.name}
-                    type="password"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
                     aria-invalid={isInvalid}
-                    placeholder="••••••••"
                     autoComplete="new-password"
                     disabled={isLoading}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="••••••••"
+                    type="password"
+                    value={field.state.value}
                   />
                   <FieldDescription>
                     At least 8 characters with uppercase, lowercase, and a
@@ -136,16 +136,16 @@ function ResetPasswordPage() {
                     Confirm New Password
                   </FieldLabel>
                   <Input
-                    id={field.name}
-                    name={field.name}
-                    type="password"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
                     aria-invalid={isInvalid}
-                    placeholder="••••••••"
                     autoComplete="new-password"
                     disabled={isLoading}
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="••••••••"
+                    type="password"
+                    value={field.state.value}
                   />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
@@ -155,10 +155,10 @@ function ResetPasswordPage() {
         </FieldGroup>
 
         <Button
-          type="submit"
-          size="lg"
           className="w-full"
           disabled={isLoading || form.state.isSubmitting}
+          size="lg"
+          type="submit"
         >
           {isLoading || form.state.isSubmitting
             ? "Resetting..."

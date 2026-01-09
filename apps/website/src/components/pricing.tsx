@@ -20,38 +20,38 @@ export const Pricing = () => {
 
   return (
     <div className="container mx-auto max-w-3xl px-4">
-      <div className="grid lg:grid-cols-2 w-full bg-border gap-px">
+      <div className="grid w-full gap-px bg-border lg:grid-cols-2">
         {plans.map((plan) => (
           <Card
+            className="relative rounded-none border-none bg-background"
             key={plan.name}
-            className="relative border-none bg-background rounded-none"
           >
-            <CardHeader className="text-center dark:text-white text-black border-b border-border">
-              <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+            <CardHeader className="border-border border-b text-center text-black dark:text-white">
+              <CardTitle className="font-bold text-2xl">{plan.name}</CardTitle>
               <CardDescription className="text-muted-foreground">
                 {plan.description}
               </CardDescription>
 
               <div className="flex items-baseline justify-center gap-1 pt-4">
-                <span className="text-4xl font-bold">
+                <span className="font-bold text-4xl">
                   {formatPrice(plan.price)}
                 </span>
                 <span className="text-muted-foreground">/{plan.interval}</span>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4 flex-1 p-6 sm:p-8 ">
+            <CardContent className="flex-1 space-y-4 p-6 sm:p-8">
               <div className="space-y-3">
-                <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                <h4 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
                   Features
                 </h4>
                 <ul className="space-y-2">
                   {plan.features.map((feature) => (
                     <li
+                      className="flex items-center gap-3 text-muted-foreground text-sm"
                       key={feature}
-                      className="flex items-center gap-3 text-muted-foreground text-sm "
                     >
-                      <Check className="size-3 text-emerald-500 shrink-0" />
+                      <Check className="size-3 shrink-0 text-emerald-500" />
                       <span>{feature}</span>
                     </li>
                   ))}

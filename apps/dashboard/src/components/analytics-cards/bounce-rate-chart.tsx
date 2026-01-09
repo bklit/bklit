@@ -19,10 +19,10 @@ export function BounceRateChart({
 
   return (
     <PieDonut
+      centerLabel={{ showTotal: true, suffix: "sessions" }}
+      className="min-h-[250px] w-full"
       data={chartData}
       variant="positive-negative"
-      className="min-h-[250px] w-full"
-      centerLabel={{ showTotal: true, suffix: "sessions" }}
     />
   );
 }

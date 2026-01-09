@@ -39,7 +39,7 @@ export function BillingDetailsCard({
   } = useQuery(
     trpc.organization.getBillingDetails.queryOptions({
       organizationId,
-    }),
+    })
   );
 
   if (isLoading) {
@@ -71,23 +71,23 @@ export function BillingDetailsCard({
           <CardDescription>Billing information and invoices</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 rounded-lg border border-destructive/50 bg-destructive/10">
-            <p className="text-sm text-destructive">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+            <p className="text-destructive text-sm">
               Unable to load billing details
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-muted-foreground text-xs">
               Please try refreshing the page or contact support if the issue
               persists.
             </p>
           </div>
           <Button
-            variant="outline"
             className="w-full"
             onClick={async () => {
               await authClient.customer.portal();
             }}
+            variant="outline"
           >
-            <ExternalLink className="size-4 mr-2" />
+            <ExternalLink className="mr-2 size-4" />
             Manage Billing
           </Button>
         </CardContent>
@@ -109,7 +109,7 @@ export function BillingDetailsCard({
       <CardContent className="space-y-6">
         {hasCustomerId &&
           (hasNextInvoice && billingDetails.nextInvoice ? (
-            <Item variant="outline" className="bg-bklit-600/30">
+            <Item className="bg-bklit-600/30" variant="outline">
               <ItemContent>
                 <ItemTitle>
                   {new Intl.NumberFormat("en-US", {
@@ -120,7 +120,7 @@ export function BillingDetailsCard({
                 <ItemDescription>
                   Due on{" "}
                   {new Date(
-                    billingDetails.nextInvoice.dueDate,
+                    billingDetails.nextInvoice.dueDate
                   ).toLocaleDateString("en-US", {
                     month: "long",
                     day: "numeric",
@@ -129,7 +129,7 @@ export function BillingDetailsCard({
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
-                <Badge variant="alternative" size="lg">
+                <Badge size="lg" variant="alternative">
                   Due soon
                 </Badge>
               </ItemActions>
@@ -149,10 +149,10 @@ export function BillingDetailsCard({
           <ItemGroup>
             {billingDetails.invoices.map((invoice) => (
               <Item
+                className="rounded-t-none rounded-b-none border-b-0 first:rounded-t-md last:rounded-b-md last:border-b"
                 key={invoice.id}
                 size="sm"
                 variant="outline"
-                className="rounded-b-none rounded-t-none border-b-0 last:border-b first:rounded-t-md last:rounded-b-md"
               >
                 <ItemContent>
                   <ItemTitle>
@@ -173,11 +173,11 @@ export function BillingDetailsCard({
                 </ItemContent>
                 <ItemActions>
                   <Badge
+                    className="capitalize"
+                    size="lg"
                     variant={
                       invoice.status === "paid" ? "success" : "secondary"
                     }
-                    size="lg"
-                    className="capitalize"
                   >
                     {invoice.status}
                   </Badge>
@@ -186,7 +186,7 @@ export function BillingDetailsCard({
             ))}
           </ItemGroup>
         ) : (
-          <Item variant="outline" className="bg-bklit-600/30">
+          <Item className="bg-bklit-600/30" variant="outline">
             <ItemContent>
               <ItemTitle>No previous invoices</ItemTitle>
               <ItemDescription>

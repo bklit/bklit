@@ -6,41 +6,41 @@ import { LogoDropdown } from "./logo-dropdown";
 
 export const PageHeader = () => {
   return (
-    <header className="fixed z-50 w-full flex sm:px-3 py-5 md:py-3 bg-linear-to-b from-background to-transparent">
-      <div className="container max-w-7xl mx-auto px-4">
-        <div className="flex items-center gap-2 justify-between border sm:px-4 py-1 rounded-xl backdrop-blur-sm bg-background/60">
+    <header className="fixed z-50 flex w-full bg-linear-to-b from-background to-transparent py-5 sm:px-3 md:py-3">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="flex items-center justify-between gap-2 rounded-xl border bg-background/60 py-1 backdrop-blur-sm sm:px-4">
           <div className="flex items-start gap-3 pl-3 sm:pl-0">
             <LogoDropdown />
             <Badge
+              className="hidden opacity-70 hover:opacity-100 sm:block"
               variant="secondary"
-              className="opacity-70 hover:opacity-100 hidden sm:block"
             >
               Beta
             </Badge>
           </div>
-          <nav className="p-4 hidden md:block">
+          <nav className="hidden p-4 md:block">
             <ul className="flex items-center gap-2">
               <li>
-                <Button variant="ghost" asChild>
+                <Button asChild variant="ghost">
                   <Link href="/#product">Product</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild>
+                <Button asChild variant="ghost">
                   <Link href="/pricing">Pricing</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild>
+                <Button asChild variant="ghost">
                   <Link href="/contact">Contact</Link>
                 </Button>
               </li>
               <li>
-                <Button variant="ghost" asChild>
+                <Button asChild variant="ghost">
                   <a
                     href="https://docs.bklit.com"
-                    target="_blank"
                     rel="noopener noreferrer"
+                    target="_blank"
                   >
                     Docs
                   </a>
@@ -50,24 +50,24 @@ export const PageHeader = () => {
           </nav>
 
           <nav className="flex items-center gap-2">
-            <Button size="lg" variant="ghost" asChild>
+            <Button asChild size="lg" variant="ghost">
               <a
-                href="https://app.bklit.com/signin"
-                title="Sign in"
                 data-bklit-event="signin-button"
-                target="_blank"
+                href="https://app.bklit.com/signin"
                 rel="noopener noreferrer"
+                target="_blank"
+                title="Sign in"
               >
                 Sign in
               </a>
             </Button>
-            <Button size="lg" variant="mono" asChild>
+            <Button asChild size="lg" variant="mono">
               <a
-                href="https://app.bklit.com/signup"
-                title="Sign up"
                 data-bklit-event="signup-button"
-                target="_blank"
+                href="https://app.bklit.com/signup"
                 rel="noopener noreferrer"
+                target="_blank"
+                title="Sign up"
               >
                 Sign up
               </a>

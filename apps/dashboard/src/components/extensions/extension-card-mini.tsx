@@ -1,13 +1,10 @@
 "use client";
 
-import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
@@ -38,14 +35,14 @@ export function ExtensionCardMini({
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border bg-muted overflow-hidden">
+          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
             {icon ? (
               <Image
-                src={`/extensions/${extensionId}/${icon.replace("./", "")}`}
                 alt={displayName}
-                width={48}
-                height={48}
                 className="size-12 object-cover"
+                height={48}
+                src={`/extensions/${extensionId}/${icon.replace("./", "")}`}
+                width={48}
               />
             ) : (
               <Puzzle className="size-6" />
@@ -57,7 +54,7 @@ export function ExtensionCardMini({
         </div>
         <CardAction className="flex items-center gap-2">
           <Switch checked={enabled} onCheckedChange={onToggle} />
-          <Button onClick={onEdit} variant="outline" size="icon">
+          <Button onClick={onEdit} size="icon" variant="outline">
             <Pencil className="size-4" />
           </Button>
         </CardAction>

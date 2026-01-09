@@ -5,20 +5,20 @@ import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 // Helper function to create a response with CORS headers
 function createCorsResponse(
   body: Record<string, unknown> | { message: string; error?: string },
-  status: number,
+  status: number
 ) {
   const response = NextResponse.json(body, { status });
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   response.headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization",
+    "Content-Type, Authorization"
   );
   return response;
 }
 
 // Handle OPTIONS requests for CORS preflight
-export async function OPTIONS() {
+export function OPTIONS() {
   return createCorsResponse({ message: "CORS preflight OK" }, 200);
 }
 
@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
   try {
     const { sessionId, projectId } = await request.json();
 
-    if (!sessionId || !projectId) {
+    if (!(sessionId && projectId)) {
       return createCorsResponse(
         { message: "sessionId and projectId are required" },
-        400,
+        400
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (!token) {
       return createCorsResponse(
         { message: "Authorization token is required" },
-        401,
+        401
       );
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (!tokenValidation.valid) {
       return createCorsResponse(
         { message: tokenValidation.error || "Invalid token" },
-        401,
+        401
       );
     }
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       if (!requestDomain) {
         return createCorsResponse(
           { message: "Origin or Referer header required" },
-          403,
+          403
         );
       }
 
@@ -90,11 +90,15 @@ export async function POST(request: NextRequest) {
         const isAllowed = tokenValidation.allowedDomains.some(
           (allowedDomain) => {
             // Exact match
-            if (requestDomain === allowedDomain) return true;
+            if (requestDomain === allowedDomain) {
+              return true;
+            }
             // Subdomain match (e.g., www.example.com matches example.com)
-            if (requestDomain.endsWith(`.${allowedDomain}`)) return true;
+            if (requestDomain.endsWith(`.${allowedDomain}`)) {
+              return true;
+            }
             return false;
-          },
+          }
         );
 
         if (!isAllowed) {
@@ -102,7 +106,7 @@ export async function POST(request: NextRequest) {
             {
               message: `Domain ${requestDomain} is not allowed for this token`,
             },
-            403,
+            403
           );
         }
       }
@@ -115,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (!sessionExists) {
       return createCorsResponse(
         { message: "Session not found for this project" },
-        404,
+        404
       );
     }
 
@@ -126,7 +130,7 @@ export async function POST(request: NextRequest) {
       {
         message: "Session ended",
       },
-      200,
+      200
     );
   } catch (error) {
     console.error("Error ending session:", error);
@@ -135,7 +139,7 @@ export async function POST(request: NextRequest) {
         message: "Error ending session",
         error: error instanceof Error ? error.message : String(error),
       },
-      500,
+      500
     );
   }
 }

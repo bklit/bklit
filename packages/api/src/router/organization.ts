@@ -17,9 +17,9 @@ const PLAN_LIMITS = {
     eventLimit: 4000,
   },
   [PlanType.PRO]: {
-    projectLimit: 999999,
-    teamMemberLimit: 999999,
-    eventLimit: 100000,
+    projectLimit: 999_999,
+    teamMemberLimit: 999_999,
+    eventLimit: 100_000,
   },
 };
 
@@ -32,7 +32,7 @@ export const organizationRouter = {
     .input(
       z.object({
         id: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const organization = await ctx.prisma.organization.findFirst({
@@ -59,7 +59,7 @@ export const organizationRouter = {
       }
 
       const userMembership = organization.members.find(
-        (member) => member.userId === ctx.session.user.id,
+        (member) => member.userId === ctx.session.user.id
       );
 
       if (!userMembership) {
@@ -100,7 +100,7 @@ export const organizationRouter = {
         id: z.string(),
         name: z.string().optional(),
         theme: z.string().optional(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user is admin or owner of organization
@@ -140,7 +140,7 @@ export const organizationRouter = {
       z.object({
         id: z.string(),
         plan: z.enum(["free", "pro"]),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       // Verify user is admin of organization
@@ -173,7 +173,7 @@ export const organizationRouter = {
     .input(
       z.object({
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Verify user has access to this organization
@@ -196,7 +196,7 @@ export const organizationRouter = {
       }
 
       const planType = Object.values(PlanType).includes(
-        organization.plan as PlanType,
+        organization.plan as PlanType
       )
         ? (organization.plan as PlanType)
         : PlanType.FREE;
@@ -251,7 +251,7 @@ export const organizationRouter = {
           subscriptions.result.items.length === 0
         ) {
           console.warn(
-            `[Billing] Malformed or empty subscriptions response for org ${input.organizationId}`,
+            `[Billing] Malformed or empty subscriptions response for org ${input.organizationId}`
           );
         } else {
           const activeSubscription = subscriptions.result.items[0];
@@ -280,7 +280,7 @@ export const organizationRouter = {
                 ? new Date(activeSubscription.startedAt)
                 : null;
             billingData.cancelAtPeriodEnd =
-              activeSubscription.cancelAtPeriodEnd || false;
+              activeSubscription.cancelAtPeriodEnd;
           }
         }
       } catch (error) {
@@ -307,21 +307,21 @@ export const organizationRouter = {
             ctx.analytics.countTrackedEvents(
               project.id,
               periodStart,
-              new Date(),
+              new Date()
             ),
           ]);
           return { pageviews, trackedEvents };
-        }),
+        })
       );
 
       // Sum up counts from all projects
       const pageViewCount = usageCounts.reduce(
         (sum, count) => sum + count.pageviews,
-        0,
+        0
       );
       const trackedEventCount = usageCounts.reduce(
         (sum, count) => sum + count.trackedEvents,
-        0,
+        0
       );
 
       const totalEvents = pageViewCount + trackedEventCount;
@@ -344,7 +344,7 @@ export const organizationRouter = {
     .input(
       z.object({
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       // Verify user has access to this organization
@@ -422,7 +422,7 @@ export const organizationRouter = {
 
           if (!customerId) {
             console.warn(
-              "[Billing Details] WARNING: No customer ID found in subscription!",
+              "[Billing Details] WARNING: No customer ID found in subscription!"
             );
           }
 
@@ -453,7 +453,7 @@ export const organizationRouter = {
 
             if (orders?.result?.items && orders.result.items.length > 0) {
               // Define type for Polar order response
-              type PolarOrder = {
+              interface PolarOrder {
                 id: string;
                 createdAt?: string | Date;
                 created_at?: string | Date;
@@ -464,7 +464,7 @@ export const organizationRouter = {
                 status?: string;
                 invoiceNumber?: string;
                 invoice_number?: string;
-              };
+              }
 
               // Filter and sort orders - we want completed/paid orders
               const paidOrders = orders.result.items
@@ -487,10 +487,10 @@ export const organizationRouter = {
                   const orderDataA = a as unknown as PolarOrder;
                   const orderDataB = b as unknown as PolarOrder;
                   const dateA = new Date(
-                    orderDataA.createdAt || orderDataA.created_at || "",
+                    orderDataA.createdAt || orderDataA.created_at || ""
                   ).getTime();
                   const dateB = new Date(
-                    orderDataB.createdAt || orderDataB.created_at || "",
+                    orderDataB.createdAt || orderDataB.created_at || ""
                   ).getTime();
                   return dateB - dateA;
                 })
@@ -507,7 +507,7 @@ export const organizationRouter = {
                     amount: totalAmount,
                     currency: orderData.currency || "usd",
                     createdAt: new Date(
-                      orderData.createdAt || orderData.created_at || "",
+                      orderData.createdAt || orderData.created_at || ""
                     ),
                     status: orderData.paid
                       ? "paid"
@@ -577,7 +577,7 @@ export const organizationRouter = {
           organizationId: z.string(),
           page: z.number().min(1).default(1),
           limit: z.number().min(1).max(50).default(15),
-        }),
+        })
       )
       .query(async ({ input, ctx }) => {
         // Verify user is member of organization
@@ -644,7 +644,7 @@ export const organizationRouter = {
           organizationId: z.string(),
           memberId: z.string(),
           role: z.enum(["owner", "admin", "member"]),
-        }),
+        })
       )
       .mutation(async ({ input, ctx }) => {
         // Verify user is admin or owner of organization
@@ -675,7 +675,7 @@ export const organizationRouter = {
 
         // Check if the member being updated exists
         const memberToUpdate = organization.members.find(
-          (m) => m.id === input.memberId,
+          (m) => m.id === input.memberId
         );
 
         if (!memberToUpdate) {
@@ -688,7 +688,7 @@ export const organizationRouter = {
         // Prevent changing the role of the last owner
         if (memberToUpdate.role === "owner") {
           const ownerCount = organization.members.filter(
-            (m) => m.role === "owner",
+            (m) => m.role === "owner"
           ).length;
 
           if (ownerCount === 1 && input.role !== "owner") {
@@ -722,7 +722,7 @@ export const organizationRouter = {
           organizationId: z.string(),
           memberId: z.string(),
           confirmEmail: z.string().email(),
-        }),
+        })
       )
       .mutation(async ({ input, ctx }) => {
         // Verify user is admin or owner of organization
@@ -757,7 +757,7 @@ export const organizationRouter = {
 
         // Find the member to remove
         const memberToRemove = organization.members.find(
-          (m) => m.id === input.memberId,
+          (m) => m.id === input.memberId
         );
 
         if (!memberToRemove) {
@@ -786,7 +786,7 @@ export const organizationRouter = {
         // Prevent removing the last owner
         if (memberToRemove.role === "owner") {
           const ownerCount = organization.members.filter(
-            (m) => m.role === "owner",
+            (m) => m.role === "owner"
           ).length;
 
           if (ownerCount === 1) {

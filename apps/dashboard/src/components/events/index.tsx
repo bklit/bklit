@@ -73,12 +73,16 @@ export function Events({ organizationId, projectId }: EventsProps) {
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (dateParams.startDate) return dateParams.startDate;
-    if (!dateParams.endDate) return undefined;
+    if (dateParams.startDate) {
+      return dateParams.startDate;
+    }
+    if (!dateParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -96,7 +100,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   const {
@@ -109,12 +113,12 @@ export function Events({ organizationId, projectId }: EventsProps) {
       organizationId,
       startDate,
       endDate,
-    }),
+    })
   );
 
   // Calculate previous period dates for comparison
   const { startDate: prevStartDate, endDate: prevEndDate } = useMemo(() => {
-    if (!compare || !startDate || !endDate) {
+    if (!(compare && startDate && endDate)) {
       return { startDate: undefined, endDate: undefined };
     }
     return getPreviousPeriod(startDate, endDate);
@@ -145,7 +149,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
 
   return (
     <>
-      <PageHeader title="Events" description="Manage your events">
+      <PageHeader description="Manage your events" title="Events">
         <div className="flex items-center gap-2">
           <DateRangePicker />
           <Button onClick={openCreateSheet}>Create Event</Button>
@@ -153,14 +157,14 @@ export function Events({ organizationId, projectId }: EventsProps) {
       </PageHeader>
 
       <EventSheet
-        projectId={projectId}
-        organizationId={organizationId}
-        open={openEventsSheet}
-        onOpenChange={setOpenEventsSheet}
-        mode={sheetMode}
         editingEvent={editingEvent}
         existingEvents={events}
+        mode={sheetMode}
+        onOpenChange={setOpenEventsSheet}
         onSuccess={() => refetch()}
+        open={openEventsSheet}
+        organizationId={organizationId}
+        projectId={projectId}
       />
 
       <div className="container mx-auto flex flex-col gap-4">
@@ -180,7 +184,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
                 prevEvents && {
                   ...calculateChange(
                     events?.reduce((sum, e) => sum + e.totalCount, 0) || 0,
-                    prevEvents?.reduce((sum, e) => sum + e.totalCount, 0) || 0,
+                    prevEvents?.reduce((sum, e) => sum + e.totalCount, 0) || 0
                   ),
                 }),
               ...(compare &&
@@ -194,7 +198,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
               stat: events?.length
                 ? Math.round(
                     events.reduce((sum, e) => sum + e.totalCount, 0) /
-                      events.length,
+                      events.length
                   )
                 : 0,
               ...(compare &&
@@ -203,15 +207,15 @@ export function Events({ organizationId, projectId }: EventsProps) {
                     events?.length
                       ? Math.round(
                           events.reduce((sum, e) => sum + e.totalCount, 0) /
-                            events.length,
+                            events.length
                         )
                       : 0,
                     prevEvents?.length
                       ? Math.round(
                           prevEvents.reduce((sum, e) => sum + e.totalCount, 0) /
-                            prevEvents.length,
+                            prevEvents.length
                         )
-                      : 0,
+                      : 0
                   ),
                 }),
               ...(compare &&
@@ -227,7 +231,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
                   const today = e.recentEvents.filter(
                     (re) =>
                       new Date(re.timestamp) >
-                      new Date(Date.now() - 24 * 60 * 60 * 1000),
+                      new Date(Date.now() - 24 * 60 * 60 * 1000)
                   ).length;
                   return sum + today;
                 }, 0) || 0,
@@ -340,7 +344,7 @@ export function Events({ organizationId, projectId }: EventsProps) {
                           {event.name}
                         </TableCell>
                         <TableCell>
-                          <code className="text-sm bg-muted px-2 py-1 rounded">
+                          <code className="rounded bg-muted px-2 py-1 text-sm">
                             {event.trackingId}
                           </code>
                         </TableCell>
@@ -348,31 +352,33 @@ export function Events({ organizationId, projectId }: EventsProps) {
                         <TableCell>{uniqueSessionsCount}</TableCell>
                         <TableCell className="font-mono">
                           <Badge
-                            variant={
-                              conversionRate > 75
-                                ? "success"
-                                : conversionRate > 35
-                                  ? "secondary"
-                                  : "destructive"
-                            }
                             size="lg"
+                            variant={(() => {
+                              if (conversionRate > 75) {
+                                return "success";
+                              }
+                              if (conversionRate > 35) {
+                                return "secondary";
+                              }
+                              return "destructive";
+                            })()}
                           >
                             {conversionRate.toFixed(0)}%
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
+                          <div className="flex justify-end gap-2">
                             <Link
                               href={`/${organizationId}/${projectId}/events/${event.trackingId}`}
                             >
-                              <Button variant="secondary" size="lg">
+                              <Button size="lg" variant="secondary">
                                 View
                               </Button>
                             </Link>
                             <Button
-                              variant="outline"
-                              size="lg"
                               onClick={() => openEditSheet(event)}
+                              size="lg"
+                              variant="outline"
                             >
                               Edit
                             </Button>

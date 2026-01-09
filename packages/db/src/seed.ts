@@ -7,7 +7,7 @@ const DEFAULT_USERS = [
     name: "Tim Apple",
     email: "tim@apple.com",
   },
-] as Array<Partial<User>>;
+] as Partial<User>[];
 
 (async () => {
   try {
@@ -23,8 +23,8 @@ const DEFAULT_USERS = [
           create: {
             ...user,
           },
-        }),
-      ),
+        })
+      )
     );
   } catch (error) {
     console.error(error);

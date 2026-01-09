@@ -3,7 +3,7 @@ import type { SlackConfig } from "./config-schema";
 
 export async function sendToSlack(
   config: SlackConfig,
-  event: EventData,
+  event: EventData
 ): Promise<void> {
   // Skip "view" events to prevent spam
   if (event.eventType === "view") {
@@ -68,7 +68,7 @@ export async function sendToSlack(
 
     if (!response.ok) {
       throw new Error(
-        `Slack webhook failed: ${response.status} ${response.statusText}`,
+        `Slack webhook failed: ${response.status} ${response.statusText}`
       );
     }
   } catch (error) {

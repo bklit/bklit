@@ -1,15 +1,21 @@
-export function isMobileDevice(userAgent: string | null | undefined): boolean {
-  if (!userAgent) return false;
+// Regex for mobile device detection
+const MOBILE_DEVICE_REGEX =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
 
-  const mobileRegex =
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
-  return mobileRegex.test(userAgent);
+export function isMobileDevice(userAgent: string | null | undefined): boolean {
+  if (!userAgent) {
+    return false;
+  }
+
+  return MOBILE_DEVICE_REGEX.test(userAgent);
 }
 
 export function detectDevice(
-  userAgent: string | null | undefined,
+  userAgent: string | null | undefined
 ): "mobile" | "desktop" | "tablet" | "unknown" {
-  if (!userAgent) return "unknown";
+  if (!userAgent) {
+    return "unknown";
+  }
 
   const ua = userAgent.toLowerCase();
 

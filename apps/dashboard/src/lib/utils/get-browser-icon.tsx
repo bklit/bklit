@@ -46,10 +46,14 @@ export function getBrowserIcon(browser: string, size = 16) {
 }
 
 export function getBrowserFromUserAgent(userAgent: string | null): string {
-  if (!userAgent) return "Unknown";
+  if (!userAgent) {
+    return "Unknown";
+  }
 
   for (const config of Object.values(BROWSER_CONFIG)) {
-    if (userAgent.includes(config.pattern)) return config.name;
+    if (userAgent.includes(config.pattern)) {
+      return config.name;
+    }
   }
 
   return "Other";

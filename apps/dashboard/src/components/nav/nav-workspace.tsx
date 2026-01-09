@@ -44,15 +44,15 @@ export function NavWorkspace({ user }: { user: User }) {
 
   // Fetch organizations client-side
   const { data: organizations = [] } = useQuery(
-    trpc.organization.list.queryOptions(),
+    trpc.organization.list.queryOptions()
   );
 
   const activeOrganization = organizations.find(
-    (org) => org.id === organizationId,
+    (org) => org.id === organizationId
   );
 
   const activeProject = activeOrganization?.projects.find(
-    (project) => project.id === projectId,
+    (project) => project.id === projectId
   );
 
   const isPro = activeOrganization?.plan === "pro";
@@ -60,30 +60,54 @@ export function NavWorkspace({ user }: { user: User }) {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {!activeOrganization ? (
+        {activeOrganization ? (
           <>
-            <BreadcrumbItem className="flex items-center gap-2">
-              <Avatar className="size-4">
-                <AvatarImage src={user.avatar || ""} />
-                <AvatarFallback>{user.name?.[0]?.toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <span>{user.name}'s Workspaces</span>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link
+                  className="flex items-center gap-2"
+                  href={`/${activeOrganization?.id}`}
+                >
+                  <Avatar className="size-4">
+                    <AvatarImage src={activeOrganization?.logo || ""} />
+                    <AvatarFallback
+                      className={getThemeGradient(activeOrganization?.theme)}
+                    />
+                  </Avatar>
+                  <span
+                    className={cn(
+                      "hidden sm:inline-flex",
+                      !activeProject && "inline-flex"
+                    )}
+                  >
+                    {activeOrganization?.name}
+                  </span>
+
+                  <Badge
+                    className="hidden sm:inline-flex"
+                    variant={isPro ? "default" : "secondary"}
+                  >
+                    {isPro ? "Pro" : "Free"}
+                  </Badge>
+                </Link>
+              </BreadcrumbLink>
             </BreadcrumbItem>
+
             {isDesktop ? (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button size="icon" variant="ghost">
                     <ChevronsUpDown className="size-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="rounded-lg p-0 min-w-max">
+                <PopoverContent className="min-w-max rounded-lg p-0">
                   <ModuleWorkspaces />
                 </PopoverContent>
               </Popover>
             ) : (
               <Drawer>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button size="icon" variant="ghost">
                     <ChevronsUpDown className="size-4" />
                   </Button>
                 </DrawerTrigger>
@@ -98,52 +122,28 @@ export function NavWorkspace({ user }: { user: User }) {
           </>
         ) : (
           <>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link
-                  href={`/${activeOrganization?.id}`}
-                  className="flex items-center gap-2"
-                >
-                  <Avatar className="size-4">
-                    <AvatarImage src={activeOrganization?.logo || ""} />
-                    <AvatarFallback
-                      className={getThemeGradient(activeOrganization?.theme)}
-                    />
-                  </Avatar>
-                  <span
-                    className={cn(
-                      "hidden sm:inline-flex",
-                      !activeProject && "inline-flex",
-                    )}
-                  >
-                    {activeOrganization?.name}
-                  </span>
-
-                  <Badge
-                    variant={isPro ? "default" : "secondary"}
-                    className="hidden sm:inline-flex"
-                  >
-                    {isPro ? "Pro" : "Free"}
-                  </Badge>
-                </Link>
-              </BreadcrumbLink>
+            <BreadcrumbItem className="flex items-center gap-2">
+              <Avatar className="size-4">
+                <AvatarImage src={user.avatar || ""} />
+                <AvatarFallback>{user.name?.[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span>{user.name}'s Workspaces</span>
             </BreadcrumbItem>
-
             {isDesktop ? (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button size="icon" variant="ghost">
                     <ChevronsUpDown className="size-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="rounded-lg p-0 min-w-max">
+                <PopoverContent className="min-w-max rounded-lg p-0">
                   <ModuleWorkspaces />
                 </PopoverContent>
               </Popover>
             ) : (
               <Drawer>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button size="icon" variant="ghost">
                     <ChevronsUpDown className="size-4" />
                   </Button>
                 </DrawerTrigger>
@@ -170,18 +170,18 @@ export function NavWorkspace({ user }: { user: User }) {
             {isDesktop ? (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button size="icon" variant="ghost">
                     <ChevronsUpDown className="size-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="rounded-lg p-0 min-w-max">
+                <PopoverContent className="min-w-max rounded-lg p-0">
                   <ModuleProjects />
                 </PopoverContent>
               </Popover>
             ) : (
               <Drawer>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button size="icon" variant="ghost">
                     <ChevronsUpDown className="size-4" />
                   </Button>
                 </DrawerTrigger>

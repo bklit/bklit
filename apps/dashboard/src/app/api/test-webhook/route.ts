@@ -17,12 +17,12 @@ export async function POST(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
-export async function GET() {
+export function GET() {
   return NextResponse.json({
     message: "Test webhook endpoint is working",
     timestamp: new Date().toISOString(),

@@ -57,7 +57,7 @@ export function AcquisitionsTable({
     {
       page: {
         defaultValue: 1,
-        parse: (value) => parseInt(value, 10) || 1,
+        parse: (value) => Number.parseInt(value, 10) || 1,
         serialize: (value) => value.toString(),
       },
       startDate: parseAsIsoDateTime,
@@ -65,12 +65,16 @@ export function AcquisitionsTable({
     },
     {
       history: "push",
-    },
+    }
   );
 
   const startDate = useMemo(() => {
-    if (queryParams.startDate) return queryParams.startDate;
-    if (!queryParams.endDate) return undefined;
+    if (queryParams.startDate) {
+      return queryParams.startDate;
+    }
+    if (!queryParams.endDate) {
+      return undefined;
+    }
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date;
@@ -90,14 +94,14 @@ export function AcquisitionsTable({
       limit: 20,
       startDate,
       endDate,
-    }),
+    })
   );
 
   const { data: projectData } = useQuery(
     trpc.project.fetch.queryOptions({
       id: projectId,
       organizationId,
-    }),
+    })
   );
 
   if (isLoading) {
@@ -111,8 +115,8 @@ export function AcquisitionsTable({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+            {Array.from({ length: 5 }).map((_, _i) => (
+              <Skeleton className="h-12 w-full" key={crypto.randomUUID()} />
             ))}
           </div>
         </CardContent>
@@ -130,7 +134,7 @@ export function AcquisitionsTable({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             Error loading acquisition data: {error.message}
           </div>
         </CardContent>
@@ -148,7 +152,7 @@ export function AcquisitionsTable({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             No acquisition data found
           </div>
         </CardContent>
@@ -166,7 +170,7 @@ export function AcquisitionsTable({
       </CardHeader>
       <CardContent>
         {acquisitionsData.acquisitions.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="py-8 text-center text-muted-foreground">
             No acquisition data found
           </div>
         ) : (
@@ -185,7 +189,7 @@ export function AcquisitionsTable({
               {acquisitionsData.acquisitions.map((acquisition) => {
                 const sourceFavicon = getSourceFavicon(
                   acquisition.source,
-                  projectData?.domain,
+                  projectData?.domain
                 );
                 return (
                   <TableRow key={acquisition.source}>
@@ -209,29 +213,29 @@ export function AcquisitionsTable({
                         {acquisition.sourceType}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm font-medium">
+                    <TableCell className="font-medium text-sm">
                       {acquisition.viewCount}
                     </TableCell>
-                    <TableCell className="text-sm font-medium">
+                    <TableCell className="font-medium text-sm">
                       {acquisition.uniqueUserCount}
                     </TableCell>
-                    <TableCell className="text-sm font-medium">
+                    <TableCell className="font-medium text-sm">
                       {acquisition.avgViewsPerUser}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-xs">
                       <div className="space-y-1">
                         <div>
                           {formatDistanceToNow(
                             new Date(acquisition.lastViewed),
                             {
                               addSuffix: true,
-                            },
+                            }
                           )}
                         </div>
                         <div className="text-xs">
                           {format(
                             new Date(acquisition.lastViewed),
-                            "MMM d, HH:mm",
+                            "MMM d, HH:mm"
                           )}
                         </div>
                       </div>
@@ -249,6 +253,11 @@ export function AcquisitionsTable({
           <Pagination>
             <PaginationContent>
               <PaginationPrevious
+                className={
+                  acquisitionsData.pagination.hasPreviousPage
+                    ? ""
+                    : "pointer-events-none opacity-50"
+                }
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
@@ -258,15 +267,10 @@ export function AcquisitionsTable({
                     });
                   }
                 }}
-                className={
-                  !acquisitionsData.pagination.hasPreviousPage
-                    ? "pointer-events-none opacity-50"
-                    : ""
-                }
               />
               {Array.from(
                 { length: acquisitionsData.pagination.totalPages },
-                (_, i) => i + 1,
+                (_, i) => i + 1
               )
                 .filter((page) => {
                   const current = acquisitionsData.pagination.page;
@@ -291,11 +295,11 @@ export function AcquisitionsTable({
                       <PaginationItem>
                         <PaginationLink
                           href="#"
+                          isActive={page === acquisitionsData.pagination.page}
                           onClick={(e) => {
                             e.preventDefault();
                             setQueryParams({ page });
                           }}
-                          isActive={page === acquisitionsData.pagination.page}
                         >
                           {page}
                         </PaginationLink>
@@ -304,6 +308,11 @@ export function AcquisitionsTable({
                   );
                 })}
               <PaginationNext
+                className={
+                  acquisitionsData.pagination.hasNextPage
+                    ? ""
+                    : "pointer-events-none opacity-50"
+                }
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
@@ -313,11 +322,6 @@ export function AcquisitionsTable({
                     });
                   }
                 }}
-                className={
-                  !acquisitionsData.pagination.hasNextPage
-                    ? "pointer-events-none opacity-50"
-                    : ""
-                }
               />
             </PaginationContent>
           </Pagination>

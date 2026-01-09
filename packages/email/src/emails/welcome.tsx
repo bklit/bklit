@@ -31,21 +31,21 @@ export const BklitWelcomeEmail = ({ username }: BklitWelcomeEmailProps) => (
         <Preview>
           Welcome to Bklit - Start tracking your analytics today
         </Preview>
-        <Container className="max-w-480px mx-auto pt-12 px-8 pb-12">
-          <div className="bg-black flex items-center justify-center rounded-lg overflow-clip">
+        <Container className="mx-auto max-w-480px px-8 pt-12 pb-12">
+          <div className="flex items-center justify-center overflow-clip rounded-lg bg-black">
             <Img
-              src={`${baseUrl}/react-email-header.jpg`}
               alt="Bklit"
-              width="100%"
               height="auto"
+              src={`${baseUrl}/react-email-header.jpg`}
+              width="100%"
             />
           </div>
 
-          <Text className="text-2xl font-semibold">
+          <Text className="font-semibold text-2xl">
             Welcome to Bklit, <strong>{username}</strong>!
           </Text>
 
-          <Section className="p-4 border border-gray-200 rounded-md bg-white">
+          <Section className="rounded-md border border-gray-200 bg-white p-4">
             <Text className="text-left text-lg">
               Hey <strong>{username}</strong>!
             </Text>
@@ -56,7 +56,7 @@ export const BklitWelcomeEmail = ({ username }: BklitWelcomeEmailProps) => (
             </Text>
 
             <Button
-              className="inline-block text-center py-3 px-5 text-white text-base font-bold bg-lime-500 rounded-md"
+              className="inline-block rounded-md bg-lime-500 px-5 py-3 text-center font-bold text-base text-white"
               href={`${baseUrl}?utm_source=email&utm_medium=email&utm_campaign=welcome&utm_content=cta-button`}
             >
               Get Started
@@ -68,7 +68,7 @@ export const BklitWelcomeEmail = ({ username }: BklitWelcomeEmailProps) => (
               {links?.map((link) => (
                 <Column key={link.title}>
                   <Link
-                    className="text-xs font-bold text-black"
+                    className="font-bold text-black text-xs"
                     href={link.href}
                   >
                     {link.title}

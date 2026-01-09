@@ -37,7 +37,7 @@ export function ProjectSelector({
   isLoading,
 }: ProjectSelectorProps) {
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
   const [deactivateDialog, setDeactivateDialog] = useState<{
     projectId: string;
@@ -85,7 +85,7 @@ export function ProjectSelector({
   };
 
   const nonActivatedProjects = projects.filter(
-    (p) => !activatedProjectIds.includes(p.id),
+    (p) => !activatedProjectIds.includes(p.id)
   );
 
   const handleToggleAll = () => {
@@ -102,19 +102,19 @@ export function ProjectSelector({
   };
 
   const hasNonActivatedSelection = Array.from(selectedProjects).some(
-    (id) => !activatedProjectIds.includes(id),
+    (id) => !activatedProjectIds.includes(id)
   );
 
   return (
     <div className="space-y-4">
       {nonActivatedProjects.length > 0 && (
         <div className="flex items-center justify-between">
-          <Label className="text-base font-semibold">Select Projects</Label>
+          <Label className="font-semibold text-base">Select Projects</Label>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleToggleAll}
             disabled={isLoading}
+            onClick={handleToggleAll}
+            size="sm"
+            variant="ghost"
           >
             {selectedProjects.size === nonActivatedProjects.length
               ? "Deselect All"
@@ -130,18 +130,18 @@ export function ProjectSelector({
 
           return (
             <Label
-              key={project.id}
+              className="flex cursor-pointer items-center justify-between space-x-2 rounded-xl bg-bklit-500/50 px-2.5 py-2 transition-colors hover:bg-bklit-500"
               htmlFor={project.id}
-              className="flex items-center justify-between space-x-2 bg-bklit-500/50 py-2 px-2.5 rounded-xl cursor-pointer hover:bg-bklit-500 transition-colors"
+              key={project.id}
             >
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id={project.id}
                   checked={isActivated || isSelected}
-                  onCheckedChange={() => handleToggle(project.id, project.name)}
                   disabled={isLoading}
+                  id={project.id}
+                  onCheckedChange={() => handleToggle(project.id, project.name)}
                 />
-                <span className="text-sm font-normal cursor-pointer">
+                <span className="cursor-pointer font-normal text-sm">
                   {project.name}
                 </span>
               </div>
@@ -153,9 +153,9 @@ export function ProjectSelector({
 
       {hasNonActivatedSelection && selectedProjects.size > 0 && (
         <Button
-          onClick={handleActivate}
-          disabled={isLoading}
           className="w-full"
+          disabled={isLoading}
+          onClick={handleActivate}
         >
           {isLoading
             ? "Activating..."
@@ -164,8 +164,8 @@ export function ProjectSelector({
       )}
 
       <Dialog
-        open={!!deactivateDialog}
         onOpenChange={(open) => !open && handleCancelDeactivate()}
+        open={!!deactivateDialog}
       >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -181,30 +181,30 @@ export function ProjectSelector({
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label
+                className="sr-only text-right"
                 htmlFor="project-name-confirmation"
-                className="text-right sr-only"
               >
                 Project Name
               </Label>
               <Input
+                className="col-span-4"
                 id="project-name-confirmation"
-                value={confirmationInput}
                 onChange={(e) => setConfirmationInput(e.target.value)}
                 placeholder={deactivateDialog?.projectName}
-                className="col-span-4"
+                value={confirmationInput}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline" onClick={handleCancelDeactivate}>
+              <Button onClick={handleCancelDeactivate} variant="outline">
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              variant="destructive"
-              onClick={handleConfirmDeactivate}
               disabled={confirmationInput !== deactivateDialog?.projectName}
+              onClick={handleConfirmDeactivate}
+              variant="destructive"
             >
               Deactivate Extension
             </Button>

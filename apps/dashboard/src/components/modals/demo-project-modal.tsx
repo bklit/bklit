@@ -22,43 +22,43 @@ export function DemoProjectModal() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={open}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="relative text-center space-y-3 w-[calc(100%+4.5rem)] -mx-9 -mt-9 rounded-t-xl aspect-1000/560 p-9 flex flex-col items-center justify-end">
-          <div className="absolute top-0 left-0 w-full aspect-1000/560 rounded-t-xl overflow-hidden">
+        <DialogHeader className="-mx-9 -mt-9 relative flex aspect-1000/560 w-[calc(100%+4.5rem)] flex-col items-center justify-end space-y-3 rounded-t-xl p-9 text-center">
+          <div className="absolute top-0 left-0 aspect-1000/560 w-full overflow-hidden rounded-t-xl">
             <Image
-              src="/playground.jpg"
               alt="Playground"
-              width={1000}
               height={560}
+              src="/playground.jpg"
+              width={1000}
             />
-            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent from-50% to-background rounded-t-xl" />
-            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-r from-transparent to-background/50 rounded-t-xl" />
+            <div className="absolute top-0 left-0 h-full w-full rounded-t-xl bg-linear-to-b from-50% from-transparent to-background" />
+            <div className="absolute top-0 left-0 h-full w-full rounded-t-xl bg-linear-to-r from-transparent to-background/50" />
           </div>
           <DialogTitle className="z-10 flex items-center justify-center gap-2">
-            <BklitLogo size={48} className="dark:text-white text-black" />
-            <span className="text-2xl font-bold">Bklit Demo</span>
+            <BklitLogo className="text-black dark:text-white" size={48} />
+            <span className="font-bold text-2xl">Bklit Demo</span>
           </DialogTitle>
         </DialogHeader>
-        <div className="text-base space-y-3 text-center text-muted-foreground pt-4">
+        <div className="space-y-3 pt-4 text-center text-base text-muted-foreground">
           <p>
             All the data you see here is collected from our live playground at{" "}
             <a
-              href="https://playground.bklit.com"
-              target="_blank"
-              rel="noopener noreferrer"
               className="text-foreground hover:underline"
+              href="https://playground.bklit.com"
+              rel="noopener noreferrer"
+              target="_blank"
             >
               playground.bklit.com
             </a>
           </p>
         </div>
         <DialogFooter className="sm:justify-center">
-          <Button variant="ghost" size="lg" asChild>
+          <Button asChild size="lg" variant="ghost">
             <a
               href="https://playground.bklit.com/?utm_source=dashboard&utm_medium=referral&utm_campaign=demo-project-modal"
-              target="_blank"
               rel="noopener noreferrer"
+              target="_blank"
             >
               Playground
               <ExternalLink className="size-4" />

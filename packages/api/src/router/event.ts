@@ -14,7 +14,7 @@ export const eventRouter = {
         trackingId: z.string().min(1),
         projectId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -33,11 +33,7 @@ export const eventRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -92,7 +88,7 @@ export const eventRouter = {
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -111,11 +107,7 @@ export const eventRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -186,7 +178,7 @@ export const eventRouter = {
               sessionId: ev.session_id,
             })),
           };
-        }),
+        })
       );
 
       // Always return all event definitions, even if they have 0 tracked events
@@ -204,7 +196,7 @@ export const eventRouter = {
         endDate: z.date().optional(),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(1000).default(10),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -223,11 +215,7 @@ export const eventRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -268,7 +256,7 @@ export const eventRouter = {
           startDate: normalizedStartDate,
           endDate: normalizedEndDate,
           limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-        },
+        }
       );
 
       // Get unique session IDs
@@ -284,20 +272,20 @@ export const eventRouter = {
         Array.from(sessionIds).map(async (sessionId) => {
           const session = await ctx.analytics.getSessionById(
             sessionId,
-            input.projectId,
+            input.projectId
           );
           return session ? { sessionId, session } : null;
-        }),
+        })
       );
 
       const sessionMap = new Map(
         sessions
           .filter((s): s is NonNullable<typeof s> => s !== null)
-          .map((s) => [s.sessionId, s.session]),
+          .map((s) => [s.sessionId, s.session])
       );
 
       // Group events by session
-      type SessionGroup = {
+      interface SessionGroup {
         sessionId: string;
         session: Awaited<
           ReturnType<typeof ctx.analytics.getSessionById>
@@ -313,7 +301,7 @@ export const eventRouter = {
         }>;
         firstEvent: (typeof trackedEvents)[0];
         lastEvent: (typeof trackedEvents)[0];
-      };
+      }
 
       const sessionGroups = trackedEvents.reduce(
         (acc, event) => {
@@ -353,21 +341,21 @@ export const eventRouter = {
           }
           return acc;
         },
-        {} as Record<string, SessionGroup>,
+        {} as Record<string, SessionGroup>
       );
 
       // Convert to array and sort by last event timestamp
       const sessionGroupsArray = Object.values(sessionGroups).sort(
         (a, b) =>
           parseClickHouseDate(b.lastEvent.timestamp).getTime() -
-          parseClickHouseDate(a.lastEvent.timestamp).getTime(),
+          parseClickHouseDate(a.lastEvent.timestamp).getTime()
       );
 
       // Apply pagination
       const totalCount = sessionGroupsArray.length;
       const paginatedGroups = sessionGroupsArray.slice(
         (input.page - 1) * input.limit,
-        input.page * input.limit,
+        input.page * input.limit
       );
 
       // Transform data for display
@@ -463,7 +451,7 @@ export const eventRouter = {
         description: z.string().optional(),
         trackingId: z.string().min(1).optional(),
         organizationId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const event = await ctx.prisma.eventDefinition.findUnique({
@@ -484,8 +472,7 @@ export const eventRouter = {
       });
 
       if (
-        !event ||
-        !event.project.organization ||
+        !event?.project.organization ||
         event.project.organization.members.length === 0
       ) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -519,7 +506,7 @@ export const eventRouter = {
                 name: input.name,
               },
             },
-          },
+          }
         );
 
         if (existingEventByName) {
@@ -545,7 +532,7 @@ export const eventRouter = {
       z.object({
         id: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const event = await ctx.prisma.eventDefinition.findUnique({
@@ -566,8 +553,7 @@ export const eventRouter = {
       });
 
       if (
-        !event ||
-        !event.project.organization ||
+        !event?.project.organization ||
         event.project.organization.members.length === 0
       ) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -588,7 +574,7 @@ export const eventRouter = {
         endDate: z.date().optional(),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(20),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -607,11 +593,7 @@ export const eventRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -653,7 +635,7 @@ export const eventRouter = {
           startDate: normalizedStartDate,
           endDate: normalizedEndDate,
           limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-        },
+        }
       );
 
       const totalCount = allTrackedEvents.length;
@@ -661,7 +643,7 @@ export const eventRouter = {
       // Apply pagination
       const trackedEvents = allTrackedEvents.slice(
         (input.page - 1) * input.limit,
-        input.page * input.limit,
+        input.page * input.limit
       );
 
       // Get sessions for these events
@@ -676,16 +658,16 @@ export const eventRouter = {
         Array.from(sessionIds).map(async (sessionId) => {
           const session = await ctx.analytics.getSessionById(
             sessionId,
-            input.projectId,
+            input.projectId
           );
           return session ? { sessionId, session } : null;
-        }),
+        })
       );
 
       const sessionMap = new Map(
         sessions
           .filter((s): s is NonNullable<typeof s> => s !== null)
-          .map((s) => [s.sessionId, s.session]),
+          .map((s) => [s.sessionId, s.session])
       );
 
       const eventTypeCounts: Record<string, number> = {};
@@ -796,7 +778,7 @@ export const eventRouter = {
         trackingId: event.trackingId,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
-        totalCount: totalCount,
+        totalCount,
         eventTypeCounts,
         recentEvents: trackedEvents.map((ev) => ({
           id: ev.id,
@@ -826,7 +808,7 @@ export const eventRouter = {
       z.object({
         eventId: z.string(),
         organizationId: z.string(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const event = await ctx.prisma.eventDefinition.findUnique({
@@ -847,8 +829,7 @@ export const eventRouter = {
       });
 
       if (
-        !event ||
-        !event.project.organization ||
+        !event?.project.organization ||
         event.project.organization.members.length === 0
       ) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -885,7 +866,7 @@ export const eventRouter = {
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -897,11 +878,7 @@ export const eventRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -937,7 +914,7 @@ export const eventRouter = {
           };
           return acc;
         },
-        {} as Record<string, { total: number; views: number; clicks: number }>,
+        {} as Record<string, { total: number; views: number; clicks: number }>
       );
 
       const endDate = input.endDate || new Date();
@@ -973,7 +950,7 @@ export const eventRouter = {
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -985,11 +962,7 @@ export const eventRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new Error("Forbidden");
       }
 
@@ -1035,13 +1008,13 @@ export const eventRouter = {
       const sessions = await Promise.all(
         Array.from(sessionIds).map(async (sessionId) => {
           return await ctx.analytics.getSessionById(sessionId, input.projectId);
-        }),
+        })
       );
 
       const sessionMap = new Map(
         sessions
           .filter((s): s is NonNullable<typeof s> => s !== null)
-          .map((s) => [s.session_id, s]),
+          .map((s) => [s.session_id, s])
       );
 
       // Get pageviews for mobile detection
@@ -1062,7 +1035,7 @@ export const eventRouter = {
           }
           return acc;
         },
-        {} as Record<string, Array<{ mobile: boolean | null }>>,
+        {} as Record<string, Array<{ mobile: boolean | null }>>
       );
 
       for (const event of trackedEvents) {
@@ -1084,8 +1057,11 @@ export const eventRouter = {
           (session?.user_agent
             ? /Mobile|Android|iPhone|iPad/.test(session.user_agent)
             : false);
-        if (isMobile) mobileEvents += 1;
-        else desktopEvents += 1;
+        if (isMobile) {
+          mobileEvents += 1;
+        } else {
+          desktopEvents += 1;
+        }
       }
 
       return {
@@ -1104,7 +1080,7 @@ export const eventRouter = {
         organizationId: z.string(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
-      }),
+      })
     )
     .query(async ({ input, ctx }) => {
       const project = await ctx.prisma.project.findFirst({
@@ -1116,11 +1092,7 @@ export const eventRouter = {
         },
       });
 
-      if (
-        !project ||
-        !project.organization ||
-        project.organization.members.length === 0
-      ) {
+      if (!project?.organization || project.organization.members.length === 0) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 

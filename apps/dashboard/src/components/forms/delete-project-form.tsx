@@ -74,7 +74,7 @@ export function DeleteProjectForm({
       });
     } else {
       toast.error(
-        "Project name does not match. Please type it correctly to confirm.",
+        "Project name does not match. Please type it correctly to confirm."
       );
     }
   };
@@ -86,7 +86,7 @@ export function DeleteProjectForm({
   }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
         <Button size="lg" variant="destructive">
           Delete project
@@ -104,17 +104,17 @@ export function DeleteProjectForm({
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label
+              className="sr-only text-right"
               htmlFor="project-name-confirmation"
-              className="text-right sr-only"
             >
               Project Name
             </Label>
             <Input
+              className="col-span-4"
               id="project-name-confirmation"
-              value={confirmationInput}
               onChange={(e) => setConfirmationInput(e.target.value)}
               placeholder={projectName}
-              className="col-span-4"
+              value={confirmationInput}
             />
           </div>
         </div>
@@ -123,9 +123,9 @@ export function DeleteProjectForm({
             <Button variant="outline">Cancel</Button>
           </DialogClose>
           <Button
-            variant="destructive"
-            onClick={handleSubmitDeletion}
             disabled={isPending || confirmationInput !== projectName}
+            onClick={handleSubmitDeletion}
+            variant="destructive"
           >
             {isPending ? "Deleting..." : "Delete Project"}
           </Button>

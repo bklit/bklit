@@ -11,7 +11,7 @@ export const Turborepo = ({
   variant = "default",
 }: TurborepoProps) => {
   return (
-    <svg height={height} viewBox="0 0 185 30" fill="none" className={className}>
+    <svg className={className} fill="none" height={height} viewBox="0 0 185 30">
       <title>Turborepo Logo</title>
       <path
         d="M51.2357 12.1012V8.83301H35.6299V12.1012H41.5211V22.9687H45.3443V12.1012H51.2357Z"
@@ -54,22 +54,22 @@ export const Turborepo = ({
         fill="currentColor"
       />
       <path
-        fillRule="evenodd"
         clipRule="evenodd"
         d="M15.7279 5.82V2.8125C22.205 3.162 27.3505 8.574 27.3505 15.198C27.3505 21.822 22.205 27.2325 15.7279 27.5835V24.576C20.5553 24.228 24.3779 20.157 24.3779 15.198C24.3779 10.239 20.5553 6.168 15.7279 5.82ZM8.02022 21.348C6.74056 19.857 5.91568 17.958 5.76854 15.873H2.78711C2.94168 18.7905 4.09799 21.438 5.90974 23.4765L8.01874 21.348H8.02022ZM14.3903 27.5835V24.576C12.3229 24.4275 10.4413 23.5965 8.964 22.3035L6.855 24.432C8.87631 26.262 11.4996 27.4275 14.3888 27.5835H14.3903Z"
         fill={
           variant === "mono" ? "currentColor" : "url(#paint0_linear_222_137)"
         }
+        fillRule="evenodd"
       />
       {variant !== "mono" && (
         <defs>
           <linearGradient
+            gradientUnits="userSpaceOnUse"
             id="paint0_linear_222_137"
             x1="16.2096"
-            y1="4.55416"
             x2="4.01814"
+            y1="4.55416"
             y2="16.634"
-            gradientUnits="userSpaceOnUse"
           >
             <stop stopColor="#0096FF" />
             <stop offset="1" stopColor="#FF1E56" />

@@ -10,15 +10,15 @@ export const PageHeader = ({
   children,
 }: PageHeaderProps) => {
   return (
-    <div className="flex flex-row justify-between items-center w-full container mx-auto mb-6 gap-4">
-      <div className="flex flex-col gap-0.5 sm:gap-2 w-full">
-        <h1 className="text-sm sm:text-xl font-bold">{title}</h1>
-        <p className="inline text-xs sm:text-base text-muted-foreground">
+    <div className="container mx-auto mb-6 flex w-full flex-row items-center justify-between gap-4">
+      <div className="flex w-full flex-col gap-0.5 sm:gap-2">
+        <h1 className="font-bold text-sm sm:text-xl">{title}</h1>
+        <p className="inline text-muted-foreground text-xs sm:text-base">
           {description}
         </p>
       </div>
       {children && (
-        <div className="flex items-center gap-2 justify-end w-full sm:w-auto">
+        <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
           {children}
         </div>
       )}

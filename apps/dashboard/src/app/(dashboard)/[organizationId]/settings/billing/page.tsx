@@ -31,8 +31,8 @@ export default async function BillingPage({
       return (
         <div className="container mx-auto">
           <PageHeader
-            title="Billing"
             description="No organization found. Please create an organization first."
+            title="Billing"
           />
         </div>
       );
@@ -48,8 +48,8 @@ export default async function BillingPage({
     return (
       <>
         <PageHeader
-          title="Billing"
           description={`Manage subscription and billing information for ${organization.name}.`}
+          title="Billing"
         >
           <SubNavigation
             configKey="organizationSettings"
@@ -58,7 +58,7 @@ export default async function BillingPage({
         </PageHeader>
         <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-4">
             <Suspense
               fallback={
@@ -68,8 +68,8 @@ export default async function BillingPage({
               }
             >
               <BillingSnapshotCard
-                organizationId={organization.id}
                 hideViewBillingButton
+                organizationId={organization.id}
               />
             </Suspense>
           </div>
@@ -93,8 +93,8 @@ export default async function BillingPage({
   return (
     <>
       <PageHeader
-        title="Billing"
         description={`Manage subscription and billing information for ${organization.name}.`}
+        title="Billing"
       >
         <SubNavigation
           configKey="organizationSettings"
@@ -104,7 +104,7 @@ export default async function BillingPage({
       <BillingSuccessDialog isOpenInitially={showSuccessMessage} />
 
       {/* Billing Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-4">
           <Suspense
             fallback={
@@ -114,8 +114,8 @@ export default async function BillingPage({
             }
           >
             <BillingSnapshotCard
-              organizationId={organizationId}
               hideViewBillingButton
+              organizationId={organizationId}
             />
           </Suspense>
         </div>

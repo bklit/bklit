@@ -19,7 +19,7 @@ export default function Modal() {
   };
 
   return (
-    <Dialog open={true} onOpenChange={() => router.back()}>
+    <Dialog onOpenChange={() => router.back()} open={true}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add organization</DialogTitle>

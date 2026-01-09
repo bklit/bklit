@@ -20,12 +20,12 @@ import { authenticated } from "@/lib/auth";
 async function getSiteData(
   projectId: string,
   organizationId: string,
-  userId: string,
+  userId: string
 ) {
   const site = await prisma.project.findFirst({
     where: {
       id: projectId,
-      organizationId: organizationId,
+      organizationId,
     },
     include: {
       organization: {
@@ -38,7 +38,7 @@ async function getSiteData(
     },
   });
 
-  if (!site || !site.organization || site.organization.members.length === 0) {
+  if (!site?.organization || site.organization.members.length === 0) {
     return null;
   }
 
@@ -56,7 +56,7 @@ export default async function ProjectDashboardPage({
   const siteData = await getSiteData(
     projectId,
     organizationId,
-    session.user.id,
+    session.user.id
   );
 
   if (!siteData) {
@@ -67,8 +67,8 @@ export default async function ProjectDashboardPage({
   return (
     <>
       <PageHeader
-        title="Project settings"
         description="Manage your projects settings."
+        title="Project settings"
       >
         <SubNavigation
           configKey="projectSettings"
@@ -91,7 +91,7 @@ export default async function ProjectDashboardPage({
 
         <DeploymentTrackingForm projectId={projectId} />
 
-        <FormPermissions requiredRole={MemberRole.ADMIN} asChild>
+        <FormPermissions asChild requiredRole={MemberRole.ADMIN}>
           <Card variant="destructive">
             <CardHeader>
               <CardTitle>Delete {site.name}</CardTitle>

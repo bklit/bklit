@@ -16,7 +16,7 @@ import { parseAsString, useQueryState } from "nuqs";
 export function WelcomeModal() {
   const [onboarding, setOnboarding] = useQueryState(
     "onboarding",
-    parseAsString,
+    parseAsString
   );
   const open = onboarding === "new";
 
@@ -25,25 +25,25 @@ export function WelcomeModal() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={open}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center space-y-4">
+        <DialogHeader className="space-y-4 text-center">
           <div className="mx-auto">
-            <BklitLogo size={48} className="dark:text-white text-black" />
+            <BklitLogo className="text-black dark:text-white" size={48} />
           </div>
-          <DialogTitle className="text-2xl text-center">
+          <DialogTitle className="text-center text-2xl">
             Welcome to <b className="font-bold">Bklit</b>
           </DialogTitle>
-          <DialogDescription className="text-base space-y-3 text-center">
-            <p className="text-muted-foreground font-medium">
+          <DialogDescription className="space-y-3 text-center text-base">
+            <p className="font-medium text-muted-foreground">
               We've invited you to our demo project so you can explore Bklit's
               features with real data.
             </p>
             <p>
               Click the bell icon
-              <div className="inline-flex items-center justify-center relative mx-2">
-                <Bell className="size-4 inline-flex text-card-foreground dark:text-white" />{" "}
-                <span className="bg-primary size-1 rounded-full absolute -top-1 -right-1"></span>
+              <div className="relative mx-2 inline-flex items-center justify-center">
+                <Bell className="inline-flex size-4 text-card-foreground dark:text-white" />{" "}
+                <span className="-top-1 -right-1 absolute size-1 rounded-full bg-primary" />
               </div>
               in the header to see your notifications and{" "}
               <b>accept the invitation</b>.

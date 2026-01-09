@@ -98,22 +98,22 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
               success: true,
               message: "Webhook received but status not handled",
-              status: status,
+              status,
             });
           }
 
           const updatedOrg = await prisma.organization.update({
             where: { id: referenceId },
             data: {
-              plan: plan,
-              polarCustomerId: polarCustomerId,
-              billingInterval: billingInterval,
+              plan,
+              polarCustomerId,
+              billingInterval,
             },
           });
 
           revalidatePath(`/${referenceId}/settings/billing`);
           revalidatePath(`/${referenceId}`);
-          revalidatePath(`/settings/billing`);
+          revalidatePath("/settings/billing");
 
           const processingTime = Date.now() - startTime;
 
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
                   ? dbError.message
                   : "Unknown database error",
             },
-            { status: 500 },
+            { status: 500 }
           );
         }
       } else {
@@ -155,12 +155,12 @@ export async function POST(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
-export async function GET() {
+export function GET() {
   return NextResponse.json({
     message: "Polar webhook endpoint is working",
     timestamp: new Date().toISOString(),

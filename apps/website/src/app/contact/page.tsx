@@ -24,19 +24,19 @@ export default function BrandingPage() {
   return (
     <>
       <PageHeader />
-      <div className="container mx-auto max-w-6xl py-48 space-y-16 px-4">
-        <SectionHeader title="Contact" description="Contact the Bklit team">
-          <Button variant="outline" asChild size="lg">
+      <div className="container mx-auto max-w-6xl space-y-16 px-4 py-48">
+        <SectionHeader description="Contact the Bklit team" title="Contact">
+          <Button asChild size="lg" variant="outline">
             <a
               href="https://www.linkedin.com/company/bklit/"
-              target="_blank"
               rel="noopener noreferrer"
+              target="_blank"
             >
               LinkedIn
             </a>
           </Button>
         </SectionHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className="col-span-1">
             <Card>
               <CardHeader>
@@ -59,7 +59,7 @@ export default function BrandingPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button size="lg" asChild variant="mono">
+                <Button asChild size="lg" variant="mono">
                   <a href="mailto:support@bklit.com">Email Support</a>
                 </Button>
               </CardContent>
@@ -67,42 +67,42 @@ export default function BrandingPage() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-center items-center gap-8">
+        <div className="flex flex-col items-center justify-center gap-8">
           <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Follow the community...
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="lg" asChild>
+            <Button asChild size="lg" variant="outline">
               <a
                 href="https://discord.gg/9yyK8FwPcU"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 <DiscordIcon className="size-4" />
                 Discord
               </a>
             </Button>
-            <Button variant="outline" size="lg" asChild>
+            <Button asChild size="lg" variant="outline">
               <a
                 href="https://x.com/bklitai"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 <XIcon className="size-4" />
                 .com
               </a>
             </Button>
-            <Button variant="outline" size="lg" asChild>
+            <Button asChild size="lg" variant="outline">
               <a
                 href="https://github.com/bklit/bklit"
+                rel="noopener noreferrer"
                 target="_blank"
                 title="Bklit on Github"
-                rel="noopener noreferrer"
               >
                 <GitHubIcon className="size-4" /> Github
-                <span className="flex items-center gap-1 group-hover:opacity-100 opacity-70 transition-opacity">
+                <span className="flex items-center gap-1 opacity-70 transition-opacity group-hover:opacity-100">
                   <GithubStarCount />
                 </span>
               </a>

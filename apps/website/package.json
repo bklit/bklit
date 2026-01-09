@@ -27,6 +27,7 @@
     "recharts": "^3.3.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.11",
     "@bklit/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "^4.1.16",
     "@types/node": "catalog:",
@@ -34,6 +35,7 @@
     "@types/react-dom": "catalog:react19",
     "dotenv-cli": "catalog:",
     "tailwindcss": "^4.1.16",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "ultracite": "7.0.10"
   }
 }

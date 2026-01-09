@@ -52,7 +52,7 @@ export function ExtensionConfigSheet({
   const eventIds = extension?.eventDefinitions?.map((e) => e.id) || [];
 
   const [webhookUrl, setWebhookUrl] = useState(
-    (config.webhookUrl as string) || "",
+    (config.webhookUrl as string) || ""
   );
   const [selectedEvents, setSelectedEvents] = useState(eventIds);
   const [extConfig, setExtConfig] = useState(config);
@@ -69,7 +69,7 @@ export function ExtensionConfigSheet({
       onError: (error) => {
         toast.error(error.message);
       },
-    }),
+    })
   );
 
   const testMutation = useMutation(
@@ -80,11 +80,13 @@ export function ExtensionConfigSheet({
       onError: (error) => {
         toast.error(error.message);
       },
-    }),
+    })
   );
 
   const handleSave = () => {
-    if (!extensionId) return;
+    if (!extensionId) {
+      return;
+    }
 
     updateMutation.mutate({
       projectId,
@@ -94,12 +96,14 @@ export function ExtensionConfigSheet({
     });
   };
 
-  if (!extension) return null;
+  if (!extension) {
+    return null;
+  }
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-xl overflow-y-auto">
+      <Sheet onOpenChange={onOpenChange} open={open}>
+        <SheetContent className="overflow-y-auto sm:max-w-xl">
           <SheetHeader>
             <SheetTitle>{extension.metadata?.displayName}</SheetTitle>
             <SheetDescription>
@@ -110,10 +114,10 @@ export function ExtensionConfigSheet({
           <div className="space-y-6 p-4">
             {extensionId === "github" ? (
               <GitHubConfig
-                organizationId={organizationId}
-                projectId={projectId}
                 config={extConfig}
                 onChange={setExtConfig}
+                organizationId={organizationId}
+                projectId={projectId}
               />
             ) : (
               <>
@@ -121,50 +125,52 @@ export function ExtensionConfigSheet({
                   <Label htmlFor="webhook-url">Webhook URL</Label>
                   <Input
                     id="webhook-url"
-                    type="url"
-                    placeholder="https://discord.com/api/webhooks/..."
-                    value={webhookUrl}
                     onChange={(e) => setWebhookUrl(e.target.value)}
+                    placeholder="https://discord.com/api/webhooks/..."
+                    type="url"
+                    value={webhookUrl}
                   />
                 </div>
 
                 <EventSelector
                   events={eventDefinitions || []}
-                  selectedEventIds={selectedEvents}
+                  onCreateEvent={() => {
+                    // Event creation handled externally
+                  }}
                   onSelectionChange={setSelectedEvents}
-                  onCreateEvent={() => {}}
+                  selectedEventIds={selectedEvents}
                 />
               </>
             )}
 
             {extension.lastTriggeredAt && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 Last triggered:{" "}
                 {new Date(extension.lastTriggeredAt).toLocaleString()}
               </div>
             )}
           </div>
 
-          <SheetFooter className="flex sm:flex-row justify-between gap-2">
+          <SheetFooter className="flex justify-between gap-2 sm:flex-row">
             <div className="flex items-center gap-2">
               <Button
-                variant="destructive"
                 onClick={() => setDeleteDialogOpen(true)}
+                variant="destructive"
               >
                 Remove Extension
               </Button>
               <Button
-                variant="outline"
+                disabled={testMutation.isPending || !extensionId}
                 onClick={() =>
                   extensionId && testMutation.mutate({ projectId, extensionId })
                 }
-                disabled={testMutation.isPending || !extensionId}
+                variant="outline"
               >
                 <TestTube2 className="size-3" />
                 {testMutation.isPending ? "Testing..." : "Test"}
               </Button>
             </div>
-            <Button onClick={handleSave} disabled={updateMutation.isPending}>
+            <Button disabled={updateMutation.isPending} onClick={handleSave}>
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </SheetFooter>
@@ -180,10 +186,7 @@ export function ExtensionConfigSheet({
               }
             : null
         }
-        open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
-        organizationId={organizationId}
-        projectId={projectId}
         onSuccess={() => {
           setDeleteDialogOpen(false);
           onOpenChange(false);
@@ -191,6 +194,9 @@ export function ExtensionConfigSheet({
             queryKey: [["extension", "listForProject"]],
           });
         }}
+        open={deleteDialogOpen}
+        organizationId={organizationId}
+        projectId={projectId}
       />
     </>
   );

@@ -25,7 +25,7 @@ export function ProjectExtensionsList({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [editingExtensionId, setEditingExtensionId] = useState<string | null>(
-    null,
+    null
   );
 
   const { data: extensions, isLoading } = useQuery({
@@ -39,7 +39,7 @@ export function ProjectExtensionsList({
           queryKey: [["extension", "listForProject"]],
         });
       },
-    }),
+    })
   );
 
   if (isLoading) {
@@ -84,12 +84,12 @@ export function ProjectExtensionsList({
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {sortedExtensions.map((ext) => (
             <ExtensionCardMini
-              key={ext.id}
-              extensionId={ext.extensionId}
-              displayName={ext.metadata?.displayName || ext.extensionId}
               description={ext.metadata?.description || ""}
-              icon={ext.metadata?.icon}
+              displayName={ext.metadata?.displayName || ext.extensionId}
               enabled={ext.enabled}
+              extensionId={ext.extensionId}
+              icon={ext.metadata?.icon}
+              key={ext.id}
               onEdit={() => setEditingExtensionId(ext.extensionId)}
               onToggle={(enabled) =>
                 toggleMutation.mutate({
@@ -105,10 +105,10 @@ export function ProjectExtensionsList({
 
       <ExtensionConfigSheet
         extensionId={editingExtensionId}
-        projectId={projectId}
-        organizationId={organizationId}
-        open={!!editingExtensionId}
         onOpenChange={(open) => !open && setEditingExtensionId(null)}
+        open={!!editingExtensionId}
+        organizationId={organizationId}
+        projectId={projectId}
       />
     </>
   );

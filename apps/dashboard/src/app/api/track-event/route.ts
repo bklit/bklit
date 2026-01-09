@@ -16,19 +16,19 @@ interface EventTrackingPayload {
 
 function createCorsResponse(
   body: Record<string, unknown> | { message: string; error?: string },
-  status: number,
+  status: number
 ) {
   const response = NextResponse.json(body, { status });
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   response.headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization",
+    "Content-Type, Authorization"
   );
   return response;
 }
 
-export async function OPTIONS() {
+export function OPTIONS() {
   return createCorsResponse({ message: "CORS preflight OK" }, 200);
 }
 
@@ -43,10 +43,10 @@ export async function POST(request: NextRequest) {
       timestamp: payload.timestamp,
     });
 
-    if (!payload.projectId || !payload.trackingId || !payload.eventType) {
+    if (!(payload.projectId && payload.trackingId && payload.eventType)) {
       return createCorsResponse(
         { message: "projectId, trackingId, and eventType are required" },
-        400,
+        400
       );
     }
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (!token) {
       return createCorsResponse(
         { message: "Authorization token is required" },
-        401,
+        401
       );
     }
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!tokenValidation.valid) {
       return createCorsResponse(
         { message: tokenValidation.error || "Invalid token" },
-        401,
+        401
       );
     }
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       if (!requestDomain) {
         return createCorsResponse(
           { message: "Origin or Referer header required" },
-          403,
+          403
         );
       }
 
@@ -107,11 +107,15 @@ export async function POST(request: NextRequest) {
         const isAllowed = tokenValidation.allowedDomains.some(
           (allowedDomain) => {
             // Exact match
-            if (requestDomain === allowedDomain) return true;
+            if (requestDomain === allowedDomain) {
+              return true;
+            }
             // Subdomain match (e.g., www.example.com matches example.com)
-            if (requestDomain.endsWith(`.${allowedDomain}`)) return true;
+            if (requestDomain.endsWith(`.${allowedDomain}`)) {
+              return true;
+            }
             return false;
-          },
+          }
         );
 
         if (!isAllowed) {
@@ -119,7 +123,7 @@ export async function POST(request: NextRequest) {
             {
               message: `Domain ${requestDomain} is not allowed for this token`,
             },
-            403,
+            403
           );
         }
       }
@@ -136,7 +140,7 @@ export async function POST(request: NextRequest) {
             currentUsage: usageCheck.currentUsage,
             limit: usageCheck.limit,
           },
-          429,
+          429
         );
       }
     }
@@ -160,7 +164,7 @@ export async function POST(request: NextRequest) {
           message:
             "Event definition not found. Please create this event in your dashboard first.",
         },
-        404,
+        404
       );
     }
 
@@ -218,7 +222,9 @@ export async function POST(request: NextRequest) {
             console.error("Failed to fetch organization for Polar:", err);
           }
         })
-        .catch(() => {}); // Silently fail
+        .catch(() => {
+          // Silently fail - sending to Polar is non-critical
+        });
     }
 
     // Deliver to extensions (fire-and-forget)
@@ -256,7 +262,7 @@ export async function POST(request: NextRequest) {
     }
     return createCorsResponse(
       { message: "Error processing request", error: errorMessage },
-      500,
+      500
     );
   }
 }

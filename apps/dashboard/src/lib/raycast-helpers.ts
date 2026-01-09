@@ -7,7 +7,9 @@ export function calculateLast24Hours() {
 }
 
 export function calculatePercentage(value: number, total: number): number {
-  if (total === 0) return 0;
+  if (total === 0) {
+    return 0;
+  }
   return Math.round((value / total) * 1000) / 10; // Round to 1 decimal
 }
 
