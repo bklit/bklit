@@ -25,7 +25,7 @@ export default function MarketingHomePage() {
   return (
     <div className="flex flex-col space-y-16 sm:space-y-64">
       <div className={cn("relative w-full sm:min-h-[400px]")}>
-        <div className="container mx-auto max-w-full px-4 sm:max-w-[1600px]">
+        <div className="container mx-auto max-w-full sm:max-w-[1600px]">
           <div className="grid grid-cols-1 grid-rows-1">
             <AnimateHeroNew />
             <div className="container mx-auto max-w-6xl px-4">
@@ -42,7 +42,7 @@ export default function MarketingHomePage() {
           title="Detect everything, everywhere"
         />
         <div className="relative min-h-[600px] w-full">
-          <div className="container mx-auto max-w-6xl px-4">
+          <div className="container mx-auto max-w-6xl">
             <DetectEverything />
           </div>
         </div>
@@ -50,10 +50,10 @@ export default function MarketingHomePage() {
 
       <div className="space-y-16 px-4">
         <div className="relative min-h-[400px] w-full overflow-hidden">
-          <div className="container mx-auto max-w-6xl px-4">
+          <div className="container mx-auto max-w-6xl">
             <PageviewsView />
           </div>
-          <div className="container mx-auto max-w-6xl border-t px-4">
+          <div className="container mx-auto max-w-6xl border-t">
             <div className="grid grid-cols-1 md:grid-cols-2">
               <div className="col-span-1 space-y-8 border-b p-6 sm:border-r sm:p-12">
                 <div className="space-y-2">

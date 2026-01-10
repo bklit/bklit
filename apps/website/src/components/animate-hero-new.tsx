@@ -1,5 +1,6 @@
 "use client";
 
+import { useIsMobile } from "@bklit/ui/hooks/use-mobile";
 import { cn } from "@bklit/ui/lib/utils";
 import { motion } from "motion/react";
 import dynamic from "next/dynamic";
@@ -13,6 +14,7 @@ const FakeDashboard = dynamic(
 
 export function AnimateHeroNew() {
   const [rotationComplete, setRotationComplete] = useState(false);
+  const isMobile = useIsMobile();
 
   return (
     <div className="relative flex max-h-[800px] flex-col overflow-hidden md:max-h-[1200px]">
@@ -27,11 +29,12 @@ export function AnimateHeroNew() {
                   rotateZ: -20,
                   scale: 1,
                   translateZ: 20,
+                  x: isMobile ? 180 : 0,
                   y: 0,
                 }}
                 className={cn(
                   "backface-hidden absolute inset-0 overflow-hidden rounded-xl",
-                  "mt-32 aspect-1942/1283 w-full md:mt-24 md:h-[1283px] md:w-[1942px]"
+                  "mt-32 aspect-1942/1283 w-[620px] md:mt-24 md:h-[1283px] md:w-[1942px]"
                 )}
                 initial={{
                   rotateX: 0,
