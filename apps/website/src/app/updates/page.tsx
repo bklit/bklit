@@ -15,5 +15,5 @@ export default function UpdatesPage() {
   const updates = allUpdates.slice(0, UPDATES_PER_PAGE);
   const hasMore = allUpdates.length > UPDATES_PER_PAGE;
 
-  return <UpdatesPageContent updates={updates} hasMore={hasMore} />;
+  return <UpdatesPageContent hasMore={hasMore} updates={updates} />;
 }

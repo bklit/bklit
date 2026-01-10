@@ -21,7 +21,10 @@ interface UpdatesPageContentProps {
   hasMore: boolean;
 }
 
-export function UpdatesPageContent({ updates, hasMore }: UpdatesPageContentProps) {
+export function UpdatesPageContent({
+  updates,
+  hasMore,
+}: UpdatesPageContentProps) {
   useEffect(() => {
     let currentSlug: string | null = null;
 
@@ -31,14 +34,14 @@ export function UpdatesPageContent({ updates, hasMore }: UpdatesPageContentProps
       // Find first article that's within 100px from top
       for (const article of articles) {
         const rect = article.getBoundingClientRect();
-        
+
         if (rect.top <= 100 && rect.bottom > 100) {
           const slug = (article as HTMLElement).id;
-          
+
           if (slug && slug !== currentSlug) {
             currentSlug = slug;
             // Just update the address bar, no routing
-            window.history.replaceState(null, '', `/updates/${slug}`);
+            window.history.replaceState(null, "", `/updates/${slug}`);
             break;
           }
         }
@@ -50,7 +53,7 @@ export function UpdatesPageContent({ updates, hasMore }: UpdatesPageContentProps
         const rect = firstArticle.getBoundingClientRect();
         if (rect.top > 100 && currentSlug !== null) {
           currentSlug = null;
-          window.history.replaceState(null, '', '/updates');
+          window.history.replaceState(null, "", "/updates");
         }
       }
     };
@@ -112,8 +115,8 @@ export function UpdatesPageContent({ updates, hasMore }: UpdatesPageContentProps
                     className="w-full rounded-lg"
                     height={448}
                     src={update.frontmatter.image}
-                    width={896}
                     unoptimized
+                    width={896}
                   />
                 )}
 
@@ -160,4 +163,3 @@ export function UpdatesPageContent({ updates, hasMore }: UpdatesPageContentProps
     </main>
   );
 }
-

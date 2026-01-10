@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useInView, useMotionValue, animate } from "motion/react";
+import { AnimatePresence, motion, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 interface Update {
@@ -33,7 +33,8 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
       const article = document.getElementById(firstArticleOfMonth.slug);
       if (article) {
         const yOffset = -200; // offset to account for fixed header and ticker
-        const y = article.getBoundingClientRect().top + window.scrollY + yOffset;
+        const y =
+          article.getBoundingClientRect().top + window.scrollY + yOffset;
         window.scrollTo({ top: y, behavior: "smooth" });
       }
     }
@@ -148,6 +149,7 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
             <div className="relative overflow-clip rounded-full border bg-background/10 py-2 shadow-lg backdrop-blur-sm">
               <div className="relative h-4 w-[160px] overflow-hidden">
                 <motion.div
+                  className="relative h-full w-full cursor-grab active:cursor-grabbing"
                   drag="x"
                   dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={0.1}
@@ -157,73 +159,63 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
                   onDragEnd={(_, info) => {
                     // Calculate how many months moved based on drag
                     const monthsToSkip = Math.round(info.offset.x / 48);
-                    
+
                     if (monthsToSkip !== 0) {
                       const targetIndex = activeMonthIndex - monthsToSkip;
                       const targetMonth = allMonths[targetIndex];
-                      
+
                       if (targetMonth) {
                         scrollToMonth(targetMonth.id);
                       }
                     }
-                    
+
                     // Smoothly animate offset back to 0
                     const startOffset = dragOffset;
                     const startTime = Date.now();
                     const duration = 300;
-                    
+
                     const animateBack = () => {
                       const elapsed = Date.now() - startTime;
                       const progress = Math.min(elapsed / duration, 1);
-                      const eased = 1 - Math.pow(1 - progress, 3); // easeOut cubic
-                      
+                      const eased = 1 - (1 - progress) ** 3; // easeOut cubic
+
                       setDragOffset(startOffset * (1 - eased));
-                      
+
                       if (progress < 1) {
                         requestAnimationFrame(animateBack);
                       }
                     };
-                    
+
                     requestAnimationFrame(animateBack);
                   }}
-                  className="relative h-full w-full cursor-grab active:cursor-grabbing"
                 >
                   <AnimatePresence initial={false} mode="popLayout">
-                  {monthsToRender.map((month) => (
-                    <motion.span
-                      key={month.id}
-                      layout="position"
-                      initial={{
-                        x: getPosition(month.offset),
-                        opacity: 0,
-                      }}
-                      animate={{
-                        x: getPosition(month.offset) + dragOffset,
-                        opacity: 1,
-                      }}
+                    {monthsToRender.map((month) => (
+                      <motion.span
+                        animate={{
+                          x: getPosition(month.offset) + dragOffset,
+                          opacity: 1,
+                        }}
+                        className={`pointer-events-auto absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs ${
+                          month.offset === 0
+                            ? "font-semibold text-foreground"
+                            : "cursor-pointer text-muted-foreground hover:text-foreground"
+                        }`}
                         exit={{
                           x: getPosition(month.offset > 0 ? 3 : -3),
                           opacity: 0,
                         }}
-                        whileHover={
-                          month.offset !== 0
-                            ? {
-                                scale: 1.15,
-                                opacity: 1,
-                                transition: { duration: 0.2 },
-                              }
-                            : undefined
-                        }
+                        initial={{
+                          x: getPosition(month.offset),
+                          opacity: 0,
+                        }}
+                        key={month.id}
+                        layout="position"
                         onClick={() => {
                           if (month.offset !== 0) {
                             scrollToMonth(month.id);
                           }
                         }}
-                        className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs pointer-events-auto ${
-                          month.offset === 0
-                            ? "font-semibold text-foreground"
-                            : "text-muted-foreground cursor-pointer hover:text-foreground"
-                        }`}
                         transition={{
                           x: {
                             duration: 1.5,
@@ -238,15 +230,24 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
                             ease: [0, 0.667, 0.138, 1],
                           },
                         }}
+                        whileHover={
+                          month.offset !== 0
+                            ? {
+                                scale: 1.15,
+                                opacity: 1,
+                                transition: { duration: 0.2 },
+                              }
+                            : undefined
+                        }
                       >
-                      {month.label}
-                    </motion.span>
-                  ))}
+                        {month.label}
+                      </motion.span>
+                    ))}
                   </AnimatePresence>
                 </motion.div>
               </div>
-              <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-linear-to-r from-background to-transparent pointer-events-none" />
-              <div className="absolute top-0 right-0 bottom-0 w-1/3 bg-linear-to-l from-background to-transparent pointer-events-none" />
+              <div className="pointer-events-none absolute top-0 bottom-0 left-0 w-1/3 bg-linear-to-r from-background to-transparent" />
+              <div className="pointer-events-none absolute top-0 right-0 bottom-0 w-1/3 bg-linear-to-l from-background to-transparent" />
             </div>
           </motion.div>
         )}
