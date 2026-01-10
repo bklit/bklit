@@ -34,7 +34,7 @@ export const PageHeader = () => {
           data-navbar
         >
           {/* Logo */}
-          <div className="order-1 col-span-6 flex h-9 items-start gap-3 border border-emerald-300 sm:pl-0 md:col-span-3 md:pl-3">
+          <div className="order-1 col-span-3 flex h-9 items-start gap-3 sm:pl-0 md:col-span-3 md:pl-3">
             <LogoDropdown />
             <Badge
               className="hidden opacity-70 hover:opacity-100 sm:block"
@@ -48,8 +48,8 @@ export const PageHeader = () => {
           <motion.nav
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              "order-3 col-span-12 hidden items-center justify-center border border-emerald-300 md:order-2 md:col-span-6 md:flex md:h-9",
-              isMenuOpen && "visible flex border-rose-500 md:hidden md:flex-col"
+              "order-3 col-span-12 hidden w-full items-center justify-center py-4 md:order-2 md:col-span-6 md:flex md:h-9 md:py-0",
+              isMenuOpen && "visible flex md:hidden md:flex-col"
             )}
             initial={{ opacity: 0, y: -7 }}
             transition={{
@@ -94,7 +94,7 @@ export const PageHeader = () => {
           </motion.nav>
 
           {/* CTA */}
-          <nav className="order-2 col-span-6 flex h-9 items-center justify-end gap-2 border border-emerald-300 md:order-3 md:col-span-3">
+          <nav className="order-2 col-span-9 flex h-9 items-center justify-end gap-2 md:order-3 md:col-span-3">
             <Button asChild size={isMobile ? "sm" : "default"} variant="ghost">
               <a
                 data-bklit-event="signin-button"
@@ -120,7 +120,7 @@ export const PageHeader = () => {
 
             {/* Mobile Menu */}
             <button
-              className="flex size-7 items-center justify-center"
+              className="flex size-7 shrink-0 appearance-none items-center justify-center"
               onClick={handleMenuOpen}
               type="button"
             >
