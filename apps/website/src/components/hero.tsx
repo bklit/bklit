@@ -35,7 +35,7 @@ export const Hero = () => {
 
   return (
     <div className="container mx-auto flex max-w-6xl flex-col px-4">
-      <div className="flex w-full flex-col items-center justify-center space-y-4 pt-32 pb-0 text-center sm:pt-42">
+      <div className="z-10 flex w-full flex-col items-center justify-center space-y-4 pt-32 pb-0 text-center sm:pt-42 md:z-auto">
         <motion.div
           animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
           className="squircle hidden aspect-square w-24 items-center justify-center rounded-4xl bg-radial-[at_25%_25%] from-lime-200 to-emerald-500 sm:flex sm:rounded-[300px]"

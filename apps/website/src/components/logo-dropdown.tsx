@@ -12,7 +12,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { brandingSnippets } from "../lib/branding-snippets";
 
-export const LogoDropdown = () => {
+interface LogoDropdownProps {
+  onClick?: () => void;
+}
+
+export const LogoDropdown = ({ onClick }: LogoDropdownProps) => {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copyToClipboard = async (text: string, type: string) => {
@@ -28,7 +32,11 @@ export const LogoDropdown = () => {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <Link className="flex cursor-pointer items-center gap-3" href="/">
+        <Link
+          className="flex cursor-pointer items-center gap-3"
+          href="/"
+          onClick={onClick}
+        >
           <BklitLogo size={32} theme="dark" />
           <span className="hidden font-bold text-base sm:text-2xl md:inline-flex">
             Bklit

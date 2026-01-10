@@ -317,10 +317,10 @@ function DashboardContent() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col">
-                  {mockSessions.map((session, i) => (
+                  {mockSessions.map((session) => (
                     <div
                       className="flex items-center justify-between border-b px-2 py-1.5 transition-colors last-of-type:border-b-0 hover:bg-accent/50"
-                      key={i}
+                      key={session.browser}
                     >
                       <div className="flex flex-col">
                         <div className="flex items-center gap-3">
@@ -418,7 +418,7 @@ export function FakeDashboard({
   }
 
   return (
-    <div className="pointer-events-none relative h-[1283px] w-[1942px] rounded-xl border">
+    <div className="pointer-events-none relative h-[1283px] w-[1942px] origin-top-left scale-40 rounded-xl border md:scale-100">
       {/* Header SVG */}
       <motion.div
         animate={

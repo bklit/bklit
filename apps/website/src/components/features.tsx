@@ -64,7 +64,7 @@ const features: Feature[] = [
 export const Features = () => {
   return (
     <div className="w-full">
-      <div className="container mx-auto max-w-6xl px-4">
+      <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-3">
           {features.map((feature, index) => (
             <div

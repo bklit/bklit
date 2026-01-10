@@ -1,5 +1,7 @@
 "use client";
 
+import { useIsMobile } from "@bklit/ui/hooks/use-mobile";
+import { cn } from "@bklit/ui/lib/utils";
 import { motion } from "motion/react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
@@ -12,12 +14,13 @@ const FakeDashboard = dynamic(
 
 export function AnimateHeroNew() {
   const [rotationComplete, setRotationComplete] = useState(false);
+  const isMobile = useIsMobile();
 
   return (
-    <div className="relative flex max-h-[1200px] flex-col overflow-hidden">
-      <div className="container mx-auto max-w-6xl overflow-visible px-4">
-        <div className="grid h-[1283px] w-full grid-cols-1 grid-rows-1">
-          <div className="col-start-1 row-start-1 pt-32">
+    <div className="relative flex max-h-[800px] flex-col overflow-hidden md:max-h-[1200px]">
+      <div className="container mx-auto max-w-full overflow-visible px-4 md:max-w-6xl">
+        <div className="grid h-[800px] w-full grid-cols-1 grid-rows-1 md:h-[1283px]">
+          <div className="col-start-1 row-start-1 pt-24 md:pt-32">
             <div className="perspective-4000 perspective-origin-top-right preserve-3d relative h-full w-full overflow-visible">
               <motion.div
                 animate={{
@@ -26,9 +29,13 @@ export function AnimateHeroNew() {
                   rotateZ: -20,
                   scale: 1,
                   translateZ: 20,
+                  x: isMobile ? 180 : 0,
                   y: 0,
                 }}
-                className="backface-hidden absolute inset-0 mt-24 h-[1283px] w-[1942px] overflow-hidden rounded-xl"
+                className={cn(
+                  "backface-hidden absolute inset-0 overflow-hidden rounded-xl",
+                  "mt-32 aspect-1942/1283 w-[620px] md:mt-24 md:h-[1283px] md:w-[1942px]"
+                )}
                 initial={{
                   rotateX: 0,
                   rotateY: 0,
