@@ -7,4 +7,3 @@ export default function ExtensionsLayout({
 }) {
   return <NuqsAdapter>{children}</NuqsAdapter>;
 }
-

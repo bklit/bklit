@@ -6,10 +6,7 @@ interface MDXCodeBlockProps {
   className?: string;
 }
 
-export async function MDXCodeBlock({
-  children,
-  className,
-}: MDXCodeBlockProps) {
+export async function MDXCodeBlock({ children, className }: MDXCodeBlockProps) {
   // Extract language from className (e.g., "language-typescript" -> "typescript")
   const language = className?.replace(/language-/, "") as BundledLanguage;
 

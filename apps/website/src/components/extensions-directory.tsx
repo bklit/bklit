@@ -110,7 +110,7 @@ export function ExtensionsDirectory({ extensions }: ExtensionsDirectoryProps) {
         <div className="flex-1 space-y-6">
           {/* Search */}
           <div className="relative">
-            <Search className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground" />
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="cursor-pointer pl-9"
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -119,7 +119,7 @@ export function ExtensionsDirectory({ extensions }: ExtensionsDirectoryProps) {
               readOnly
               value={searchQuery}
             />
-            <kbd className="-translate-y-1/2 pointer-events-none absolute top-1/2 right-3 hidden items-center rounded border bg-muted px-2 py-0.5 font-mono text-muted-foreground text-sm md:inline-flex">
+            <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 items-center rounded border bg-muted px-2 py-0.5 font-mono text-muted-foreground text-sm md:inline-flex">
               <span className="relative top-px mr-px text-[19px]">⌘</span>K
             </kbd>
           </div>
