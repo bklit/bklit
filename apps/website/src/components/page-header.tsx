@@ -32,7 +32,7 @@ export const PageHeader = () => {
             }
       }
     >
-      <div className="container mx-auto max-w-7xl md:px-4">
+      <div className="container mx-auto max-w-5xl md:px-4">
         <motion.div
           className="grid grid-cols-12 items-center justify-between gap-2 border-b bg-background/60 p-4 px-4 backdrop-blur-sm md:rounded-3xl md:border"
           data-navbar
