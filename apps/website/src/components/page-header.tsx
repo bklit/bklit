@@ -21,12 +21,16 @@ export const PageHeader = () => {
     <motion.header
       animate={{ y: 0, opacity: 1 }}
       className="fixed z-50 flex w-full bg-linear-to-b from-background to-transparent md:px-3 md:py-3"
-      initial={{ y: 30, opacity: 0 }}
-      transition={{
-        duration: 0.8,
-        ease: "easeInOut",
-        delay: 0.1,
-      }}
+      initial={isMobile ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+      transition={
+        isMobile
+          ? { duration: 0 }
+          : {
+              duration: 0.8,
+              ease: "easeInOut",
+              delay: 0.1,
+            }
+      }
     >
       <div className="container mx-auto max-w-7xl md:px-4">
         <motion.div
@@ -46,40 +50,91 @@ export const PageHeader = () => {
 
           {/* Navigation */}
           <motion.nav
-            animate={{ opacity: 1, y: 0 }}
+            animate={isMobile ? (isMenuOpen ? "visible" : "hidden") : "visible"}
             className={cn(
               "order-3 col-span-12 hidden w-full items-center justify-center py-4 md:order-2 md:col-span-6 md:flex md:h-9 md:py-0",
-              isMenuOpen && "visible flex md:hidden md:flex-col"
+              isMobile && isMenuOpen && "visible flex md:hidden md:flex-col"
             )}
-            initial={{ opacity: 0, y: -7 }}
-            transition={{
-              duration: 1.2,
-              ease: "easeInOut",
-              delay: 0.1,
+            initial="hidden"
+            variants={{
+              hidden: { opacity: 0, y: -7 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: isMobile
+                  ? {
+                      duration: 0,
+                    }
+                  : {
+                      duration: 1.8,
+                      ease: "easeInOut",
+                      delay: 0,
+                    },
+              },
             }}
           >
-            <ul className="flex flex-col items-center gap-2 md:flex-row">
-              <li>
+            <motion.ul className="flex flex-col items-center gap-2 md:flex-row">
+              <motion.li
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { duration: 0.18, delay: 0 },
+                  },
+                }}
+              >
                 <Button asChild variant="ghost">
                   <Link href="/#product">Product</Link>
                 </Button>
-              </li>
-              <li>
+              </motion.li>
+              <motion.li
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { duration: 0.18, delay: 0.05 },
+                  },
+                }}
+              >
                 <Button asChild variant="ghost">
                   <Link href="/pricing">Pricing</Link>
                 </Button>
-              </li>
-              <li>
+              </motion.li>
+              <motion.li
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { duration: 0.18, delay: 0.1 },
+                  },
+                }}
+              >
                 <Button asChild variant="ghost">
                   <Link href="/contact">Contact</Link>
                 </Button>
-              </li>
-              <li>
+              </motion.li>
+              <motion.li
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { duration: 0.18, delay: 0.15 },
+                  },
+                }}
+              >
                 <Button asChild variant="ghost">
                   <Link href="/updates">Updates</Link>
                 </Button>
-              </li>
-              <li>
+              </motion.li>
+              <motion.li
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { duration: 0.18, delay: 0.2 },
+                  },
+                }}
+              >
                 <Button asChild variant="ghost">
                   <a
                     href="https://docs.bklit.com"
@@ -89,8 +144,8 @@ export const PageHeader = () => {
                     Docs
                   </a>
                 </Button>
-              </li>
-            </ul>
+              </motion.li>
+            </motion.ul>
           </motion.nav>
 
           {/* CTA */}
@@ -120,7 +175,7 @@ export const PageHeader = () => {
 
             {/* Mobile Menu */}
             <button
-              className="flex size-7 shrink-0 appearance-none items-center justify-center"
+              className="flex size-7 shrink-0 appearance-none items-center justify-center md:hidden"
               onClick={handleMenuOpen}
               type="button"
             >
