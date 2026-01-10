@@ -17,7 +17,7 @@ export default function ExtensionsPage() {
       <div className="container mx-auto flex max-w-6xl flex-col space-y-24 px-4 py-48">
         <SectionHeader
           // align="left"
-          description="Connect Bklit with your favorite tools and automate your analytics workflow."
+          description="Extend Bklit with powerful integrations and automations."
           title="Extensions"
         />
         <ExtensionsDirectory extensions={extensions} />

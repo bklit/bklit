@@ -45,7 +45,7 @@
     "motion": "catalog:",
     "next": "catalog:",
     "next-themes": "catalog:",
-    "nuqs": "^2.7.2",
+    "nuqs": "catalog:",
     "react": "catalog:react19",
     "react-circle-flags": "^0.0.23",
     "react-dom": "catalog:react19",

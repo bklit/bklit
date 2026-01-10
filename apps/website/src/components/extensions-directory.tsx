@@ -12,9 +12,10 @@ import {
   CommandList,
 } from "@bklit/ui/components/command";
 import { Input } from "@bklit/ui/components/input";
-import { Puzzle, Search } from "lucide-react";
+import { BarChart, Bell, Mail, Puzzle, Search, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { ExtensionDirectoryCard } from "./extension-directory-card";
 
@@ -22,17 +23,30 @@ interface ExtensionsDirectoryProps {
   extensions: Array<ExtensionMetadata & { id: string }>;
 }
 
-const categories = [
-  { id: "all", label: "All Extensions", icon: "⭐" },
-  { id: "notifications", label: "Notifications", icon: "🔔" },
-  { id: "analytics", label: "Analytics", icon: "📊" },
-  { id: "marketing", label: "Marketing", icon: "📧" },
-  { id: "other", label: "Other", icon: "🔧" },
+type CategoryId = "all" | "notifications" | "analytics" | "marketing";
+
+const categories: Array<{
+  id: CategoryId;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: "all", label: "All Extensions", icon: Sparkles },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "analytics", label: "Analytics", icon: BarChart },
+  { id: "marketing", label: "Marketing", icon: Mail },
 ];
 
 export function ExtensionsDirectory({ extensions }: ExtensionsDirectoryProps) {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useQueryState(
+    "category",
+    parseAsStringLiteral([
+      "all",
+      "notifications",
+      "analytics",
+      "marketing",
+    ] as const).withDefault("all")
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [commandOpen, setCommandOpen] = useState(false);
 
@@ -58,7 +72,9 @@ export function ExtensionsDirectory({ extensions }: ExtensionsDirectoryProps) {
   });
 
   const getCategoryCount = (categoryId: string) => {
-    if (categoryId === "all") return extensions.length;
+    if (categoryId === "all") {
+      return extensions.length;
+    }
     return extensions.filter((ext) => ext.category === categoryId).length;
   };
 
@@ -66,24 +82,27 @@ export function ExtensionsDirectory({ extensions }: ExtensionsDirectoryProps) {
     <>
       <div className="flex flex-col gap-8 lg:flex-row">
         {/* Sidebar */}
-        <aside className="w-full lg:w-64">
+        <aside className="hidden w-full md:block lg:w-64">
           <nav className="space-y-1">
-            {categories.map((category) => (
-              <Button
-                className="w-full justify-start"
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                variant={
-                  selectedCategory === category.id ? "secondary" : "ghost"
-                }
-              >
-                <span className="mr-2">{category.icon}</span>
-                {category.label}
-                <span className="ml-auto text-muted-foreground text-xs">
-                  {getCategoryCount(category.id)}
-                </span>
-              </Button>
-            ))}
+            {categories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <Button
+                  className="w-full justify-start"
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  variant={
+                    selectedCategory === category.id ? "secondary" : "ghost"
+                  }
+                >
+                  <Icon className="mr-2 size-4" />
+                  {category.label}
+                  <span className="ml-auto text-muted-foreground text-xs">
+                    {getCategoryCount(category.id)}
+                  </span>
+                </Button>
+              );
+            })}
           </nav>
         </aside>
 

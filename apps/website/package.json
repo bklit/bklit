@@ -25,6 +25,7 @@
     "next": "catalog:",
     "next-mdx-remote": "catalog:",
     "next-themes": "catalog:",
+    "nuqs": "catalog:",
     "react": "catalog:react19",
     "react-circle-flags": "^0.0.23",
     "react-dom": "catalog:react19",
