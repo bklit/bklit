@@ -4,7 +4,10 @@ Send real-time analytics events to your Discord server channels.
 
 ## Setup Guide
 
-### Step 1: Create a Webhook in Discord
+<Steps>
+<Step>
+
+### Create a Webhook in Discord
 
 1. Open your Discord server
 2. Go to the channel where you want notifications (e.g., `#analytics`)
@@ -18,20 +21,31 @@ Send real-time analytics events to your Discord server channels.
 7. Click **"Copy Webhook URL"**
    - Format: `https://discord.com/api/webhooks/123456789/abcdefghijklmnopqrstuvwxyz`
 
-### Step 2: Activate in Bklit
+</Step>
+
+<Step>
+
+### Activate in Bklit
 
 1. Click **"Activate"** on this page
 2. Select which projects should use Discord notifications
 3. Navigate to your project's settings → Extensions
 4. Click **"Configure"** on Discord
 
-### Step 3: Configure
+</Step>
+
+<Step>
+
+### Configure
 
 1. **Paste your Discord webhook URL**
 2. **Select which custom events** you want forwarded to Discord
 3. Click **"Save Configuration"**
 4. Click **"Test"** to verify it works
 5. Toggle to **"Active"**
+
+</Step>
+</Steps>
 
 ## How It Works
 
@@ -42,16 +56,16 @@ Whenever a selected custom event is triggered on your website, Discord receives 
 When someone on your site triggers:
 
 ```javascript
-window.trackEvent('purchase', 'completed', {
-  plan: 'Pro',
-  amount: '$29',
-  userId: 'user-123'
+window.trackEvent("purchase", "completed", {
+  plan: "Pro",
+  amount: "$29",
+  userId: "user-123",
 });
 ```
 
 Discord receives:
 
-```
+```text
 🎯 purchase
 Event: completed
 
@@ -65,6 +79,7 @@ Project ID: your-project-id
 ## Event Filtering
 
 **Note:** "View" events are automatically filtered out to prevent spam. The Discord extension only forwards:
+
 - Click events
 - Custom events (purchase, signup, etc.)
 - Other interaction events
@@ -91,12 +106,14 @@ To send different events to different Discord channels:
 ## Troubleshooting
 
 **Messages not appearing?**
+
 - Verify webhook URL is correct
 - Check extension is enabled (toggle)
 - Ensure events are selected
 - Use "Test" button to debug
 
 **Rate limit hit?**
+
 - Wait for next hour
 - Consider filtering which events to forward
 - Contact support for increased limits (Pro plan)
@@ -111,4 +128,3 @@ To send different events to different Discord channels:
 ## Support
 
 Need help? Contact support@bklit.com or check our documentation.
-

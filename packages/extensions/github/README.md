@@ -4,7 +4,10 @@ Track GitHub Actions workflow deployments and see them on your analytics charts.
 
 ## Setup Guide
 
-### Step 1: Link Your GitHub Account
+<Steps>
+<Step>
+
+### Link Your GitHub Account
 
 1. Navigate to Extensions in your Bklit dashboard
 2. Find the GitHub Deployments extension
@@ -13,16 +16,27 @@ Track GitHub Actions workflow deployments and see them on your analytics charts.
 5. Click **"Link GitHub Account"**
 6. Authorize Bklit to access your GitHub workflows
 
-### Step 2: Configure
+</Step>
+
+<Step>
+
+### Configure
 
 1. **Select Repository** - Choose which repo to track
 2. **Select Production Workflows** - Pick workflows that deploy to production (e.g., "Deploy to Production", "Release")
 3. **Set Production Branch** - Usually `main` or `master`
 4. Click **"Setup GitHub Webhook"** - Automatically creates the webhook in your repo
 
-### Step 3: Deploy!
+</Step>
+
+<Step>
+
+### Deploy!
 
 Whenever a selected workflow completes successfully on your production branch, the deployment will be tracked in Bklit.
+
+</Step>
+</Steps>
 
 ## How It Works
 

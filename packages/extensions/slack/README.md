@@ -4,7 +4,10 @@ Send real-time analytics events to your Slack workspace channels.
 
 ## Setup Guide
 
-### Step 1: Create an Incoming Webhook in Slack
+<Steps>
+<Step>
+
+### Create an Incoming Webhook in Slack
 
 1. Go to your Slack workspace
 2. Visit [Slack App Directory](https://api.slack.com/messaging/webhooks)
@@ -18,7 +21,11 @@ Send real-time analytics events to your Slack workspace channels.
 10. Copy the **Webhook URL**
     - Format: `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX`
 
-### Step 2: Activate in Bklit
+</Step>
+
+<Step>
+
+### Activate in Bklit
 
 1. Navigate to Extensions in your Bklit dashboard
 2. Find the Slack extension
@@ -27,13 +34,20 @@ Send real-time analytics events to your Slack workspace channels.
 5. Go to your project's settings → Extensions
 6. Click **"Configure"** on Slack
 
-### Step 3: Configure
+</Step>
+
+<Step>
+
+### Configure
 
 1. **Paste your Slack webhook URL**
 2. **Select which custom events** you want forwarded to Slack
 3. Click **"Save Configuration"**
 4. Click **"Test"** to verify it works
 5. Toggle to **"Active"**
+
+</Step>
+</Steps>
 
 ## How It Works
 
@@ -44,16 +58,16 @@ Whenever a selected custom event is triggered on your website, Slack receives a 
 When someone on your site triggers:
 
 ```javascript
-window.trackEvent('purchase', 'completed', {
-  plan: 'Pro',
-  amount: '$29',
-  userId: 'user-123'
+window.trackEvent("purchase", "completed", {
+  plan: "Pro",
+  amount: "$29",
+  userId: "user-123",
 });
 ```
 
 Slack receives a formatted Block Kit message:
 
-```
+```text
 🎯 purchase
 Event: completed
 

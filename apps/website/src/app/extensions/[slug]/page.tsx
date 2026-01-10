@@ -1,5 +1,13 @@
 import { extensionRegistry } from "@bklit/extensions";
 import { Badge } from "@bklit/ui/components/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@bklit/ui/components/breadcrumb";
 import { Button } from "@bklit/ui/components/button";
 import {
   Card,
@@ -9,12 +17,15 @@ import {
   CardTitle,
 } from "@bklit/ui/components/card";
 import { Separator } from "@bklit/ui/components/separator";
-import type { Metadata } from "next";
+import { Step, Steps } from "@bklit/ui/components/steps";
 import { Puzzle } from "lucide-react";
-import { MDXRemote } from "next-mdx-remote/rsc";
+import type { MDXComponents } from "mdx/types";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import { MDXCodeBlock } from "@/components/mdx-code-block";
 
 interface ExtensionDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -78,42 +89,78 @@ export default async function ExtensionDetailPage({
     other: "Other",
   };
 
+  const components: MDXComponents = {
+    code: ({ children, className }) => (
+      <MDXCodeBlock className={className as string}>
+        {String(children)}
+      </MDXCodeBlock>
+    ),
+    pre: ({ children }) => <>{children}</>,
+    Steps,
+    Step,
+  };
+
   return (
     <main className="flex min-h-screen w-full flex-col">
       <div className="container mx-auto max-w-4xl space-y-8 px-4 py-24 md:py-32">
-        {/* Header */}
-        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div className="flex gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
-              {iconPath ? (
-                <Image
-                  alt={extension.metadata.displayName}
-                  className="size-16 object-cover"
-                  height={64}
-                  src={iconPath}
-                  width={64}
-                />
-              ) : (
-                <Puzzle className="size-8" />
-              )}
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h1 className="font-semibold text-3xl">
+        <div className="flex flex-col gap-4">
+          {/* Breadcrumb */}
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/extensions">Extensions</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>
                   {extension.metadata.displayName}
-                </h1>
-                {extension.metadata.isPro && (
-                  <Badge variant="default">Pro</Badge>
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          {/* Header */}
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="flex gap-4">
+              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                {iconPath ? (
+                  <Image
+                    alt={extension.metadata.displayName}
+                    className="size-16 object-cover"
+                    height={64}
+                    src={iconPath}
+                    width={64}
+                  />
+                ) : (
+                  <Puzzle className="size-8" />
                 )}
               </div>
-              <p className="text-muted-foreground text-lg">
-                {extension.metadata.description}
-              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <h1 className="font-semibold text-3xl">
+                    {extension.metadata.displayName}
+                  </h1>
+                  {extension.metadata.isPro && (
+                    <Badge variant="default">Pro</Badge>
+                  )}
+                </div>
+                <p className="text-lg text-muted-foreground">
+                  {extension.metadata.description}
+                </p>
+              </div>
             </div>
+            <Button asChild size="lg" variant="mono">
+              <a href="https://app.bklit.com/signup">Get Started</a>
+            </Button>
           </div>
-          <Button asChild size="lg" variant="mono">
-            <a href="https://app.bklit.com/signup">Get Started</a>
-          </Button>
         </div>
 
         {/* Metadata */}
@@ -137,7 +184,8 @@ export default async function ExtensionDetailPage({
               <div>
                 <p className="text-muted-foreground text-sm">Rate Limit</p>
                 <p className="font-medium">
-                  {extension.metadata.rateLimit.eventsPerHour.toLocaleString()}/hr
+                  {extension.metadata.rateLimit.eventsPerHour.toLocaleString()}
+                  /hr
                 </p>
               </div>
             )}
@@ -148,8 +196,8 @@ export default async function ExtensionDetailPage({
 
         {/* README Content */}
         {readmeContent ? (
-          <div className="prose prose-neutral dark:prose-invert max-w-none">
-            <MDXRemote source={readmeContent} />
+          <div className="page-content">
+            <MDXRemote components={components} source={readmeContent} />
           </div>
         ) : (
           <Card>
@@ -190,4 +238,3 @@ export default async function ExtensionDetailPage({
     </main>
   );
 }
-
