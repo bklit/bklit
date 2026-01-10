@@ -27,6 +27,8 @@ import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { MDXCodeBlock } from "@/components/mdx-code-block";
 
+export const dynamic = "force-dynamic";
+
 interface ExtensionDetailPageProps {
   params: Promise<{ slug: string }>;
 }
