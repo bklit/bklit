@@ -17,6 +17,12 @@ export const PageHeader = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleLinkClick = () => {
+    if (isMobile && isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  };
+
   return (
     <motion.header
       animate={{ y: 0, opacity: 1 }}
@@ -39,7 +45,7 @@ export const PageHeader = () => {
         >
           {/* Logo */}
           <div className="order-1 col-span-3 flex h-9 items-start gap-3 sm:pl-0 md:col-span-3 md:pl-3">
-            <LogoDropdown />
+            <LogoDropdown onClick={handleLinkClick} />
             <Badge
               className="hidden opacity-70 hover:opacity-100 sm:block"
               variant="secondary"
@@ -84,7 +90,9 @@ export const PageHeader = () => {
                 }}
               >
                 <Button asChild variant="ghost">
-                  <Link href="/#product">Product</Link>
+                  <Link href="/#product" onClick={handleLinkClick}>
+                    Product
+                  </Link>
                 </Button>
               </motion.li>
               <motion.li
@@ -97,7 +105,9 @@ export const PageHeader = () => {
                 }}
               >
                 <Button asChild variant="ghost">
-                  <Link href="/pricing">Pricing</Link>
+                  <Link href="/pricing" onClick={handleLinkClick}>
+                    Pricing
+                  </Link>
                 </Button>
               </motion.li>
               <motion.li
@@ -110,7 +120,9 @@ export const PageHeader = () => {
                 }}
               >
                 <Button asChild variant="ghost">
-                  <Link href="/contact">Contact</Link>
+                  <Link href="/contact" onClick={handleLinkClick}>
+                    Contact
+                  </Link>
                 </Button>
               </motion.li>
               <motion.li
@@ -123,7 +135,9 @@ export const PageHeader = () => {
                 }}
               >
                 <Button asChild variant="ghost">
-                  <Link href="/updates">Updates</Link>
+                  <Link href="/updates" onClick={handleLinkClick}>
+                    Updates
+                  </Link>
                 </Button>
               </motion.li>
               <motion.li
@@ -138,6 +152,7 @@ export const PageHeader = () => {
                 <Button asChild variant="ghost">
                   <a
                     href="https://docs.bklit.com"
+                    onClick={handleLinkClick}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
