@@ -24,6 +24,9 @@ catalogs:
     '@types/node':
       specifier: ^20
       version: 20.19.24
+    date-fns:
+      specifier: ^4.1.0
+      version: 4.1.0
     dotenv-cli:
       specifier: ^10.0.0
       version: 10.0.0
@@ -39,9 +42,18 @@ catalogs:
     lucide-react:
       specifier: ^0.511.0
       version: 0.511.0
+    motion:
+      specifier: ^12.23.24
+      version: 12.23.24
     next:
       specifier: ^16.0.10
       version: 16.0.10
+    next-mdx-remote:
+      specifier: ^5.0.0
+      version: 5.0.0
+    next-themes:
+      specifier: ^0.4.6
+      version: 0.4.6
     resend:
       specifier: ^4.0.0
       version: 4.8.0
@@ -186,7 +198,7 @@ importers:
         specifier: ^0.8.5
         version: 0.8.5
       date-fns:
-        specifier: ^4.1.0
+        specifier: 'catalog:'
         version: 4.1.0
       dompurify:
         specifier: ^3.3.1
@@ -198,13 +210,13 @@ importers:
         specifier: ^3.17.0
         version: 3.17.0
       motion:
-        specifier: ^12.23.24
+        specifier: 'catalog:'
         version: 12.23.24(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next:
         specifier: 'catalog:'
         version: 16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-themes:
-        specifier: ^0.4.6
+        specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       nuqs:
         specifier: ^2.7.2
@@ -410,6 +422,9 @@ importers:
       '@bklit/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@bklit/extensions':
+        specifier: workspace:*
+        version: link:../../packages/extensions
       '@bklit/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
@@ -423,22 +438,22 @@ importers:
         specifier: ^0.5.10
         version: 0.5.10(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       date-fns:
-        specifier: ^4.1.0
+        specifier: 'catalog:'
         version: 4.1.0
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
       motion:
-        specifier: ^12.23.24
+        specifier: 'catalog:'
         version: 12.23.24(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next:
         specifier: 'catalog:'
         version: 16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-mdx-remote:
-        specifier: ^5.0.0
+        specifier: 'catalog:'
         version: 5.0.0(@types/react@19.2.2)(react@19.2.1)
       next-themes:
-        specifier: ^0.4.4
+        specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react:
         specifier: catalog:react19
@@ -843,7 +858,7 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       date-fns:
-        specifier: ^4.1.0
+        specifier: 'catalog:'
         version: 4.1.0
       hast-util-to-jsx-runtime:
         specifier: ^2.3.6
@@ -855,10 +870,10 @@ importers:
         specifier: ^0.475.0
         version: 0.475.0(react@19.2.1)
       motion:
-        specifier: ^12.23.24
+        specifier: 'catalog:'
         version: 12.23.24(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-themes:
-        specifier: ^0.4.6
+        specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       ogl:
         specifier: ^1.0.11
