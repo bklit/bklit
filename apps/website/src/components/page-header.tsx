@@ -2,6 +2,15 @@
 
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@bklit/ui/components/navigation-menu";
 import { useIsMobile } from "@bklit/ui/hooks/use-mobile";
 import { cn } from "@bklit/ui/lib/utils";
 import { motion } from "motion/react";
@@ -79,88 +88,188 @@ export const PageHeader = () => {
               },
             }}
           >
-            <motion.ul className="flex flex-col items-center gap-2 md:flex-row">
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/#product" onClick={handleLinkClick}>
-                    Product
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.05 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/pricing" onClick={handleLinkClick}>
-                    Pricing
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.1 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/contact" onClick={handleLinkClick}>
-                    Contact
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.15 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/updates" onClick={handleLinkClick}>
-                    Updates
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.2 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <a
-                    href="https://docs.bklit.com"
-                    onClick={handleLinkClick}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    Docs
-                  </a>
-                </Button>
-              </motion.li>
-            </motion.ul>
+            {isMobile ? (
+              <motion.ul className="flex flex-col items-center gap-2">
+                <motion.li
+                  className="mb-0.5 font-medium text-[10px] text-muted-foreground uppercase tracking-wider"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { duration: 0.18, delay: 0 },
+                    },
+                  }}
+                >
+                  Product
+                </motion.li>
+                <motion.li
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { duration: 0.18, delay: 0.05 },
+                    },
+                  }}
+                >
+                  <Button asChild variant="ghost">
+                    <Link href="/#product" onClick={handleLinkClick}>
+                      Overview
+                    </Link>
+                  </Button>
+                </motion.li>
+                <motion.li
+                  className="mb-3"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { duration: 0.18, delay: 0.1 },
+                    },
+                  }}
+                >
+                  <Button asChild variant="ghost">
+                    <Link href="/extensions" onClick={handleLinkClick}>
+                      Extensions
+                    </Link>
+                  </Button>
+                </motion.li>
+                <motion.li
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { duration: 0.18, delay: 0.15 },
+                    },
+                  }}
+                >
+                  <Button asChild variant="ghost">
+                    <Link href="/pricing" onClick={handleLinkClick}>
+                      Pricing
+                    </Link>
+                  </Button>
+                </motion.li>
+                <motion.li
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { duration: 0.18, delay: 0.2 },
+                    },
+                  }}
+                >
+                  <Button asChild variant="ghost">
+                    <Link href="/contact" onClick={handleLinkClick}>
+                      Contact
+                    </Link>
+                  </Button>
+                </motion.li>
+                <motion.li
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { duration: 0.18, delay: 0.25 },
+                    },
+                  }}
+                >
+                  <Button asChild variant="ghost">
+                    <Link href="/updates" onClick={handleLinkClick}>
+                      Updates
+                    </Link>
+                  </Button>
+                </motion.li>
+                <motion.li
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { duration: 0.18, delay: 0.3 },
+                    },
+                  }}
+                >
+                  <Button asChild variant="ghost">
+                    <a
+                      href="https://docs.bklit.com"
+                      onClick={handleLinkClick}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Docs
+                    </a>
+                  </Button>
+                </motion.li>
+              </motion.ul>
+            ) : (
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger>Product</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[300px] gap-2 p-2">
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link href="/#product">
+                              <div className="font-medium">Overview</div>
+                              <div className="text-muted-foreground text-sm">
+                                See what Bklit can do for you
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link href="/extensions">
+                              <div className="font-medium">Extensions</div>
+                              <div className="text-muted-foreground text-sm">
+                                Extend Bklit with powerful integrations
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      <Link href="/pricing">Pricing</Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      <Link href="/contact">Contact</Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      <Link href="/updates">Updates</Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      <a
+                        href="https://docs.bklit.com"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        Docs
+                      </a>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            )}
           </motion.nav>
 
           {/* CTA */}
