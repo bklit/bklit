@@ -88,7 +88,6 @@ export const PageHeader = () => {
               },
             }}
           >
-<<<<<<< HEAD
             {isMobile ? (
               <motion.ul className="flex flex-col items-center gap-2">
                 <motion.li
@@ -271,90 +270,6 @@ export const PageHeader = () => {
                 </NavigationMenuList>
               </NavigationMenu>
             )}
-=======
-            <motion.ul className="flex flex-col items-center gap-2 md:flex-row">
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/#product" onClick={handleLinkClick}>
-                    Product
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.05 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/pricing" onClick={handleLinkClick}>
-                    Pricing
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.1 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/contact" onClick={handleLinkClick}>
-                    Contact
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.15 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <Link href="/updates" onClick={handleLinkClick}>
-                    Updates
-                  </Link>
-                </Button>
-              </motion.li>
-              <motion.li
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { duration: 0.18, delay: 0.2 },
-                  },
-                }}
-              >
-                <Button asChild variant="ghost">
-                  <a
-                    href="https://docs.bklit.com"
-                    onClick={handleLinkClick}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    Docs
-                  </a>
-                </Button>
-              </motion.li>
-            </motion.ul>
->>>>>>> origin/main
           </motion.nav>
 
           {/* CTA */}
