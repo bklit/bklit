@@ -418,7 +418,7 @@ export function FakeDashboard({
   }
 
   return (
-    <div className="pointer-events-none relative h-[1283px] w-[1942px] rounded-xl border">
+    <div className="pointer-events-none relative h-[1283px] w-[1942px] origin-top-left scale-40 rounded-xl border md:scale-100">
       {/* Header SVG */}
       <motion.div
         animate={
