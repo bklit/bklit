@@ -317,10 +317,10 @@ function DashboardContent() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col">
-                  {mockSessions.map((session, i) => (
+                  {mockSessions.map((session) => (
                     <div
                       className="flex items-center justify-between border-b px-2 py-1.5 transition-colors last-of-type:border-b-0 hover:bg-accent/50"
-                      key={i}
+                      key={session.browser}
                     >
                       <div className="flex flex-col">
                         <div className="flex items-center gap-3">

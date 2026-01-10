@@ -15,10 +15,10 @@ export function AnimateHeroNew() {
   const [rotationComplete, setRotationComplete] = useState(false);
 
   return (
-    <div className="relative flex max-h-[600px] flex-col overflow-hidden md:max-h-[1200px]">
-      <div className="container mx-auto max-w-4xl overflow-visible px-4 md:max-w-6xl">
-        <div className="grid h-[700px] w-full grid-cols-1 grid-rows-1 md:h-[1283px]">
-          <div className="col-start-1 row-start-1 pt-16 md:pt-32">
+    <div className="relative flex max-h-[800px] flex-col overflow-hidden md:max-h-[1200px]">
+      <div className="container mx-auto max-w-full overflow-visible px-4 md:max-w-6xl">
+        <div className="grid h-[800px] w-full grid-cols-1 grid-rows-1 md:h-[1283px]">
+          <div className="col-start-1 row-start-1 pt-24 md:pt-32">
             <div className="perspective-4000 perspective-origin-top-right preserve-3d relative h-full w-full overflow-visible">
               <motion.div
                 animate={{
@@ -31,7 +31,7 @@ export function AnimateHeroNew() {
                 }}
                 className={cn(
                   "backface-hidden absolute inset-0 overflow-hidden rounded-xl",
-                  "mt-48 aspect-1942/1283 w-full md:mt-24 md:h-[1283px] md:w-[1942px]"
+                  "mt-32 aspect-1942/1283 w-full md:mt-24 md:h-[1283px] md:w-[1942px]"
                 )}
                 initial={{
                   rotateX: 0,
