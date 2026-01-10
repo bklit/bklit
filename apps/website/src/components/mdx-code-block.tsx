@@ -1,14 +1,15 @@
-"use client";
-
-import { CodeBlockClient } from "@bklit/ui/components/code-block-client";
 import type { BundledLanguage } from "shiki";
+import { CodeBlockServer } from "./code-block-server";
 
 interface MDXCodeBlockProps {
   children: string;
   className?: string;
 }
 
-export function MDXCodeBlock({ children, className }: MDXCodeBlockProps) {
+export async function MDXCodeBlock({
+  children,
+  className,
+}: MDXCodeBlockProps) {
   // Extract language from className (e.g., "language-typescript" -> "typescript")
   const language = className?.replace(/language-/, "") as BundledLanguage;
 
@@ -25,6 +26,6 @@ export function MDXCodeBlock({ children, className }: MDXCodeBlockProps) {
   const displayLanguage = language || "text";
 
   return (
-    <CodeBlockClient language={displayLanguage}>{children}</CodeBlockClient>
+    <CodeBlockServer language={displayLanguage}>{children}</CodeBlockServer>
   );
 }
