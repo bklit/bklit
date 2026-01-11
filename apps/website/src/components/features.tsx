@@ -6,12 +6,6 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    title: "Real-time",
-    subtitle: "See when and where users are",
-    description:
-      "Real-time analytics let you know where your visitors are in in the world and what they are interested in.",
-  },
-  {
     title: "Custom events",
     subtitle: "Conversion tracking",
     description:
@@ -22,12 +16,6 @@ const features: Feature[] = [
     subtitle: "UTM parameters",
     description:
       "Campaign tracking lets you track specific campaigns and channels with UTM parameters.",
-  },
-  {
-    title: "Funnels",
-    subtitle: "Conversion tracking",
-    description:
-      "Funnels let you track specific user journeys and conversions through funnels you create.",
   },
   {
     title: "Sessions",
@@ -53,12 +41,6 @@ const features: Feature[] = [
     description:
       "By default Bklit doesn't store any indetifiable data about your users, so no cookies and completely GDPR compliant.",
   },
-  {
-    title: "Simple SDKs",
-    subtitle: "Use with any framework",
-    description:
-      "Bklit provides simple SDKs for your website, so you can start tracking your users in minutes.",
-  },
 ];
 
 export const Features = () => {
@@ -66,10 +48,10 @@ export const Features = () => {
     <div className="w-full">
       <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-3">
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <div
-              className="relative flex flex-col gap-2 nth-[3n+3]:border-r-0 border-b p-6 sm:border-r sm:nth-last-[-n+3]:border-b-0 sm:p-12"
-              key={index}
+              className="relative flex flex-col gap-2 nth-[3n+3]:border-r-0 p-6 sm:border-r sm:nth-last-[-n+3]:border-b-0 sm:p-12 md:border-b"
+              key={feature.title}
             >
               <div className="flex flex-col gap-2">
                 <h3 className="font-bold text-slate-300 text-xl">

@@ -1,12 +1,12 @@
 import { Button } from "@bklit/ui/components/button";
-import { ArrowRight, Clock, Eye, Users } from "lucide-react";
+import { Clock, Eye, Users } from "lucide-react";
 import Image from "next/image";
 
 export const PageviewsView = () => {
   return (
     <div className="flex flex-col">
       <div className="relative flex flex-col sm:grid sm:grid-cols-2 sm:grid-rows-1">
-        <div className="relative col-span-2 col-start-1 row-start-1 border-b">
+        <div className="relative col-span-2 col-start-1 row-start-1">
           <div className="perspective-[3000px]">
             <div className="relative aspect-video w-full overflow-hidden">
               <Image
@@ -32,13 +32,13 @@ export const PageviewsView = () => {
               distributed across your website or application.
             </p>
           </div>
-          <Button asChild size="lg" variant="outline">
+          <Button asChild size="lg" variant="mono">
             <a
               href="https://app.bklit.com/signin?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
               rel="noopener noreferrer"
               target="_blank"
             >
-              Get started <ArrowRight size={16} />
+              Get started
             </a>
           </Button>
         </div>

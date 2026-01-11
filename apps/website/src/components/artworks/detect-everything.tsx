@@ -415,7 +415,7 @@ export const DetectEverything = () => {
     <div className="flex flex-col gap-0 sm:grid sm:grid-cols-2 sm:gap-8">
       <div className="col-span-1">
         <button
-          className={`flex w-full cursor-pointer flex-col gap-2 border-b p-4 text-left transition-colors sm:p-14 ${
+          className={`flex w-full cursor-pointer flex-col gap-2 border-b p-4 text-left transition-colors sm:p-8 ${
             isActive("browsers")
               ? "bg-accent/30 hover:bg-accent/40"
               : "hover:bg-accent/50"

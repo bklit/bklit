@@ -6,7 +6,10 @@ import { AnimateHeroNew } from "@/components/animate-hero-new";
 import { AnimatedGlobalStats } from "@/components/animated-global-stats";
 import { DetectEverything } from "@/components/artworks/detect-everything";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
-import { Notifications } from "@/components/artworks/notifications";
+import {
+  type NotificationItem,
+  Notifications,
+} from "@/components/artworks/notifications";
 import { SankeyDemo } from "@/components/artworks/sankey-demo";
 import { SDKs } from "@/components/artworks/sdks";
 import { FAQ } from "@/components/faq";
@@ -14,6 +17,45 @@ import { Features as SectionFeatures } from "@/components/features";
 import { PageviewsView } from "@/components/pageviews-view";
 import { SectionBasic } from "@/components/section-basic";
 import { SectionHeader } from "@/components/section-header";
+
+const MOCK_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: "us-visitor",
+    title: "New live visitor from United States.",
+    description: "Viewing on desktop",
+    countryCode: "us",
+  },
+  {
+    id: "gb-visitor",
+    title: "New live visitor from United Kingdom.",
+    description: "Viewing on mobile",
+    countryCode: "gb",
+  },
+  {
+    id: "de-visitor",
+    title: "New live visitor from Germany.",
+    description: "Viewing on desktop",
+    countryCode: "de",
+  },
+  {
+    id: "fr-visitor",
+    title: "New live visitor from France.",
+    description: "Viewing on mobile",
+    countryCode: "fr",
+  },
+  {
+    id: "jp-visitor",
+    title: "New live visitor from Japan.",
+    description: "Viewing on desktop",
+    countryCode: "jp",
+  },
+  {
+    id: "ca-visitor",
+    title: "New live visitor from Canada.",
+    description: "Viewing on mobile",
+    countryCode: "ca",
+  },
+];
 
 export const metadata: Metadata = {
   title: "Bklit Analytics: Open-source, privacy-friendly analytics",
@@ -53,49 +95,52 @@ export default function MarketingHomePage() {
           <div className="container mx-auto max-w-6xl">
             <PageviewsView />
           </div>
-          <div className="container mx-auto max-w-6xl border-t">
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="col-span-1 space-y-8 border-b p-6 sm:border-r sm:p-12">
-                <div className="space-y-2">
-                  <h2 className="font-semibold text-2xl text-slate-300">
-                    User Journeys
-                  </h2>
-                  <p className="text-lg text-muted-foreground">
-                    See where your users enter your website and where they exit,
-                    and how they navigate through your website.
-                  </p>
-                </div>
-                <div className="relative min-h-[400px] w-full">
-                  <SankeyDemo />
-
-                  <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-b from-transparent via-transparent to-background" />
-                </div>
-              </div>
-              <div className="col-span-1 space-y-8 border-b p-6 sm:p-12">
-                <div className="space-y-2">
-                  <h2 className="font-semibold text-2xl text-slate-300">
-                    Conversion funnels
-                  </h2>
-                  <p className="text-lg text-muted-foreground">
-                    Create funnels to improve your conversion rate across
-                    campaigns and channels.
-                  </p>
-                </div>
-                <div className="relative w-full">
-                  <FunnelDemo />
-                  <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-b from-transparent via-background/66 to-background" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <SectionFeatures />
         </div>
       </div>
 
-      <div className="space-y-16 px-4">
-        <div className="container mx-auto max-w-6xl border-t">
+      <div className="md:px-4">
+        <div className="container mx-auto max-w-6xl md:border-t">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="col-span-1 space-y-8 border-b p-6 sm:border-r sm:p-12">
+            <div className="col-span-1 space-y-8 p-6 sm:border-r sm:p-12 md:border-b">
+              <div className="space-y-2">
+                <h2 className="font-semibold text-2xl text-slate-300">
+                  User Journeys
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  See where your users enter your website and where they exit,
+                  and how they navigate through your website.
+                </p>
+              </div>
+              <div className="relative min-h-[400px] w-full">
+                <SankeyDemo />
+
+                <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-b from-transparent via-transparent to-background" />
+              </div>
+            </div>
+            <div className="col-span-1 space-y-8 p-6 sm:p-12 md:border-b">
+              <div className="space-y-2">
+                <h2 className="font-semibold text-2xl text-slate-300">
+                  Conversion funnels
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Create funnels to improve your conversion rate across
+                  campaigns and channels.
+                </p>
+              </div>
+              <div className="relative w-full">
+                <FunnelDemo />
+                <div className="pointer-events-none absolute top-0 left-0 h-full w-full bg-linear-to-b from-transparent via-background/66 to-background" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <SectionFeatures />
+      </div>
+
+      <div className="space-y-16 md:px-4">
+        <div className="container mx-auto max-w-6xl md:border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="col-span-1 space-y-8 p-6 sm:border-r sm:p-12 md:border-b">
               <div className="space-y-2">
                 <h2 className="font-semibold text-slate-300 text-xl">
                   User Journeys
@@ -107,7 +152,7 @@ export default function MarketingHomePage() {
               </div>
               <div className="relative w-full">Hi world</div>
             </div>
-            <div className="col-span-1 space-y-8 border-b p-6 sm:p-12">
+            <div className="col-span-1 space-y-8 overflow-hidden p-6 sm:p-12 md:border-b">
               <div className="space-y-2">
                 <h2 className="font-semibold text-slate-300 text-xl">
                   Real-time
@@ -117,9 +162,9 @@ export default function MarketingHomePage() {
                   the world and what they are interested in.
                 </p>
               </div>
-              <div className="relative flex aspect-square w-full items-center justify-center border border-blue-500 border-dashed">
-                <div className="relative w-full border border-green-500 border-dashed">
-                  <Notifications />
+              <div className="relative flex aspect-video w-full items-center justify-center">
+                <div className="relative w-full">
+                  <Notifications items={MOCK_NOTIFICATIONS} />
                 </div>
               </div>
             </div>
