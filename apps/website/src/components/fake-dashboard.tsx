@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@bklit/ui/components/dropdown-menu";
 import { ProgressRow } from "@bklit/ui/components/progress-row";
+import { useIsMobile } from "@bklit/ui/hooks/use-mobile";
 import { ChromeIcon } from "@bklit/ui/icons/chrome";
 import { EdgeIcon } from "@bklit/ui/icons/edge";
 import { FirefoxIcon } from "@bklit/ui/icons/firefox";
@@ -407,15 +408,7 @@ export function FakeDashboard({
 }: {
   animationStarted?: boolean;
 }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <div className="h-[1283px] w-[1942px] rounded-xl bg-background" />;
-  }
+  const isMobile = useIsMobile();
 
   return (
     <div className="pointer-events-none relative h-[1283px] w-[1942px] origin-top-left scale-40 rounded-xl border md:scale-100">
@@ -520,7 +513,19 @@ export function FakeDashboard({
           ease: "easeOut",
         }}
       >
-        <DashboardContent />
+        {isMobile ? (
+          <Image
+            alt="Dashboard Content"
+            className="absolute top-0 right-6 bottom-6 left-4"
+            height={1197}
+            priority
+            src="/mockup/content.svg"
+            unoptimized
+            width={1686}
+          />
+        ) : (
+          <DashboardContent />
+        )}
       </motion.div>
     </div>
   );

@@ -17,6 +17,7 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
   const [dragOffset, setDragOffset] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
   const isHeaderInView = useInView(headerRef, { amount: 0.5 });
+  const viewportHeightRef = useRef<number>(0);
 
   // Function to scroll to a specific month
   const scrollToMonth = (monthId: string) => {
@@ -73,8 +74,16 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
   });
 
   useEffect(() => {
+    // Cache viewport height and update on resize
+    const updateViewportHeight = () => {
+      viewportHeightRef.current = window.innerHeight;
+    };
+
+    updateViewportHeight();
+    window.addEventListener("resize", updateViewportHeight, { passive: true });
+
     const handleScroll = () => {
-      const viewportCenter = window.innerHeight / 2;
+      const viewportCenter = viewportHeightRef.current / 2;
       const articles = document.querySelectorAll("article[id]");
 
       let closestArticle: Element | null = null;
@@ -112,7 +121,10 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateViewportHeight);
+    };
   }, [updates, allMonths, activeMonthIndex]);
 
   // Ticker is visible when header is NOT in view
@@ -137,7 +149,7 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
         {isVisible && (
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
+            className="-translate-x-1/2 fixed bottom-4 left-1/2 z-50"
             exit={{ opacity: 0, y: 20 }}
             initial={{ opacity: 0, y: 20 }}
             key="updates-ticker"
@@ -196,7 +208,7 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
                           x: getPosition(month.offset) + dragOffset,
                           opacity: 1,
                         }}
-                        className={`pointer-events-auto absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs ${
+                        className={`-translate-x-1/2 pointer-events-auto absolute left-1/2 whitespace-nowrap text-xs ${
                           month.offset === 0
                             ? "font-semibold text-foreground"
                             : "cursor-pointer text-muted-foreground hover:text-foreground"
