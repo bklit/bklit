@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { CircleFlag } from "react-circle-flags";
 
 interface Position {
   x: number;
@@ -11,24 +12,54 @@ interface Position {
 
 // 6 physical positions to match our 6 items for a seamless loop
 const positions: Position[] = [
-  { x: 0, y: 0, opacity: 0 }, // Position 1: FRONT (Entrance, Invisible)
-  { x: 12, y: 10, opacity: 1 }, // Position 2: Visible
-  { x: 24, y: 20, opacity: 1 }, // Position 3: Visible
-  { x: 36, y: 30, opacity: 1 }, // Position 4: Visible
-  { x: 48, y: 40, opacity: 0 }, // Position 5: BACK (Exit, Invisible)
-  { x: 60, y: 50, opacity: 0 }, // Position 6: Hidden (Transition slot)
+  { x: -24, y: -20, opacity: 0 }, // Position 1: FRONT (Entrance, Invisible)
+  { x: -12, y: -10, opacity: 1 }, // Position 2: Visible (Frontmost)
+  { x: 0, y: 0, opacity: 1 }, // Position 3: Visible
+  { x: 12, y: 10, opacity: 1 }, // Position 4: Visible
+  { x: 24, y: 20, opacity: 0 }, // Position 5: BACK (Exit, Invisible)
+  { x: 36, y: 30, opacity: 0 }, // Position 6: Hidden (Transition slot)
 ];
 
 export const Notifications = () => {
   const [cycleIndex, setCycleIndex] = useState(0);
 
   const notifications = [
-    { id: "item-1" },
-    { id: "item-2" },
-    { id: "item-3" },
-    { id: "item-4" },
-    { id: "item-5" },
-    { id: "item-6" },
+    {
+      id: "us-visitor",
+      title: "New live visitor from United States, San Francisco.",
+      description: "Viewing on desktop",
+      countryCode: "us",
+    },
+    {
+      id: "gb-visitor",
+      title: "New live visitor from United Kingdom, London.",
+      description: "Viewing on mobile",
+      countryCode: "gb",
+    },
+    {
+      id: "de-visitor",
+      title: "New live visitor from Germany, Berlin.",
+      description: "Viewing on desktop",
+      countryCode: "de",
+    },
+    {
+      id: "fr-visitor",
+      title: "New live visitor from France, Paris.",
+      description: "Viewing on mobile",
+      countryCode: "fr",
+    },
+    {
+      id: "jp-visitor",
+      title: "New live visitor from Japan, Tokyo.",
+      description: "Viewing on desktop",
+      countryCode: "jp",
+    },
+    {
+      id: "ca-visitor",
+      title: "New live visitor from Canada, Toronto.",
+      description: "Viewing on mobile",
+      countryCode: "ca",
+    },
   ];
 
   useEffect(() => {
@@ -61,13 +92,19 @@ export const Notifications = () => {
               ease: [0.4, 0, 0.2, 1],
             }}
           >
-            <div className="-skew-y-4 -rotate-x-14 relative flex h-32 w-[320px] rotate-y-20 select-none items-center justify-center rounded-lg border border-border bg-background shadow-lg backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-2">
-                <span className="font-mono text-muted-foreground text-xs uppercase">
-                  {n.id}
-                </span>
-                <div className="h-2 w-24 rounded-full bg-muted" />
-                <div className="h-2 w-16 rounded-full bg-muted/50" />
+            <div className="-skew-y-4 -rotate-x-14 relative flex h-auto w-[320px] rotate-y-20 select-none flex-col rounded-lg border border-border bg-background p-4 shadow-lg backdrop-blur-sm">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0">
+                  <CircleFlag className="size-4" countryCode={n.countryCode} />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-left font-medium text-foreground text-sm leading-tight">
+                    {n.title}
+                  </p>
+                  <p className="text-left text-muted-foreground text-xs">
+                    {n.description}
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>
