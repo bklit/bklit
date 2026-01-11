@@ -167,10 +167,6 @@ export function SankeyNivo({
 
   const chartData = useMemo(() => {
     if (!(data.nodes.length && data.links.length)) {
-      console.log("SankeyNivo: Missing nodes or links", {
-        nodeCount: data.nodes.length,
-        linkCount: data.links.length,
-      });
       return null;
     }
 
@@ -185,16 +181,10 @@ export function SankeyNivo({
         Number.isFinite(link.value) &&
         link.value > 0;
 
-      if (!isValid) {
-        console.warn("SankeyNivo: Invalid link filtered out:", link, {
-          isSelfLoop,
-        });
-      }
       return isValid;
     });
 
     if (validLinks.length === 0) {
-      console.log("SankeyNivo: No valid links after filtering");
       return null;
     }
 
