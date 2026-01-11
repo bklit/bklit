@@ -30,7 +30,7 @@ const Node = ({
   >
     {handlePosition === "left" && (
       <div
-        className="absolute top-1/2 left-0 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-bklit-200 bg-background"
+        className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-0 size-2 rounded-full border border-bklit-200 bg-background"
         ref={handleRef}
       />
     )}
@@ -48,7 +48,7 @@ const Node = ({
     </Badge>
     {handlePosition === "right" && (
       <div
-        className="absolute top-1/2 right-0 size-2 translate-x-1/2 -translate-y-1/2 rounded-full border border-bklit-200 bg-bklit-200"
+        className="-translate-y-1/2 absolute top-1/2 right-0 size-2 translate-x-1/2 rounded-full border border-bklit-200 bg-bklit-200"
         ref={handleRef}
       />
     )}
@@ -103,7 +103,10 @@ export const FunnelBuilderDemo = () => {
   };
 
   return (
-    <div className="relative h-[350px] w-full overflow-hidden" ref={wrapperRef}>
+    <div
+      className="relative h-[350px] w-full scale-80 overflow-hidden md:scale-100"
+      ref={wrapperRef}
+    >
       {/* SVG path layer - outside 3D transform so it follows screen positions */}
       <div className="pointer-events-none absolute inset-0 z-20">
         <svg
@@ -158,7 +161,7 @@ export const FunnelBuilderDemo = () => {
             {/* Node 1: Landing Page */}
             <motion.div
               animate={{ opacity: 1, x: 0 }}
-              className="z-20 -translate-y-12"
+              className="-translate-y-12 z-20"
               initial={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.5 }}
             >
