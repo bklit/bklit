@@ -49,8 +49,10 @@ export function AnimatedGlobalStats() {
             ease: "easeOut",
           }}
         >
-          <h3 className="text-xs sm:text-lg">Sessions recorded</h3>
-          <div className="font-bold text-xl sm:text-2xl">
+          <h3 className="text-slate-300 text-xs sm:text-lg">
+            Sessions recorded
+          </h3>
+          <div className="font-bold text-slate-300 text-xl sm:text-2xl">
             <NumberFlow value={stats.totalSessions} />
           </div>
         </motion.div>
@@ -64,8 +66,10 @@ export function AnimatedGlobalStats() {
             ease: "easeOut",
           }}
         >
-          <h3 className="text-xs sm:text-lg">Pageviews recorded</h3>
-          <div className="font-bold text-xl sm:text-2xl">
+          <h3 className="text-slate-300 text-xs sm:text-lg">
+            Pageviews recorded
+          </h3>
+          <div className="font-bold text-slate-300 text-xl sm:text-2xl">
             <NumberFlow value={stats.totalPageviews} />
           </div>
         </motion.div>
@@ -79,8 +83,8 @@ export function AnimatedGlobalStats() {
             ease: "easeOut",
           }}
         >
-          <h3 className="text-xs sm:text-lg">Unique users</h3>
-          <div className="font-bold text-xl sm:text-2xl">
+          <h3 className="text-slate-300 text-xs sm:text-lg">Unique users</h3>
+          <div className="font-bold text-slate-300 text-xl sm:text-2xl">
             <NumberFlow value={stats.totalUniqueUsers} />
           </div>
         </motion.div>
@@ -94,8 +98,10 @@ export function AnimatedGlobalStats() {
             ease: "easeOut",
           }}
         >
-          <h3 className="text-xs sm:text-lg">Conversions recorded</h3>
-          <div className="font-bold text-xl sm:text-2xl">
+          <h3 className="text-slate-300 text-xs sm:text-lg">
+            Conversions recorded
+          </h3>
+          <div className="font-bold text-slate-300 text-xl sm:text-2xl">
             <NumberFlow value={stats.totalConversions} />
           </div>
         </motion.div>

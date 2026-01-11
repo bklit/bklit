@@ -72,7 +72,9 @@ export const Features = () => {
               key={index}
             >
               <div className="flex flex-col gap-2">
-                <h3 className="font-bold text-xl">{feature.title}</h3>
+                <h3 className="font-bold text-slate-300 text-xl">
+                  {feature.title}
+                </h3>
               </div>
               <p className="text-muted-foreground text-sm">
                 {feature.description}

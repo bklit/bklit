@@ -15,13 +15,8 @@ const data = [
   },
   {
     id: "cart",
-    value: 3200,
+    value: 2200,
     label: "Add to Cart",
-  },
-  {
-    id: "checkout",
-    value: 1800,
-    label: "Checkout",
   },
 ];
 

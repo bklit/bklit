@@ -100,20 +100,6 @@ export const Hero = () => {
               View Demo
             </a>
           </Button>
-          <Button
-            asChild
-            data-bklit-event="sign-up-button"
-            size="lg"
-            variant="ghost"
-          >
-            <a
-              href="https://app.bklit.com/signup?utm_source=website&utm_medium=homepage&utm_campaign=bklit"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Sign Up
-            </a>
-          </Button>
         </motion.div>
       </div>
     </div>

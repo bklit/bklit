@@ -15,7 +15,7 @@ export const SectionBasic = ({
       <div className="container mx-auto flex max-w-6xl flex-col px-4">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className="col-span-1 col-start-1 row-start-1 space-y-4 p-14">
-            <h2 className="font-regular text-3xl text-black dark:text-white">
+            <h2 className="font-regular text-3xl text-black dark:text-slate-300">
               {title}
             </h2>
             {children}

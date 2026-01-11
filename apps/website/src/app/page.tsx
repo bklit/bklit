@@ -6,11 +6,11 @@ import { AnimateHeroNew } from "@/components/animate-hero-new";
 import { AnimatedGlobalStats } from "@/components/animated-global-stats";
 import { DetectEverything } from "@/components/artworks/detect-everything";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
+import { Notifications } from "@/components/artworks/notifications";
 import { SankeyDemo } from "@/components/artworks/sankey-demo";
 import { SDKs } from "@/components/artworks/sdks";
 import { FAQ } from "@/components/faq";
 import { Features as SectionFeatures } from "@/components/features";
-
 import { PageviewsView } from "@/components/pageviews-view";
 import { SectionBasic } from "@/components/section-basic";
 import { SectionHeader } from "@/components/section-header";
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function MarketingHomePage() {
   return (
-    <div className="flex flex-col space-y-16 sm:space-y-64">
+    <div className="flex flex-col space-y-16 pb-16 sm:space-y-64 sm:pb-64">
       <div className={cn("relative w-full sm:min-h-[400px]")}>
         <div className="container mx-auto max-w-full sm:max-w-[1600px]">
           <div className="grid grid-cols-1 grid-rows-1">
@@ -57,7 +57,9 @@ export default function MarketingHomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2">
               <div className="col-span-1 space-y-8 border-b p-6 sm:border-r sm:p-12">
                 <div className="space-y-2">
-                  <h2 className="font-bold text-2xl">User Journeys</h2>
+                  <h2 className="font-semibold text-2xl text-slate-300">
+                    User Journeys
+                  </h2>
                   <p className="text-lg text-muted-foreground">
                     See where your users enter your website and where they exit,
                     and how they navigate through your website.
@@ -71,7 +73,9 @@ export default function MarketingHomePage() {
               </div>
               <div className="col-span-1 space-y-8 border-b p-6 sm:p-12">
                 <div className="space-y-2">
-                  <h2 className="font-bold text-2xl">Conversion funnels</h2>
+                  <h2 className="font-semibold text-2xl text-slate-300">
+                    Conversion funnels
+                  </h2>
                   <p className="text-lg text-muted-foreground">
                     Create funnels to improve your conversion rate across
                     campaigns and channels.
@@ -85,6 +89,41 @@ export default function MarketingHomePage() {
             </div>
           </div>
           <SectionFeatures />
+        </div>
+      </div>
+
+      <div className="space-y-16 px-4">
+        <div className="container mx-auto max-w-6xl border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="col-span-1 space-y-8 border-b p-6 sm:border-r sm:p-12">
+              <div className="space-y-2">
+                <h2 className="font-semibold text-slate-300 text-xl">
+                  User Journeys
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  See where your users enter your website and where they exit,
+                  and how they navigate through your website.
+                </p>
+              </div>
+              <div className="relative w-full">Hi world</div>
+            </div>
+            <div className="col-span-1 space-y-8 border-b p-6 sm:p-12">
+              <div className="space-y-2">
+                <h2 className="font-semibold text-slate-300 text-xl">
+                  Real-time
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Real-time analytics let you know where your visitors are in in
+                  the world and what they are interested in.
+                </p>
+              </div>
+              <div className="relative flex aspect-square w-full items-center justify-center border border-blue-500 border-dashed">
+                <div className="relative w-full border border-green-500 border-dashed">
+                  <Notifications />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

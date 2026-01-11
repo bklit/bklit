@@ -73,7 +73,7 @@ export const FAQ = () => {
               key={faq.value}
               value={faq.value}
             >
-              <AccordionTrigger className="font-normal text-lg hover:cursor-pointer">
+              <AccordionTrigger className="font-normal text-lg text-slate-300 hover:cursor-pointer">
                 {faq.question}
               </AccordionTrigger>
               <AccordionContent className="flex flex-col gap-4 text-balance">

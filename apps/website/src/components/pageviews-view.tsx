@@ -24,7 +24,9 @@ export const PageviewsView = () => {
         </div>
         <div className="relative col-span-1 col-start-1 row-start-1 space-y-4 p-6 sm:p-12">
           <div className="space-y-2">
-            <h3 className="font-bold text-2xl">Visual understading</h3>
+            <h3 className="font-semibold text-2xl text-slate-300">
+              Visual understading
+            </h3>
             <p className="text-muted-foreground text-xl">
               See how many pageviews your website has received and how they are
               distributed across your website or application.
@@ -45,32 +47,32 @@ export const PageviewsView = () => {
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-0 sm:grid-cols-4">
           <div className="flex flex-col gap-1 p-6 sm:border-r sm:p-12">
-            <h3 className="flex items-center gap-2 font-bold text-lg">
-              <Eye className="text-chart-1" size={14} /> Views
+            <h3 className="flex items-center gap-2 font-semibold text-lg text-slate-300">
+              <Eye size={14} /> Views
             </h3>
             <div className="text-muted-foreground text-sm">
               Track page views and entry points
             </div>
           </div>
           <div className="flex flex-col gap-1 p-6 sm:border-r sm:p-12">
-            <h3 className="flex items-center gap-2 font-bold text-lg">
-              <Users className="text-chart-2" size={14} /> Users
+            <h3 className="flex items-center gap-2 font-semibold text-lg text-slate-300">
+              <Users size={14} /> Users
             </h3>
             <div className="text-muted-foreground text-sm">
               Track unique users on every page
             </div>
           </div>
           <div className="flex flex-col gap-1 p-6 sm:border-r sm:p-12">
-            <h3 className="flex items-center gap-2 font-bold text-lg">
-              <Users className="text-chart-3" size={14} /> Avg/User
+            <h3 className="flex items-center gap-2 font-semibold text-lg text-slate-300">
+              <Users size={14} /> Avg/User
             </h3>
             <div className="text-muted-foreground text-sm">
               Track average page views per user
             </div>
           </div>
           <div className="flex flex-col gap-1 p-6 sm:p-12">
-            <h3 className="flex items-center gap-2 font-bold text-lg">
-              <Clock className="text-chart-4" size={14} /> Last Viewed
+            <h3 className="flex items-center gap-2 font-semibold text-lg text-slate-300">
+              <Clock size={14} /> Last Viewed
             </h3>
             <div className="text-muted-foreground text-sm">
               Track when users last viewed a page

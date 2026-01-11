@@ -23,7 +23,7 @@ export const SectionHeader = ({
     >
       <h2
         className={cn(
-          "font-regular text-3xl sm:text-3xl",
+          "font-regular text-3xl text-slate-200 sm:text-3xl",
           align === "left" && "text-left",
           align === "center" && "text-center",
           align === "right" && "text-right"

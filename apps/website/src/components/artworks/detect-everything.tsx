@@ -413,7 +413,7 @@ export const DetectEverything = () => {
 
   return (
     <div className="flex flex-col gap-0 sm:grid sm:grid-cols-2 sm:gap-8">
-      <div className="col-span-1 sm:border-l">
+      <div className="col-span-1">
         <button
           className={`flex w-full cursor-pointer flex-col gap-2 border-b p-4 text-left transition-colors sm:p-14 ${
             isActive("browsers")
@@ -424,7 +424,9 @@ export const DetectEverything = () => {
           onMouseLeave={handleMouseLeave}
           type="button"
         >
-          <h2 className="font-bold text-md sm:text-xl">Browser Usage</h2>
+          <h2 className="font-bold text-md text-slate-300 sm:text-xl">
+            Browser Usage
+          </h2>
           <p className="text-muted-foreground text-xs sm:text-lg">
             Gain insight into which browsers your visitors are using and how
             they're interacting with your website.
@@ -441,7 +443,9 @@ export const DetectEverything = () => {
           onMouseLeave={handleMouseLeave}
           type="button"
         >
-          <h3 className="font-bold text-md sm:text-xl">Recent Sessions</h3>
+          <h3 className="font-bold text-md text-slate-300 sm:text-xl">
+            Recent Sessions
+          </h3>
           <p className="text-muted-foreground text-xs sm:text-lg">
             Understand your users' behavior and how they flow through your
             website.
@@ -458,7 +462,9 @@ export const DetectEverything = () => {
           onMouseLeave={handleMouseLeave}
           type="button"
         >
-          <h3 className="font-bold text-md sm:text-xl">Top Countries</h3>
+          <h3 className="font-bold text-md text-slate-300 sm:text-xl">
+            Top Countries
+          </h3>
           <p className="text-muted-foreground text-xs sm:text-lg">
             Gain insight into where your visitors are coming from and what
             timezones they're in.
@@ -496,7 +502,7 @@ export const DetectEverything = () => {
                 rotate: isHovering ? 0 : 360,
                 opacity: isHovering ? 0 : 1,
               }}
-              className="absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2"
+              className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 size-8"
               style={{
                 background:
                   "conic-gradient(from 0deg, transparent, var(--bklit-400) 360deg, transparent 360deg)",
