@@ -4,15 +4,24 @@ import { Badge } from "@bklit/ui/components/badge";
 import { cn } from "@bklit/ui/lib/utils";
 import { Eye, MousePointerClick } from "lucide-react";
 import { motion } from "motion/react";
+import type React from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 interface NodeProps {
   title: string;
   icon: React.ReactNode;
   className?: string;
   handlePosition?: "left" | "right";
+  handleRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-const Node = ({ title, icon, className, handlePosition }: NodeProps) => (
+const Node = ({
+  title,
+  icon,
+  className,
+  handlePosition,
+  handleRef,
+}: NodeProps) => (
   <div
     className={cn(
       "relative flex h-32 w-40 flex-col items-center justify-center gap-2 rounded-xl border border-bklit-500 bg-bklit-800 px-4 py-3 shadow-lg",
@@ -20,7 +29,10 @@ const Node = ({ title, icon, className, handlePosition }: NodeProps) => (
     )}
   >
     {handlePosition === "left" && (
-      <div className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-0 size-2 rounded-full border border-bklit-500 bg-background" />
+      <div
+        className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-0 size-2 rounded-full border border-bklit-500 bg-background"
+        ref={handleRef}
+      />
     )}
     <div className="flex size-7 items-center justify-center rounded-lg bg-bklit-500/20 text-bklit-500">
       {icon}
@@ -30,14 +42,61 @@ const Node = ({ title, icon, className, handlePosition }: NodeProps) => (
       /foobar
     </Badge>
     {handlePosition === "right" && (
-      <div className="-translate-y-1/2 absolute top-1/2 right-0 size-2 translate-x-1/2 rounded-full border border-bklit-500 bg-background" />
+      <div
+        className="-translate-y-1/2 absolute top-1/2 right-0 size-2 translate-x-1/2 rounded-full border border-bklit-500 bg-background"
+        ref={handleRef}
+      />
     )}
   </div>
 );
 
 export const FunnelBuilderDemo = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sourceRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement>(null);
+  const [path, setPath] = useState("");
+
+  useLayoutEffect(() => {
+    const updatePath = () => {
+      if (!(containerRef.current && sourceRef.current && targetRef.current)) {
+        return;
+      }
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const sourceRect = sourceRef.current.getBoundingClientRect();
+      const targetRect = targetRef.current.getBoundingClientRect();
+
+      // Get visual center of the handles relative to the container
+      const startX =
+        sourceRect.left + sourceRect.width / 2 - containerRect.left;
+      const startY = sourceRect.top + sourceRect.height / 2 - containerRect.top;
+      const endX = targetRect.left + targetRect.width / 2 - containerRect.left;
+      const endY = targetRect.top + targetRect.height / 2 - containerRect.top;
+
+      // Calculate S-curve (Cubic Bezier)
+      const midX = (startX + endX) / 2;
+      const d = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+      setPath(d);
+    };
+
+    // Initial calculation
+    updatePath();
+
+    // Use a small delay to ensure motion animations have established initial positions
+    const timeout = setTimeout(updatePath, 100);
+
+    window.addEventListener("resize", updatePath);
+    return () => {
+      window.removeEventListener("resize", updatePath);
+      clearTimeout(timeout);
+    };
+  }, []);
+
   return (
-    <div className="relative flex h-[350px] w-full items-center justify-center overflow-hidden">
+    <div
+      className="relative flex h-[350px] w-full items-center justify-center overflow-hidden"
+      ref={containerRef}
+    >
       {/* Dot grid effect */}
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] opacity-[0.05]" />
 
@@ -51,65 +110,48 @@ export const FunnelBuilderDemo = () => {
         >
           <Node
             handlePosition="right"
+            handleRef={sourceRef}
             icon={<Eye size={16} />}
             title="Landing page"
           />
         </motion.div>
 
         {/* Animated Connection Path (S-curve) */}
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-12">
-          <div className="relative h-full w-full max-w-2xl">
-            <svg
-              className="h-full w-full overflow-visible"
-              fill="none"
-              preserveAspectRatio="none"
-              viewBox="0 0 576 350"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <title>Animated connection path between nodes</title>
-              {/* 
-                Coordinates calculation:
-                The SVG container width is max-w-2xl minus the px-12 on both sides.
-                672 - 48 - 48 = 576px.
-                
-                Node 1 (Left):
-                Handle Right is at the right edge of the node.
-                Node width is 160px.
-                Handle Right: x = 160, y = 175 - 48 = 127
-                
-                Node 2 (Right):
-                Handle Left is at the left edge of the node.
-                Node width is 160px.
-                SVG width is 576. 
-                Left edge of Node 2 starts at 576 - 160 = 416.
-                Handle Left: x = 416, y = 175 + 48 = 223
-              */}
+        <div className="pointer-events-none absolute inset-0 z-10">
+          <svg
+            className="h-full w-full overflow-visible"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <title>Animated connection path between nodes</title>
+            {path && (
+              <>
+                {/* Background static path (dimmed) */}
+                <path
+                  d={path}
+                  stroke="var(--bklit-500)"
+                  strokeDasharray="6 4"
+                  strokeOpacity="0.1"
+                  strokeWidth="2"
+                />
 
-              {/* Background static path (dimmed) */}
-              <path
-                d="M 160 127 C 288 127, 288 223, 416 223"
-                stroke="var(--bklit-500)"
-                strokeDasharray="6 4"
-                strokeOpacity="0.1"
-                strokeWidth="2"
-              />
-
-              {/* Animated dashed path */}
-              <motion.path
-                animate={{ strokeDashoffset: 0 }}
-                d="M 160 127 C 288 127, 288 223, 416 223"
-                initial={{ strokeDashoffset: 24 }}
-                stroke="var(--bklit-500)"
-                strokeDasharray="6 4"
-                strokeWidth="2"
-                transition={{
-                  duration: 2,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "linear",
-                }}
-              />
-            </svg>
-          </div>
+                {/* Animated dashed path */}
+                <motion.path
+                  animate={{ strokeDashoffset: 0 }}
+                  d={path}
+                  initial={{ strokeDashoffset: 24 }}
+                  stroke="var(--bklit-500)"
+                  strokeDasharray="6 4"
+                  strokeWidth="2"
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }}
+                />
+              </>
+            )}
+          </svg>
         </div>
 
         {/* Node 2: Add to cart */}
@@ -121,6 +163,7 @@ export const FunnelBuilderDemo = () => {
         >
           <Node
             handlePosition="left"
+            handleRef={targetRef}
             icon={<MousePointerClick size={16} />}
             title="Add to cart"
           />
