@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { AnimateHeroNew } from "@/components/animate-hero-new";
 import { AnimatedGlobalStats } from "@/components/animated-global-stats";
 import { DetectEverything } from "@/components/artworks/detect-everything";
+import { FunnelBuilderDemo } from "@/components/artworks/funnel-builder-demo";
 import { FunnelDemo } from "@/components/artworks/funnel-demo";
 import {
   type NotificationItem,
@@ -143,14 +144,16 @@ export default function MarketingHomePage() {
             <div className="col-span-1 space-y-8 p-6 sm:border-r sm:p-12 md:border-b">
               <div className="space-y-2">
                 <h2 className="font-semibold text-slate-300 text-xl">
-                  User Journeys
+                  Funnel builder
                 </h2>
                 <p className="text-lg text-muted-foreground">
                   See where your users enter your website and where they exit,
                   and how they navigate through your website.
                 </p>
               </div>
-              <div className="relative w-full">Hi world</div>
+              <div className="relative w-full">
+                <FunnelBuilderDemo />
+              </div>
             </div>
             <div className="col-span-1 space-y-8 overflow-hidden p-6 sm:p-12 md:border-b">
               <div className="space-y-2">
