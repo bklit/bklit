@@ -87,7 +87,7 @@ export const BrandTiles = () => {
             filter: isHovered ? "blur(0px)" : "blur(4px)",
             pointerEvents: isHovered ? "auto" : "none",
           }}
-          className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
           initial={{ opacity: 0, scale: 0.9, filter: "blur(40px)" }}
           transition={{
             ease: "easeInOut",

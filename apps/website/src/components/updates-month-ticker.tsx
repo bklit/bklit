@@ -149,7 +149,7 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
         {isVisible && (
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="-translate-x-1/2 fixed bottom-4 left-1/2 z-50"
+            className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
             exit={{ opacity: 0, y: 20 }}
             initial={{ opacity: 0, y: 20 }}
             key="updates-ticker"
@@ -208,7 +208,7 @@ export function UpdatesMonthTicker({ updates }: UpdatesMonthTickerProps) {
                           x: getPosition(month.offset) + dragOffset,
                           opacity: 1,
                         }}
-                        className={`-translate-x-1/2 pointer-events-auto absolute left-1/2 whitespace-nowrap text-xs ${
+                        className={`pointer-events-auto absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-xs ${
                           month.offset === 0
                             ? "font-semibold text-foreground"
                             : "cursor-pointer text-muted-foreground hover:text-foreground"

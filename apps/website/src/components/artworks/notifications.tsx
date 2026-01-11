@@ -134,7 +134,7 @@ export const Notifications = ({ items, debug = false }: NotificationsProps) => {
         </div>
       )}
 
-      <div className="md:-ml-12 grid place-items-center opacity-100 [grid-template-areas:'stack']">
+      <div className="grid place-items-center opacity-100 [grid-template-areas:'stack'] md:-ml-12">
         {items.map((n, i) => {
           const posIdx = (i + cycleIndex) % itemCount;
           // We only have 6 visual positions defined
