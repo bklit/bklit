@@ -30,20 +30,25 @@ const Node = ({
   >
     {handlePosition === "left" && (
       <div
-        className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-0 size-2 rounded-full border border-bklit-500 bg-background"
+        className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-0 size-2 rounded-full border border-bklit-200 bg-background"
         ref={handleRef}
       />
     )}
-    <div className="flex size-7 items-center justify-center rounded-lg bg-bklit-500/20 text-bklit-500">
+    <div
+      className={cn(
+        "flex size-7 items-center justify-center rounded-lg bg-bklit-500/20 text-bklit-500",
+        handlePosition === "left" ? "text-emerald-500" : "text-purple-500"
+      )}
+    >
       {icon}
     </div>
     <span className="font-medium text-slate-200 text-xs">{title}</span>
     <Badge className="px-1.5 py-0 text-[10px]" variant="code">
-      /foobar
+      {handlePosition === "left" ? "event" : "pageview"}
     </Badge>
     {handlePosition === "right" && (
       <div
-        className="-translate-y-1/2 absolute top-1/2 right-0 size-2 translate-x-1/2 rounded-full border border-bklit-500 bg-background"
+        className="-translate-y-1/2 absolute top-1/2 right-0 size-2 translate-x-1/2 rounded-full border border-bklit-200 bg-bklit-200"
         ref={handleRef}
       />
     )}
@@ -57,6 +62,8 @@ export const FunnelBuilderDemo = () => {
   const [path, setPath] = useState("");
 
   useLayoutEffect(() => {
+    let animationFrameId: number;
+
     const updatePath = () => {
       if (!(containerRef.current && sourceRef.current && targetRef.current)) {
         return;
@@ -66,29 +73,28 @@ export const FunnelBuilderDemo = () => {
       const sourceRect = sourceRef.current.getBoundingClientRect();
       const targetRect = targetRef.current.getBoundingClientRect();
 
-      // Get visual center of the handles relative to the container
+      // Get exact visual center of the handles relative to the container
       const startX =
         sourceRect.left + sourceRect.width / 2 - containerRect.left;
       const startY = sourceRect.top + sourceRect.height / 2 - containerRect.top;
       const endX = targetRect.left + targetRect.width / 2 - containerRect.left;
       const endY = targetRect.top + targetRect.height / 2 - containerRect.top;
 
-      // Calculate S-curve (Cubic Bezier)
+      // Calculate S-curve (Cubic Bezier) with slight smoothing
       const midX = (startX + endX) / 2;
       const d = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
       setPath(d);
+
+      animationFrameId = requestAnimationFrame(updatePath);
     };
 
-    // Initial calculation
+    // Start tracking
     updatePath();
-
-    // Use a small delay to ensure motion animations have established initial positions
-    const timeout = setTimeout(updatePath, 100);
 
     window.addEventListener("resize", updatePath);
     return () => {
       window.removeEventListener("resize", updatePath);
-      clearTimeout(timeout);
+      cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
@@ -140,7 +146,7 @@ export const FunnelBuilderDemo = () => {
                   animate={{ strokeDashoffset: 0 }}
                   d={path}
                   initial={{ strokeDashoffset: 24 }}
-                  stroke="var(--bklit-500)"
+                  stroke="var(--bklit-200)"
                   strokeDasharray="6 4"
                   strokeWidth="2"
                   transition={{
@@ -156,10 +162,23 @@ export const FunnelBuilderDemo = () => {
 
         {/* Node 2: Add to cart */}
         <motion.div
-          animate={{ opacity: 1, x: 0 }}
-          className="z-20 translate-y-12"
-          initial={{ opacity: 0, x: 20 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          animate={{
+            opacity: 1,
+            x: 0,
+            y: [48, 48, 88, 8, 48, 48], // Looping drag movement
+          }}
+          className="z-20"
+          initial={{ opacity: 0, x: 20, y: 48 }}
+          transition={{
+            opacity: { duration: 0.5, delay: 0.2 },
+            x: { duration: 0.5, delay: 0.2 },
+            y: {
+              duration: 6,
+              repeat: Number.POSITIVE_INFINITY,
+              times: [0, 0.3, 0.45, 0.65, 0.8, 1],
+              ease: "easeInOut",
+            },
+          }}
         >
           <Node
             handlePosition="left"
