@@ -12,12 +12,12 @@ interface Position {
 
 // 6 physical positions to match our 6 items for a seamless loop
 const positions: Position[] = [
-  { x: -24, y: -20, opacity: 0 }, // Position 1: FRONT (Entrance, Invisible)
-  { x: -12, y: -10, opacity: 1 }, // Position 2: Visible (Frontmost)
+  { x: -24, y: 20, opacity: 0 }, // Position 1: FRONT (Entrance, Invisible)
+  { x: -12, y: 10, opacity: 1 }, // Position 2: Visible (Frontmost)
   { x: 0, y: 0, opacity: 1 }, // Position 3: Visible
-  { x: 12, y: 10, opacity: 1 }, // Position 4: Visible
-  { x: 24, y: 20, opacity: 0 }, // Position 5: BACK (Exit, Invisible)
-  { x: 36, y: 30, opacity: 0 }, // Position 6: Hidden (Transition slot)
+  { x: 12, y: -10, opacity: 1 }, // Position 4: Visible
+  { x: 24, y: -20, opacity: 0 }, // Position 5: BACK (Exit, Invisible)
+  { x: 36, y: -30, opacity: 0 }, // Position 6: Hidden (Transition slot)
 ];
 
 export const Notifications = () => {
