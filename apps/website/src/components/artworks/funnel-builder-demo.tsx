@@ -103,10 +103,7 @@ export const FunnelBuilderDemo = () => {
   };
 
   return (
-    <div
-      className="relative h-[350px] w-full scale-80 overflow-hidden md:scale-100"
-      ref={wrapperRef}
-    >
+    <div className="relative h-[350px] w-full overflow-hidden" ref={wrapperRef}>
       {/* SVG path layer - outside 3D transform so it follows screen positions */}
       <div className="pointer-events-none absolute inset-0 z-20">
         <svg
@@ -161,7 +158,7 @@ export const FunnelBuilderDemo = () => {
             {/* Node 1: Landing Page */}
             <motion.div
               animate={{ opacity: 1, x: 0 }}
-              className="-translate-y-12 z-20"
+              className="-translate-y-12 -translate-x-12 md:-translate-x-0 z-20"
               initial={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.5 }}
             >
@@ -180,7 +177,7 @@ export const FunnelBuilderDemo = () => {
                 x: 0,
                 y: [48, 48, 88, 8, 48, 48], // Looping drag movement
               }}
-              className="z-20"
+              className="-translate-x-4 z-20 md:translate-x-0"
               initial={{ opacity: 0, x: 20, y: 48 }}
               transition={{
                 opacity: { duration: 0.5, delay: 0.2 },
