@@ -241,10 +241,10 @@ export const PageHeader = () => {
                         <ul className="flex flex-col gap-2 border-l p-4">
                           <li>
                             <NavigationMenuLink asChild>
-                              <Link href="/#product">
-                                <div className="font-medium">Features</div>
+                              <Link href="/#faqs">
+                                <div className="font-medium">FAQs</div>
                                 <div className="text-muted-foreground text-sm">
-                                  Foobar
+                                  Frequently asked questions
                                 </div>
                               </Link>
                             </NavigationMenuLink>

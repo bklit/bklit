@@ -201,7 +201,7 @@ export default function MarketingHomePage() {
         </SectionBasic>
       </div>
 
-      <div className="space-y-16 px-4">
+      <div className="space-y-16 px-4" id="faqs">
         <SectionHeader description="We've got answers" title="Got questions?" />
         <FAQ />
       </div>
