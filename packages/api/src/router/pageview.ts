@@ -66,7 +66,16 @@ export const pageviewRouter = createTRPCRouter({
           const originalUrl = pageview.url;
           const timestamp = parseClickHouseDate(pageview.timestamp);
 
-          if (!acc[normalizedUrl]) {
+          if (acc[normalizedUrl]) {
+            // Update title if this pageview is more recent and has a title
+            if (
+              pageview.title &&
+              timestamp > acc[normalizedUrl].latestTitleTimestamp
+            ) {
+              acc[normalizedUrl].title = pageview.title;
+              acc[normalizedUrl].latestTitleTimestamp = timestamp;
+            }
+          } else {
             acc[normalizedUrl] = {
               url: originalUrl,
               // Use actual title if available, fallback to inferred
@@ -78,14 +87,8 @@ export const pageviewRouter = createTRPCRouter({
               lastViewed: timestamp,
               firstViewed: timestamp,
             };
-          } else {
-            // Update title if this pageview is more recent and has a title
-            if (pageview.title && timestamp > acc[normalizedUrl].latestTitleTimestamp) {
-              acc[normalizedUrl].title = pageview.title;
-              acc[normalizedUrl].latestTitleTimestamp = timestamp;
-            }
           }
-          
+
           acc[normalizedUrl].viewCount += 1;
           if (pageview.ip) {
             acc[normalizedUrl].uniqueUsers.add(pageview.ip);
@@ -375,7 +378,7 @@ export const pageviewRouter = createTRPCRouter({
         (acc, pv) => {
           const path = extractPath(pv.url);
           const timestamp = parseClickHouseDate(pv.timestamp);
-          
+
           if (!acc[path]) {
             acc[path] = {
               title: pv.title || extractPageTitle(pv.url),
@@ -388,7 +391,7 @@ export const pageviewRouter = createTRPCRouter({
               timestamp,
             };
           }
-          
+
           return acc;
         },
         {} as Record<string, { title: string; timestamp: Date }>

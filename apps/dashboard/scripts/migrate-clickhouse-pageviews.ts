@@ -3,9 +3,9 @@
 /**
  * ClickHouse Pageviews Migration Script
  * Adds metadata and campaign tracking columns to page_view_event table
- * 
+ *
  * Cross-platform: Works on Windows, macOS, and Linux
- * 
+ *
  * Usage:
  *   pnpm tsx scripts/migrate-clickhouse-pageviews.ts
  */
@@ -51,14 +51,19 @@ if (!CLICKHOUSE_HOST) {
 }
 
 if (!CLICKHOUSE_PASSWORD) {
-  console.error("❌ Error: CLICKHOUSE_PASSWORD environment variable is required");
+  console.error(
+    "❌ Error: CLICKHOUSE_PASSWORD environment variable is required"
+  );
   console.error("Please set it in your .env file");
   process.exit(1);
 }
 
 // Handle CLICKHOUSE_HOST - it might be a full URL or just hostname
 let CLICKHOUSE_URL: string;
-if (CLICKHOUSE_HOST.startsWith("http://") || CLICKHOUSE_HOST.startsWith("https://")) {
+if (
+  CLICKHOUSE_HOST.startsWith("http://") ||
+  CLICKHOUSE_HOST.startsWith("https://")
+) {
   CLICKHOUSE_URL = CLICKHOUSE_HOST;
 } else {
   const port = process.env.CLICKHOUSE_PORT || "8123";
@@ -71,20 +76,24 @@ console.log(`  User: ${CLICKHOUSE_USER}`);
 console.log(`  URL: ${CLICKHOUSE_URL}\n`);
 
 // Helper function to make ClickHouse requests
-async function clickhouseRequest(query: string): Promise<{ ok: boolean; status: number; text: string }> {
-  const auth = Buffer.from(`${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}`).toString("base64");
-  
+async function clickhouseRequest(
+  query: string
+): Promise<{ ok: boolean; status: number; text: string }> {
+  const auth = Buffer.from(
+    `${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}`
+  ).toString("base64");
+
   const response = await fetch(CLICKHOUSE_URL, {
     method: "POST",
     headers: {
-      "Authorization": `Basic ${auth}`,
+      Authorization: `Basic ${auth}`,
       "Content-Type": "text/plain",
     },
     body: query,
   });
 
   const text = await response.text();
-  
+
   return {
     ok: response.ok,
     status: response.status,
@@ -99,13 +108,17 @@ async function main() {
     const pingResponse = await fetch(`${CLICKHOUSE_URL}/ping`, {
       method: "GET",
       headers: {
-        "Authorization": `Basic ${Buffer.from(`${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}`).toString("base64")}`,
+        Authorization: `Basic ${Buffer.from(`${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}`).toString("base64")}`,
       },
     });
 
     if (!pingResponse.ok) {
-      console.error(`❌ Failed to connect to ClickHouse (HTTP ${pingResponse.status})`);
-      console.error("Please check your credentials and ensure ClickHouse is running");
+      console.error(
+        `❌ Failed to connect to ClickHouse (HTTP ${pingResponse.status})`
+      );
+      console.error(
+        "Please check your credentials and ensure ClickHouse is running"
+      );
       process.exit(1);
     }
 
@@ -153,7 +166,9 @@ ALTER TABLE page_view_event
     // Verify columns were added
     console.log("Verifying new columns...\n");
 
-    const describeResponse = await clickhouseRequest("DESCRIBE TABLE page_view_event");
+    const describeResponse = await clickhouseRequest(
+      "DESCRIBE TABLE page_view_event"
+    );
 
     if (!describeResponse.ok) {
       console.error("❌ Verification failed - could not describe table");
@@ -162,14 +177,31 @@ ALTER TABLE page_view_event
 
     const tableSchema = describeResponse.text;
     const newColumns = [
-      "title", "description", "og_image", "og_title", "favicon", 
-      "canonical_url", "language", "robots", "referrer_hostname", 
-      "referrer_path", "referrer_type", "utm_id", "gclid", "fbclid", 
-      "msclkid", "ttclid", "li_fat_id", "twclid", "is_new_visitor", 
-      "landing_page"
+      "title",
+      "description",
+      "og_image",
+      "og_title",
+      "favicon",
+      "canonical_url",
+      "language",
+      "robots",
+      "referrer_hostname",
+      "referrer_path",
+      "referrer_type",
+      "utm_id",
+      "gclid",
+      "fbclid",
+      "msclkid",
+      "ttclid",
+      "li_fat_id",
+      "twclid",
+      "is_new_visitor",
+      "landing_page",
     ];
 
-    const allColumnsPresent = newColumns.every(col => tableSchema.includes(col));
+    const allColumnsPresent = newColumns.every((col) =>
+      tableSchema.includes(col)
+    );
 
     if (!allColumnsPresent) {
       console.error("❌ Verification failed - some columns may be missing");
@@ -180,11 +212,11 @@ ALTER TABLE page_view_event
 
     console.log("✓ Verification successful - all columns added\n");
     console.log("New columns:");
-    
+
     // Parse and display new columns
     const lines = tableSchema.split("\n");
     for (const col of newColumns) {
-      const line = lines.find(l => l.startsWith(col));
+      const line = lines.find((l) => l.startsWith(col));
       if (line) {
         const parts = line.split("\t");
         console.log(`  - ${parts[0]} (${parts[1]})`);
@@ -198,7 +230,6 @@ ALTER TABLE page_view_event
     console.log("  1. Deploy updated tracker script");
     console.log("  2. Deploy updated API and services");
     console.log("  3. Test with a pageview\n");
-
   } catch (error) {
     console.error("\n❌ Migration failed with error:");
     console.error(error);
@@ -207,4 +238,3 @@ ALTER TABLE page_view_event
 }
 
 main();
-
