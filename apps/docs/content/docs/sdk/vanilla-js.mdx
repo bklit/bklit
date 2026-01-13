@@ -170,6 +170,54 @@ The SDK automatically detects route changes in single-page applications:
 
 No additional configuration needed!
 
+## Captured Data
+
+Bklit automatically captures comprehensive metadata from each pageview to give you rich analytics insights.
+
+### Page Metadata
+
+- **Title** - Page title from `<title>` tag
+- **Description** - Meta description for SEO context
+- **Open Graph Image** - Social sharing image (`og:image`)
+- **Open Graph Title** - Social sharing title
+- **Favicon** - Site icon URL
+- **Canonical URL** - Preferred URL version
+- **Language** - Document language setting
+- **Robots** - SEO directives
+
+### Campaign Attribution
+
+Track marketing campaigns and understand where your traffic comes from:
+
+**UTM Parameters:**
+- Source (`utm_source`)
+- Medium (`utm_medium`)
+- Campaign (`utm_campaign`)
+- Term (`utm_term`)
+- Content (`utm_content`)
+- ID (`utm_id`)
+
+**Ad Platform Click IDs:**
+- Google Ads (`gclid`)
+- Facebook/Instagram (`fbclid`)
+- Microsoft/Bing Ads (`msclkid`)
+- TikTok Ads (`ttclid`)
+- LinkedIn Ads (`li_fat_id`)
+- Twitter Ads (`twclid`)
+
+**Referrer Analysis:**
+- Hostname and path extraction
+- Automatic classification (organic, social, paid, referral, direct)
+
+### Session Tracking
+
+- New vs returning visitors
+- Landing pages per session
+- Entry and exit pages
+- Session duration and bounce tracking
+
+All data is captured client-side and sent securely to your Bklit project with no configuration required.
+
 ## Related Documentation
 
 - [Configuration](/sdk/configuration) - All configuration options

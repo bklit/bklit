@@ -1,0 +1,62 @@
+---
+title: "Enhanced Pageview Tracking: Real Titles, Full Metadata & Campaign Attribution"
+date: "2026-01-14T00:00:00.000Z"
+author: "uixmat"
+tags: ["update", "feature"]
+---
+
+We've upgraded pageview tracking to capture actual page titles and comprehensive metadata, plus enhanced campaign attribution for better marketing insights.
+
+## What's New
+
+### Real Page Titles
+
+Previously, we inferred page titles from URLs (e.g., `/pricing` became "Pricing"). Now we capture the actual page title from your `<title>` tag, so "Bklit - Simple Analytics" shows exactly as you intended.
+
+The Pageviews dashboard now groups by path and displays the most recent title, eliminating duplicates while showing the real content.
+
+### SEO Metadata Capture
+
+Every pageview now captures:
+
+- Meta description
+- Open Graph image
+- Favicon
+- Canonical URL
+- Language settings
+- Robots directives
+
+This data sets us up for future features like SEO insights and social share previews.
+
+### Enhanced Campaign Attribution
+
+Marketing teams get better data with:
+
+- **Click ID tracking**: Google Ads (gclid), Facebook (fbclid), Microsoft (msclkid), TikTok, LinkedIn, Twitter
+- **Referrer classification**: Automatic categorization as organic, social, paid, or referral
+- **UTM ID support**: Track campaign IDs across platforms
+
+This powers better ROI analysis and multi-touch attribution (coming soon).
+
+## Migration Required
+
+If you're self-hosting, run the ClickHouse migration:
+
+```bash
+cd apps/dashboard
+./scripts/migrate-clickhouse-pageviews.sh
+```
+
+Cloud users: No action needed, we've already migrated your data.
+
+## What's Next
+
+This foundation enables upcoming features:
+
+- Campaign performance dashboard
+- SEO health monitoring
+- Social share analytics
+- Multi-touch attribution
+
+Existing pageviews will show inferred titles until new traffic arrives with actual metadata. Your tracker script will automatically start capturing this data on your next deployment—no code changes needed.
+

@@ -69,14 +69,23 @@ export const pageviewRouter = createTRPCRouter({
           if (!acc[normalizedUrl]) {
             acc[normalizedUrl] = {
               url: originalUrl,
-              title: extractPageTitle(originalUrl),
+              // Use actual title if available, fallback to inferred
+              title: pageview.title || extractPageTitle(originalUrl),
+              latestTitleTimestamp: timestamp,
               path: normalizedUrl,
               viewCount: 0,
               uniqueUsers: new Set<string>(),
               lastViewed: timestamp,
               firstViewed: timestamp,
             };
+          } else {
+            // Update title if this pageview is more recent and has a title
+            if (pageview.title && timestamp > acc[normalizedUrl].latestTitleTimestamp) {
+              acc[normalizedUrl].title = pageview.title;
+              acc[normalizedUrl].latestTitleTimestamp = timestamp;
+            }
           }
+          
           acc[normalizedUrl].viewCount += 1;
           if (pageview.ip) {
             acc[normalizedUrl].uniqueUsers.add(pageview.ip);
@@ -94,6 +103,7 @@ export const pageviewRouter = createTRPCRouter({
           {
             url: string;
             title: string;
+            latestTitleTimestamp: Date;
             path: string;
             viewCount: number;
             uniqueUsers: Set<string>;
@@ -360,6 +370,30 @@ export const pageviewRouter = createTRPCRouter({
         >
       );
 
+      // Build a map of path -> latest title from pageviews
+      const pathToTitle = pageviews.reduce(
+        (acc, pv) => {
+          const path = extractPath(pv.url);
+          const timestamp = parseClickHouseDate(pv.timestamp);
+          
+          if (!acc[path]) {
+            acc[path] = {
+              title: pv.title || extractPageTitle(pv.url),
+              timestamp,
+            };
+          } else if (pv.title && timestamp > acc[path].timestamp) {
+            // Update with latest actual title
+            acc[path] = {
+              title: pv.title,
+              timestamp,
+            };
+          }
+          
+          return acc;
+        },
+        {} as Record<string, { title: string; timestamp: Date }>
+      );
+
       const entryPageGroups = sessions.reduce(
         (acc, session) => {
           const entryPage = extractPath(session.entry_page);
@@ -434,20 +468,24 @@ export const pageviewRouter = createTRPCRouter({
       );
 
       // Convert to array and format
-      const entryPages = Object.values(entryPageGroups).map((group) => ({
-        url: group.url,
-        title: extractPageTitle(group.url),
-        path: extractPath(group.url),
-        sessions: group.sessions,
-        totalPageviews: group.totalPageviews,
-        uniqueSessions: group.uniqueSessions.size,
-        lastVisited: group.lastVisited,
-        firstVisited: group.firstVisited,
-        countries: Array.from(group.countries),
-        cities: Array.from(group.cities),
-        mobileSessions: group.mobileSessions,
-        desktopSessions: group.desktopSessions,
-      }));
+      const entryPages = Object.values(entryPageGroups).map((group) => {
+        const path = extractPath(group.url);
+        return {
+          url: group.url,
+          // Use latest title from pathToTitle map, fallback to inferred
+          title: pathToTitle[path]?.title || extractPageTitle(group.url),
+          path,
+          sessions: group.sessions,
+          totalPageviews: group.totalPageviews,
+          uniqueSessions: group.uniqueSessions.size,
+          lastVisited: group.lastVisited,
+          firstVisited: group.firstVisited,
+          countries: Array.from(group.countries),
+          cities: Array.from(group.cities),
+          mobileSessions: group.mobileSessions,
+          desktopSessions: group.desktopSessions,
+        };
+      });
 
       // Sort by sessions count
       const sortedEntryPages = entryPages.sort(
