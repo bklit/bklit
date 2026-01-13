@@ -20,6 +20,29 @@ interface TrackingPayload {
   utmCampaign?: string;
   utmTerm?: string;
   utmContent?: string;
+  // Page metadata
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  ogTitle?: string;
+  favicon?: string;
+  canonicalUrl?: string;
+  language?: string;
+  robots?: string;
+  // Enhanced campaign tracking
+  referrerHostname?: string;
+  referrerPath?: string;
+  referrerType?: string;
+  utmId?: string;
+  gclid?: string;
+  fbclid?: string;
+  msclkid?: string;
+  ttclid?: string;
+  liFatId?: string;
+  twclid?: string;
+  // Session tracking
+  isNewVisitor?: boolean;
+  landingPage?: string;
 }
 
 // Helper function to create a response with CORS headers
@@ -232,6 +255,29 @@ export async function POST(request: NextRequest) {
           utmCampaign: payload.utmCampaign,
           utmTerm: payload.utmTerm,
           utmContent: payload.utmContent,
+          // Page metadata
+          title: payload.title,
+          description: payload.description,
+          ogImage: payload.ogImage,
+          ogTitle: payload.ogTitle,
+          favicon: payload.favicon,
+          canonicalUrl: payload.canonicalUrl,
+          language: payload.language,
+          robots: payload.robots,
+          // Enhanced campaign tracking
+          referrerHostname: payload.referrerHostname,
+          referrerPath: payload.referrerPath,
+          referrerType: payload.referrerType,
+          utmId: payload.utmId,
+          gclid: payload.gclid,
+          fbclid: payload.fbclid,
+          msclkid: payload.msclkid,
+          ttclid: payload.ttclid,
+          liFatId: payload.liFatId,
+          twclid: payload.twclid,
+          // Session tracking
+          isNewVisitor: payload.isNewVisitor,
+          landingPage: payload.landingPage,
         });
 
         // Create or update session in ClickHouse

@@ -30,7 +30,7 @@ const Node = ({
   >
     {handlePosition === "left" && (
       <div
-        className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-0 size-2 rounded-full border border-bklit-200 bg-background"
+        className="absolute top-1/2 left-0 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-bklit-200 bg-background"
         ref={handleRef}
       />
     )}
@@ -48,7 +48,7 @@ const Node = ({
     </Badge>
     {handlePosition === "right" && (
       <div
-        className="-translate-y-1/2 absolute top-1/2 right-0 size-2 translate-x-1/2 rounded-full border border-bklit-200 bg-bklit-200"
+        className="absolute top-1/2 right-0 size-2 translate-x-1/2 -translate-y-1/2 rounded-full border border-bklit-200 bg-bklit-200"
         ref={handleRef}
       />
     )}
@@ -158,7 +158,7 @@ export const FunnelBuilderDemo = () => {
             {/* Node 1: Landing Page */}
             <motion.div
               animate={{ opacity: 1, x: 0 }}
-              className="-translate-y-12 -translate-x-12 md:-translate-x-0 z-20"
+              className="z-20 -translate-x-12 -translate-y-12 md:-translate-x-0"
               initial={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.5 }}
             >
@@ -177,7 +177,7 @@ export const FunnelBuilderDemo = () => {
                 x: 0,
                 y: [48, 48, 88, 8, 48, 48], // Looping drag movement
               }}
-              className="-translate-x-4 z-20 md:translate-x-0"
+              className="z-20 -translate-x-4 md:translate-x-0"
               initial={{ opacity: 0, x: 20, y: 48 }}
               transition={{
                 opacity: { duration: 0.5, delay: 0.2 },

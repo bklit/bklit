@@ -24,6 +24,29 @@ export interface PageViewData {
   utmMedium?: string | null;
   utmSource?: string | null;
   utmTerm?: string | null;
+  // Page metadata
+  title?: string | null;
+  description?: string | null;
+  ogImage?: string | null;
+  ogTitle?: string | null;
+  favicon?: string | null;
+  canonicalUrl?: string | null;
+  language?: string | null;
+  robots?: string | null;
+  // Enhanced campaign tracking
+  referrerHostname?: string | null;
+  referrerPath?: string | null;
+  referrerType?: string | null;
+  utmId?: string | null;
+  gclid?: string | null;
+  fbclid?: string | null;
+  msclkid?: string | null;
+  ttclid?: string | null;
+  liFatId?: string | null;
+  twclid?: string | null;
+  // Session tracking
+  isNewVisitor?: boolean;
+  landingPage?: string | null;
 }
 
 export interface TrackedEventData {

@@ -70,9 +70,57 @@
     inactivityTimer = setTimeout(endSession, INACTIVITY_TIMEOUT_MS);
   }
 
+  // Helper to classify referrer
+  function classifyReferrer(hostname) {
+    if (!hostname) return "direct";
+    const h = hostname.toLowerCase();
+
+    // Search engines
+    if (
+      h.includes("google") ||
+      h.includes("bing") ||
+      h.includes("yahoo") ||
+      h.includes("duckduckgo") ||
+      h.includes("baidu")
+    ) {
+      return "organic";
+    }
+
+    // Social media
+    if (
+      h.includes("facebook") ||
+      h.includes("twitter") ||
+      h.includes("linkedin") ||
+      h.includes("instagram") ||
+      h.includes("tiktok") ||
+      h.includes("reddit") ||
+      h.includes("pinterest") ||
+      h.includes("youtube")
+    ) {
+      return "social";
+    }
+
+    return "referral";
+  }
+
   // Track page view (existing logic)
   async function trackPageView() {
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // Parse referrer data
+      let referrerHostname, referrerPath, referrerType;
+      if (document.referrer) {
+        try {
+          const refUrl = new URL(document.referrer);
+          referrerHostname = refUrl.hostname;
+          referrerPath = refUrl.pathname;
+          referrerType = classifyReferrer(refUrl.hostname);
+        } catch (e) {
+          // Invalid referrer URL, ignore
+        }
+      }
+
       const data = {
         url: window.location.href,
         timestamp: new Date().toISOString(),
@@ -80,19 +128,56 @@
         sessionId: getSessionId(),
         userAgent: navigator.userAgent,
         referrer: document.referrer || undefined,
+
+        // Page metadata
+        title: document.title,
+        description: document.querySelector('meta[name="description"]')
+          ?.content,
+        ogImage: document.querySelector('meta[property="og:image"]')?.content,
+        ogTitle: document.querySelector('meta[property="og:title"]')?.content,
+        favicon:
+          document.querySelector('link[rel="icon"]')?.href ||
+          document.querySelector('link[rel="shortcut icon"]')?.href,
+        canonicalUrl: document.querySelector('link[rel="canonical"]')?.href,
+        language: document.documentElement.lang,
+        robots: document.querySelector('meta[name="robots"]')?.content,
+
+        // Referrer data
+        referrerHostname,
+        referrerPath,
+        referrerType,
+
+        // Standard UTMs
+        utmSource: urlParams.get("utm_source"),
+        utmMedium: urlParams.get("utm_medium"),
+        utmCampaign: urlParams.get("utm_campaign"),
+        utmTerm: urlParams.get("utm_term"),
+        utmContent: urlParams.get("utm_content"),
+        utmId: urlParams.get("utm_id"),
+
+        // Click IDs
+        gclid: urlParams.get("gclid"),
+        fbclid: urlParams.get("fbclid"),
+        msclkid: urlParams.get("msclkid"),
+        ttclid: urlParams.get("ttclid"),
+        liFatId: urlParams.get("li_fat_id"),
+        twclid: urlParams.get("twclid"),
+
+        // Session tracking
+        isNewVisitor: !localStorage.getItem("bklit_has_visited"),
+        landingPage:
+          sessionStorage.getItem("bklit_landing_page") || window.location.href,
       };
 
-      // Extract UTM parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("utm_source"))
-        data.utmSource = urlParams.get("utm_source");
-      if (urlParams.get("utm_medium"))
-        data.utmMedium = urlParams.get("utm_medium");
-      if (urlParams.get("utm_campaign"))
-        data.utmCampaign = urlParams.get("utm_campaign");
-      if (urlParams.get("utm_term")) data.utmTerm = urlParams.get("utm_term");
-      if (urlParams.get("utm_content"))
-        data.utmContent = urlParams.get("utm_content");
+      // Mark as visited
+      if (!localStorage.getItem("bklit_has_visited")) {
+        localStorage.setItem("bklit_has_visited", "true");
+      }
+
+      // Store landing page
+      if (!sessionStorage.getItem("bklit_landing_page")) {
+        sessionStorage.setItem("bklit_landing_page", window.location.href);
+      }
 
       await fetch(`${apiUrl}/api/track`, {
         method: "POST",

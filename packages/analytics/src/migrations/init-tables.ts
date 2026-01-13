@@ -33,7 +33,27 @@ async function initTables() {
         utm_content Nullable(String),
         utm_medium Nullable(String),
         utm_source Nullable(String),
-        utm_term Nullable(String)
+        utm_term Nullable(String),
+        title Nullable(String),
+        description Nullable(String),
+        og_image Nullable(String),
+        og_title Nullable(String),
+        favicon Nullable(String),
+        canonical_url Nullable(String),
+        language Nullable(String),
+        robots Nullable(String),
+        referrer_hostname Nullable(String),
+        referrer_path Nullable(String),
+        referrer_type Nullable(String),
+        utm_id Nullable(String),
+        gclid Nullable(String),
+        fbclid Nullable(String),
+        msclkid Nullable(String),
+        ttclid Nullable(String),
+        li_fat_id Nullable(String),
+        twclid Nullable(String),
+        is_new_visitor Bool DEFAULT false,
+        landing_page Nullable(String)
       )
       ENGINE = MergeTree()
       PARTITION BY toYYYYMM(timestamp)

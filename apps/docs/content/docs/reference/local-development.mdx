@@ -270,6 +270,31 @@ Database migration and management commands use a `with-env-dev` wrapper that sub
 
 This means you can safely run any command without accidentally touching production data.
 
+### Running Database Migrations
+
+When updating Bklit or applying schema changes, you may need to run migrations:
+
+**PostgreSQL (Prisma) Migrations:**
+```bash
+pnpm db:migrate
+```
+
+**ClickHouse Migrations:**
+
+For ClickHouse schema updates (like adding new columns), use the migration scripts in `apps/dashboard/scripts/`:
+
+```bash
+# Cross-platform (recommended for Windows contributors)
+cd apps/dashboard
+pnpm tsx scripts/migrate-clickhouse-pageviews.ts
+
+# Unix shell script (macOS/Linux only)
+cd apps/dashboard
+./scripts/migrate-clickhouse-pageviews.sh
+```
+
+See the [scripts README](https://github.com/uixmat/bklit/tree/main/apps/dashboard/scripts) for details on specific migrations.
+
 ### Docker Compose
 
 The `docker-compose.yml` at the project root defines the ClickHouse service:
