@@ -193,13 +193,6 @@ export function SankeyNivo({
       links: validLinks,
     };
 
-    console.log("SankeyNivo Chart Data:", {
-      nodes: transformed.nodes,
-      links: transformed.links,
-      nodeCount: transformed.nodes.length,
-      linkCount: transformed.links.length,
-    });
-
     return transformed;
   }, [data]);
 

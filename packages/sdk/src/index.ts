@@ -17,6 +17,41 @@ const TRACKING_DEBOUNCE_MS = 1000; // Debounce tracking by 1 second
 const SESSION_STORAGE_KEY = "bklit_session_id";
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
+// Classify referrer into categories
+function classifyReferrer(hostname: string): string {
+  if (!hostname) return "direct";
+
+  // Search engines
+  const searchEngines = [
+    "google",
+    "bing",
+    "yahoo",
+    "duckduckgo",
+    "baidu",
+    "yandex",
+  ];
+  if (searchEngines.some((engine) => hostname.includes(engine))) {
+    return "organic";
+  }
+
+  // Social media
+  const socialPlatforms = [
+    "facebook",
+    "twitter",
+    "linkedin",
+    "instagram",
+    "pinterest",
+    "reddit",
+    "tiktok",
+    "youtube",
+  ];
+  if (socialPlatforms.some((platform) => hostname.includes(platform))) {
+    return "social";
+  }
+
+  return "referral";
+}
+
 export function initBklit(options: BklitOptions): void {
   if (typeof window === "undefined") {
     return;
@@ -116,11 +151,19 @@ export function initBklit(options: BklitOptions): void {
     try {
       // Extract UTM parameters from URL
       const urlParams = new URLSearchParams(window.location.search);
-      const utmSource = urlParams.get("utm_source");
-      const utmMedium = urlParams.get("utm_medium");
-      const utmCampaign = urlParams.get("utm_campaign");
-      const utmTerm = urlParams.get("utm_term");
-      const utmContent = urlParams.get("utm_content");
+
+      // Parse referrer data
+      let referrerHostname, referrerPath, referrerType;
+      if (document.referrer) {
+        try {
+          const refUrl = new URL(document.referrer);
+          referrerHostname = refUrl.hostname;
+          referrerPath = refUrl.pathname;
+          referrerType = classifyReferrer(refUrl.hostname);
+        } catch (e) {
+          // Invalid referrer URL, ignore
+        }
+      }
 
       const data = {
         url: currentUrl,
@@ -129,13 +172,73 @@ export function initBklit(options: BklitOptions): void {
         userAgent: navigator.userAgent,
         sessionId: currentSessionId,
         referrer: document.referrer || undefined,
-        utmSource: utmSource || undefined,
-        utmMedium: utmMedium || undefined,
-        utmCampaign: utmCampaign || undefined,
-        utmTerm: utmTerm || undefined,
-        utmContent: utmContent || undefined,
         environment,
+
+        // Page metadata
+        title: document.title,
+        description: (
+          document.querySelector(
+            'meta[name="description"]'
+          ) as HTMLMetaElement
+        )?.content,
+        ogImage: (
+          document.querySelector('meta[property="og:image"]') as HTMLMetaElement
+        )?.content,
+        ogTitle: (
+          document.querySelector('meta[property="og:title"]') as HTMLMetaElement
+        )?.content,
+        favicon:
+          (document.querySelector('link[rel="icon"]') as HTMLLinkElement)
+            ?.href ||
+          (
+            document.querySelector(
+              'link[rel="shortcut icon"]'
+            ) as HTMLLinkElement
+          )?.href,
+        canonicalUrl: (
+          document.querySelector('link[rel="canonical"]') as HTMLLinkElement
+        )?.href,
+        language: document.documentElement.lang,
+        robots: (
+          document.querySelector('meta[name="robots"]') as HTMLMetaElement
+        )?.content,
+
+        // Referrer data
+        referrerHostname,
+        referrerPath,
+        referrerType,
+
+        // Standard UTMs
+        utmSource: urlParams.get("utm_source") || undefined,
+        utmMedium: urlParams.get("utm_medium") || undefined,
+        utmCampaign: urlParams.get("utm_campaign") || undefined,
+        utmTerm: urlParams.get("utm_term") || undefined,
+        utmContent: urlParams.get("utm_content") || undefined,
+        utmId: urlParams.get("utm_id") || undefined,
+
+        // Click IDs
+        gclid: urlParams.get("gclid") || undefined,
+        fbclid: urlParams.get("fbclid") || undefined,
+        msclkid: urlParams.get("msclkid") || undefined,
+        ttclid: urlParams.get("ttclid") || undefined,
+        liFatId: urlParams.get("li_fat_id") || undefined,
+        twclid: urlParams.get("twclid") || undefined,
+
+        // Session tracking
+        isNewVisitor: !localStorage.getItem("bklit_has_visited"),
+        landingPage:
+          sessionStorage.getItem("bklit_landing_page") || currentUrl,
       };
+
+      // Mark as visited
+      if (!localStorage.getItem("bklit_has_visited")) {
+        localStorage.setItem("bklit_has_visited", "true");
+      }
+
+      // Store landing page
+      if (!sessionStorage.getItem("bklit_landing_page")) {
+        sessionStorage.setItem("bklit_landing_page", currentUrl);
+      }
 
       if (debug) {
         console.log("🚀 Bklit SDK: Tracking page view...", {
@@ -348,26 +451,89 @@ export function trackPageView() {
   // Call the internal trackPageView function
   // We need to recreate it here since it's scoped inside initBklit
   const urlParams = new URLSearchParams(window.location.search);
-  const utmSource = urlParams.get("utm_source");
-  const utmMedium = urlParams.get("utm_medium");
-  const utmCampaign = urlParams.get("utm_campaign");
-  const utmTerm = urlParams.get("utm_term");
-  const utmContent = urlParams.get("utm_content");
+  const currentUrl = window.location.href;
+
+  // Parse referrer data
+  let referrerHostname, referrerPath, referrerType;
+  if (document.referrer) {
+    try {
+      const refUrl = new URL(document.referrer);
+      referrerHostname = refUrl.hostname;
+      referrerPath = refUrl.pathname;
+      referrerType = classifyReferrer(refUrl.hostname);
+    } catch (e) {
+      // Invalid referrer URL, ignore
+    }
+  }
 
   const data = {
-    url: window.location.href,
+    url: currentUrl,
     timestamp: new Date().toISOString(),
     projectId: window.bklitprojectId || "unknown",
     userAgent: navigator.userAgent,
     sessionId: currentSessionId,
     referrer: document.referrer || undefined,
-    utmSource: utmSource || undefined,
-    utmMedium: utmMedium || undefined,
-    utmCampaign: utmCampaign || undefined,
-    utmTerm: utmTerm || undefined,
-    utmContent: utmContent || undefined,
     environment: window.bklitEnvironment || "production",
+
+    // Page metadata
+    title: document.title,
+    description: (
+      document.querySelector('meta[name="description"]') as HTMLMetaElement
+    )?.content,
+    ogImage: (
+      document.querySelector('meta[property="og:image"]') as HTMLMetaElement
+    )?.content,
+    ogTitle: (
+      document.querySelector('meta[property="og:title"]') as HTMLMetaElement
+    )?.content,
+    favicon:
+      (document.querySelector('link[rel="icon"]') as HTMLLinkElement)?.href ||
+      (
+        document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement
+      )?.href,
+    canonicalUrl: (
+      document.querySelector('link[rel="canonical"]') as HTMLLinkElement
+    )?.href,
+    language: document.documentElement.lang,
+    robots: (
+      document.querySelector('meta[name="robots"]') as HTMLMetaElement
+    )?.content,
+
+    // Referrer data
+    referrerHostname,
+    referrerPath,
+    referrerType,
+
+    // Standard UTMs
+    utmSource: urlParams.get("utm_source") || undefined,
+    utmMedium: urlParams.get("utm_medium") || undefined,
+    utmCampaign: urlParams.get("utm_campaign") || undefined,
+    utmTerm: urlParams.get("utm_term") || undefined,
+    utmContent: urlParams.get("utm_content") || undefined,
+    utmId: urlParams.get("utm_id") || undefined,
+
+    // Click IDs
+    gclid: urlParams.get("gclid") || undefined,
+    fbclid: urlParams.get("fbclid") || undefined,
+    msclkid: urlParams.get("msclkid") || undefined,
+    ttclid: urlParams.get("ttclid") || undefined,
+    liFatId: urlParams.get("li_fat_id") || undefined,
+    twclid: urlParams.get("twclid") || undefined,
+
+    // Session tracking
+    isNewVisitor: !localStorage.getItem("bklit_has_visited"),
+    landingPage: sessionStorage.getItem("bklit_landing_page") || currentUrl,
   };
+
+  // Mark as visited
+  if (!localStorage.getItem("bklit_has_visited")) {
+    localStorage.setItem("bklit_has_visited", "true");
+  }
+
+  // Store landing page
+  if (!sessionStorage.getItem("bklit_landing_page")) {
+    sessionStorage.setItem("bklit_landing_page", currentUrl);
+  }
 
   if (debug) {
     console.log("🚀 Bklit SDK: Manual page view tracking...", {
