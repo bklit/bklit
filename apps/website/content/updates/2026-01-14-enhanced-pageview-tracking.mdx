@@ -42,9 +42,16 @@ This powers better ROI analysis and multi-touch attribution (coming soon).
 
 If you're self-hosting, run the ClickHouse migration:
 
+**On macOS/Linux:**
 ```bash
 cd apps/dashboard
 ./scripts/migrate-clickhouse-pageviews.sh
+```
+
+**On Windows (or any platform):**
+```bash
+cd apps/dashboard
+pnpm tsx scripts/migrate-clickhouse-pageviews.ts
 ```
 
 Cloud users: No action needed, we've already migrated your data.

@@ -39,12 +39,19 @@ fi
 
 # Set defaults
 CLICKHOUSE_USER="${CLICKHOUSE_USER:-default}"
-CLICKHOUSE_PORT="${CLICKHOUSE_PORT:-8123}"
-CLICKHOUSE_URL="http://${CLICKHOUSE_HOST}:${CLICKHOUSE_PORT}"
+
+# Handle CLICKHOUSE_HOST - it might be a full URL or just hostname
+if [[ "$CLICKHOUSE_HOST" =~ ^https?:// ]]; then
+  # CLICKHOUSE_HOST already includes protocol (e.g., http://46.224.125.208:8123)
+  CLICKHOUSE_URL="$CLICKHOUSE_HOST"
+else
+  # CLICKHOUSE_HOST is just hostname/IP, construct full URL
+  CLICKHOUSE_PORT="${CLICKHOUSE_PORT:-8123}"
+  CLICKHOUSE_URL="http://${CLICKHOUSE_HOST}:${CLICKHOUSE_PORT}"
+fi
 
 echo "Configuration:"
 echo "  Host: $CLICKHOUSE_HOST"
-echo "  Port: $CLICKHOUSE_PORT"
 echo "  User: $CLICKHOUSE_USER"
 echo "  URL: $CLICKHOUSE_URL"
 echo ""
@@ -91,16 +98,20 @@ ALTER TABLE page_view_event
   ADD COLUMN IF NOT EXISTS landing_page Nullable(String);
 "
 
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$CLICKHOUSE_URL" \
+RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$CLICKHOUSE_URL" \
   --user "$CLICKHOUSE_USER:$CLICKHOUSE_PASSWORD" \
   --data-binary "$MIGRATION_SQL")
 
-HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-BODY=$(echo "$RESPONSE" | head -n-1)
+# Extract HTTP status code (last line after HTTP_STATUS:)
+HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | sed 's/HTTP_STATUS://')
+# Get body (everything before HTTP_STATUS line)
+BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS:/d')
 
 if [ "$HTTP_CODE" != "200" ]; then
   echo "✗ Migration failed (HTTP $HTTP_CODE)"
-  echo "Error: $BODY"
+  if [ -n "$BODY" ]; then
+    echo "Error: $BODY"
+  fi
   exit 1
 fi
 
