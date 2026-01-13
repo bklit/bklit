@@ -3,6 +3,14 @@
 import { Badge } from "@bklit/ui/components/badge";
 import { Button } from "@bklit/ui/components/button";
 import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@bklit/ui/components/item";
+import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
@@ -13,7 +21,9 @@ import {
 } from "@bklit/ui/components/navigation-menu";
 import { useIsMobile } from "@bklit/ui/hooks/use-mobile";
 import { cn } from "@bklit/ui/lib/utils";
+import { CircleChevronRight } from "lucide-react";
 import { motion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { LogoDropdown } from "./logo-dropdown";
@@ -205,28 +215,69 @@ export const PageHeader = () => {
                   <NavigationMenuItem>
                     <NavigationMenuTrigger>Product</NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <ul className="grid w-[300px] gap-2 p-2">
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <Link href="/#product">
-                              <div className="font-medium">Overview</div>
-                              <div className="text-muted-foreground text-sm">
-                                See what Bklit can do for you
-                              </div>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <Link href="/extensions">
-                              <div className="font-medium">Extensions</div>
-                              <div className="text-muted-foreground text-sm">
-                                Extend Bklit with powerful integrations
-                              </div>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      </ul>
+                      <div className="grid w-[600px] grid-cols-2">
+                        <ul className="flex flex-col gap-2 p-4">
+                          <li>
+                            <NavigationMenuLink asChild>
+                              <Link href="/#product">
+                                <div className="font-medium">Overview</div>
+                                <div className="text-muted-foreground text-sm">
+                                  See what Bklit can do for you
+                                </div>
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                          <li>
+                            <NavigationMenuLink asChild>
+                              <Link href="/extensions">
+                                <div className="font-medium">Extensions</div>
+                                <div className="text-muted-foreground text-sm">
+                                  Extend Bklit with powerful integrations
+                                </div>
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        </ul>
+                        <ul className="flex flex-col gap-2 border-l p-4">
+                          <li>
+                            <NavigationMenuLink asChild>
+                              <Link href="/#product">
+                                <div className="font-medium">Features</div>
+                                <div className="text-muted-foreground text-sm">
+                                  Foobar
+                                </div>
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        </ul>
+                      </div>
+                      <footer className="border-border border-t bg-bklit-800/50">
+                        <Item asChild variant="ghost">
+                          <Link href="/extensions">
+                            <ItemMedia>
+                              <Image
+                                alt="Raycast"
+                                height={50}
+                                src="/raycast-extension-icon.png"
+                                // src="/RaycastiOS-AppIcon.webp"
+                                width={50}
+                              />
+                            </ItemMedia>
+                            <ItemContent>
+                              <ItemTitle>Raycast Extension</ItemTitle>
+                              <ItemDescription>
+                                Get a daily digest on macOS & Windows desktop
+                              </ItemDescription>
+                            </ItemContent>
+                            <ItemActions>
+                              <CircleChevronRight
+                                className="text-muted-foreground"
+                                strokeWidth={1}
+                              />
+                            </ItemActions>
+                          </Link>
+                        </Item>
+                      </footer>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
