@@ -14,6 +14,7 @@ import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
 import { CircleFlag } from "react-circle-flags";
 import { useLiveMap } from "@/contexts/live-map-context";
+import { useLiveUsers } from "@/hooks/use-live-users";
 import { useTRPC } from "@/trpc/react";
 
 interface LiveStatsCardProps {
@@ -32,8 +33,8 @@ export function LiveStatsCard({
     ...trpc.session.liveTopCountries.queryOptions(
       { projectId, organizationId },
       {
-        refetchInterval: 15_000,
-        staleTime: 10_000,
+        refetchInterval: 30_000, // 30s (was 15s) - real-time triggers invalidation
+        staleTime: 20_000,
       }
     ),
   });
@@ -42,20 +43,20 @@ export function LiveStatsCard({
     ...trpc.session.liveTopPages.queryOptions(
       { projectId, organizationId, limit: 5 },
       {
-        refetchInterval: 15_000,
-        staleTime: 10_000,
+        refetchInterval: 30_000, // 30s (was 15s) - real-time triggers invalidation
+        staleTime: 20_000,
       }
     ),
   });
 
-  const { data: liveUsers = 0, isLoading: isLoadingLiveUsers } = useQuery({
-    ...trpc.session.liveUsers.queryOptions(
-      { projectId, organizationId },
-      {
-        refetchInterval: 15_000,
-        staleTime: 10_000,
-      }
-    ),
+  const {
+    liveUsers,
+    isLoading: isLoadingLiveUsers,
+    isRealtime,
+    realtimeAvailable,
+  } = useLiveUsers({
+    projectId,
+    organizationId,
   });
 
   const isLoading = isLoadingCountries || isLoadingPages || isLoadingLiveUsers;
@@ -71,8 +72,14 @@ export function LiveStatsCard({
         <CardDescription>
           Top countries and pages by live users.
         </CardDescription>
-        <CardAction className="font-semibold text-2xl">
+        <CardAction className="flex items-center gap-2 font-semibold text-2xl">
           <NumberFlow value={liveUsers} />
+          {realtimeAvailable && (
+            <span
+              className={`size-2 rounded-full ${isRealtime ? "bg-green-500" : "bg-yellow-500"}`}
+              title={isRealtime ? "Real-time connected" : "Polling mode"}
+            />
+          )}
         </CardAction>
       </CardHeader>
       <CardContent>

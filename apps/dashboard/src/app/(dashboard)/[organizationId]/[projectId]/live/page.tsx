@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { LiveWrapper } from "@/components/live/live-wrapper";
 import { authenticated } from "@/lib/auth";
 import { api } from "@/trpc/server";
@@ -16,9 +15,17 @@ export default async function LivePage({
     api.session.liveUsers({ projectId, organizationId }),
   ]);
 
-  if (organization.plan !== "pro" || liveUsers < 1) {
-    redirect(`/${organizationId}/${projectId}`);
-  }
+  // Temporarily disabled for testing real-time infrastructure
+  // TODO: Re-enable after verifying live user count works properly
+  // if (organization.plan !== "pro" || liveUsers < 1) {
+  //   redirect(`/${organizationId}/${projectId}`);
+  // }
+
+  console.log("🔍 Live Page Debug:", {
+    plan: organization.plan,
+    liveUsers,
+    shouldRedirect: organization.plan !== "pro" || liveUsers < 1,
+  });
 
   return <LiveWrapper organizationId={organizationId} projectId={projectId} />;
 }

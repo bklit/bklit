@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
+import "@bklit/redis"; // Initialize Redis on first import
+import { publishLiveEvent, trackSessionStart } from "@bklit/redis";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
@@ -198,22 +200,28 @@ export async function POST(request: NextRequest) {
     const analytics = new AnalyticsService();
     const pageViewId = randomBytes(16).toString("hex");
 
+    // Check if this is a new session BEFORE saving (for toast notification)
+    let isNewSession = false;
+    if (payload.sessionId) {
+      isNewSession = !(await analytics.sessionExists(
+        payload.sessionId,
+        payload.projectId
+      ));
+    }
+
     if (payload.sessionId) {
       try {
         console.log("🔄 API: Processing session and saving page view...", {
           sessionId: payload.sessionId,
           projectId: payload.projectId,
           url: payload.url,
+          isNewSession,
         });
 
         const sessionId = payload.sessionId;
 
-        // Check if session exists in ClickHouse
-        const sessionExists = await analytics.sessionExists(
-          sessionId,
-          payload.projectId
-        );
-        const isNewSession = !sessionExists;
+        // Use the isNewSession check from above
+        const sessionExists = !isNewSession;
 
         // Generate visitor ID from user agent (simple hash)
         const generateVisitorId = (userAgent: string): string => {
@@ -380,6 +388,32 @@ export async function POST(request: NextRequest) {
       projectId: payload.projectId,
       sessionId: payload.sessionId,
     });
+
+    // Track session in Redis for real-time live count (if available)
+    if (payload.sessionId) {
+      await trackSessionStart(payload.projectId, payload.sessionId);
+    }
+
+    // Real-time notification (optional - won't break if Redis unavailable)
+    // isNewSession was calculated earlier (before saving to ClickHouse)
+    publishLiveEvent({
+      projectId: payload.projectId,
+      type: "pageview",
+      timestamp: new Date().toISOString(),
+      data: {
+        url: payload.url,
+        country: locationData?.country,
+        countryCode: locationData?.countryCode,
+        city: locationData?.city,
+        sessionId: payload.sessionId,
+        mobile: isMobileDevice(payload.userAgent),
+        title: payload.title,
+        lat: locationData?.lat,
+        lon: locationData?.lon,
+        userAgent: payload.userAgent,
+        isNewSession, // Flag to show toast only on new sessions
+      },
+    }).catch(() => {}); // Swallow errors
 
     const orgId = tokenValidation.organizationId;
     if (orgId) {

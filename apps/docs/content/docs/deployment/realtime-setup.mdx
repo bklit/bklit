@@ -1,0 +1,208 @@
+---
+title: Real-Time Setup
+description: Enable real-time analytics for your self-hosted Bklit instance
+---
+
+# Real-Time Setup (Self-Hosted)
+
+This guide shows you how to enable real-time analytics on your self-hosted Bklit instance. If you don't set this up, Bklit works perfectly fine with polling mode.
+
+## Prerequisites
+
+- A server with Ubuntu/Debian (we use Hetzner in this example)
+- Node.js 20+ installed
+- Nginx installed
+- Your Bklit dashboard already deployed
+
+## Step 1: Install Redis
+
+SSH into your server and run:
+
+```bash
+apt update && apt install redis-server -y
+```
+
+Generate a strong password:
+
+```bash
+openssl rand -base64 32
+```
+
+Copy that password, then configure Redis:
+
+```bash
+cat > /etc/redis/redis.conf << 'EOF'
+bind 127.0.0.1 ::1
+port 6379
+requirepass YOUR_PASSWORD_HERE
+maxmemory 2gb
+maxmemory-policy allkeys-lru
+dir /var/lib/redis
+EOF
+
+systemctl restart redis-server
+systemctl enable redis-server
+```
+
+Test it works:
+
+```bash
+redis-cli -a 'YOUR_PASSWORD' ping
+# Should return: PONG
+```
+
+## Step 2: Deploy WebSocket Server
+
+On your **local machine**, build the server:
+
+```bash
+cd websocket-server
+pnpm install
+pnpm build
+```
+
+Copy to your server:
+
+```bash
+scp -r dist package.json root@YOUR_SERVER:/opt/bklit-websocket/
+```
+
+On your **server**, install and configure:
+
+```bash
+cd /opt/bklit-websocket
+npm install --omit=dev
+
+cat > .env << 'EOF'
+NODE_ENV=production
+PORT=6001
+REDIS_PASSWORD=YOUR_REDIS_PASSWORD
+CORS_ORIGINS=https://your-domain.com
+EOF
+```
+
+Create systemd service:
+
+```bash
+cat > /etc/systemd/system/bklit-websocket.service << 'EOF'
+[Unit]
+Description=Bklit WebSocket Server
+After=network.target redis-server.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/bklit-websocket
+EnvironmentFile=/opt/bklit-websocket/.env
+ExecStart=/usr/bin/node dist/server.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable bklit-websocket
+systemctl start bklit-websocket
+systemctl status bklit-websocket
+```
+
+## Step 3: Configure Nginx
+
+Create nginx config for WebSocket:
+
+```bash
+cat > /etc/nginx/sites-available/ws.yourdomain.com << 'EOF'
+upstream socketio {
+    server 127.0.0.1:6001;
+}
+
+server {
+    listen 80;
+    server_name ws.yourdomain.com;
+    
+    location / {
+        proxy_pass http://socketio;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/ws.yourdomain.com /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+```
+
+## Step 4: DNS Setup
+
+Add an A record for your WebSocket subdomain:
+- **Type:** A
+- **Name:** ws
+- **Value:** YOUR_SERVER_IP
+- **TTL:** 300
+
+**Important:** If using Cloudflare, turn OFF the proxy (gray cloud, not orange).
+
+## Step 5: SSL Certificate
+
+```bash
+apt install certbot python3-certbot-nginx -y
+certbot --nginx -d ws.yourdomain.com
+```
+
+Follow prompts and choose to redirect HTTP to HTTPS.
+
+## Step 6: Configure Your Dashboard
+
+Add these environment variables to your dashboard deployment:
+
+```bash
+REDIS_URL=redis://:YOUR_PASSWORD@YOUR_SERVER:6379
+NEXT_PUBLIC_WS_URL=https://ws.yourdomain.com
+```
+
+For Vercel: Add these in Project Settings → Environment Variables
+
+## Step 7: Deploy
+
+Push your code and the real-time features will activate automatically!
+
+## Verify It's Working
+
+Check the health endpoint:
+
+```bash
+curl https://your-domain.com/api/health/realtime
+```
+
+Should return:
+```json
+{"status":"healthy","redis":"connected","mode":"realtime"}
+```
+
+Open your dashboard and you should see:
+- Green indicator dot next to live user count
+- Instant toast notifications when visitors arrive
+- Map updates in real-time
+
+## Troubleshooting
+
+**WebSocket not connecting:**
+- Check firewall allows ports 80 and 443
+- Verify DNS points to your server
+- If using Cloudflare, proxy must be OFF (gray cloud)
+
+**Redis connection errors:**
+- Check Redis password is correct
+- Verify Redis is running: `systemctl status redis-server`
+
+**Falling back to polling:**
+- This is normal if Redis/WebSocket unavailable
+- Analytics still work, just not real-time
+- Check logs: `journalctl -u bklit-websocket -f`
+
+That's it! Real-time analytics should now be working on your self-hosted instance.
+

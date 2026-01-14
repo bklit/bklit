@@ -1,0 +1,62 @@
+---
+title: Real-Time Analytics
+description: Get instant notifications and live updates as visitors arrive on your site
+---
+
+# Real-Time Analytics
+
+Bklit includes real-time features that update your dashboard instantly as visitors interact with your site.
+
+## What You Get
+
+### Live Visitor Notifications
+
+Get notified the moment someone visits your site. Toast notifications appear within 1 second showing:
+- Visitor's location (country and city)
+- Device type (mobile or desktop)
+- Entry page
+
+### Live Map Updates
+
+The globe on your Live analytics page updates instantly when visitors arrive. Watch pins appear in real-time showing exactly where your visitors are from.
+
+### Accurate Live Counts
+
+The live visitor counter in your dashboard header updates immediately. No more stale numbers - you always know exactly how many people are on your site right now.
+
+## How It Works
+
+Real-time analytics uses WebSocket connections to push updates from your server to your dashboard instantly. When a visitor arrives:
+
+1. Event is tracked normally (saved to ClickHouse)
+2. Event is also published to Redis
+3. WebSocket server broadcasts to connected dashboards
+4. You see the update in less than 1 second
+
+### Automatic Fallback
+
+If real-time isn't available (Redis not configured or WebSocket down), everything automatically falls back to polling mode. Your analytics continue working normally - you just won't get instant updates.
+
+## Self-Hosted Setup
+
+Real-time features are **completely optional**. If you don't configure Redis:
+- Analytics work exactly as before
+- Polling mode (30-60 second updates)
+- No errors or degraded functionality
+
+To enable real-time on your self-hosted instance, see our [deployment guide](/docs/deployment/realtime-setup).
+
+## What's Different
+
+**Before (Polling):**
+- Updates every 15-30 seconds
+- Multiple ClickHouse queries per user
+- Slight delays in live counts
+
+**Now (Real-Time):**
+- Updates within 1 second
+- Fewer database queries
+- Instant, accurate live data
+
+The best part? You don't need to do anything - it works automatically in production!
+

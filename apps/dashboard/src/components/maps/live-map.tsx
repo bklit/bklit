@@ -15,9 +15,11 @@ import { formatDistanceToNow } from "date-fns";
 import mapboxgl from "mapbox-gl";
 import { useTRPC } from "@/trpc/react";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 import { useLiveMap } from "@/contexts/live-map-context";
+import { useSocketIOEvents } from "@/hooks/use-socketio-client";
 import {
   findCountryCoordinates,
   getAlpha2Code,
@@ -53,15 +55,43 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   const { registerCenterFunction } = useLiveMap();
 
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { data: liveUserLocations = [] } = useQuery({
     ...trpc.session.liveUserLocations.queryOptions(
       { projectId, organizationId },
       {
-        refetchInterval: 15_000, // Poll every 15 seconds
-        staleTime: 10_000,
+        refetchInterval: 60_000, // Poll every 60s (was 15s) - real-time handles updates
+        staleTime: 50_000,
       }
     ),
   });
+
+  // Real-time pageview handler for instant map updates
+  const handleRealtimePageview = useCallback(
+    (data: any) => {
+      // Validate coordinates
+      const lat = data.lat;
+      const lon = data.lon;
+
+      // Trigger refetch to get updated location data
+      setTimeout(() => {
+        queryClient.invalidateQueries({
+          queryKey: [["session", "liveUserLocations"]],
+        });
+      }, 500);
+
+      if (!(lat && lon) || (lat === 0 && lon === 0)) {
+        return;
+      }
+
+      if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        return;
+      }
+    },
+    [queryClient]
+  );
+
+  useSocketIOEvents(projectId, "pageview", handleRealtimePageview);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) {

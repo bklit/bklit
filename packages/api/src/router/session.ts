@@ -1,4 +1,5 @@
 import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
+import { getLiveUserCount } from "@bklit/redis";
 import { z } from "zod";
 import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -453,10 +454,15 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Clean up stale sessions in ClickHouse only
-      await ctx.analytics.cleanupStaleSessions(input.projectId);
+      // Try Redis first (real-time source of truth)
+      const redisCount = await getLiveUserCount(input.projectId);
 
-      // Count active sessions from ClickHouse
+      if (redisCount !== null) {
+        return redisCount;
+      }
+
+      // Fallback to ClickHouse if Redis unavailable
+      await ctx.analytics.cleanupStaleSessions(input.projectId);
       const liveUsers = await ctx.analytics.getLiveUsers(input.projectId);
 
       return liveUsers;
