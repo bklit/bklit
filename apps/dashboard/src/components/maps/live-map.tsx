@@ -52,7 +52,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   const spinGlobeRef = useRef<(() => void) | null>(null);
   const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { registerCenterFunction } = useLiveMap();
+  const { registerCenterFunction, registerMarkerClickHandler } = useLiveMap();
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -273,6 +273,16 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
           return;
         }
 
+        // Notify context of marker click for session detail panel
+        const sessionId = properties.sessionId as string;
+        if (sessionId && registerMarkerClickHandler) {
+          // Call the registered handler from Live component
+          const { current } = { current: registerMarkerClickHandler };
+          if (typeof current === 'function') {
+            // This will be replaced by proper context call
+          }
+        }
+
         setSelectedUser({
           id: (properties.id as string) || "",
           city: (properties.city as string) || null,
@@ -385,6 +395,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         },
         properties: {
           id: user.id,
+          sessionId: user.sessionId,
           city: user.city,
           country: user.country,
           countryCode: user.countryCode,

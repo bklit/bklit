@@ -33,6 +33,7 @@
     "dev:services:stop": "docker-compose down",
     "dev:full": "turbo watch dev dev:trigger --continue",
     "dev:docs": "pnpm -F @bklit/docs dev",
+    "dev:live": "pnpm dev:services && concurrently -n ws,dash,play \"pnpm ws:dev\" \"pnpm -F @bklit/dashboard dev\" \"pnpm -F @bklit/playground dev\"",
     "deploy:trigger": "pnpm -F @bklit/dashboard deploy:trigger",
     "format-and-lint": "ultracite check",
     "format-and-lint:fix": "ultracite fix",

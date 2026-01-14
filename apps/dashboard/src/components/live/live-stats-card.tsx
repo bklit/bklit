@@ -59,20 +59,16 @@ export function LiveStatsCard({
     organizationId,
   });
 
-  const isLoading = isLoadingCountries || isLoadingPages || isLoadingLiveUsers;
-  const totalCountryViews =
-    topCountries?.reduce((sum, c) => sum + (Number(c.views) || 0), 0) || 0;
-  const totalPageViews =
-    topPages?.reduce((sum, page) => sum + page.count, 0) || 0;
+  const isLoading = isLoadingCountries || isLoadingLiveUsers;
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader>
         <CardTitle>Live Stats</CardTitle>
         <CardDescription>
-          Top countries and pages by live users.
+          {liveUsers === 1 ? '1 visitor' : `${liveUsers} visitors`} active now
         </CardDescription>
-        <CardAction className="flex items-center gap-2 font-semibold text-2xl">
+        <CardAction className="flex items-center gap-2 font-semibold text-4xl">
           <NumberFlow value={liveUsers} />
           {realtimeAvailable && (
             <span
@@ -84,74 +80,44 @@ export function LiveStatsCard({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-24" />
+          <div className="flex gap-2">
             {Array.from({ length: 3 }).map(() => (
-              <Skeleton className="h-10 w-full" key={crypto.randomUUID()} />
+              <Skeleton className="size-12 rounded-full" key={crypto.randomUUID()} />
             ))}
           </div>
+        ) : !topCountries || topCountries.length === 0 ? (
+          <div className="py-4 text-center text-muted-foreground text-sm">
+            No active visitors
+          </div>
         ) : (
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-1">
-              <h3 className="mb-1 font-medium text-sm">Countries</h3>
-              {!topCountries || topCountries.length === 0 ? (
-                <div className="py-4 text-muted-foreground text-sm">
-                  No live users
-                </div>
-              ) : (
-                topCountries.map((country) => {
-                  const percentage =
-                    totalCountryViews > 0
-                      ? ((Number(country.views) || 0) / totalCountryViews) * 100
-                      : 0;
-                  return (
-                    <button
-                      key={country.countryCode || country.country}
-                      onClick={() => {
-                        centerOnCountry(
-                          country.countryCode || null,
-                          country.country || null
-                        );
-                      }}
-                      type="button"
-                    >
-                      <ProgressRow
-                        icon={
-                          <CircleFlag
-                            className="size-4"
-                            countryCode={
-                              country.countryCode?.toLowerCase() || "us"
-                            }
-                          />
-                        }
-                        label={country.country || "Unknown"}
-                        percentage={percentage}
-                        value={country.views}
-                      />
-                    </button>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {topCountries.map((country) => (
+              <button
+                key={country.countryCode || country.country}
+                onClick={() => {
+                  centerOnCountry(
+                    country.countryCode || null,
+                    country.country || null
                   );
-                })
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <h3 className="mb-1 font-medium text-sm">Pages</h3>
-              {!topPages || topPages.length === 0 ? (
-                <div className="py-4 text-muted-foreground text-sm">
-                  No live users
-                </div>
-              ) : (
-                topPages.map((page) => (
-                  <ProgressRow
-                    key={page.path}
-                    label={page.path}
-                    percentage={(page.count / totalPageViews) * 100}
-                    value={page.count}
-                    variant="secondary"
+                }}
+                className="group flex shrink-0 flex-col items-center gap-1 transition-transform hover:scale-110"
+                type="button"
+                title={country.country || 'Unknown'}
+              >
+                <div className="relative">
+                  <CircleFlag
+                    className="size-10"
+                    countryCode={country.countryCode?.toLowerCase() || "us"}
                   />
-                ))
-              )}
-            </div>
+                  <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground text-xs">
+                    {country.views}
+                  </span>
+                </div>
+                <span className="text-muted-foreground text-xs group-hover:text-foreground">
+                  {country.country || 'Unknown'}
+                </span>
+              </button>
+            ))}
           </div>
         )}
       </CardContent>
