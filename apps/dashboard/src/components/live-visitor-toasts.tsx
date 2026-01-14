@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 import { toast } from "sonner";
+import { useSocketIOEvents } from "@/hooks/use-socketio-client";
 import { getCountryCodeForFlag } from "@/lib/maps/country-coordinates";
 import { isMobileDevice } from "@/lib/user-agent";
 import { useTRPC } from "@/trpc/react";
@@ -48,8 +49,8 @@ export function LiveVisitorToasts({
       },
       {
         enabled: !!projectId && !!organizationId,
-        refetchInterval: 15_000,
-        staleTime: 10_000,
+        refetchInterval: 30_000, // 30s (was 15s) - real-time handles instant notifications
+        staleTime: 20_000,
         refetchOnWindowFocus: false,
         refetchOnMount: true,
         retry: (failureCount, error) => {
@@ -76,7 +77,51 @@ export function LiveVisitorToasts({
     console.error("Error fetching recent sessions:", sessionsErrorData);
   }
 
+  // Real-time pageview handler (declare early) - only show toast for NEW sessions
+  const handleRealtimePageview = useCallback(
+    (data: any) => {
+      if (!preferences?.liveVisitorToasts) return;
+
+      // Only show toast for new sessions (first pageview)
+      if (!data.isNewSession) return;
+
+      const now = Date.now();
+      if (now - lastToastTime.current < toastDebounceMs) return;
+
+      // Track this session IMMEDIATELY so polling doesn't show duplicate
+      if (data.sessionId) {
+        setSeenSessionIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(data.sessionId);
+          return newSet;
+        });
+      }
+
+      lastToastTime.current = now;
+
+      const location = data.country || "Unknown location";
+      const city = data.city ? `, ${data.city}` : "";
+      const countryCode = getCountryCodeForFlag(data.country || "");
+      const isMobile = data.mobile;
+      const deviceType = isMobile ? "mobile" : "desktop";
+
+      toast(`New visitor from ${location}${city}`, {
+        description: `Viewing on ${deviceType}`,
+        icon: <CircleFlag className="size-4" countryCode={countryCode} />,
+      });
+    },
+    [preferences?.liveVisitorToasts]
+  );
+
+  const { isConnected } = useSocketIOEvents(
+    projectId,
+    "pageview",
+    handleRealtimePageview
+  );
+
   useEffect(() => {
+    // Keep polling toasts as fallback/verification even with real-time
+    // They won't conflict because we track seen sessions
     if (!preferences?.liveVisitorToasts) {
       return;
     }
@@ -113,7 +158,8 @@ export function LiveVisitorToasts({
       const city = session.city ? `, ${session.city}` : "";
       const countryCode = getCountryCodeForFlag(session.country || "");
 
-      toast(`New live visitor from ${location}${city}.`, {
+      // Show as polling toast (fallback/missed by real-time)
+      toast(`New visitor from ${location}${city}`, {
         description: `Viewing on ${deviceType}`,
         icon: <CircleFlag className="size-4" countryCode={countryCode} />,
       });

@@ -1,0 +1,45 @@
+---
+title: Real-Time Analytics
+description: Your dashboard now updates instantly as visitors arrive
+date: 2026-01-15
+author: Matt
+---
+
+# Real-Time Analytics
+
+We've added real-time features to Bklit that make your analytics feel alive.
+
+## What's New
+
+**Live Visitor Notifications**  
+Get notified the moment someone visits your site. You'll see a toast notification within a second showing where they're from and what device they're using. No more waiting around - you know instantly when someone arrives.
+
+**Live Map Updates**  
+The globe on your Live page now updates as visitors land on your site. Watch the pins appear in real-time and see exactly where in the world your visitors are coming from.
+
+**Instant Live Counts**  
+The live visitor counter in your dashboard header updates immediately. It's accurate, it's fast, and you always know exactly how many people are on your site right now.
+
+## How It Works
+
+We use WebSocket connections to push updates to your dashboard the moment they happen. When someone visits your site, the event travels through Redis pub/sub and gets broadcast to all connected dashboards instantly.
+
+If real-time features aren't available (like if you're self-hosting without Redis), everything automatically falls back to polling mode. Your analytics keep working normally - you just won't get the instant updates.
+
+## What You'll Notice
+
+- Toast notifications pop up within 1 second (they used to take 15-30 seconds)
+- Live visitor counts update immediately instead of on a delay
+- Map markers appear as visitors arrive, not minutes later
+- Everything feels more responsive and alive
+
+## For Self-Hosted Users
+
+Real-time features are completely optional. If you don't set up Redis, Bklit works exactly as it did before. We built it this way so self-hosters don't need extra infrastructure if they don't want it.
+
+If you do want real-time on your self-hosted instance, check out our [deployment guide](/docs/deployment/realtime-setup).
+
+---
+
+That's it! The feature works automatically in our cloud version. Enjoy the instant updates!
+

@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
+import { publishLiveEvent } from "@bklit/redis";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { checkEventLimit } from "@/lib/usage-limits";
@@ -252,6 +253,19 @@ export async function POST(request: NextRequest) {
           console.error("❌ Extension delivery failed:", err);
         });
     }
+
+    // Real-time notification (optional - won't break if Redis unavailable)
+    publishLiveEvent({
+      projectId: payload.projectId,
+      type: "event",
+      timestamp: new Date().toISOString(),
+      data: {
+        trackingId: payload.trackingId,
+        eventType: payload.eventType,
+        sessionId: payload.sessionId,
+        metadata: payload.metadata,
+      },
+    }).catch(() => {}); // Swallow errors
 
     return createCorsResponse({ message: "Event tracked successfully" }, 200);
   } catch (error) {

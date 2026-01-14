@@ -177,9 +177,7 @@ export function initBklit(options: BklitOptions): void {
         // Page metadata
         title: document.title,
         description: (
-          document.querySelector(
-            'meta[name="description"]'
-          ) as HTMLMetaElement
+          document.querySelector('meta[name="description"]') as HTMLMetaElement
         )?.content,
         ogImage: (
           document.querySelector('meta[property="og:image"]') as HTMLMetaElement
@@ -226,8 +224,7 @@ export function initBklit(options: BklitOptions): void {
 
         // Session tracking
         isNewVisitor: !localStorage.getItem("bklit_has_visited"),
-        landingPage:
-          sessionStorage.getItem("bklit_landing_page") || currentUrl,
+        landingPage: sessionStorage.getItem("bklit_landing_page") || currentUrl,
       };
 
       // Mark as visited
@@ -488,16 +485,14 @@ export function trackPageView() {
     )?.content,
     favicon:
       (document.querySelector('link[rel="icon"]') as HTMLLinkElement)?.href ||
-      (
-        document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement
-      )?.href,
+      (document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement)
+        ?.href,
     canonicalUrl: (
       document.querySelector('link[rel="canonical"]') as HTMLLinkElement
     )?.href,
     language: document.documentElement.lang,
-    robots: (
-      document.querySelector('meta[name="robots"]') as HTMLMetaElement
-    )?.content,
+    robots: (document.querySelector('meta[name="robots"]') as HTMLMetaElement)
+      ?.content,
 
     // Referrer data
     referrerHostname,

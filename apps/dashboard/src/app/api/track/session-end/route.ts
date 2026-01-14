@@ -1,4 +1,5 @@
 import { AnalyticsService } from "@bklit/analytics/service";
+import { trackSessionEnd } from "@bklit/redis";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 
@@ -125,6 +126,9 @@ export async function POST(request: NextRequest) {
 
     // End the session in ClickHouse
     await analytics.endSession(sessionId, projectId);
+
+    // End session in Redis (if available)
+    await trackSessionEnd(projectId, sessionId);
 
     return createCorsResponse(
       {

@@ -18,6 +18,7 @@
     "@bklit/db": "workspace:*",
     "@bklit/email": "workspace:*",
     "@bklit/extensions": "workspace:*",
+    "@bklit/redis": "workspace:*",
     "@bklit/utils": "workspace:*",
     "@bklit/validators": "workspace:*",
     "@trpc/server": "catalog:",

@@ -37,7 +37,9 @@
     "format-and-lint": "ultracite check",
     "format-and-lint:fix": "ultracite fix",
     "postinstall": "#pnpm lint:ws",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "ws:dev": "cd websocket-server && pnpm dev",
+    "ws:build": "cd websocket-server && pnpm build"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.2",

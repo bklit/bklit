@@ -1,7 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useTRPC } from "@/trpc/react";
+import { useSocketIOEvents } from "./use-socketio-client";
 
 interface UseLiveUsersProps {
   projectId: string;
@@ -10,26 +12,23 @@ interface UseLiveUsersProps {
 
 export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
   const trpc = useTRPC();
-
+  const queryClient = useQueryClient();
   const enabled = !!projectId && !!organizationId;
 
+  // Polling fallback - always active but less aggressive when real-time is connected
   const {
     data: liveUsers,
     isLoading,
     error,
   } = useQuery({
     ...trpc.session.liveUsers.queryOptions(
+      { projectId, organizationId },
       {
-        projectId,
-        organizationId,
-      },
-      {
-        refetchInterval: 15_000, // Poll every 15 seconds (less aggressive)
-        staleTime: 10_000, // Consider data stale after 10 seconds
-        refetchOnWindowFocus: false, // Don't refetch when window gains focus
-        refetchOnMount: true, // Refetch when component mounts
+        refetchInterval: 30_000, // 30s instead of 15s
+        staleTime: 20_000,
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
         retry: (failureCount, error) => {
-          // Don't retry on abort errors (normal behavior)
           if (error instanceof Error && error.name === "AbortError") {
             return false;
           }
@@ -40,9 +39,27 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
     enabled,
   });
 
+  // Real-time enhancement - invalidate cache when pageview received
+  const handlePageview = useCallback(() => {
+    // Small delay to allow ClickHouse/Redis to update
+    setTimeout(() => {
+      queryClient.invalidateQueries({
+        queryKey: [["session", "liveUsers"]],
+      });
+    }, 500);
+  }, [queryClient]);
+
+  const { isConnected, isAvailable } = useSocketIOEvents(
+    projectId,
+    "pageview",
+    handlePageview
+  );
+
   return {
     liveUsers: liveUsers ?? 0,
     isLoading,
     error,
+    isRealtime: isConnected,
+    realtimeAvailable: isAvailable,
   };
 }
