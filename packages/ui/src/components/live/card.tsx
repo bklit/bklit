@@ -19,6 +19,11 @@ const DUMMY_DATA = {
     { path: "/website/mario-carrillo-821", count: 1 },
     { path: "/website/artworld-414", count: 1 },
     { path: "/website/dala-502", count: 1 },
+    { path: "/website/resend-917", count: 1 },
+    { path: "/website/notion-445", count: 1 },
+    { path: "/website/figma-223", count: 1 },
+    { path: "/website/vercel-889", count: 1 },
+    { path: "/website/github-334", count: 1 },
   ],
   referrers: [
     { name: "Direct", count: 14 },
@@ -78,7 +83,8 @@ export function LiveCard({ className }: LiveCardProps) {
   }, [view, selectedUser]);
 
   return (
-    <MotionConfig transition={{ duration: 0.5, type: "spring", bounce: 0.1 }}>
+    <MotionConfig transition={{ duration: 0.5, ease: "easeInOut" }}>
+      
       <motion.div
         animate={enableAnimation && bounds.height ? { height: bounds.height } : {}}
         initial={false}
@@ -89,6 +95,7 @@ export function LiveCard({ className }: LiveCardProps) {
         style={{ borderRadius: 16 }}
       >
         <div ref={ref} className="flex flex-col">
+
           {/* Back Button */}
           <AnimatePresence>
             {canGoBack && (
@@ -113,15 +120,16 @@ export function LiveCard({ className }: LiveCardProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{
-                  type: "spring",
                   duration: 0.4,
-                  bounce: 0,
+                  ease: "easeInOut",
                 }}
               >
                 {content}
               </motion.div>
             </AnimatePresence>
           </div>
+
+
 
           {/* Fixed Footer */}
           <div className="flex items-center justify-center border-zinc-800/50 px-6 pb-6 pt-4">
@@ -204,7 +212,7 @@ function PagesView() {
     <div className="space-y-3 pt-4">
       <h2 className="text-center font-semibold text-base text-white">Pages</h2>
       
-      <div className="space-y-1.5">
+      <div className="max-h-[180px] space-y-1.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-700 hover:scrollbar-thumb-zinc-600">
         {DUMMY_DATA.pages.map((page, index) => (
           <div
             key={page.path}
