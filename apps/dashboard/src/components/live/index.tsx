@@ -4,11 +4,14 @@ import { useLiveCard } from "@bklit/ui/components/live/card";
 import type { UserData } from "@bklit/ui/components/live/card-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useLiveMap } from "@/contexts/live-map-context";
 import { useSocketIOEvents } from "@/hooks/use-socketio-client";
 import { useTRPC } from "@/trpc/react";
-import { LiveCardWithData } from "./live-card-with-data";
+import {
+  LiveCardWithData,
+  LiveCardWithDataSkeleton,
+} from "./live-card-with-data";
 
 interface LiveProps {
   projectId: string;
@@ -107,10 +110,12 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
   return (
     <div className="pointer-events-none fixed bottom-0 left-1/2 z-50 flex -translate-x-1/2 justify-center p-6">
       <div className="pointer-events-auto">
-        <LiveCardWithData
-          organizationId={organizationId}
-          projectId={projectId}
-        />
+        <Suspense fallback={<LiveCardWithDataSkeleton />}>
+          <LiveCardWithData
+            organizationId={organizationId}
+            projectId={projectId}
+          />
+        </Suspense>
       </div>
     </div>
   );

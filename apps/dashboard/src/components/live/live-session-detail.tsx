@@ -49,7 +49,7 @@ export function LiveSessionDetail({
   // Fetch session details
   const { data: session, isLoading } = useQuery({
     ...trpc.session.getById.queryOptions(
-      { id: sessionId || "", organizationId },
+      { sessionId: sessionId || "", projectId, organizationId },
       {
         enabled: !!sessionId,
         refetchInterval: 30_000,
@@ -160,8 +160,8 @@ export function LiveSessionDetail({
             <CardDescription className="flex items-center gap-2 text-xs">
               {session.city && <span>{session.city}</span>}
               {session.city && <span>•</span>}
-              <DeviceIcon className="size-3" />
-              <BrowserIcon className="size-3" />
+              {deviceIcon}
+              {browserIcon}
             </CardDescription>
           </div>
         </div>

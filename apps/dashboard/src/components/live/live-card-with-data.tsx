@@ -14,7 +14,7 @@ import { useTRPC } from "@/trpc/react";
  *
  * Features:
  * - Real-time updates via Socket.IO for pageview events
- * - 30-second polling fallback for reliability
+ * - 10-second polling fallback for reliability
  * - Automatic data transformation to LiveCardData format
  * - Live user count, top pages, top countries, and top referrers
  *

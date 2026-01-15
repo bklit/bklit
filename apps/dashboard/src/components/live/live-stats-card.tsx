@@ -93,7 +93,7 @@ export function LiveStatsCard({
           </div>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-2">
-            {topCountries.map((country) => (
+            {topCountries.map((country, index) => (
               <button
                 className="group flex shrink-0 flex-col items-center gap-1 transition-transform hover:scale-110"
                 key={country.countryCode || country.country}
