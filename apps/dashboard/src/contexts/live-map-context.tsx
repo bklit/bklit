@@ -10,6 +10,8 @@ interface LiveMapContextValue {
   registerCenterFunction: (
     fn: (countryCode: string | null, countryName?: string | null) => void
   ) => void;
+  registerMarkerClickHandler: (fn: (sessionId: string) => void) => void;
+  onMarkerClick: (sessionId: string) => void;
 }
 
 const LiveMapContext = createContext<LiveMapContextValue | null>(null);
@@ -18,11 +20,18 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
   const centerFunctionRef = useRef<
     ((countryCode: string | null, countryName?: string | null) => void) | null
   >(null);
+  const markerClickHandlerRef = useRef<((sessionId: string) => void) | null>(
+    null
+  );
 
   const registerCenterFunction = (
     fn: (countryCode: string | null, countryName?: string | null) => void
   ) => {
     centerFunctionRef.current = fn;
+  };
+
+  const registerMarkerClickHandler = (fn: (sessionId: string) => void) => {
+    markerClickHandlerRef.current = fn;
   };
 
   const centerOnCountry = (
@@ -34,9 +43,20 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const onMarkerClick = (sessionId: string) => {
+    if (markerClickHandlerRef.current) {
+      markerClickHandlerRef.current(sessionId);
+    }
+  };
+
   return (
     <LiveMapContext.Provider
-      value={{ centerOnCountry, registerCenterFunction }}
+      value={{
+        centerOnCountry,
+        registerCenterFunction,
+        registerMarkerClickHandler,
+        onMarkerClick,
+      }}
     >
       {children}
     </LiveMapContext.Provider>

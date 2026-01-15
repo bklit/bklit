@@ -1277,6 +1277,25 @@ export class AnalyticsService {
 
     return sessions.map((session) => {
       const latestPv = latestPageviewBySession.get(session.session_id);
+
+      // Use pageview coordinates if available and valid
+      let lat = latestPv?.lat || null;
+      let lon = latestPv?.lon || null;
+
+      // If no valid coordinates from pageview, use country center as fallback
+      if (!(lat && lon) || (lat === 0 && lon === 0)) {
+        const countryCode = session.country_code;
+        if (countryCode) {
+          // Use approximate country center coordinates
+          // This ensures all sessions show on map even without exact location
+          const countryCenter = this.getCountryCenterCoordinates(countryCode);
+          if (countryCenter) {
+            lat = countryCenter.lat;
+            lon = countryCenter.lon;
+          }
+        }
+      }
+
       return {
         id: session.id,
         session_id: session.session_id,
@@ -1287,10 +1306,44 @@ export class AnalyticsService {
         city: session.city,
         pageview_country: latestPv?.country || null,
         pageview_country_code: latestPv?.country_code || null,
-        lat: latestPv?.lat || null,
-        lon: latestPv?.lon || null,
+        lat,
+        lon,
       };
     });
+  }
+
+  // Helper to get country center coordinates for map markers
+  private getCountryCenterCoordinates(
+    countryCode: string
+  ): { lat: number; lon: number } | null {
+    // Approximate center coordinates for common countries
+    const countryCenters: Record<string, { lat: number; lon: number }> = {
+      US: { lat: 37.0902, lon: -95.7129 },
+      GB: { lat: 55.3781, lon: -3.436 },
+      FR: { lat: 46.2276, lon: 2.2137 },
+      DE: { lat: 51.1657, lon: 10.4515 },
+      CA: { lat: 56.1304, lon: -106.3468 },
+      AU: { lat: -25.2744, lon: 133.7751 },
+      JP: { lat: 36.2048, lon: 138.2529 },
+      KR: { lat: 35.9078, lon: 127.7669 }, // South Korea
+      CZ: { lat: 49.8175, lon: 15.473 },
+      BG: { lat: 42.7339, lon: 25.4858 },
+      ES: { lat: 40.4637, lon: -3.7492 },
+      IT: { lat: 41.8719, lon: 12.5674 },
+      NL: { lat: 52.1326, lon: 5.2913 },
+      SE: { lat: 60.1282, lon: 18.6435 },
+      NO: { lat: 60.472, lon: 8.4689 },
+      DK: { lat: 56.2639, lon: 9.5018 },
+      FI: { lat: 61.9241, lon: 25.7482 },
+      PL: { lat: 51.9194, lon: 19.1451 },
+      BR: { lat: -14.235, lon: -51.9253 },
+      IN: { lat: 20.5937, lon: 78.9629 },
+      CN: { lat: 35.8617, lon: 104.1954 },
+      MX: { lat: 23.6345, lon: -102.5528 }, // Mexico
+      RU: { lat: 61.524, lon: 105.3188 }, // Russia
+    };
+
+    return countryCenters[countryCode.toUpperCase()] || null;
   }
 
   async getRecentSessions(projectId: string, since: Date, limit = 10) {
@@ -1690,6 +1743,106 @@ export class AnalyticsService {
 
     return Array.from(urlCounts.entries())
       .map(([url, count]) => ({ url, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }
+
+  async getLiveTopReferrers(projectId: string) {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    // Get live sessions using window function to get latest state per session_id
+    const sessionsResult = await this.client.query({
+      query: `
+        SELECT session_id
+        FROM (
+          SELECT 
+            session_id,
+            ended_at,
+            updated_at,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE project_id = {projectId:String}
+            AND updated_at >= {thirtyMinutesAgo:DateTime}
+        )
+        WHERE rn = 1
+          AND ended_at IS NULL
+      `,
+      query_params: {
+        projectId,
+        thirtyMinutesAgo: formatDateForClickHouse(thirtyMinutesAgo),
+      },
+      format: "JSONEachRow",
+    });
+
+    const sessions = (await sessionsResult.json()) as Array<{
+      session_id: string;
+    }>;
+
+    if (sessions.length === 0) {
+      return [];
+    }
+
+    const sessionIds = sessions.map((s) => s.session_id);
+
+    // Get latest pageview for each session
+    const pageviewsResult = await this.client.query({
+      query: `
+        SELECT 
+          session_id,
+          referrer,
+          timestamp
+        FROM page_view_event
+        WHERE project_id = {projectId:String}
+          AND session_id != ''
+        ORDER BY timestamp DESC
+      `,
+      query_params: {
+        projectId,
+      },
+      format: "JSONEachRow",
+    });
+
+    const allPageviews = (await pageviewsResult.json()) as Array<{
+      session_id: string | null;
+      referrer: string | null;
+      timestamp: string;
+    }>;
+
+    // Filter to only relevant sessions and get latest per session
+    const relevantPageviews = allPageviews.filter(
+      (pv) => pv.session_id && sessionIds.includes(pv.session_id)
+    );
+
+    const latestPageviewBySession = new Map<
+      string,
+      (typeof relevantPageviews)[0]
+    >();
+    for (const pv of relevantPageviews) {
+      if (pv.session_id && !latestPageviewBySession.has(pv.session_id)) {
+        latestPageviewBySession.set(pv.session_id, pv);
+      }
+    }
+
+    // Count referrers
+    const referrerCounts = new Map<string, number>();
+    for (const session of sessions) {
+      const latestPv = latestPageviewBySession.get(session.session_id);
+      let referrer = "Direct";
+
+      if (latestPv?.referrer) {
+        try {
+          const url = new URL(latestPv.referrer);
+          referrer = url.hostname.replace(/^www\./, "");
+        } catch {
+          referrer = latestPv.referrer;
+        }
+      }
+
+      referrerCounts.set(referrer, (referrerCounts.get(referrer) || 0) + 1);
+    }
+
+    return Array.from(referrerCounts.entries())
+      .map(([referrer, count]) => ({ referrer, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
   }

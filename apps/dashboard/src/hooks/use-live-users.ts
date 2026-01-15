@@ -24,8 +24,8 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
     ...trpc.session.liveUsers.queryOptions(
       { projectId, organizationId },
       {
-        refetchInterval: 30_000, // 30s instead of 15s
-        staleTime: 20_000,
+        refetchInterval: 10_000, // 10s for more responsive updates
+        staleTime: 0, // No stale time - always allow refetch
         refetchOnWindowFocus: false,
         refetchOnMount: true,
         retry: (failureCount, error) => {
@@ -41,12 +41,10 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
 
   // Real-time enhancement - invalidate cache when pageview received
   const handlePageview = useCallback(() => {
-    // Small delay to allow ClickHouse/Redis to update
-    setTimeout(() => {
-      queryClient.invalidateQueries({
-        queryKey: [["session", "liveUsers"]],
-      });
-    }, 500);
+    // Immediately invalidate to trigger refetch
+    queryClient.invalidateQueries({
+      queryKey: [["session", "liveUsers"]],
+    });
   }, [queryClient]);
 
   const { isConnected, isAvailable } = useSocketIOEvents(

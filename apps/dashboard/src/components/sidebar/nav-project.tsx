@@ -10,12 +10,9 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@bklit/ui/components/sidebar";
-import { cn } from "@bklit/ui/lib/utils";
-import { useQuery } from "@tanstack/react-query";
 import { FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTRPC } from "@/trpc/react";
 
 interface NavProjectProps {
   projectName?: string;
@@ -39,15 +36,6 @@ export function NavProject({
   items,
 }: NavProjectProps) {
   const pathname = usePathname();
-  const trpc = useTRPC();
-
-  const { data: liveUsers = 0 } = useQuery({
-    ...trpc.session.liveUsers.queryOptions({
-      projectId: projectId ?? "",
-      organizationId: organizationId ?? "",
-    }),
-    enabled: !!projectId && !!organizationId,
-  });
 
   if (items.length === 0) {
     return null;
@@ -62,32 +50,14 @@ export function NavProject({
           const isActive = item.items?.length
             ? pathname.startsWith(item.href)
             : pathname === item.href;
-          const isLiveItem = item.href.includes("/live");
-          const isEnabled = !isLiveItem || liveUsers >= 1;
 
           return (
             <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                disabled={!isEnabled}
-                isActive={isActive}
-              >
-                {isEnabled ? (
-                  <Link href={item.href}>
-                    <Icon />
-                    <span>{item.title}</span>
-                  </Link>
-                ) : (
-                  <div
-                    className={cn(
-                      isLiveItem &&
-                        "cursor-not-allowed opacity-50 hover:opacity-50"
-                    )}
-                  >
-                    <Icon />
-                    <span>{item.title}</span>
-                  </div>
-                )}
+              <SidebarMenuButton asChild isActive={isActive}>
+                <Link href={item.href}>
+                  <Icon />
+                  <span>{item.title}</span>
+                </Link>
               </SidebarMenuButton>
               {isActive && item.items?.length ? (
                 <SidebarMenuSub>
