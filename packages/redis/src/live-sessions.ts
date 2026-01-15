@@ -1,8 +1,10 @@
 import { getRedisClient, isRedisAvailable } from "./client";
 
 const SESSION_TTL = 30 * 60; // 30 minutes in seconds
+const SESSION_TTL_MS = SESSION_TTL * 1000; // in milliseconds
 const COUNT_KEY_PREFIX = "live:project:";
 const SESSION_KEY_PREFIX = "live:session:";
+const SESSIONS_ZSET_PREFIX = "live:sessions:";
 
 export async function trackSessionStart(
   projectId: string,
@@ -25,40 +27,29 @@ export async function trackSessionStart(
   }
 
   try {
-    const sessionKey = `${SESSION_KEY_PREFIX}${sessionId}`;
-    const countKey = `${COUNT_KEY_PREFIX}${projectId}:count`;
-
-    // Check if session already tracked
-    const exists = await client.exists(sessionKey);
+    const sessionsKey = `${SESSIONS_ZSET_PREFIX}${projectId}`;
+    const now = Date.now();
+    
+    // Add or update session in sorted set with current timestamp as score
+    // This automatically handles both new and existing sessions
+    await client.zadd(sessionsKey, now, sessionId);
+    
+    // Set TTL on the sorted set itself (1 hour) to eventually clean up empty sets
+    await client.expire(sessionsKey, SESSION_TTL * 2);
+    
+    // Clean up expired sessions (older than 30 minutes)
+    await client.zremrangebyscore(sessionsKey, '-inf', now - SESSION_TTL_MS);
+    
+    const activeCount = await client.zcard(sessionsKey);
     
     // #region agent log
-    console.log('[DEBUG H4] Session existence check:', { sessionKey: sessionKey, exists: exists, countKey: countKey });
+    console.log('[DEBUG H4] Session tracked in sorted set:', { 
+      sessionsKey: sessionsKey, 
+      sessionId: sessionId, 
+      activeCount: activeCount,
+      timestamp: now 
+    });
     // #endregion
-
-    if (exists) {
-      // Existing session - just refresh TTL
-      await client.expire(sessionKey, SESSION_TTL);
-      // #region agent log
-      console.log('[DEBUG H4] Existing session - refreshed TTL:', { sessionKey: sessionKey, ttl: SESSION_TTL });
-      // #endregion
-    } else {
-      // New session - increment count and set session key
-      // First ensure the count key exists as an integer
-      const currentCount = await client.get(countKey);
-      if (currentCount && isNaN(Number.parseInt(currentCount, 10))) {
-        await client.del(countKey);
-      }
-
-      await Promise.all([
-        client.incr(countKey),
-        client.setex(sessionKey, SESSION_TTL, projectId),
-      ]);
-      
-      const newCount = await client.get(countKey);
-      // #region agent log
-      console.log('[DEBUG H4] New session - incremented count:', { sessionKey: sessionKey, countKey: countKey, currentCount: currentCount, newCount: newCount });
-      // #endregion
-    }
   } catch (error) {
     console.error("Redis session tracking error:", error);
     // #region agent log
@@ -77,38 +68,15 @@ export async function trackSessionEnd(
   if (!client) return;
 
   try {
-    const sessionKey = `${SESSION_KEY_PREFIX}${sessionId}`;
-    const countKey = `${COUNT_KEY_PREFIX}${projectId}:count`;
-
-    // Check if session exists before decrementing
-    const exists = await client.exists(sessionKey);
-
-    if (exists) {
-      // Safely decrement count
-      try {
-        const currentCount = await client.get(countKey);
-
-        // If value is not a valid integer, reset it to 0
-        if (currentCount && isNaN(Number.parseInt(currentCount, 10))) {
-          await client.set(countKey, "0");
-          await client.del(sessionKey);
-          return;
-        }
-
-        const count = currentCount ? Number.parseInt(currentCount, 10) : 0;
-
-        if (count > 0) {
-          await client.decr(countKey);
-        }
-
-        await client.del(sessionKey);
-      } catch (decrError) {
-        console.error("Redis session end error:", decrError);
-        // Reset the corrupted key
-        await client.del(countKey);
-        await client.del(sessionKey);
-      }
-    }
+    const sessionsKey = `${SESSIONS_ZSET_PREFIX}${projectId}`;
+    
+    // Remove session from sorted set
+    await client.zrem(sessionsKey, sessionId);
+    
+    console.log('[DEBUG] Session ended and removed from sorted set:', { 
+      projectId, 
+      sessionId 
+    });
   } catch (error) {
     console.error("Redis session end error:", error);
   }
@@ -125,17 +93,17 @@ export async function getLiveUserCount(
   if (!client) return null;
 
   try {
-    const countKey = `${COUNT_KEY_PREFIX}${projectId}:count`;
-    const count = await client.get(countKey);
-
-    // If value is not a valid integer string, reset it
-    if (count && isNaN(Number.parseInt(count, 10))) {
-      await client.del(countKey);
-      return 0;
-    }
-
-    const numCount = count ? Number.parseInt(count, 10) : 0;
-    return Math.max(0, numCount); // Ensure never negative
+    // Use sorted set approach - automatically removes expired sessions
+    const sessionsKey = `${SESSIONS_ZSET_PREFIX}${projectId}`;
+    const now = Date.now();
+    
+    // Remove sessions that expired (score < now - SESSION_TTL_MS)
+    await client.zremrangebyscore(sessionsKey, '-inf', now - SESSION_TTL_MS);
+    
+    // Count remaining active sessions
+    const count = await client.zcard(sessionsKey);
+    
+    return Math.max(0, count); // Ensure never negative
   } catch (error) {
     console.error("Redis get count error:", error);
     return null;
