@@ -39,7 +39,9 @@
         "CLICKHOUSE_PASSWORD",
         "DEV_CLICKHOUSE_HOST",
         "DEV_CLICKHOUSE_USERNAME",
-        "DEV_CLICKHOUSE_PASSWORD"
+        "DEV_CLICKHOUSE_PASSWORD",
+        "REDIS_URL",
+        "NEXT_PUBLIC_WS_URL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "dependsOn": ["^build", "^db:generate"],
