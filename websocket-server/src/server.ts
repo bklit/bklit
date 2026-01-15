@@ -98,8 +98,8 @@ subscriber.on("message", (channel, message) => {
 });
 
 // Start server
-httpServer.listen(PORT, () => {
-  console.log(`[STARTUP] Socket.IO server listening on port ${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`[STARTUP] Socket.IO server listening on 0.0.0.0:${PORT}`);
   console.log(`[STARTUP] Node version: ${process.version}`);
   console.log(
     `[STARTUP] Environment: ${process.env.NODE_ENV || "development"}`
