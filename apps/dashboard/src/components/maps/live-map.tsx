@@ -1,46 +1,21 @@
 "use client";
 
-import { Badge } from "@bklit/ui/components/badge";
-import { Card, CardContent } from "@bklit/ui/components/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@bklit/ui/components/dialog";
-import { Separator } from "@bklit/ui/components/separator";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import mapboxgl from "mapbox-gl";
 import { useTRPC } from "@/trpc/react";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { CircleFlag } from "react-circle-flags";
+import { useCallback, useEffect, useRef } from "react";
 import { useLiveMap } from "@/contexts/live-map-context";
 import { useSocketIOEvents } from "@/hooks/use-socketio-client";
 import {
   findCountryCoordinates,
-  getAlpha2Code,
   getCountryCoordinates,
 } from "@/lib/maps/country-coordinates";
-import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
-import { getDeviceIcon } from "@/lib/utils/get-device-icon";
 
 interface LiveMapProps {
   projectId: string;
   organizationId: string;
-}
-
-interface SelectedUser {
-  id: string;
-  city: string | null;
-  country: string | null;
-  countryCode: string | null;
-  startedAt: Date;
-  browser?: string;
-  deviceType?: string;
 }
 
 export function LiveMap({ projectId, organizationId }: LiveMapProps) {
@@ -50,9 +25,13 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   const spinEnabled = useRef(true);
   const pulsingDotRef = useRef<mapboxgl.StyleImageInterface | null>(null);
   const spinGlobeRef = useRef<(() => void) | null>(null);
-  const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { registerCenterFunction, registerMarkerClickHandler } = useLiveMap();
+  const onMarkerClickRef = useRef<((sessionId: string) => void) | null>(null);
+  const { registerCenterFunction, onMarkerClick } = useLiveMap();
+
+  // Keep ref updated with latest onMarkerClick
+  useEffect(() => {
+    onMarkerClickRef.current = onMarkerClick;
+  }, [onMarkerClick]);
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -68,7 +47,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
 
   // Real-time pageview handler for instant map updates
   const handleRealtimePageview = useCallback(
-    (data: any) => {
+    (data: { lat?: number; lon?: number }) => {
       // Validate coordinates
       const lat = data.lat;
       const lon = data.lon;
@@ -273,26 +252,13 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
           return;
         }
 
-        // Notify context of marker click for session detail panel
-        const sessionId = properties.sessionId as string;
-        if (sessionId && registerMarkerClickHandler) {
-          // Call the registered handler from Live component
-          const { current } = { current: registerMarkerClickHandler };
-          if (typeof current === 'function') {
-            // This will be replaced by proper context call
-          }
-        }
+        const sessionId =
+          (properties.sessionId as string) || (properties.id as string);
 
-        setSelectedUser({
-          id: (properties.id as string) || "",
-          city: (properties.city as string) || null,
-          country: (properties.country as string) || null,
-          countryCode: (properties.countryCode as string) || null,
-          startedAt: new Date(properties.startedAt as string),
-          browser: (properties.browser as string) || undefined,
-          deviceType: (properties.deviceType as string) || undefined,
-        });
-        setIsDialogOpen(true);
+        // Notify the Live component to show user details in the card
+        if (sessionId && onMarkerClickRef.current) {
+          onMarkerClickRef.current(sessionId);
+        }
       });
 
       // Change cursor on hover
@@ -348,9 +314,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         try {
           // Stop all animations and interactions
           map.current.stop();
-          // Remove all event listeners
-          map.current.off();
-          // Remove the map
+          // Remove the map (this also removes all event listeners)
           map.current.remove();
         } catch (error) {
           // Ignore errors during cleanup (map might already be removed)
@@ -363,6 +327,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
       spinGlobeRef.current = null;
       pulsingDotRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onMarkerClick is from stable context, map should only init once
   }, []);
 
   // Update map with live user locations
@@ -395,7 +360,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         },
         properties: {
           id: user.id,
-          sessionId: user.sessionId,
+          sessionId: user.id, // Use id as sessionId since they're the same
           city: user.city,
           country: user.country,
           countryCode: user.countryCode,
@@ -408,23 +373,6 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
 
     source.setData(geojson);
   }, [liveUserLocations]);
-
-  // Pause/resume globe rotation when dialog opens/closes
-  useEffect(() => {
-    if (isDialogOpen) {
-      // Pause rotation
-      spinEnabled.current = false;
-      if (map.current) {
-        map.current.stop();
-      }
-    } else {
-      // Resume rotation
-      spinEnabled.current = true;
-      if (spinGlobeRef.current) {
-        spinGlobeRef.current();
-      }
-    }
-  }, [isDialogOpen]);
 
   // Function to center the map on a country
   const centerOnCountry = useCallback(
@@ -481,94 +429,16 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
     registerCenterFunction(centerOnCountry);
   }, [registerCenterFunction, centerOnCountry]);
 
-  const countryName = selectedUser?.country || "Unknown";
-  const countryCode = selectedUser?.countryCode
-    ? getAlpha2Code(selectedUser.countryCode)
-    : "xx";
-  const sessionDuration = selectedUser?.startedAt
-    ? formatDistanceToNow(selectedUser.startedAt, { addSuffix: false })
-    : null;
-
   const projection = map.current?.getProjection();
 
   return (
-    <>
-      <div
-        className="absolute! inset-0! h-full! w-full! overflow-hidden rounded-lg"
-        ref={mapContainer}
-      >
-        {projection && (
-          <div className="pointer-events-none absolute inset-0 h-full w-full bg-bklit-700/50 mix-blend-color" />
-        )}
-      </div>
-      <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CircleFlag className="size-5" countryCode={countryCode} />
-              {countryName}
-            </DialogTitle>
-            <DialogDescription>Live user information</DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <Card className="border-0 shadow-none">
-              <CardContent className="space-y-4 pt-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">Country</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground text-sm">
-                        {countryName}
-                      </span>
-                      <CircleFlag
-                        className="size-4"
-                        countryCode={countryCode}
-                      />
-                    </div>
-                  </div>
-                  {selectedUser.city && (
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">City</span>
-                      <Badge variant="secondary">{selectedUser.city}</Badge>
-                    </div>
-                  )}
-                  {selectedUser.deviceType && (
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">Device type</span>
-                      {getDeviceIcon(selectedUser.deviceType || "")}
-                    </div>
-                  )}
-                  {selectedUser.browser && (
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">Browser</span>
-                      {getBrowserIcon(selectedUser.browser)}
-                    </div>
-                  )}
-                </div>
-                <Separator />
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">
-                      Session started
-                    </span>
-                    <Badge variant="secondary">
-                      {sessionDuration ? `${sessionDuration} ago` : "Unknown"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-sm">
-                      Status
-                    </span>
-                    <Badge size="lg" variant="success">
-                      Live
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+    <div
+      className="absolute! inset-0! h-full! w-full! overflow-hidden rounded-lg"
+      ref={mapContainer}
+    >
+      {projection && (
+        <div className="pointer-events-none absolute inset-0 h-full w-full bg-bklit-700/50 mix-blend-color" />
+      )}
+    </div>
   );
 }

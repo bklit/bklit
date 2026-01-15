@@ -1742,6 +1742,106 @@ export class AnalyticsService {
       .slice(0, 10);
   }
 
+  async getLiveTopReferrers(projectId: string) {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    // Get live sessions using window function to get latest state per session_id
+    const sessionsResult = await this.client.query({
+      query: `
+        SELECT session_id
+        FROM (
+          SELECT 
+            session_id,
+            ended_at,
+            updated_at,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE project_id = {projectId:String}
+            AND updated_at >= {thirtyMinutesAgo:DateTime}
+        )
+        WHERE rn = 1
+          AND ended_at IS NULL
+      `,
+      query_params: {
+        projectId,
+        thirtyMinutesAgo: formatDateForClickHouse(thirtyMinutesAgo),
+      },
+      format: "JSONEachRow",
+    });
+
+    const sessions = (await sessionsResult.json()) as Array<{
+      session_id: string;
+    }>;
+
+    if (sessions.length === 0) {
+      return [];
+    }
+
+    const sessionIds = sessions.map((s) => s.session_id);
+
+    // Get latest pageview for each session
+    const pageviewsResult = await this.client.query({
+      query: `
+        SELECT 
+          session_id,
+          referrer,
+          timestamp
+        FROM page_view_event
+        WHERE project_id = {projectId:String}
+          AND session_id != ''
+        ORDER BY timestamp DESC
+      `,
+      query_params: {
+        projectId,
+      },
+      format: "JSONEachRow",
+    });
+
+    const allPageviews = (await pageviewsResult.json()) as Array<{
+      session_id: string | null;
+      referrer: string | null;
+      timestamp: string;
+    }>;
+
+    // Filter to only relevant sessions and get latest per session
+    const relevantPageviews = allPageviews.filter(
+      (pv) => pv.session_id && sessionIds.includes(pv.session_id)
+    );
+
+    const latestPageviewBySession = new Map<
+      string,
+      (typeof relevantPageviews)[0]
+    >();
+    for (const pv of relevantPageviews) {
+      if (pv.session_id && !latestPageviewBySession.has(pv.session_id)) {
+        latestPageviewBySession.set(pv.session_id, pv);
+      }
+    }
+
+    // Count referrers
+    const referrerCounts = new Map<string, number>();
+    for (const session of sessions) {
+      const latestPv = latestPageviewBySession.get(session.session_id);
+      let referrer = "Direct";
+      
+      if (latestPv?.referrer) {
+        try {
+          const url = new URL(latestPv.referrer);
+          referrer = url.hostname.replace(/^www\./, "");
+        } catch {
+          referrer = latestPv.referrer;
+        }
+      }
+      
+      referrerCounts.set(referrer, (referrerCounts.get(referrer) || 0) + 1);
+    }
+
+    return Array.from(referrerCounts.entries())
+      .map(([referrer, count]) => ({ referrer, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }
+
   async cleanupStaleSessions(projectId: string): Promise<number> {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const now = new Date();

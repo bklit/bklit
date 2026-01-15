@@ -11,6 +11,7 @@ interface LiveMapContextValue {
     fn: (countryCode: string | null, countryName?: string | null) => void
   ) => void;
   registerMarkerClickHandler: (fn: (sessionId: string) => void) => void;
+  onMarkerClick: (sessionId: string) => void;
 }
 
 const LiveMapContext = createContext<LiveMapContextValue | null>(null);
@@ -40,8 +41,7 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Expose marker click to LiveMap
-  const handleMarkerClick = (sessionId: string) => {
+  const onMarkerClick = (sessionId: string) => {
     if (markerClickHandlerRef.current) {
       markerClickHandlerRef.current(sessionId);
     }
@@ -49,7 +49,7 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
 
   return (
     <LiveMapContext.Provider
-      value={{ centerOnCountry, registerCenterFunction, registerMarkerClickHandler }}
+      value={{ centerOnCountry, registerCenterFunction, registerMarkerClickHandler, onMarkerClick }}
     >
       {children}
     </LiveMapContext.Provider>

@@ -7,55 +7,52 @@ import { cn } from "../../lib/utils";
 import { useLiveCard } from "./card-context";
 import { useMeasure } from "../../hooks/use-measure";
 
-interface LiveCardProps {
-  className?: string;
+export interface LivePageData {
+  path: string;
+  count: number;
 }
 
-// Dummy data
-const DUMMY_DATA = {
-  pages: [
-    { path: "/", count: 7 },
-    { path: "/website/linear-870", count: 2 },
-    { path: "/website/mario-carrillo-821", count: 1 },
-    { path: "/website/artworld-414", count: 1 },
-    { path: "/website/dala-502", count: 1 },
-    { path: "/website/resend-917", count: 1 },
-    { path: "/website/notion-445", count: 1 },
-    { path: "/website/figma-223", count: 1 },
-    { path: "/website/vercel-889", count: 1 },
-    { path: "/website/github-334", count: 1 },
-  ],
-  referrers: [
-    { name: "Direct", count: 14 },
-    { name: "google.com", count: 3 },
-    { name: "twitter.com", count: 2 },
-  ],
-  countries: [
-    { name: "United States", code: "US", flag: "🇺🇸", count: 8 },
-    { name: "Brazil", code: "BR", flag: "🇧🇷", count: 5 },
-    { name: "Canada", code: "CA", flag: "🇨🇦", count: 4 },
-    { name: "United Kingdom", code: "GB", flag: "🇬🇧", count: 4 },
-  ],
-  liveUsers: 21,
-  users: [
-    {
-      id: "1",
-      name: "Thorough Elk",
-      location: "Joinville, BR",
-      countryCode: "BR",
-      firstSeen: "Jan 14, 2026",
-      sessions: 1,
-      events: 16,
-      currentPage: "/website/umbrel-975",
-      referrer: "Direct",
-      browser: "Chrome",
-      device: "Desktop",
-      os: "Windows",
-    },
-  ],
-};
+export interface LiveReferrerData {
+  name: string;
+  count: number;
+}
 
-export function LiveCard({ className }: LiveCardProps) {
+export interface LiveCountryData {
+  name: string;
+  code: string;
+  flag: string;
+  count: number;
+}
+
+export interface LiveUserData {
+  id: string;
+  name: string;
+  location: string;
+  countryCode: string;
+  firstSeen: string;
+  sessions: number;
+  events: number;
+  currentPage: string;
+  referrer: string;
+  browser: string;
+  device: string;
+  os: string;
+}
+
+export interface LiveCardData {
+  pages: LivePageData[];
+  referrers: LiveReferrerData[];
+  countries: LiveCountryData[];
+  liveUsers: number;
+  users: LiveUserData[];
+}
+
+interface LiveCardProps {
+  className?: string;
+  data: LiveCardData;
+}
+
+export function LiveCard({ className, data }: LiveCardProps) {
   const { view, goBack, canGoBack, selectedUser } = useLiveCard();
   const [ref, bounds] = useMeasure();
   const [enableAnimation, setEnableAnimation] = useState(false);
@@ -68,19 +65,19 @@ export function LiveCard({ className }: LiveCardProps) {
   const content = useMemo(() => {
     switch (view) {
       case "overview":
-        return <OverviewView />;
+        return <OverviewView data={data} />;
       case "pages":
-        return <PagesView />;
+        return <PagesView pages={data.pages} />;
       case "referrers":
-        return <ReferrersView />;
+        return <ReferrersView referrers={data.referrers} />;
       case "countries":
-        return <CountriesView />;
+        return <CountriesView countries={data.countries} />;
       case "user":
-        return selectedUser ? <UserView user={selectedUser} /> : null;
+        return selectedUser ? <UserView user={selectedUser} data={data} /> : null;
       default:
-        return <OverviewView />;
+        return <OverviewView data={data} />;
     }
-  }, [view, selectedUser]);
+  }, [view, selectedUser, data]);
 
   return (
     <MotionConfig transition={{ type: "spring", stiffness: 220, damping: 20, mass: 1.5 }}>
@@ -137,7 +134,7 @@ export function LiveCard({ className }: LiveCardProps) {
               <div className="flex items-center gap-2 rounded-full bg-indigo-500/20 px-3.5 py-1.5 ring-1 ring-indigo-500/30">
                 <Globe className="size-4 text-indigo-400" />
                 <span className="font-semibold text-base text-indigo-300">
-                  {DUMMY_DATA.liveUsers}
+                  {data.liveUsers}
                 </span>
               </div>
             </nav>
@@ -147,68 +144,104 @@ export function LiveCard({ className }: LiveCardProps) {
   );
 }
 
-function OverviewView() {
+function OverviewView({ data }: { data: LiveCardData }) {
   const { setView } = useLiveCard();
+
+  const topPage = data.pages[0];
+  const topReferrer = data.referrers[0];
+  const topCountry = data.countries[0];
+
+  const hasData = topPage || topReferrer || topCountry;
+
+  if (!hasData && data.liveUsers === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <div className="mb-2 rounded-full bg-bklit-800/50 p-4">
+          <Globe className="size-8 text-bklit-400" />
+        </div>
+        <p className="text-bklit-300 text-sm">No active visitors</p>
+        <p className="text-bklit-500 text-xs">Data will appear when visitors arrive</p>
+      </div>
+    );
+  }
+
+  if (!hasData && data.liveUsers > 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <div className="mb-2 rounded-full bg-bklit-800/50 p-4">
+          <Globe className="size-8 text-bklit-400" />
+        </div>
+        <p className="text-bklit-300 text-sm">{data.liveUsers} visitor{data.liveUsers === 1 ? '' : 's'} online</p>
+        <p className="text-bklit-500 text-xs">Loading analytics data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       {/* Pages Section */}
-      <div className="space-y-2">
-        <h3 className="font-medium text-xs text-bklit-400 sr-only">Pages</h3>
-        
-        <button
-          onClick={() => setView("pages")}
-          className="group relative flex w-full items-center gap-2.5 rounded-xl bg-bklit-800/50 px-4 py-3 text-left transition-all hover:bg-bklit-800/80"
-        >
-          <span className="font-mono text-sm text-bklit-200">/</span>
-          <div className="flex-1" />
-          <span className="font-semibold text-sm text-bklit-300">
-            {DUMMY_DATA.pages[0]?.count}
-          </span>
-          <ChevronRight className="size-4 text-bklit-500 transition-transform group-hover:translate-x-0.5" />
-        </button>
-      </div>
+      {topPage && (
+        <div className="space-y-2">
+          <h3 className="font-medium text-xs text-bklit-400 sr-only">Pages</h3>
+          
+          <button
+            onClick={() => setView("pages")}
+            className="group relative flex w-full items-center gap-2.5 rounded-xl bg-bklit-800/50 px-4 py-3 text-left transition-all hover:bg-bklit-800/80"
+          >
+            <span className="font-mono text-sm text-bklit-200">{topPage.path}</span>
+            <div className="flex-1" />
+            <span className="font-semibold text-sm text-bklit-300">
+              {topPage.count}
+            </span>
+            <ChevronRight className="size-4 text-bklit-500 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </div>
+      )}
 
       {/* Referrers Section */}
-      <div className="space-y-2">
-        <h3 className="font-medium text-xs text-bklit-400 sr-only">Referrers</h3>
-        
-        <button
-          onClick={() => setView("referrers")}
-          className="group relative flex w-full items-center gap-2.5 rounded-xl bg-bklit-800/50 px-4 py-3 text-left transition-all hover:bg-bklit-800/80"
-        >
-          <ChevronRight className="size-4 text-bklit-500" />
-          <span className="text-sm text-bklit-200">Direct</span>
-          <div className="flex-1" />
-          <span className="font-semibold text-sm text-bklit-300">
-            {DUMMY_DATA.referrers[0]?.count}
-          </span>
-          <ChevronRight className="size-4 text-bklit-500 transition-transform group-hover:translate-x-0.5" />
-        </button>
-      </div>
+      {topReferrer && (
+        <div className="space-y-2">
+          <h3 className="font-medium text-xs text-bklit-400 sr-only">Referrers</h3>
+          
+          <button
+            onClick={() => setView("referrers")}
+            className="group relative flex w-full items-center gap-2.5 rounded-xl bg-bklit-800/50 px-4 py-3 text-left transition-all hover:bg-bklit-800/80"
+          >
+            <ChevronRight className="size-4 text-bklit-500" />
+            <span className="text-sm text-bklit-200">{topReferrer.name}</span>
+            <div className="flex-1" />
+            <span className="font-semibold text-sm text-bklit-300">
+              {topReferrer.count}
+            </span>
+            <ChevronRight className="size-4 text-bklit-500 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </div>
+      )}
 
       {/* Countries Section */}
-      <div className="space-y-2">
-        <h3 className="font-medium text-xs text-bklit-400 sr-only">Countries</h3>
-        
-        <button
-          onClick={() => setView("countries")}
-          className="group relative flex w-full items-center gap-2.5 rounded-xl bg-bklit-800/50 px-4 py-3 text-left transition-all hover:bg-bklit-800/80"
-        >
-          <span className="text-base">🇺🇸</span>
-          <span className="text-sm text-bklit-200">United States</span>
-          <div className="flex-1" />
-          <span className="font-semibold text-sm text-bklit-300">
-            {DUMMY_DATA.countries[0]?.count}
-          </span>
-          <ChevronRight className="size-4 text-bklit-500 transition-transform group-hover:translate-x-0.5" />
-        </button>
-      </div>
+      {topCountry && (
+        <div className="space-y-2">
+          <h3 className="font-medium text-xs text-bklit-400 sr-only">Countries</h3>
+          
+          <button
+            onClick={() => setView("countries")}
+            className="group relative flex w-full items-center gap-2.5 rounded-xl bg-bklit-800/50 px-4 py-3 text-left transition-all hover:bg-bklit-800/80"
+          >
+            <span className="text-base">{topCountry.flag}</span>
+            <span className="text-sm text-bklit-200">{topCountry.name}</span>
+            <div className="flex-1" />
+            <span className="font-semibold text-sm text-bklit-300">
+              {topCountry.count}
+            </span>
+            <ChevronRight className="size-4 text-bklit-500 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-function PagesView() {
+function PagesView({ pages }: { pages: LivePageData[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTopMask, setShowTopMask] = useState(false);
   const [showBottomMask, setShowBottomMask] = useState(false);
@@ -240,6 +273,15 @@ function PagesView() {
     };
   }, []);
 
+  if (pages.length === 0) {
+    return (
+      <div className="space-y-3 pt-4">
+        <h2 className="text-center font-semibold text-base text-white">Pages</h2>
+        <div className="py-8 text-center text-bklit-400 text-sm">No page data available</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3 pt-4">
       <h2 className="text-center font-semibold text-base text-white">Pages</h2>
@@ -250,12 +292,12 @@ function PagesView() {
           data-scrolled-top={showTopMask}
           data-scrolled-bottom={showBottomMask}
         >
-          {DUMMY_DATA.pages.map((page, index) => (
+          {pages.map((page, index) => (
             <div
               key={page.path}
               className={cn(
                 "flex items-center justify-between rounded-lg bg-bklit-800/50 px-3.5 py-2.5",
-                index === DUMMY_DATA.pages.length - 1 && "opacity-60"
+                index === pages.length - 1 && "opacity-60"
               )}
             >
               <span className="font-mono text-xs text-bklit-200">{page.path}</span>
@@ -268,13 +310,22 @@ function PagesView() {
   );
 }
 
-function ReferrersView() {
+function ReferrersView({ referrers }: { referrers: LiveReferrerData[] }) {
+  if (referrers.length === 0) {
+    return (
+      <div className="space-y-3 pt-4">
+        <h2 className="text-center font-semibold text-base text-white">Referrers</h2>
+        <div className="py-8 text-center text-bklit-400 text-sm">No referrer data available</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3 pt-4">
       <h2 className="text-center font-semibold text-base text-white">Referrers</h2>
       
       <div className="space-y-1.5">
-        {DUMMY_DATA.referrers.map((referrer) => (
+        {referrers.map((referrer) => (
           <div
             key={referrer.name}
             className="flex items-center gap-2.5 rounded-lg bg-bklit-800/50 px-3.5 py-2.5"
@@ -289,13 +340,22 @@ function ReferrersView() {
   );
 }
 
-function CountriesView() {
+function CountriesView({ countries }: { countries: LiveCountryData[] }) {
+  if (countries.length === 0) {
+    return (
+      <div className="space-y-3 pt-4">
+        <h2 className="text-center font-semibold text-base text-white">Countries</h2>
+        <div className="py-8 text-center text-bklit-400 text-sm">No country data available</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3 pt-4">
       <h2 className="text-center font-semibold text-base text-white">Countries</h2>
       
       <div className="space-y-1.5">
-        {DUMMY_DATA.countries.map((country) => (
+        {countries.map((country) => (
           <div
             key={country.code}
             className="flex items-center gap-2.5 rounded-lg bg-bklit-800/50 px-3.5 py-2.5"
@@ -310,7 +370,9 @@ function CountriesView() {
   );
 }
 
-function UserView({ user }: { user: any }) {
+function UserView({ user, data }: { user: LiveUserData; data: LiveCardData }) {
+  const country = data.countries.find(c => c.code === user.countryCode);
+  
   return (
     <div className="space-y-4 pt-4">
       {/* User Header */}
@@ -320,7 +382,7 @@ function UserView({ user }: { user: any }) {
         <div>
           <h2 className="font-semibold text-base text-white">{user.name}</h2>
           <div className="flex items-center justify-center gap-1.5 text-bklit-400">
-            <span className="text-sm">{DUMMY_DATA.countries.find(c => c.code === user.countryCode)?.flag}</span>
+            {country && <span className="text-sm">{country.flag}</span>}
             <span className="text-xs">{user.location}</span>
           </div>
         </div>

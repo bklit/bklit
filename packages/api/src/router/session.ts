@@ -954,4 +954,39 @@ export const sessionRouter = createTRPCRouter({
         .slice(0, input.limit)
         .map(([path, count]) => ({ path, count }));
     }),
+  liveTopReferrers: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        organizationId: z.string(),
+        limit: z.number().default(5),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const project = await ctx.prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          organizationId: input.organizationId,
+        },
+        include: {
+          organization: {
+            include: {
+              members: {
+                where: { userId: ctx.session.user.id },
+              },
+            },
+          },
+        },
+      });
+
+      if (!project?.organization || project.organization.members.length === 0) {
+        throw new Error("Forbidden");
+      }
+
+      const liveTopReferrers = await ctx.analytics.getLiveTopReferrers(input.projectId);
+
+      return liveTopReferrers
+        .slice(0, input.limit)
+        .map((item) => ({ name: item.referrer, count: item.count }));
+    }),
 });
