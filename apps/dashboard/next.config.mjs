@@ -14,7 +14,6 @@ const config = {
     "@bklit/api",
   ],
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
 
   experimental: {
     serverActions: {
@@ -22,9 +21,9 @@ const config = {
     },
   },
 
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
-  },
+  // compiler: {
+  //   removeConsole: process.env.NODE_ENV === "production",
+  // },
 
   skipMiddlewareUrlNormalize: true,
   skipTrailingSlashRedirect: true,

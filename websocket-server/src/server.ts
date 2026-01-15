@@ -5,19 +5,18 @@ import { Server } from "socket.io";
 
 config();
 
-const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
+const REDIS_URL = process.env.REDIS_URL;
 const PORT = Number(process.env.PORT) || 6001;
 const CORS_ORIGINS = process.env.CORS_ORIGINS?.split(",") || [
   "https://app.bklit.com",
   "http://localhost:3000",
 ];
 
-// Redis clients with explicit config
-const redisConfig = REDIS_PASSWORD
-  ? { host: "127.0.0.1", port: 6379, password: REDIS_PASSWORD }
-  : { host: "127.0.0.1", port: 6379 };
-
-const redis = new Redis(redisConfig);
+// Redis clients - use REDIS_URL if available, otherwise fall back to localhost
+const redis = REDIS_URL 
+  ? new Redis(REDIS_URL)
+  : new Redis({ host: "127.0.0.1", port: 6379 });
+  
 const subscriber = redis.duplicate();
 
 // HTTP server
