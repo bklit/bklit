@@ -12,10 +12,73 @@ import {
   findCountryCoordinates,
   getCountryCoordinates,
 } from "@/lib/maps/country-coordinates";
+import { getMarkerGradient, parseRGB } from "@/lib/maps/marker-colors";
 
 interface LiveMapProps {
   projectId: string;
   organizationId: string;
+}
+
+// Helper function to create a pulsing dot with custom gradient
+function createPulsingDot(
+  fromColor: string,
+  toColor: string
+): mapboxgl.StyleImageInterface {
+  const size = 200;
+  const from = parseRGB(fromColor);
+  const to = parseRGB(toColor);
+
+  const pulsingDot: mapboxgl.StyleImageInterface & {
+    context?: CanvasRenderingContext2D | null;
+  } = {
+    width: size,
+    height: size,
+    data: new Uint8Array(size * size * 4),
+
+    onAdd() {
+      const canvas = document.createElement("canvas");
+      canvas.width = this.width;
+      canvas.height = this.height;
+      this.context = canvas.getContext("2d");
+    },
+
+    render() {
+      const duration = 1000;
+      const t = (performance.now() % duration) / duration;
+
+      const radius = (size / 2) * 0.3;
+      const outerRadius = (size / 2) * 0.7 * t + radius;
+      const context = this.context;
+
+      if (!context) {
+        return false;
+      }
+
+      // Draw the outer circle with custom color
+      context.clearRect(0, 0, this.width, this.height);
+      context.beginPath();
+      context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
+      context.fillStyle = `rgba(${from.r}, ${from.g}, ${from.b}, ${1 - t})`;
+      context.fill();
+
+      // Draw the inner circle with custom color
+      context.beginPath();
+      context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
+      context.fillStyle = `rgba(${to.r}, ${to.g}, ${to.b}, 1)`;
+      context.strokeStyle = "white";
+      context.lineWidth = 2 + 4 * (1 - t);
+      context.fill();
+      context.stroke();
+
+      // Update this image's data with data from the canvas
+      this.data = context.getImageData(0, 0, this.width, this.height).data;
+
+      // Return `true` to let the map know that the image was updated
+      return true;
+    },
+  };
+
+  return pulsingDot;
 }
 
 export function LiveMap({ projectId, organizationId }: LiveMapProps) {
@@ -213,8 +276,10 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         return;
       }
 
-      // Add the pulsing dot image
-      map.current.addImage("pulsing-dot", pulsingDot, { pixelRatio: 2 });
+      // Add the default pulsing dot image (fallback)
+      map.current.addImage("pulsing-dot-default", pulsingDot, {
+        pixelRatio: 2,
+      });
 
       // Add empty source initially
       map.current.addSource("live-users", {
@@ -225,14 +290,15 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         },
       });
 
-      // Add layer for live users
+      // Add layer for live users with dynamic icon images
       map.current.addLayer({
         id: "live-users-layer",
         type: "symbol",
         source: "live-users",
         layout: {
-          "icon-image": "pulsing-dot",
+          "icon-image": ["get", "iconImage"], // Use the iconImage property from the feature
           "icon-size": 0.5,
+          "icon-allow-overlap": true, // Allow markers to overlap
         },
       });
 
@@ -349,6 +415,18 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
       console.log("Live user locations:", liveUserLocations);
     }
 
+    // Create dynamic pulsing dot images for each user
+    for (const user of liveUserLocations) {
+      const iconId = `pulsing-dot-${user.id}`;
+
+      // Only add the image if it doesn't exist
+      if (map.current && !map.current.hasImage(iconId)) {
+        const gradient = getMarkerGradient(user.id);
+        const pulsingDotImage = createPulsingDot(gradient.from, gradient.to);
+        map.current.addImage(iconId, pulsingDotImage, { pixelRatio: 2 });
+      }
+    }
+
     // Convert live user locations to GeoJSON format
     const geojson: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
@@ -367,6 +445,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
           startedAt: user.startedAt.toISOString(),
           browser: user.browser,
           deviceType: user.deviceType,
+          iconImage: `pulsing-dot-${user.id}`, // Assign unique icon
         },
       })),
     };

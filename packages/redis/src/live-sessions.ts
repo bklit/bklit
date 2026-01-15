@@ -52,10 +52,26 @@ export async function trackSessionEnd(
     const exists = await client.exists(sessionKey);
 
     if (exists) {
-      await Promise.all([client.decr(countKey), client.del(sessionKey)]);
+      // Decrement count, ensuring it never goes below 0
+      const currentCount = await client.get(countKey);
+      const count = currentCount ? Number.parseInt(currentCount, 10) : 0;
+
+      if (count > 0) {
+        await Promise.all([client.decr(countKey), client.del(sessionKey)]);
+      } else {
+        // Just delete the session key if count is already 0
+        await client.del(sessionKey);
+      }
     }
   } catch (error) {
     console.error("Redis session end error:", error);
+    // If there's an error (like corrupted key), try to reset the count
+    try {
+      const countKey = `${COUNT_KEY_PREFIX}${projectId}:count`;
+      await client.del(countKey); // Delete corrupted key
+    } catch {
+      // Silently fail - ClickHouse fallback will handle it
+    }
   }
 }
 

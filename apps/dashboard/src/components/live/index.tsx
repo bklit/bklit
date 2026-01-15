@@ -2,10 +2,11 @@
 
 import { useLiveCard } from "@bklit/ui/components/live/card";
 import type { UserData } from "@bklit/ui/components/live/card-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLiveMap } from "@/contexts/live-map-context";
+import { useSocketIOEvents } from "@/hooks/use-socketio-client";
 import { useTRPC } from "@/trpc/react";
 import { LiveCardWithData } from "./live-card-with-data";
 
@@ -18,6 +19,7 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
   const { registerMarkerClickHandler } = useLiveMap();
   const { openUserDetail } = useLiveCard();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null
   );
@@ -29,9 +31,25 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
       { sessionId: selectedSessionId || "", projectId, organizationId },
       {
         enabled: !!selectedSessionId,
+        refetchInterval: 5000, // Refetch every 5 seconds to show live updates
+        staleTime: 3000,
       }
     ),
   });
+
+  // Real-time update for session details when pageview occurs
+  const handlePageviewForSession = useCallback(
+    (data: { sessionId?: string }) => {
+      if (data.sessionId === selectedSessionId) {
+        queryClient.invalidateQueries({
+          queryKey: [["session", "getById"]],
+        });
+      }
+    },
+    [selectedSessionId, queryClient]
+  );
+
+  useSocketIOEvents(projectId, "pageview", handlePageviewForSession);
 
   // Register handler for map marker clicks
   useEffect(() => {
@@ -51,6 +69,14 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
       // Get the most recent pageview
       const latestPageview = sessionData.pageViewEvents?.[0];
 
+      // Build page journey from pageViewEvents (most recent first)
+      const pageJourney =
+        sessionData.pageViewEvents?.map((event, index) => ({
+          url: event.url,
+          timestamp: new Date(event.timestamp),
+          isCurrentPage: index === 0, // First item is current page
+        })) || [];
+
       // Transform session data to UserData format
       const userData: UserData = {
         id: sessionData.sessionId ?? sessionData.id ?? "unknown",
@@ -69,6 +95,8 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
         browser: getBrowserFromUserAgent(sessionData.userAgent || ""),
         device: getDeviceFromUserAgent(sessionData.userAgent || ""),
         os: getOSFromUserAgent(sessionData.userAgent || ""),
+        pageJourney,
+        triggeredEvents: [], // We can add event tracking later if needed
       };
 
       openUserDetail(userData);
@@ -77,7 +105,7 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
   }, [sessionData, selectedSessionId, hasOpenedSession, openUserDetail]);
 
   return (
-    <div className="-translate-x-1/2 pointer-events-none fixed bottom-0 left-1/2 z-50 flex justify-center p-6">
+    <div className="pointer-events-none fixed bottom-0 left-1/2 z-50 flex -translate-x-1/2 justify-center p-6">
       <div className="pointer-events-auto">
         <LiveCardWithData
           organizationId={organizationId}

@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, MotionConfig } from "motion/react";
 import { ChevronLeft, ChevronRight, Globe, Circle, Chrome, Monitor } from "lucide-react";
+import NumberFlow from "@number-flow/react";
 import { cn } from "../../lib/utils";
 import { useLiveCard } from "./card-context";
 import { useMeasure } from "../../hooks/use-measure";
@@ -24,6 +25,17 @@ export interface LiveCountryData {
   count: number;
 }
 
+interface PageJourneyItem {
+  url: string;
+  timestamp: Date;
+  isCurrentPage?: boolean;
+}
+
+interface EventItem {
+  type: string;
+  timestamp: Date;
+}
+
 export interface LiveUserData {
   id: string;
   name: string;
@@ -37,6 +49,8 @@ export interface LiveUserData {
   browser: string;
   device: string;
   os: string;
+  pageJourney?: PageJourneyItem[];
+  triggeredEvents?: EventItem[];
 }
 
 export interface LiveCardData {
@@ -133,9 +147,10 @@ export function LiveCard({ className, data }: LiveCardProps) {
             <nav className="flex items-center justify-center pb-4">
               <div className="flex items-center gap-2 rounded-full bg-indigo-500/20 px-3.5 py-1.5 ring-1 ring-indigo-500/30">
                 <Globe className="size-4 text-indigo-400" />
-                <span className="font-semibold text-base text-indigo-300">
-                  {data.liveUsers}
-                </span>
+                <NumberFlow 
+                  value={data.liveUsers} 
+                  className="font-semibold text-base text-indigo-300"
+                />
               </div>
             </nav>
           </div>
@@ -372,6 +387,7 @@ function CountriesView({ countries }: { countries: LiveCountryData[] }) {
 
 function UserView({ user, data }: { user: LiveUserData; data: LiveCardData }) {
   const country = data.countries.find(c => c.code === user.countryCode);
+  const journey = user.pageJourney || [];
   
   return (
     <div className="space-y-4 pt-4">
@@ -404,21 +420,60 @@ function UserView({ user, data }: { user: LiveUserData; data: LiveCardData }) {
         </div>
       </div>
 
-      {/* Activity */}
-      <div className="space-y-2.5 rounded-xl bg-bklit-800/30 p-3.5">
-        <div className="flex items-center gap-2.5">
-          <Circle className="size-3 fill-indigo-400 text-indigo-400" />
-          <span className="flex-1 font-mono text-xs text-bklit-300">{user.currentPage}</span>
-          <Circle className="size-1.5 fill-purple-400 text-purple-400" />
-        </div>
-        
-        <div className="flex items-center gap-2.5">
-          <ChevronRight className="size-3 text-bklit-500" />
-          <span className="flex-1 text-xs text-bklit-400">{user.referrer}</span>
-          <div className="flex items-center gap-1.5">
-            <Chrome className="size-3 text-bklit-500" />
-            <Monitor className="size-3 text-bklit-500" />
+      {/* Page Journey Timeline */}
+      {journey.length > 0 && (
+        <div className="rounded-xl bg-bklit-800/30 p-3.5">
+          <h3 className="mb-3 font-medium text-xs text-bklit-400">Page Journey</h3>
+          <div className="space-y-0 text-xs">
+            {journey.map((page: PageJourneyItem, index: number) => (
+              <div key={`${page.url}-${index}`} className="relative flex items-start gap-2.5">
+                {/* Timeline Line */}
+                {index < journey.length - 1 && (
+                  <div className="absolute top-3 left-1 h-full w-px bg-bklit-700" />
+                )}
+                
+                {/* Circle Marker */}
+                <div className="relative z-10 mt-0.5">
+                  {page.isCurrentPage ? (
+                    <Circle className="size-2.5 fill-indigo-400 text-indigo-400" />
+                  ) : (
+                    <div className="size-2.5 rounded-full bg-bklit-600" />
+                  )}
+                </div>
+                
+                {/* Page URL */}
+                <div className="flex-1 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "flex-1 truncate font-mono",
+                      page.isCurrentPage ? "text-bklit-200" : "text-bklit-400"
+                    )}>
+                      {page.url}
+                    </span>
+                    {page.isCurrentPage && (
+                      <span className="text-indigo-400">×</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+      )}
+
+      {/* Device & Browser Info */}
+      <div className="flex items-center justify-center gap-4 text-bklit-400">
+        <div className="flex items-center gap-1.5">
+          <ChevronRight className="size-3" />
+          <span className="text-xs">{user.referrer}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Chrome className="size-3" />
+          <span className="text-xs">{user.browser}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Monitor className="size-3" />
+          <span className="text-xs">{user.device}</span>
         </div>
       </div>
     </div>

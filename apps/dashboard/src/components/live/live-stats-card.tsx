@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { ProgressRow } from "@bklit/ui/components/progress-row";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import NumberFlow from "@number-flow/react";
 import { useQuery } from "@tanstack/react-query";
@@ -66,7 +65,7 @@ export function LiveStatsCard({
       <CardHeader>
         <CardTitle>Live Stats</CardTitle>
         <CardDescription>
-          {liveUsers === 1 ? '1 visitor' : `${liveUsers} visitors`} active now
+          {liveUsers === 1 ? "1 visitor" : `${liveUsers} visitors`} active now
         </CardDescription>
         <CardAction className="flex items-center gap-2 font-semibold text-4xl">
           <NumberFlow value={liveUsers} />
@@ -82,7 +81,10 @@ export function LiveStatsCard({
         {isLoading ? (
           <div className="flex gap-2">
             {Array.from({ length: 3 }).map(() => (
-              <Skeleton className="size-12 rounded-full" key={crypto.randomUUID()} />
+              <Skeleton
+                className="size-12 rounded-full"
+                key={crypto.randomUUID()}
+              />
             ))}
           </div>
         ) : !topCountries || topCountries.length === 0 ? (
@@ -93,6 +95,7 @@ export function LiveStatsCard({
           <div className="flex gap-3 overflow-x-auto pb-2">
             {topCountries.map((country) => (
               <button
+                className="group flex shrink-0 flex-col items-center gap-1 transition-transform hover:scale-110"
                 key={country.countryCode || country.country}
                 onClick={() => {
                   centerOnCountry(
@@ -100,21 +103,20 @@ export function LiveStatsCard({
                     country.country || null
                   );
                 }}
-                className="group flex shrink-0 flex-col items-center gap-1 transition-transform hover:scale-110"
+                title={country.country || "Unknown"}
                 type="button"
-                title={country.country || 'Unknown'}
               >
                 <div className="relative">
                   <CircleFlag
                     className="size-10"
                     countryCode={country.countryCode?.toLowerCase() || "us"}
                   />
-                  <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground text-xs">
+                  <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground text-xs">
                     {country.views}
                   </span>
                 </div>
                 <span className="text-muted-foreground text-xs group-hover:text-foreground">
-                  {country.country || 'Unknown'}
+                  {country.country || "Unknown"}
                 </span>
               </button>
             ))}

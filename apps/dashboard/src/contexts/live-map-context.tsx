@@ -20,7 +20,9 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
   const centerFunctionRef = useRef<
     ((countryCode: string | null, countryName?: string | null) => void) | null
   >(null);
-  const markerClickHandlerRef = useRef<((sessionId: string) => void) | null>(null);
+  const markerClickHandlerRef = useRef<((sessionId: string) => void) | null>(
+    null
+  );
 
   const registerCenterFunction = (
     fn: (countryCode: string | null, countryName?: string | null) => void
@@ -49,7 +51,12 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
 
   return (
     <LiveMapContext.Provider
-      value={{ centerOnCountry, registerCenterFunction, registerMarkerClickHandler, onMarkerClick }}
+      value={{
+        centerOnCountry,
+        registerCenterFunction,
+        registerMarkerClickHandler,
+        onMarkerClick,
+      }}
     >
       {children}
     </LiveMapContext.Provider>

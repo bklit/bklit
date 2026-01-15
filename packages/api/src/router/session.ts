@@ -457,11 +457,13 @@ export const sessionRouter = createTRPCRouter({
       // Try Redis first (real-time source of truth)
       const redisCount = await getLiveUserCount(input.projectId);
 
-      if (redisCount !== null) {
+      // Use Redis if available AND has a count > 0
+      // If Redis returns 0, it might be out of sync, so check ClickHouse as fallback
+      if (redisCount !== null && redisCount > 0) {
         return redisCount;
       }
 
-      // Fallback to ClickHouse if Redis unavailable
+      // Fallback to ClickHouse if Redis unavailable or returns 0
       await ctx.analytics.cleanupStaleSessions(input.projectId);
       const liveUsers = await ctx.analytics.getLiveUsers(input.projectId);
 
@@ -577,6 +579,18 @@ export const sessionRouter = createTRPCRouter({
         NL: [5.2913, 52.1326], // Netherlands
         CA: [-106.3468, 56.1304], // Canada
         AU: [133.7751, -25.2744], // Australia
+        JP: [138.2529, 36.2048], // Japan
+        KR: [127.7669, 35.9078], // South Korea
+        CN: [104.1954, 35.8617], // China
+        IN: [78.9629, 20.5937], // India
+        BR: [-51.9253, -14.235], // Brazil
+        MX: [-102.5528, 23.6345], // Mexico
+        RU: [105.3188, 61.524], // Russia
+        PL: [19.1451, 51.9194], // Poland
+        SE: [18.6435, 60.1282], // Sweden
+        NO: [8.4689, 60.472], // Norway
+        DK: [9.5018, 56.2639], // Denmark
+        FI: [25.7482, 61.9241], // Finland
         // Add more countries as needed - format: [longitude, latitude]
       };
 
@@ -983,7 +997,9 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      const liveTopReferrers = await ctx.analytics.getLiveTopReferrers(input.projectId);
+      const liveTopReferrers = await ctx.analytics.getLiveTopReferrers(
+        input.projectId
+      );
 
       return liveTopReferrers
         .slice(0, input.limit)

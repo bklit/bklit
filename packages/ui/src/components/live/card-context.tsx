@@ -4,6 +4,17 @@ import { createContext, type ReactNode, useContext, useState, useCallback } from
 
 type CardView = "overview" | "pages" | "referrers" | "countries" | "user";
 
+interface PageJourneyItem {
+  url: string;
+  timestamp: Date;
+  isCurrentPage?: boolean;
+}
+
+interface EventItem {
+  type: string;
+  timestamp: Date;
+}
+
 interface UserData {
   id: string;
   name: string;
@@ -17,6 +28,8 @@ interface UserData {
   browser: string;
   device: string;
   os: string;
+  pageJourney?: PageJourneyItem[];
+  triggeredEvents?: EventItem[];
 }
 
 interface LiveCardContextValue {
@@ -89,5 +102,5 @@ export function useLiveCard() {
   return context;
 }
 
-export type { UserData, CardView };
+export type { UserData, CardView, PageJourneyItem, EventItem };
 

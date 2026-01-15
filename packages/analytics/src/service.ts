@@ -1277,13 +1277,13 @@ export class AnalyticsService {
 
     return sessions.map((session) => {
       const latestPv = latestPageviewBySession.get(session.session_id);
-      
+
       // Use pageview coordinates if available and valid
       let lat = latestPv?.lat || null;
       let lon = latestPv?.lon || null;
-      
+
       // If no valid coordinates from pageview, use country center as fallback
-      if (!lat || !lon || (lat === 0 && lon === 0)) {
+      if (!(lat && lon) || (lat === 0 && lon === 0)) {
         const countryCode = session.country_code;
         if (countryCode) {
           // Use approximate country center coordinates
@@ -1295,7 +1295,7 @@ export class AnalyticsService {
           }
         }
       }
-      
+
       return {
         id: session.id,
         session_id: session.session_id,
@@ -1313,31 +1313,36 @@ export class AnalyticsService {
   }
 
   // Helper to get country center coordinates for map markers
-  private getCountryCenterCoordinates(countryCode: string): { lat: number; lon: number } | null {
+  private getCountryCenterCoordinates(
+    countryCode: string
+  ): { lat: number; lon: number } | null {
     // Approximate center coordinates for common countries
     const countryCenters: Record<string, { lat: number; lon: number }> = {
-      'US': { lat: 37.0902, lon: -95.7129 },
-      'GB': { lat: 55.3781, lon: -3.4360 },
-      'FR': { lat: 46.2276, lon: 2.2137 },
-      'DE': { lat: 51.1657, lon: 10.4515 },
-      'CA': { lat: 56.1304, lon: -106.3468 },
-      'AU': { lat: -25.2744, lon: 133.7751 },
-      'JP': { lat: 36.2048, lon: 138.2529 },
-      'CZ': { lat: 49.8175, lon: 15.4730 },
-      'BG': { lat: 42.7339, lon: 25.4858 },
-      'ES': { lat: 40.4637, lon: -3.7492 },
-      'IT': { lat: 41.8719, lon: 12.5674 },
-      'NL': { lat: 52.1326, lon: 5.2913 },
-      'SE': { lat: 60.1282, lon: 18.6435 },
-      'NO': { lat: 60.4720, lon: 8.4689 },
-      'DK': { lat: 56.2639, lon: 9.5018 },
-      'FI': { lat: 61.9241, lon: 25.7482 },
-      'PL': { lat: 51.9194, lon: 19.1451 },
-      'BR': { lat: -14.2350, lon: -51.9253 },
-      'IN': { lat: 20.5937, lon: 78.9629 },
-      'CN': { lat: 35.8617, lon: 104.1954 },
+      US: { lat: 37.0902, lon: -95.7129 },
+      GB: { lat: 55.3781, lon: -3.436 },
+      FR: { lat: 46.2276, lon: 2.2137 },
+      DE: { lat: 51.1657, lon: 10.4515 },
+      CA: { lat: 56.1304, lon: -106.3468 },
+      AU: { lat: -25.2744, lon: 133.7751 },
+      JP: { lat: 36.2048, lon: 138.2529 },
+      KR: { lat: 35.9078, lon: 127.7669 }, // South Korea
+      CZ: { lat: 49.8175, lon: 15.473 },
+      BG: { lat: 42.7339, lon: 25.4858 },
+      ES: { lat: 40.4637, lon: -3.7492 },
+      IT: { lat: 41.8719, lon: 12.5674 },
+      NL: { lat: 52.1326, lon: 5.2913 },
+      SE: { lat: 60.1282, lon: 18.6435 },
+      NO: { lat: 60.472, lon: 8.4689 },
+      DK: { lat: 56.2639, lon: 9.5018 },
+      FI: { lat: 61.9241, lon: 25.7482 },
+      PL: { lat: 51.9194, lon: 19.1451 },
+      BR: { lat: -14.235, lon: -51.9253 },
+      IN: { lat: 20.5937, lon: 78.9629 },
+      CN: { lat: 35.8617, lon: 104.1954 },
+      MX: { lat: 23.6345, lon: -102.5528 }, // Mexico
+      RU: { lat: 61.524, lon: 105.3188 }, // Russia
     };
-    
+
     return countryCenters[countryCode.toUpperCase()] || null;
   }
 
@@ -1823,7 +1828,7 @@ export class AnalyticsService {
     for (const session of sessions) {
       const latestPv = latestPageviewBySession.get(session.session_id);
       let referrer = "Direct";
-      
+
       if (latestPv?.referrer) {
         try {
           const url = new URL(latestPv.referrer);
@@ -1832,7 +1837,7 @@ export class AnalyticsService {
           referrer = latestPv.referrer;
         }
       }
-      
+
       referrerCounts.set(referrer, (referrerCounts.get(referrer) || 0) + 1);
     }
 

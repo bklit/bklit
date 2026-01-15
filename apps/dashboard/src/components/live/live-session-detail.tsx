@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@bklit/ui/components/badge";
 import {
   Card,
   CardContent,
@@ -7,16 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@bklit/ui/components/card";
-import { Badge } from "@bklit/ui/components/badge";
 import { Skeleton } from "@bklit/ui/components/skeleton";
-import { CircleFlag } from "react-circle-flags";
+import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { CircleFlag } from "react-circle-flags";
 import { useSocketIOEvents } from "@/hooks/use-socketio-client";
-import { useTRPC } from "@/trpc/react";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { getDeviceIcon } from "@/lib/utils/get-device-icon";
+import { useTRPC } from "@/trpc/react";
 
 interface LiveSessionDetailProps {
   sessionId: string | null;
@@ -41,13 +41,15 @@ export function LiveSessionDetail({
   organizationId,
 }: LiveSessionDetailProps) {
   const trpc = useTRPC();
-  const [realtimePageviews, setRealtimePageviews] = useState<PageviewUpdate[]>([]);
+  const [realtimePageviews, setRealtimePageviews] = useState<PageviewUpdate[]>(
+    []
+  );
   const [realtimeEvents, setRealtimeEvents] = useState<EventUpdate[]>([]);
 
   // Fetch session details
   const { data: session, isLoading } = useQuery({
     ...trpc.session.getById.queryOptions(
-      { id: sessionId || '', organizationId },
+      { id: sessionId || "", organizationId },
       {
         enabled: !!sessionId,
         refetchInterval: 30_000,
@@ -56,26 +58,33 @@ export function LiveSessionDetail({
   });
 
   // Real-time pageview updates
-  useSocketIOEvents(projectId, 'pageview', (data: any) => {
+  useSocketIOEvents(projectId, "pageview", (data: any) => {
     if (data.sessionId === sessionId) {
-      setRealtimePageviews((prev) => [
-        { url: data.url, timestamp: data.timestamp || new Date().toISOString() },
-        ...prev,
-      ].slice(0, 10)); // Keep last 10
+      setRealtimePageviews((prev) =>
+        [
+          {
+            url: data.url,
+            timestamp: data.timestamp || new Date().toISOString(),
+          },
+          ...prev,
+        ].slice(0, 10)
+      ); // Keep last 10
     }
   });
 
   // Real-time event updates
-  useSocketIOEvents(projectId, 'event', (data: any) => {
+  useSocketIOEvents(projectId, "event", (data: any) => {
     if (data.sessionId === sessionId) {
-      setRealtimeEvents((prev) => [
-        { 
-          trackingId: data.trackingId, 
-          eventType: data.eventType,
-          timestamp: data.timestamp || new Date().toISOString() 
-        },
-        ...prev,
-      ].slice(0, 10));
+      setRealtimeEvents((prev) =>
+        [
+          {
+            trackingId: data.trackingId,
+            eventType: data.eventType,
+            timestamp: data.timestamp || new Date().toISOString(),
+          },
+          ...prev,
+        ].slice(0, 10)
+      );
     }
   });
 
@@ -124,16 +133,18 @@ export function LiveSessionDetail({
     );
   }
 
-  const DeviceIcon = getDeviceIcon(session.userAgent || '');
-  const BrowserIcon = getBrowserIcon(session.userAgent || '');
-  const countryCode = session.country?.toLowerCase() || 'us';
+  const DeviceIcon = getDeviceIcon(session.userAgent || "");
+  const BrowserIcon = getBrowserIcon(session.userAgent || "");
+  const countryCode = session.country?.toLowerCase() || "us";
   const allPageviews = [
     ...realtimePageviews,
     ...(session.pageViewEvents || []).map((pv: any) => ({
       url: pv.url,
       timestamp: pv.timestamp,
     })),
-  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  ].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
 
   const currentPage = allPageviews[0]?.url || session.entryPage;
 
@@ -144,7 +155,7 @@ export function LiveSessionDetail({
           <CircleFlag className="size-6" countryCode={countryCode} />
           <div>
             <CardTitle className="text-base">
-              Visitor from {session.country || 'Unknown'}
+              Visitor from {session.country || "Unknown"}
             </CardTitle>
             <CardDescription className="flex items-center gap-2 text-xs">
               {session.city && <span>{session.city}</span>}
@@ -158,7 +169,7 @@ export function LiveSessionDetail({
       <CardContent className="space-y-4">
         {/* Current Page */}
         <div>
-          <h3 className="mb-2 font-medium text-xs text-muted-foreground">
+          <h3 className="mb-2 font-medium text-muted-foreground text-xs">
             Current Page
           </h3>
           <div className="rounded-lg bg-muted px-3 py-2">
@@ -169,25 +180,25 @@ export function LiveSessionDetail({
         {/* Page Journey */}
         {allPageviews.length > 0 && (
           <div>
-            <h3 className="mb-2 font-medium text-xs text-muted-foreground">
+            <h3 className="mb-2 font-medium text-muted-foreground text-xs">
               Page Journey
             </h3>
             <div className="space-y-1">
               {allPageviews.slice(0, 5).map((pv, index) => (
                 <div
-                  key={`${pv.url}-${pv.timestamp}`}
                   className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-3 py-2"
+                  key={`${pv.url}-${pv.timestamp}`}
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
                     <span className="shrink-0 font-mono text-muted-foreground text-xs">
                       {index + 1}.
                     </span>
-                    <span className="truncate font-mono text-xs">
-                      {pv.url}
-                    </span>
+                    <span className="truncate font-mono text-xs">{pv.url}</span>
                   </div>
                   <span className="shrink-0 text-muted-foreground text-xs">
-                    {formatDistanceToNow(new Date(pv.timestamp), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(pv.timestamp), {
+                      addSuffix: true,
+                    })}
                   </span>
                 </div>
               ))}
@@ -198,23 +209,25 @@ export function LiveSessionDetail({
         {/* Events Triggered */}
         {realtimeEvents.length > 0 && (
           <div>
-            <h3 className="mb-2 font-medium text-xs text-muted-foreground">
+            <h3 className="mb-2 font-medium text-muted-foreground text-xs">
               Events Triggered
             </h3>
             <div className="space-y-1">
               {realtimeEvents.slice(0, 5).map((event, index) => (
                 <div
-                  key={`${event.trackingId}-${event.timestamp}-${index}`}
                   className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-3 py-2"
+                  key={`${event.trackingId}-${event.timestamp}-${index}`}
                 >
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge className="text-xs" variant="secondary">
                       {event.eventType}
                     </Badge>
                     <span className="text-xs">{event.trackingId}</span>
                   </div>
                   <span className="text-muted-foreground text-xs">
-                    {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(event.timestamp), {
+                      addSuffix: true,
+                    })}
                   </span>
                 </div>
               ))}
@@ -223,14 +236,17 @@ export function LiveSessionDetail({
         )}
 
         {/* Session Info */}
-        <div className="border-t border-border pt-3">
+        <div className="border-border border-t pt-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Session started</span>
-            <span>{formatDistanceToNow(new Date(session.startedAt), { addSuffix: true })}</span>
+            <span>
+              {formatDistanceToNow(new Date(session.startedAt), {
+                addSuffix: true,
+              })}
+            </span>
           </div>
         </div>
       </CardContent>
     </Card>
   );
 }
-
