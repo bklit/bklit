@@ -83,7 +83,7 @@ export function LiveCard({ className }: LiveCardProps) {
   }, [view, selectedUser]);
 
   return (
-    <MotionConfig transition={{ duration: 0.5, ease: "easeInOut" }}>
+    <MotionConfig transition={{ type: "spring", stiffness: 220, damping: 20, mass: 1.26 }}>
       
       <motion.div
         animate={enableAnimation && bounds.height ? { height: bounds.height } : {}}
@@ -116,12 +116,14 @@ export function LiveCard({ className }: LiveCardProps) {
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
                 key={view}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10, scale: 0.95, filter: "blur(2px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -10, scale: 0.95, filter: "blur(2px)" }}
                 transition={{
-                  duration: 0.4,
-                  ease: "easeInOut",
+                  type: "spring",
+                  stiffness: 220,
+                  damping: 20,
+                  mass: 1,
                 }}
               >
                 {content}
