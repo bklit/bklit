@@ -397,7 +397,7 @@ export async function POST(request: NextRequest) {
     // Real-time notification (optional - won't break if Redis unavailable)
     // isNewSession was calculated earlier (before saving to ClickHouse)
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:399',message:'About to call publishLiveEvent',data:{projectId:payload.projectId,url:payload.url,sessionId:payload.sessionId,isNewSession:isNewSession},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+    console.log('[DEBUG H5] About to call publishLiveEvent:', { projectId: payload.projectId, url: payload.url, sessionId: payload.sessionId, isNewSession: isNewSession });
     // #endregion
     publishLiveEvent({
       projectId: payload.projectId,
