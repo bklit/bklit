@@ -32,7 +32,7 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
       {
         enabled: !!selectedSessionId,
         refetchInterval: 5000, // Refetch every 5 seconds to show live updates
-        staleTime: 3000,
+        staleTime: 0, // No stale time for instant timeline updates
       }
     ),
   });

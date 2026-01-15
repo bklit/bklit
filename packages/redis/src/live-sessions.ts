@@ -8,10 +8,14 @@ export async function trackSessionStart(
   projectId: string,
   sessionId: string
 ): Promise<void> {
-  if (!isRedisAvailable()) return;
+  if (!isRedisAvailable()) {
+    return;
+  }
 
   const client = getRedisClient();
-  if (!client) return;
+  if (!client) {
+    return;
+  }
 
   try {
     const sessionKey = `${SESSION_KEY_PREFIX}${sessionId}`;
@@ -25,6 +29,12 @@ export async function trackSessionStart(
       await client.expire(sessionKey, SESSION_TTL);
     } else {
       // New session - increment count and set session key
+      // First ensure the count key exists as an integer
+      const currentCount = await client.get(countKey);
+      if (currentCount && isNaN(Number.parseInt(currentCount, 10))) {
+        await client.del(countKey);
+      }
+
       await Promise.all([
         client.incr(countKey),
         client.setex(sessionKey, SESSION_TTL, projectId),
@@ -52,26 +62,33 @@ export async function trackSessionEnd(
     const exists = await client.exists(sessionKey);
 
     if (exists) {
-      // Decrement count, ensuring it never goes below 0
-      const currentCount = await client.get(countKey);
-      const count = currentCount ? Number.parseInt(currentCount, 10) : 0;
+      // Safely decrement count
+      try {
+        const currentCount = await client.get(countKey);
 
-      if (count > 0) {
-        await Promise.all([client.decr(countKey), client.del(sessionKey)]);
-      } else {
-        // Just delete the session key if count is already 0
+        // If value is not a valid integer, reset it to 0
+        if (currentCount && isNaN(Number.parseInt(currentCount, 10))) {
+          await client.set(countKey, "0");
+          await client.del(sessionKey);
+          return;
+        }
+
+        const count = currentCount ? Number.parseInt(currentCount, 10) : 0;
+
+        if (count > 0) {
+          await client.decr(countKey);
+        }
+
+        await client.del(sessionKey);
+      } catch (decrError) {
+        console.error("Redis session end error:", decrError);
+        // Reset the corrupted key
+        await client.del(countKey);
         await client.del(sessionKey);
       }
     }
   } catch (error) {
     console.error("Redis session end error:", error);
-    // If there's an error (like corrupted key), try to reset the count
-    try {
-      const countKey = `${COUNT_KEY_PREFIX}${projectId}:count`;
-      await client.del(countKey); // Delete corrupted key
-    } catch {
-      // Silently fail - ClickHouse fallback will handle it
-    }
   }
 }
 
@@ -88,6 +105,12 @@ export async function getLiveUserCount(
   try {
     const countKey = `${COUNT_KEY_PREFIX}${projectId}:count`;
     const count = await client.get(countKey);
+
+    // If value is not a valid integer string, reset it
+    if (count && isNaN(Number.parseInt(count, 10))) {
+      await client.del(countKey);
+      return 0;
+    }
 
     const numCount = count ? Number.parseInt(count, 10) : 0;
     return Math.max(0, numCount); // Ensure never negative

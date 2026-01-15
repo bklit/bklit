@@ -25,7 +25,7 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
       { projectId, organizationId },
       {
         refetchInterval: 10_000, // 10s for more responsive updates
-        staleTime: 5000, // Allow refetch after 5 seconds
+        staleTime: 0, // No stale time - always allow refetch
         refetchOnWindowFocus: false,
         refetchOnMount: true,
         retry: (failureCount, error) => {

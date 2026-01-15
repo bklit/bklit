@@ -60,7 +60,7 @@ export function LiveCardWithData({
       { projectId, organizationId },
       {
         refetchInterval: 10_000, // More frequent updates
-        staleTime: 5000,
+        staleTime: 0, // No stale time for instant updates
       }
     ),
   });
@@ -71,7 +71,7 @@ export function LiveCardWithData({
       { projectId, organizationId, limit: 10 },
       {
         refetchInterval: 10_000,
-        staleTime: 5000,
+        staleTime: 0,
       }
     ),
   });
@@ -82,7 +82,7 @@ export function LiveCardWithData({
       { projectId, organizationId, limit: 5 },
       {
         refetchInterval: 10_000,
-        staleTime: 5000,
+        staleTime: 0,
       }
     ),
   });

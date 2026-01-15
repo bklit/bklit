@@ -591,6 +591,7 @@ export const sessionRouter = createTRPCRouter({
         NO: [8.4689, 60.472], // Norway
         DK: [9.5018, 56.2639], // Denmark
         FI: [25.7482, 61.9241], // Finland
+        PT: [-8.2245, 39.3999], // Portugal
         // Add more countries as needed - format: [longitude, latitude]
       };
 
