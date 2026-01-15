@@ -247,3 +247,66 @@
     @apply text-card-foreground;
   }
 }
+
+.scroll-container {
+  @apply relative w-full;
+
+  /* Top fade - shows when scrolled from top */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      var(--bklit-700) 0%,
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+    z-index: 10;
+  }
+
+  &:has([data-scrolled-top="true"])::before {
+    opacity: 1;
+  }
+
+  /* Bottom fade - shows when there's more content below */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    pointer-events: none;
+    background: linear-gradient(to top, var(--bklit-700) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+    z-index: 10;
+  }
+
+  &:has([data-scrolled-bottom="true"])::after {
+    opacity: 1;
+  }
+
+  /* Inner scrolling container */
+  > div {
+    @apply h-full max-h-[180px] space-y-1.5 overflow-y-auto pr-1;
+
+    &::-webkit-scrollbar {
+      @apply w-1 rounded-full;
+    }
+
+    &::-webkit-scrollbar-track {
+      @apply bg-transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      @apply bg-bklit-600 rounded-full;
+    }
+  }
+}
