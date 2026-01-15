@@ -29,7 +29,13 @@ export async function publishLiveEvent(event: LiveEvent): Promise<void> {
     console.log('[DEBUG H3,H5] About to publish to Redis:', { channel: LIVE_EVENTS_CHANNEL, messageLength: message.length, eventType: event.type });
     // #endregion
 
-    await client.publish(LIVE_EVENTS_CHANNEL, message);
+    // Add timeout wrapper to prevent hanging
+    const publishPromise = client.publish(LIVE_EVENTS_CHANNEL, message);
+    const timeoutPromise = new Promise<number>((_, reject) => 
+      setTimeout(() => reject(new Error('Publish timeout after 2000ms')), 2000)
+    );
+    
+    await Promise.race([publishPromise, timeoutPromise]);
     
     // #region agent log
     console.log('[DEBUG H3] Successfully published to Redis:', { channel: LIVE_EVENTS_CHANNEL, eventType: event.type });
