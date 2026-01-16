@@ -230,9 +230,6 @@ export async function POST(request: NextRequest) {
 
         const sessionId = payload.sessionId;
 
-        // Use the isNewSession check from above
-        const sessionExists = !isNewSession;
-
         // Generate visitor ID from user agent (simple hash)
         const generateVisitorId = (userAgent: string): string => {
           let hash = 0;
@@ -431,7 +428,9 @@ export async function POST(request: NextRequest) {
         userAgent: payload.userAgent,
         isNewSession, // Flag to show toast only on new sessions
       },
-    }).catch(() => {}); // Swallow errors
+    }).catch(() => {
+      // Swallow errors - real-time is optional
+    });
 
     const orgId = tokenValidation.organizationId;
     if (orgId) {
