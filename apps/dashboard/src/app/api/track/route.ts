@@ -1,24 +1,14 @@
+import { randomBytes } from "node:crypto";
 import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
 import "@bklit/redis"; // Initialize Redis on first import
-import { publishLiveEvent, trackSessionStart } from "@bklit/redis";
+import { trackSessionStart } from "@bklit/redis";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
 import { checkEventLimit } from "@/lib/usage-limits";
 import { isMobileDevice } from "@/lib/user-agent";
 import type { GeoLocation } from "@/types/geo";
-
-export const runtime = "edge";
-
-// Edge-compatible random ID generator
-function generateId(): string {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    ""
-  );
-}
 
 interface TrackingPayload {
   url: string;
@@ -208,7 +198,7 @@ export async function POST(request: NextRequest) {
     }
 
     const analytics = new AnalyticsService();
-    const pageViewId = generateId();
+    const pageViewId = randomBytes(16).toString("hex");
 
     // Check if this is a new session BEFORE saving (for toast notification)
     let isNewSession = false;
@@ -299,7 +289,7 @@ export async function POST(request: NextRequest) {
         if (isNewSession) {
           console.log("🆕 API: Creating new session in ClickHouse...");
           // Generate a unique ID for the session
-          const sessionDbId = generateId();
+          const sessionDbId = randomBytes(16).toString("hex");
           const visitorId = payload.userAgent
             ? generateVisitorId(payload.userAgent)
             : null;
@@ -401,33 +391,39 @@ export async function POST(request: NextRequest) {
       await trackSessionStart(payload.projectId, payload.sessionId);
     }
 
-    // Real-time notification (optional - won't break if Redis unavailable)
+    // Real-time notification via direct HTTP to WebSocket server (faster than Redis PUB/SUB)
     // isNewSession was calculated earlier (before saving to ClickHouse)
     // #region agent log
-    console.log("[DEBUG H5] About to call publishLiveEvent:", {
+    console.log("[DEBUG H5] Sending event directly to WebSocket server:", {
       projectId: payload.projectId,
       url: payload.url,
       sessionId: payload.sessionId,
       isNewSession,
     });
     // #endregion
-    publishLiveEvent({
-      projectId: payload.projectId,
-      type: "pageview",
-      timestamp: new Date().toISOString(),
-      data: {
-        url: payload.url,
-        country: locationData?.country,
-        countryCode: locationData?.countryCode,
-        city: locationData?.city,
-        sessionId: payload.sessionId,
-        mobile: isMobileDevice(payload.userAgent),
-        title: payload.title,
-        lat: locationData?.lat,
-        lon: locationData?.lon,
-        userAgent: payload.userAgent,
-        isNewSession, // Flag to show toast only on new sessions
-      },
+
+    // Send directly to WebSocket server instead of going through Redis PUB/SUB
+    fetch("https://ws.bklit.ai/ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: payload.projectId,
+        type: "pageview",
+        timestamp: new Date().toISOString(),
+        data: {
+          url: payload.url,
+          country: locationData?.country,
+          countryCode: locationData?.countryCode,
+          city: locationData?.city,
+          sessionId: payload.sessionId,
+          mobile: isMobileDevice(payload.userAgent),
+          title: payload.title,
+          lat: locationData?.lat,
+          lon: locationData?.lon,
+          userAgent: payload.userAgent,
+          isNewSession, // Flag to show toast only on new sessions
+        },
+      }),
     }).catch(() => {
       // Swallow errors - real-time is optional
     });

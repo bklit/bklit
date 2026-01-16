@@ -19,8 +19,50 @@ const redis = REDIS_URL
   
 const subscriber = redis.duplicate();
 
-// HTTP server
-const httpServer = createServer();
+// HTTP server with ingest endpoint
+const httpServer = createServer((req, res) => {
+  // Handle direct event ingestion from Vercel (bypassing Redis PUB/SUB)
+  if (req.method === "POST" && req.url === "/ingest") {
+    let body = "";
+    
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+    
+    req.on("end", () => {
+      try {
+        const event = JSON.parse(body);
+        const room = `project:${event.projectId}`;
+        const clientCount = roomCounts.get(room) || 0;
+
+        if (clientCount > 0) {
+          io.to(room).emit(event.type, event.data);
+          console.log(`[EVENT-HTTP] ${event.type} → ${room} (${clientCount} clients)`);
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true, clients: clientCount }));
+      } catch (error) {
+        console.error("Error processing HTTP event:", error);
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid request" }));
+      }
+    });
+    
+    return;
+  }
+
+  // Health check endpoint
+  if (req.method === "GET" && req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", connections: connectionCount }));
+    return;
+  }
+
+  // Default response for other paths
+  res.writeHead(404);
+  res.end("Not Found");
+});
 
 // Socket.IO server
 const io = new Server(httpServer, {
