@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
 import "@bklit/redis"; // Initialize Redis on first import
@@ -9,6 +8,17 @@ import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
 import { checkEventLimit } from "@/lib/usage-limits";
 import { isMobileDevice } from "@/lib/user-agent";
 import type { GeoLocation } from "@/types/geo";
+
+export const runtime = "edge";
+
+// Edge-compatible random ID generator
+function generateId(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
+    ""
+  );
+}
 
 interface TrackingPayload {
   url: string;
@@ -198,7 +208,7 @@ export async function POST(request: NextRequest) {
     }
 
     const analytics = new AnalyticsService();
-    const pageViewId = randomBytes(16).toString("hex");
+    const pageViewId = generateId();
 
     // Check if this is a new session BEFORE saving (for toast notification)
     let isNewSession = false;
@@ -292,7 +302,7 @@ export async function POST(request: NextRequest) {
         if (isNewSession) {
           console.log("🆕 API: Creating new session in ClickHouse...");
           // Generate a unique ID for the session
-          const sessionDbId = randomBytes(16).toString("hex");
+          const sessionDbId = generateId();
           const visitorId = payload.userAgent
             ? generateVisitorId(payload.userAgent)
             : null;
@@ -397,7 +407,12 @@ export async function POST(request: NextRequest) {
     // Real-time notification (optional - won't break if Redis unavailable)
     // isNewSession was calculated earlier (before saving to ClickHouse)
     // #region agent log
-    console.log('[DEBUG H5] About to call publishLiveEvent:', { projectId: payload.projectId, url: payload.url, sessionId: payload.sessionId, isNewSession: isNewSession });
+    console.log("[DEBUG H5] About to call publishLiveEvent:", {
+      projectId: payload.projectId,
+      url: payload.url,
+      sessionId: payload.sessionId,
+      isNewSession,
+    });
     // #endregion
     publishLiveEvent({
       projectId: payload.projectId,
