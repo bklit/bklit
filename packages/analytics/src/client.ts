@@ -10,7 +10,7 @@ export function getClickHouseClient(): ClickHouseClient {
       host: env.CLICKHOUSE_HOST,
       username: env.CLICKHOUSE_USERNAME,
       password: env.CLICKHOUSE_PASSWORD,
-      database: "default",
+      database: "analytics",
       request_timeout: 30_000,
       clickhouse_settings: {
         date_time_input_format: "best_effort",

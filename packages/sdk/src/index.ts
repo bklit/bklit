@@ -616,11 +616,12 @@ export function trackEvent(
     });
   }
 
+  // Construct event API host by replacing /track with /track-event
   const eventApiHost = apiHost
-    ? apiHost.replace("/api/track", "/api/track-event")
+    ? apiHost.replace(/\/track$/, "/track-event")
     : getDefaultConfig(window.bklitEnvironment).apiHost.replace(
-        "/api/track",
-        "/api/track-event"
+        /\/track$/,
+        "/track-event"
       );
 
   const apiKey = window.bklitApiKey;

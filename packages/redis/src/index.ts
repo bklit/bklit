@@ -5,3 +5,5 @@ export * from "./client";
 export * from "./live-sessions";
 export * from "./pubsub";
 export * from "./types";
+export * from "./debug";
+export * from "./queue";

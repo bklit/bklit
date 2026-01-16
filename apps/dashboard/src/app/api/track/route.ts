@@ -2,7 +2,12 @@ import { randomBytes } from "node:crypto";
 import { AnalyticsService, sendEventToPolar } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
 import "@bklit/redis"; // Initialize Redis on first import
-import { trackSessionStart } from "@bklit/redis";
+import {
+  publishDebugLog,
+  pushToQueue,
+  type QueuedEvent,
+  trackSessionStart,
+} from "@bklit/redis";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { extractClientIP, getLocationFromIP } from "@/lib/ip-geolocation";
@@ -68,6 +73,9 @@ export function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  const requestStartTime = Date.now();
+  const eventId = `evt_${Date.now()}_${randomBytes(8).toString("hex")}`;
+
   try {
     const payload: TrackingPayload = await request.json();
     console.log("📊 API: Page view tracking request received", {
@@ -78,6 +86,16 @@ export async function POST(request: NextRequest) {
       userAgent: payload.userAgent,
     });
     console.log("🔍 API: Starting processing...");
+
+    await publishDebugLog({
+      timestamp: new Date().toISOString(),
+      stage: "ingestion",
+      level: "info",
+      message: "Event received at /api/track",
+      data: { url: payload.url, projectId: payload.projectId },
+      eventId,
+      projectId: payload.projectId,
+    });
 
     if (!payload.projectId) {
       return createCorsResponse({ message: "projectId is required" }, 400);
@@ -391,6 +409,92 @@ export async function POST(request: NextRequest) {
       await trackSessionStart(payload.projectId, payload.sessionId);
     }
 
+    // DUAL-WRITE: Also push to Redis queue for new worker-based pipeline
+    // This allows us to verify the new system produces identical results
+    try {
+      const queuedEvent: QueuedEvent = {
+        id: eventId,
+        type: "pageview",
+        payload: {
+          id: pageViewId,
+          url: payload.url,
+          timestamp: payload.timestamp,
+          projectId: payload.projectId,
+          userAgent: payload.userAgent,
+          ip: locationData?.ip,
+          country: locationData?.country,
+          countryCode: locationData?.countryCode,
+          region: locationData?.region,
+          regionName: locationData?.regionName,
+          city: locationData?.city,
+          zip: locationData?.zip,
+          lat: locationData?.lat,
+          lon: locationData?.lon,
+          timezone: locationData?.timezone,
+          isp: locationData?.isp,
+          mobile: isMobileDevice(payload.userAgent),
+          sessionId: payload.sessionId,
+          referrer: payload.referrer,
+          utmSource: payload.utmSource,
+          utmMedium: payload.utmMedium,
+          utmCampaign: payload.utmCampaign,
+          utmTerm: payload.utmTerm,
+          utmContent: payload.utmContent,
+          title: payload.title,
+          description: payload.description,
+          ogImage: payload.ogImage,
+          ogTitle: payload.ogTitle,
+          favicon: payload.favicon,
+          canonicalUrl: payload.canonicalUrl,
+          language: payload.language,
+          robots: payload.robots,
+          referrerHostname: payload.referrerHostname,
+          referrerPath: payload.referrerPath,
+          referrerType: payload.referrerType,
+          utmId: payload.utmId,
+          gclid: payload.gclid,
+          fbclid: payload.fbclid,
+          msclkid: payload.msclkid,
+          ttclid: payload.ttclid,
+          liFatId: payload.liFatId,
+          twclid: payload.twclid,
+          isNewVisitor: payload.isNewVisitor,
+          landingPage: payload.landingPage,
+        },
+        queuedAt: new Date().toISOString(),
+        projectId: payload.projectId,
+      };
+
+      await pushToQueue(queuedEvent);
+
+      await publishDebugLog({
+        timestamp: new Date().toISOString(),
+        stage: "queue",
+        level: "info",
+        message: "Event also queued for worker pipeline (dual-write)",
+        data: { eventId, pageViewId },
+        eventId,
+        projectId: payload.projectId,
+      });
+    } catch (queueError) {
+      // Don't fail the request if queue push fails
+      console.error("Failed to push to queue (dual-write):", queueError);
+      await publishDebugLog({
+        timestamp: new Date().toISOString(),
+        stage: "queue",
+        level: "error",
+        message: "Failed to queue event (dual-write)",
+        data: {
+          error:
+            queueError instanceof Error
+              ? queueError.message
+              : String(queueError),
+        },
+        eventId,
+        projectId: payload.projectId,
+      });
+    }
+
     // Real-time notification via direct HTTP to WebSocket server (faster than Redis PUB/SUB)
     // isNewSession was calculated earlier (before saving to ClickHouse)
     // #region agent log
@@ -461,9 +565,33 @@ export async function POST(request: NextRequest) {
         });
     }
 
-    return createCorsResponse({ message: "Data received and stored" }, 200);
+    const totalDuration = Date.now() - requestStartTime;
+    await publishDebugLog({
+      timestamp: new Date().toISOString(),
+      stage: "ingestion",
+      level: "info",
+      message: "Request completed successfully",
+      data: { eventId, pageViewId },
+      eventId,
+      projectId: payload.projectId,
+      duration: totalDuration,
+    });
+
+    return createCorsResponse(
+      { message: "Data received and stored", eventId },
+      200
+    );
   } catch (error) {
     console.error("❌ API: Error processing tracking data:", error);
+
+    await publishDebugLog({
+      timestamp: new Date().toISOString(),
+      stage: "ingestion",
+      level: "error",
+      message: "Request failed",
+      data: { error: error instanceof Error ? error.message : String(error) },
+      eventId,
+    });
     // Log full error details for debugging
     if (error instanceof Error) {
       console.error("Error stack:", error.stack);

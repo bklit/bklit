@@ -13,9 +13,16 @@ const YOUR_PROJECT_ID = import.meta.env.VITE_BKLIT_PROJECT_ID;
 const PROJECT_ID = YOUR_PROJECT_ID || "cmh1rrwf7000122floz152tfo";
 
 const NGROK_URL = import.meta.env.VITE_NGROK_URL;
+const IS_DEV = import.meta.env.DEV;
+
+// In development, use the new ingestion service (port 3001)
+// In production, use the dashboard API
+// Note: SDK will auto-replace /track with /track-event for custom events
 const API_HOST = NGROK_URL
   ? `${NGROK_URL}/api/track`
-  : "http://localhost:3000/api/track";
+  : IS_DEV
+    ? "http://localhost:3001/track"
+    : "http://localhost:3000/api/track";
 
 const API_KEY =
   import.meta.env.VITE_BKLIT_API_KEY || import.meta.env.BKLIT_API_KEY;
@@ -24,6 +31,7 @@ if (PROJECT_ID) {
   console.log("🎯 Playground: Initializing Bklit SDK...", {
     projectId: PROJECT_ID,
     apiHost: API_HOST,
+    mode: IS_DEV ? "development (ingestion service)" : "production",
   });
 
   try {
