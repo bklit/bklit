@@ -21,6 +21,9 @@ console.log("[Worker] Environment check:", {
 // Cache EventDefinition IDs to avoid repeated Postgres queries
 const eventDefinitionCache = new Map<string, string>(); // trackingId:projectId -> UUID
 
+// Track which sessions we've seen to know if they're new or existing
+const seenSessions = new Set<string>(); // sessionId
+
 const POLL_INTERVAL_MS = 1000; // Poll every 1 second
 const BATCH_SIZE = 100; // Process up to 100 events per batch
 
@@ -89,6 +92,45 @@ async function processBatch() {
               ...event.payload,
               timestamp: new Date(event.payload.timestamp as string),
             } as any);
+            
+            // Handle session creation/update for pageviews
+            const sessionId = event.payload.sessionId as string | undefined;
+            if (sessionId) {
+              const isNewSession = !seenSessions.has(sessionId);
+              
+              if (isNewSession) {
+                // Check if session already exists in ClickHouse
+                const exists = await analytics.sessionExists(sessionId, event.projectId);
+                
+                if (!exists) {
+                  // Create new session
+                  const sessionDbId = `sess_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                  await analytics.createTrackedSession({
+                    id: sessionDbId,
+                    sessionId: sessionId,
+                    startedAt: new Date(event.payload.timestamp as string),
+                    endedAt: null,
+                    duration: null,
+                    didBounce: true,
+                    visitorId: null,
+                    entryPage: event.payload.url as string,
+                    exitPage: event.payload.url as string,
+                    userAgent: event.payload.userAgent as string | null,
+                    country: event.payload.country as string | null,
+                    countryCode: event.payload.countryCode as string | null,
+                    city: event.payload.city as string | null,
+                    projectId: event.projectId,
+                  } as any);
+                  
+                  seenSessions.add(sessionId);
+                }
+              } else {
+                // Update existing session
+                await analytics.updateTrackedSession(sessionId, {
+                  exitPage: event.payload.url as string,
+                });
+              }
+            }
           } else if (event.type === "event") {
             // Look up EventDefinition UUID from Postgres by trackingId (BACKWARDS COMPATIBLE!)
             const trackingId = event.payload.trackingId as string;

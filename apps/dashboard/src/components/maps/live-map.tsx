@@ -12,73 +12,72 @@ import {
   findCountryCoordinates,
   getCountryCoordinates,
 } from "@/lib/maps/country-coordinates";
-import { getMarkerGradient, parseRGB } from "@/lib/maps/marker-colors";
+import { parseRGB } from "@/lib/maps/marker-colors";
 
 interface LiveMapProps {
   projectId: string;
   organizationId: string;
 }
 
-// Helper function to create a pulsing dot with custom gradient
-function createPulsingDot(
+// Helper function to create a static gradient circle marker
+function createGradientCircle(
   fromColor: string,
   toColor: string
 ): mapboxgl.StyleImageInterface {
-  const size = 200;
+  const size = 80;
   const from = parseRGB(fromColor);
   const to = parseRGB(toColor);
 
-  const pulsingDot: mapboxgl.StyleImageInterface & {
-    context?: CanvasRenderingContext2D | null;
-  } = {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d")!;
+
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const radius = size / 2 - 4;
+
+  // Create radial gradient matching card: from-cyan-400 to-indigo-500
+  // Card uses linear gradient top-left to bottom-right, we'll simulate with radial
+  const gradient = context.createRadialGradient(
+    centerX - radius * 0.3,
+    centerY - radius * 0.3,
+    0,
+    centerX,
+    centerY,
+    radius
+  );
+  gradient.addColorStop(0, `rgba(${from.r}, ${from.g}, ${from.b}, 1)`); // Cyan center
+  gradient.addColorStop(1, `rgba(${to.r}, ${to.g}, ${to.b}, 1)`); // Indigo edge
+
+  // Draw the circle with gradient
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  context.fillStyle = gradient;
+  context.fill();
+
+  // Add white border
+  context.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  context.lineWidth = 2;
+  context.stroke();
+
+  // Get the image data immediately
+  const imageData = context.getImageData(0, 0, size, size);
+
+  return {
     width: size,
     height: size,
-    data: new Uint8Array(size * size * 4),
+    data: imageData.data,
 
     onAdd() {
-      const canvas = document.createElement("canvas");
-      canvas.width = this.width;
-      canvas.height = this.height;
-      this.context = canvas.getContext("2d");
+      // Image already drawn
     },
 
     render() {
-      const duration = 1000;
-      const t = (performance.now() % duration) / duration;
-
-      const radius = (size / 2) * 0.3;
-      const outerRadius = (size / 2) * 0.7 * t + radius;
-      const context = this.context;
-
-      if (!context) {
-        return false;
-      }
-
-      // Draw the outer circle with custom color
-      context.clearRect(0, 0, this.width, this.height);
-      context.beginPath();
-      context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(${from.r}, ${from.g}, ${from.b}, ${1 - t})`;
-      context.fill();
-
-      // Draw the inner circle with custom color
-      context.beginPath();
-      context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(${to.r}, ${to.g}, ${to.b}, 1)`;
-      context.strokeStyle = "white";
-      context.lineWidth = 2 + 4 * (1 - t);
-      context.fill();
-      context.stroke();
-
-      // Update this image's data with data from the canvas
-      this.data = context.getImageData(0, 0, this.width, this.height).data;
-
-      // Return `true` to let the map know that the image was updated
-      return true;
+      // Static image - no animation
+      return false;
     },
   };
-
-  return pulsingDot;
 }
 
 export function LiveMap({ projectId, organizationId }: LiveMapProps) {
@@ -411,19 +410,28 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
     }
 
     // Log for debugging
-    if (process.env.NODE_ENV === "development") {
-      console.log("Live user locations:", liveUserLocations);
-    }
+    console.log(
+      "[Live Map] User locations:",
+      liveUserLocations.length,
+      liveUserLocations
+    );
 
-    // Create dynamic pulsing dot images for each user
+    // Create gradient circle markers for each user (matching card gradient)
     for (const user of liveUserLocations) {
-      const iconId = `pulsing-dot-${user.id}`;
+      const iconId = `gradient-circle-${user.id}`;
 
-      // Only add the image if it doesn't exist
-      if (map.current && !map.current.hasImage(iconId)) {
-        const gradient = getMarkerGradient(user.id);
-        const pulsingDotImage = createPulsingDot(gradient.from, gradient.to);
-        map.current.addImage(iconId, pulsingDotImage, { pixelRatio: 2 });
+      // Remove old image if it exists
+      if (map.current && map.current.hasImage(iconId)) {
+        map.current.removeImage(iconId);
+      }
+
+      if (map.current) {
+        // Use same gradient as card: cyan-400 to indigo-500
+        const gradientImage = createGradientCircle(
+          "rgb(34, 211, 238)",
+          "rgb(99, 102, 241)"
+        );
+        map.current.addImage(iconId, gradientImage, { pixelRatio: 2 });
       }
     }
 
@@ -445,7 +453,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
           startedAt: user.startedAt.toISOString(),
           browser: user.browser,
           deviceType: user.deviceType,
-          iconImage: `pulsing-dot-${user.id}`, // Assign unique icon
+          iconImage: `gradient-circle-${user.id}`, // Assign unique gradient icon
         },
       })),
     };

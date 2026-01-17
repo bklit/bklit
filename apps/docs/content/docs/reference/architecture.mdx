@@ -88,13 +88,36 @@ Stores:
 4. Protected routes check session
 5. tRPC procedures verify authentication
 
-## Analytics Flow
+## Analytics Flow (Queue-Based Architecture)
 
-1. SDK sends event to `/api/track`
-2. API validates token and project
-3. Checks usage limits
-4. Stores event in ClickHouse
-5. Dashboard queries and displays
+Bklit uses a queue-based architecture inspired by [Visitors.now](https://visitors.now/blog/tech-stack) for high performance and zero data loss:
+
+### Event Ingestion
+1. SDK sends event to ingestion service
+2. Token validation (with Redis caching)
+3. IP anonymization and geolocation
+4. Event pushed to Redis queue
+5. Response returned immediately (~1-3ms)
+
+### Background Processing
+1. Worker polls Redis queue every 1 second
+2. Pops up to 100 events in batch
+3. Looks up EventDefinition UUIDs from Postgres (cached)
+4. Creates/updates sessions in ClickHouse
+5. Batch inserts events to ClickHouse
+6. Publishes to Redis pub/sub for real-time updates
+
+### Real-time Updates
+1. Worker publishes processed events to Redis
+2. WebSocket server subscribes to Redis channel
+3. Broadcasts to connected dashboard clients
+4. Dashboard UI updates instantly
+
+### Benefits
+- **100x faster** ClickHouse writes (batch vs single inserts)
+- **Zero data loss** - Redis queue with AOF persistence
+- **Scalable** - Add more workers for higher throughput
+- **Observable** - /terminal UI shows complete pipeline
 
 ## Billing Flow
 

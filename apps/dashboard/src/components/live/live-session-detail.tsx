@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
+import { motion, AnimatePresence } from "motion/react";
 import { useSocketIOEvents } from "@/hooks/use-socketio-client";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { getDeviceIcon } from "@/lib/utils/get-device-icon";
@@ -57,7 +58,9 @@ export function LiveSessionDetail({
     ),
   });
 
-  // Real-time pageview updates
+  // Real-time pageview updates with animation trigger
+  const [newPageAnimation, setNewPageAnimation] = useState(false);
+  
   useSocketIOEvents(projectId, "pageview", (data: any) => {
     if (data.sessionId === sessionId) {
       setRealtimePageviews((prev) =>
@@ -68,7 +71,11 @@ export function LiveSessionDetail({
           },
           ...prev,
         ].slice(0, 10)
-      ); // Keep last 10
+      );
+      
+      // Trigger animation for new page
+      setNewPageAnimation(true);
+      setTimeout(() => setNewPageAnimation(false), 1000);
     }
   });
 
@@ -133,8 +140,8 @@ export function LiveSessionDetail({
     );
   }
 
-  const DeviceIcon = getDeviceIcon(session.userAgent || "");
-  const BrowserIcon = getBrowserIcon(session.userAgent || "");
+  const deviceIcon = getDeviceIcon(session.userAgent || "");
+  const browserIcon = getBrowserIcon(session.userAgent || "");
   const countryCode = session.country?.toLowerCase() || "us";
   const allPageviews = [
     ...realtimePageviews,
@@ -160,8 +167,10 @@ export function LiveSessionDetail({
             <CardDescription className="flex items-center gap-2 text-xs">
               {session.city && <span>{session.city}</span>}
               {session.city && <span>•</span>}
-              {deviceIcon}
-              {browserIcon}
+              <div className="flex items-center gap-1.5">
+                {deviceIcon}
+                {browserIcon}
+              </div>
             </CardDescription>
           </div>
         </div>
@@ -183,26 +192,43 @@ export function LiveSessionDetail({
             <h3 className="mb-2 font-medium text-muted-foreground text-xs">
               Page Journey
             </h3>
-            <div className="space-y-1">
-              {allPageviews.slice(0, 5).map((pv, index) => (
-                <div
-                  className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-3 py-2"
-                  key={`${pv.url}-${pv.timestamp}`}
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="shrink-0 font-mono text-muted-foreground text-xs">
-                      {index + 1}.
-                    </span>
-                    <span className="truncate font-mono text-xs">{pv.url}</span>
-                  </div>
-                  <span className="shrink-0 text-muted-foreground text-xs">
-                    {formatDistanceToNow(new Date(pv.timestamp), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <AnimatePresence mode="popLayout">
+              <div className="space-y-1">
+                {allPageviews.slice(0, 5).map((pv, index) => {
+                  const isCurrent = index === 0;
+                  const isNew = index === 0 && newPageAnimation;
+                  return (
+                    <motion.div
+                      initial={isCurrent ? { opacity: 0, y: -10 } : false}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={`flex items-center justify-between gap-2 rounded-md px-3 py-2 transition-all ${
+                        isCurrent ? "bg-primary/10" : "bg-muted/50"
+                      } ${isNew ? "ring-2 ring-primary/50" : ""}`}
+                      key={`${pv.url}-${pv.timestamp}`}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        {isCurrent ? (
+                          <div className="relative flex size-3 shrink-0">
+                            <div className="relative inline-flex size-3 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-500" />
+                          </div>
+                        ) : (
+                          <div className="size-3 shrink-0 rounded-full bg-muted" />
+                        )}
+                        <span className={`truncate font-mono text-xs ${isCurrent ? "font-semibold text-primary" : ""}`}>
+                          {pv.url}
+                        </span>
+                      </div>
+                      <span className="shrink-0 text-muted-foreground text-xs">
+                        {formatDistanceToNow(new Date(pv.timestamp), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </AnimatePresence>
           </div>
         )}
 

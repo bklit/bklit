@@ -631,8 +631,13 @@ export const sessionRouter = createTRPCRouter({
             }
           }
 
+          // If no coordinates found, use North Pole as fallback
+          // This ensures all sessions are visible on the map
           if (!coordinates) {
-            return null;
+            coordinates = [0, 90] as [number, number]; // North Pole [longitude, latitude]
+            city = city || "Unknown";
+            country = country || "Unknown Location";
+            countryCode = countryCode || "XX";
           }
 
           const userAgent = session.user_agent;
@@ -649,11 +654,7 @@ export const sessionRouter = createTRPCRouter({
             browser,
             deviceType,
           };
-        })
-        .filter(
-          (location): location is NonNullable<typeof location> =>
-            location !== null
-        );
+        });
     }),
   recentSessions: protectedProcedure
     .input(

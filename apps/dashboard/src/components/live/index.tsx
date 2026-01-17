@@ -108,7 +108,7 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
   }, [sessionData, selectedSessionId, hasOpenedSession, openUserDetail]);
 
   return (
-    <div className="pointer-events-none fixed bottom-0 left-1/2 z-50 flex -translate-x-1/2 justify-center p-6">
+    <div className="pointer-events-none absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 justify-center px-6">
       <div className="pointer-events-auto">
         <Suspense fallback={<LiveCardWithDataSkeleton />}>
           <LiveCardWithData

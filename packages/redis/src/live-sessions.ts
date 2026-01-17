@@ -10,14 +10,7 @@ export async function trackSessionStart(
   projectId: string,
   sessionId: string
 ): Promise<void> {
-  // #region agent log
-  console.log('[DEBUG H4] trackSessionStart called:', { projectId: projectId, sessionId: sessionId, isAvailable: isRedisAvailable() });
-  // #endregion
-  
   if (!isRedisAvailable()) {
-    // #region agent log
-    console.log('[DEBUG H4] trackSessionStart - Redis not available');
-    // #endregion
     return;
   }
 
@@ -31,7 +24,6 @@ export async function trackSessionStart(
     const now = Date.now();
     
     // Add or update session in sorted set with current timestamp as score
-    // This automatically handles both new and existing sessions
     await client.zadd(sessionsKey, now, sessionId);
     
     // Set TTL on the sorted set itself (1 hour) to eventually clean up empty sets
@@ -39,22 +31,8 @@ export async function trackSessionStart(
     
     // Clean up expired sessions (older than 30 minutes)
     await client.zremrangebyscore(sessionsKey, '-inf', now - SESSION_TTL_MS);
-    
-    const activeCount = await client.zcard(sessionsKey);
-    
-    // #region agent log
-    console.log('[DEBUG H4] Session tracked in sorted set:', { 
-      sessionsKey: sessionsKey, 
-      sessionId: sessionId, 
-      activeCount: activeCount,
-      timestamp: now 
-    });
-    // #endregion
   } catch (error) {
     console.error("Redis session tracking error:", error);
-    // #region agent log
-    console.error('[DEBUG H4] trackSessionStart error:', { error: error instanceof Error ? error.message : String(error) });
-    // #endregion
   }
 }
 
