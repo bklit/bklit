@@ -82,6 +82,10 @@ async function processBatch() {
           projectId: event.projectId,
         });
 
+        // Calculate isNewSession BEFORE processing for real-time marker creation
+        const sessionId = event.payload.sessionId as string | undefined;
+        const isNewSession = sessionId ? !seenSessions.has(sessionId) : false;
+
         // Insert into ClickHouse (using existing AnalyticsService)
         const clickhouseStartTime = Date.now();
         
@@ -94,10 +98,7 @@ async function processBatch() {
             } as any);
             
             // Handle session creation/update for pageviews
-            const sessionId = event.payload.sessionId as string | undefined;
             if (sessionId) {
-              const isNewSession = !seenSessions.has(sessionId);
-              
               if (isNewSession) {
                 // Check if session already exists in ClickHouse
                 const exists = await analytics.sessionExists(sessionId, event.projectId);
@@ -182,6 +183,47 @@ async function processBatch() {
               sessionId: event.payload.sessionId as string | null,
               metadata: enrichedMetadata,
             } as any);
+          } else if (event.type === "session_end") {
+            // Handle session end - mark session as ended in ClickHouse
+            const endSessionId = event.payload.sessionId as string;
+            if (endSessionId) {
+              await analytics.endTrackedSession(endSessionId);
+              seenSessions.delete(endSessionId);
+              
+              await publishDebugLog({
+                timestamp: new Date().toISOString(),
+                stage: "worker",
+                level: "info",
+                message: "Session ended",
+                data: { sessionId: endSessionId },
+                eventId: event.id,
+                projectId: event.projectId,
+              });
+
+              // Publish session_end to live-events for real-time marker removal
+              await publishLiveEvent({
+                projectId: event.projectId,
+                type: "session_end",
+                timestamp: new Date().toISOString(),
+                data: {
+                  sessionId: endSessionId,
+                },
+              });
+
+              await publishDebugLog({
+                timestamp: new Date().toISOString(),
+                stage: "pubsub",
+                level: "info",
+                message: "Session end published to live-events",
+                data: { sessionId: endSessionId },
+                eventId: event.id,
+                projectId: event.projectId,
+              });
+            }
+            
+            // Skip the rest of the processing for session_end events
+            totalProcessed++;
+            continue;
           }
         } catch (chError) {
           await publishDebugLog({
@@ -219,12 +261,15 @@ async function processBatch() {
           duration: clickhouseDuration,
         });
 
-        // Publish to live-events for WebSocket
+        // Publish to live-events for WebSocket (include isNewSession for real-time marker creation)
         await publishLiveEvent({
           projectId: event.projectId,
           type: event.type,
           timestamp: new Date().toISOString(),
-          data: event.payload,
+          data: {
+            ...event.payload,
+            isNewSession, // Include flag for real-time marker creation
+          },
         });
 
         const pubsubDetails = event.type === "event" 

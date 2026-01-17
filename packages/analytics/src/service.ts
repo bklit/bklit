@@ -379,6 +379,13 @@ export class AnalyticsService {
     });
   }
 
+  async endTrackedSession(sessionId: string): Promise<void> {
+    const now = new Date();
+    await this.updateTrackedSession(sessionId, {
+      endedAt: now,
+    });
+  }
+
   async getPageViews(query: PageViewQuery) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };

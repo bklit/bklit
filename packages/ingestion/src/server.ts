@@ -225,6 +225,71 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  // Session end endpoint (called when user closes tab)
+  if (req.method === "POST" && url.pathname === "/session-end") {
+    let body = "";
+    
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+    
+    req.on("end", async () => {
+      try {
+        const payload = JSON.parse(body);
+        const eventId = `evt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+        await publishDebugLog({
+          timestamp: new Date().toISOString(),
+          stage: "ingestion",
+          level: "info",
+          message: "Session end received",
+          data: { sessionId: payload.sessionId, projectId: payload.projectId },
+          eventId,
+          projectId: payload.projectId,
+        });
+
+        // Push session_end event to queue
+        const queuedEvent: QueuedEvent = {
+          id: eventId,
+          type: "session_end" as any,
+          payload: {
+            sessionId: payload.sessionId,
+            timestamp: new Date().toISOString(),
+          },
+          queuedAt: new Date().toISOString(),
+          projectId: payload.projectId,
+        };
+
+        await pushToQueue(queuedEvent);
+
+        await publishDebugLog({
+          timestamp: new Date().toISOString(),
+          stage: "ingestion",
+          level: "info",
+          message: "Session end queued",
+          data: { sessionId: payload.sessionId },
+          eventId,
+          projectId: payload.projectId,
+        });
+
+        res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.end(JSON.stringify({ message: "Session end queued", eventId }));
+      } catch (error) {
+        await publishDebugLog({
+          timestamp: new Date().toISOString(),
+          stage: "ingestion",
+          level: "error",
+          message: "Session end error",
+          data: { error: error instanceof Error ? error.message : String(error) },
+        });
+
+        res.writeHead(500, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.end(JSON.stringify({ error: "Processing error" }));
+      }
+    });
+    return;
+  }
+
   res.writeHead(404);
   res.end("Not Found");
 });

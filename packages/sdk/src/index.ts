@@ -283,52 +283,46 @@ export function initBklit(options: BklitOptions): void {
   }
   trackPageView();
 
-  // Cleanup on page unload
-  const handlePageUnload = async () => {
+  // Cleanup on page unload - use sendBeacon for reliability
+  const handlePageUnload = () => {
     // End the session when user leaves
     if (currentSessionId) {
-      try {
-        if (debug) {
-          console.log("🔄 Bklit SDK: Ending session on page unload...", {
-            sessionId: currentSessionId,
-            projectId,
-          });
-        }
-
-        const endSessionUrl = `${finalConfig.apiHost}/session-end`;
-        const response = await fetch(endSessionUrl, {
-          method: "POST",
-          headers: buildHeaders(apiKey),
-          body: JSON.stringify({
-            sessionId: currentSessionId,
-            projectId,
-            environment,
-          }),
-          keepalive: true, // Important for sending data before page unloads
+      // Remove /track suffix if present to get base URL for session-end
+      const baseUrl = finalConfig.apiHost.replace(/\/track$/, "");
+      const endSessionUrl = `${baseUrl}/session-end`;
+      
+      // Use sendBeacon for reliable delivery on page unload
+      // sendBeacon is specifically designed for this use case
+      const payload = JSON.stringify({
+        sessionId: currentSessionId,
+        projectId,
+        environment,
+      });
+      
+      const sent = navigator.sendBeacon(endSessionUrl, payload);
+      
+      if (debug) {
+        console.log("🔄 Bklit SDK: Session end beacon sent", {
+          sessionId: currentSessionId,
+          projectId,
+          sent,
         });
-
-        if (response.ok) {
-          if (debug) {
-            console.log("✅ Bklit SDK: Session ended successfully!", {
-              sessionId: currentSessionId,
-              status: response.status,
-            });
-          }
-        } else {
-          console.error("❌ Bklit SDK: Failed to end session", {
-            sessionId: currentSessionId,
-            status: response.status,
-            statusText: response.statusText,
-          });
-        }
-      } catch (error) {
-        console.error("❌ Bklit SDK: Error ending session:", error);
       }
     }
   };
 
   window.removeEventListener("beforeunload", handlePageUnload); // Remove first to avoid duplicates
   window.addEventListener("beforeunload", handlePageUnload);
+  
+  // Also handle visibility change for mobile/tab switching
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "hidden") {
+      handlePageUnload();
+    }
+  };
+  
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 
   // SPA navigation tracking
   let currentUrl = window.location.href;
