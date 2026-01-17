@@ -1,14 +1,13 @@
-import { config } from "dotenv";
+import { AnalyticsService } from "@bklit/analytics";
+import { prisma } from "@bklit/db/client";
 import {
-  popFromQueue,
   getQueueDepth,
+  popFromQueue,
   publishDebugLog,
   publishLiveEvent,
-  type QueuedEvent,
 } from "@bklit/redis";
-import { AnalyticsService } from "@bklit/analytics";
+import { config } from "dotenv";
 import { verifyEventInClickHouse } from "./verify";
-import { prisma } from "@bklit/db/client";
 
 config();
 
@@ -40,7 +39,7 @@ async function processBatch() {
 
   try {
     const queueDepth = await getQueueDepth();
-    
+
     if (queueDepth === 0) {
       isProcessing = false;
       return;
@@ -68,10 +67,14 @@ async function processBatch() {
     for (const event of events) {
       try {
         // Get actual event details for better logging
-        const eventDetails = event.type === "event" 
-          ? { trackingId: event.payload.trackingId, eventType: event.payload.eventType }
-          : { url: event.payload.url };
-        
+        const eventDetails =
+          event.type === "event"
+            ? {
+                trackingId: event.payload.trackingId,
+                eventType: event.payload.eventType,
+              }
+            : { url: event.payload.url };
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "worker",
@@ -88,7 +91,7 @@ async function processBatch() {
 
         // Insert into ClickHouse (using existing AnalyticsService)
         const clickhouseStartTime = Date.now();
-        
+
         try {
           if (event.type === "pageview") {
             await analytics.createPageView({
@@ -96,19 +99,22 @@ async function processBatch() {
               ...event.payload,
               timestamp: new Date(event.payload.timestamp as string),
             } as any);
-            
+
             // Handle session creation/update for pageviews
             if (sessionId) {
               if (isNewSession) {
                 // Check if session already exists in ClickHouse
-                const exists = await analytics.sessionExists(sessionId, event.projectId);
-                
+                const exists = await analytics.sessionExists(
+                  sessionId,
+                  event.projectId
+                );
+
                 if (!exists) {
                   // Create new session
                   const sessionDbId = `sess_${Date.now()}_${Math.random().toString(36).substring(7)}`;
                   await analytics.createTrackedSession({
                     id: sessionDbId,
-                    sessionId: sessionId,
+                    sessionId,
                     startedAt: new Date(event.payload.timestamp as string),
                     endedAt: null,
                     duration: null,
@@ -122,7 +128,7 @@ async function processBatch() {
                     city: event.payload.city as string | null,
                     projectId: event.projectId,
                   } as any);
-                  
+
                   seenSessions.add(sessionId);
                 }
               } else {
@@ -136,21 +142,21 @@ async function processBatch() {
             // Look up EventDefinition UUID from Postgres by trackingId (BACKWARDS COMPATIBLE!)
             const trackingId = event.payload.trackingId as string;
             const cacheKey = `${trackingId}:${event.projectId}`;
-            
+
             let eventDefinitionId = eventDefinitionCache.get(cacheKey);
-            
+
             if (!eventDefinitionId) {
               // Query Postgres for EventDefinition
               const eventDef = await prisma.eventDefinition.findUnique({
                 where: {
                   projectId_trackingId: {
                     projectId: event.projectId,
-                    trackingId: trackingId,
+                    trackingId,
                   },
                 },
                 select: { id: true },
               });
-              
+
               if (eventDef) {
                 eventDefinitionId = eventDef.id;
                 eventDefinitionCache.set(cacheKey, eventDefinitionId);
@@ -168,18 +174,18 @@ async function processBatch() {
                 continue; // Skip to next event
               }
             }
-            
+
             // Store eventType in metadata so we can differentiate click/view/hover
             const enrichedMetadata = {
-              ...(event.payload.metadata as Record<string, unknown> || {}),
+              ...((event.payload.metadata as Record<string, unknown>) || {}),
               eventType: event.payload.eventType,
             };
-            
+
             await analytics.createTrackedEvent({
               id: event.id,
               timestamp: new Date(event.payload.timestamp as string),
               projectId: event.projectId,
-              eventDefinitionId: eventDefinitionId, // Now using UUID from Postgres ✅
+              eventDefinitionId, // Now using UUID from Postgres ✅
               sessionId: event.payload.sessionId as string | null,
               metadata: enrichedMetadata,
             } as any);
@@ -189,7 +195,7 @@ async function processBatch() {
             if (endSessionId) {
               await analytics.endTrackedSession(endSessionId);
               seenSessions.delete(endSessionId);
-              
+
               await publishDebugLog({
                 timestamp: new Date().toISOString(),
                 stage: "worker",
@@ -220,7 +226,7 @@ async function processBatch() {
                 projectId: event.projectId,
               });
             }
-            
+
             // Skip the rest of the processing for session_end events
             totalProcessed++;
             continue;
@@ -232,7 +238,8 @@ async function processBatch() {
             level: "error",
             message: "ClickHouse insert failed",
             data: {
-              error: chError instanceof Error ? chError.message : String(chError),
+              error:
+                chError instanceof Error ? chError.message : String(chError),
               eventType: event.type,
               eventId: event.id,
             },
@@ -245,11 +252,17 @@ async function processBatch() {
         const clickhouseDuration = Date.now() - clickhouseStartTime;
 
         // Get table name for clarity
-        const tableName = event.type === "pageview" ? "page_view_event" : "tracked_event";
-        const savedDetails = event.type === "event" 
-          ? { trackingId: event.payload.trackingId, eventType: event.payload.eventType, table: tableName }
-          : { url: event.payload.url, table: tableName };
-        
+        const tableName =
+          event.type === "pageview" ? "page_view_event" : "tracked_event";
+        const savedDetails =
+          event.type === "event"
+            ? {
+                trackingId: event.payload.trackingId,
+                eventType: event.payload.eventType,
+                table: tableName,
+              }
+            : { url: event.payload.url, table: tableName };
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "clickhouse",
@@ -261,21 +274,22 @@ async function processBatch() {
           duration: clickhouseDuration,
         });
 
-        // Publish to live-events for WebSocket (include isNewSession for real-time marker creation)
+        // Publish to live-events for SSE (include isNewSession for real-time marker creation)
         await publishLiveEvent({
           projectId: event.projectId,
           type: event.type,
           timestamp: new Date().toISOString(),
-          data: {
-            ...event.payload,
-            isNewSession, // Include flag for real-time marker creation
-          },
-        });
+          data: { ...event.payload, isNewSession },
+        } as any);
 
-        const pubsubDetails = event.type === "event" 
-          ? { trackingId: event.payload.trackingId, eventType: event.payload.eventType }
-          : { url: event.payload.url };
-        
+        const pubsubDetails =
+          event.type === "event"
+            ? {
+                trackingId: event.payload.trackingId,
+                eventType: event.payload.eventType,
+              }
+            : { url: event.payload.url };
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "pubsub",
@@ -287,8 +301,11 @@ async function processBatch() {
         });
 
         // Verify event exists in ClickHouse (dual-write verification)
-        const verification = await verifyEventInClickHouse(event.id, event.projectId);
-        
+        const verification = await verifyEventInClickHouse(
+          event.id,
+          event.projectId
+        );
+
         if (!verification.match) {
           await publishDebugLog({
             timestamp: new Date().toISOString(),
@@ -307,7 +324,7 @@ async function processBatch() {
         totalProcessed++;
       } catch (error) {
         totalErrors++;
-        
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "worker",
@@ -343,7 +360,9 @@ async function processBatch() {
       },
     });
 
-    console.log(`✅ Processed ${events.length} events in ${duration}ms (avg: ${avgDuration.toFixed(2)}ms/event)`);
+    console.log(
+      `✅ Processed ${events.length} events in ${duration}ms (avg: ${avgDuration.toFixed(2)}ms/event)`
+    );
   } catch (error) {
     await publishDebugLog({
       timestamp: new Date().toISOString(),
@@ -364,8 +383,10 @@ async function processBatch() {
 // Start polling loop
 setInterval(processBatch, POLL_INTERVAL_MS);
 
-console.log(`🔄 Background worker started (polling every ${POLL_INTERVAL_MS}ms, batch size: ${BATCH_SIZE})`);
-console.log(`📊 Stats will be logged to debug-logs channel`);
+console.log(
+  `🔄 Background worker started (polling every ${POLL_INTERVAL_MS}ms, batch size: ${BATCH_SIZE})`
+);
+console.log("📊 Stats will be logged to debug-logs channel");
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
@@ -377,4 +398,3 @@ process.on("SIGINT", () => {
   console.log("[SHUTDOWN] SIGINT received");
   process.exit(0);
 });
-

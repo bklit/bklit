@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { Card } from "@bklit/ui/components/card";
-import { Badge } from "@bklit/ui/components/badge";
-import { ScrollArea } from "@bklit/ui/components/scroll-area";
-import { Input } from "@bklit/ui/components/input";
 import type { DebugLog } from "@bklit/redis";
+import { Badge } from "@bklit/ui/components/badge";
+import { Card } from "@bklit/ui/components/card";
+import { Input } from "@bklit/ui/components/input";
+import { ScrollArea } from "@bklit/ui/components/scroll-area";
+import { useEffect, useRef, useState } from "react";
 
 interface TerminalClientProps {
   projectId: string;
@@ -36,10 +36,14 @@ export function TerminalClient({ projectId }: TerminalClientProps) {
   const [autoScroll, setAutoScroll] = useState(true);
 
   useEffect(() => {
-    const eventSource = new EventSource(`/api/debug-stream?projectId=${projectId}`);
+    const eventSource = new EventSource(
+      `/api/debug-stream?projectId=${projectId}`
+    );
 
     eventSource.onmessage = (event) => {
-      if (isPaused) return;
+      if (isPaused) {
+        return;
+      }
 
       try {
         const log: DebugLog = JSON.parse(event.data);
@@ -79,13 +83,23 @@ export function TerminalClient({ projectId }: TerminalClientProps) {
     if (selectedStages.size > 0 && !selectedStages.has(log.stage)) {
       return false;
     }
-    if (filter && !JSON.stringify(log).toLowerCase().includes(filter.toLowerCase())) {
+    if (
+      filter &&
+      !JSON.stringify(log).toLowerCase().includes(filter.toLowerCase())
+    ) {
       return false;
     }
     return true;
   });
 
-  const stages = ["ingestion", "queue", "worker", "clickhouse", "pubsub", "websocket"];
+  const stages = [
+    "ingestion",
+    "queue",
+    "worker",
+    "clickhouse",
+    "pubsub",
+    "websocket",
+  ];
 
   return (
     <div className="flex h-full flex-col gap-4 p-6">
@@ -95,51 +109,51 @@ export function TerminalClient({ projectId }: TerminalClientProps) {
           <div className="flex gap-2">
             {stages.map((stage) => (
               <Badge
-                key={stage}
-                variant={selectedStages.has(stage) ? "default" : "outline"}
                 className={`cursor-pointer ${selectedStages.has(stage) ? STAGE_COLORS[stage] : ""}`}
+                key={stage}
                 onClick={() => toggleStage(stage)}
+                variant={selectedStages.has(stage) ? "default" : "outline"}
               >
                 {stage}
               </Badge>
             ))}
           </div>
-          
+
           <div className="ml-auto flex gap-2">
             <Input
+              className="w-64"
+              onChange={(e) => setFilter(e.target.value)}
               placeholder="Filter logs..."
               value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-64"
             />
-            
+
             <Badge
-              variant="outline"
               className="cursor-pointer"
               onClick={() => setIsPaused(!isPaused)}
+              variant="outline"
             >
               {isPaused ? "⏸ Paused" : "▶ Live"}
             </Badge>
-            
+
             <Badge
-              variant="outline"
               className="cursor-pointer"
               onClick={() => setAutoScroll(!autoScroll)}
+              variant="outline"
             >
               {autoScroll ? "📜 Auto-scroll" : "🔒 Locked"}
             </Badge>
-            
+
             <Badge
-              variant="outline"
               className="cursor-pointer"
               onClick={() => setLogs([])}
+              variant="outline"
             >
               🗑 Clear
             </Badge>
           </div>
         </div>
-        
-        <div className="mt-3 text-muted-foreground flex gap-4 text-sm">
+
+        <div className="mt-3 flex gap-4 text-muted-foreground text-sm">
           <span>Total: {logs.length}</span>
           <span>Filtered: {filteredLogs.length}</span>
         </div>
@@ -147,46 +161,51 @@ export function TerminalClient({ projectId }: TerminalClientProps) {
 
       {/* Logs Display */}
       <Card className="flex-1 overflow-hidden">
-        <ScrollArea ref={scrollRef} className="h-full p-4">
-          <div className="font-mono space-y-2 text-sm">
+        <ScrollArea className="h-full p-4" ref={scrollRef}>
+          <div className="space-y-2 font-mono text-sm">
             {filteredLogs.length === 0 ? (
-              <div className="text-muted-foreground text-center py-8">
-                {logs.length === 0 ? "Waiting for events..." : "No logs match filter"}
+              <div className="py-8 text-center text-muted-foreground">
+                {logs.length === 0
+                  ? "Waiting for events..."
+                  : "No logs match filter"}
               </div>
             ) : (
               filteredLogs.map((log, idx) => (
                 <div
+                  className={`border-l-2 py-1 pl-3 ${LEVEL_COLORS[log.level]}`}
                   key={idx}
-                  className={`border-l-2 pl-3 py-1 ${LEVEL_COLORS[log.level]}`}
                   style={{ borderLeftColor: getStageColor(log.stage) }}
                 >
                   <div className="flex items-start gap-2">
-                    <span className="text-muted-foreground min-w-[160px]">
+                    <span className="min-w-[160px] text-muted-foreground">
                       {new Date(log.timestamp).toLocaleTimeString()}.
                       {new Date(log.timestamp).getMilliseconds()}
                     </span>
-                    
-                    <Badge variant="outline" className={`${STAGE_COLORS[log.stage]} min-w-[100px] justify-center`}>
+
+                    <Badge
+                      className={`${STAGE_COLORS[log.stage]} min-w-[100px] justify-center`}
+                      variant="outline"
+                    >
                       {log.stage}
                     </Badge>
-                    
+
                     <span className="flex-1">{log.message}</span>
-                    
+
                     {log.duration && (
                       <span className="text-muted-foreground text-xs">
                         {log.duration}ms
                       </span>
                     )}
                   </div>
-                  
+
                   {Object.keys(log.data).length > 0 && (
-                    <div className="text-muted-foreground mt-1 ml-[170px] text-xs">
+                    <div className="mt-1 ml-[170px] text-muted-foreground text-xs">
                       {JSON.stringify(log.data, null, 2)}
                     </div>
                   )}
-                  
+
                   {log.eventId && (
-                    <div className="text-muted-foreground ml-[170px] text-xs">
+                    <div className="ml-[170px] text-muted-foreground text-xs">
                       Event ID: {log.eventId}
                     </div>
                   )}
@@ -211,4 +230,3 @@ function getStageColor(stage: string): string {
   };
   return colors[stage] || "rgb(156, 163, 175)";
 }
-

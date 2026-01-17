@@ -13,18 +13,23 @@ export default async function TerminalPage({ params }: TerminalPageProps) {
 
   return (
     <div className="flex h-screen flex-col">
-      <div className="border-b border-border bg-card px-6 py-4">
-        <h1 className="text-2xl font-bold">Event Pipeline Terminal</h1>
+      <div className="border-border border-b bg-card px-6 py-4">
+        <h1 className="font-bold text-2xl">Event Pipeline Terminal</h1>
         <p className="text-muted-foreground text-sm">
           Real-time monitoring of analytics pipeline: Ingestion → Queue → Worker
           → ClickHouse → PubSub → WebSocket
         </p>
       </div>
-      
-      <Suspense fallback={<div className="flex-1 flex items-center justify-center">Loading terminal...</div>}>
-        <TerminalClient projectId={projectId} organizationId={organizationId} />
+
+      <Suspense
+        fallback={
+          <div className="flex flex-1 items-center justify-center">
+            Loading terminal...
+          </div>
+        }
+      >
+        <TerminalClient organizationId={organizationId} projectId={projectId} />
       </Suspense>
     </div>
   );
 }
-

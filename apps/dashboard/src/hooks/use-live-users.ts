@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useTRPC } from "@/trpc/react";
-import { useSocketIOEvents } from "./use-socketio-client";
+import { useLiveEventStream } from "./use-live-event-stream";
 
 interface UseLiveUsersProps {
   projectId: string;
@@ -47,17 +47,15 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
     });
   }, [queryClient]);
 
-  const { isConnected, isAvailable } = useSocketIOEvents(
-    projectId,
-    "pageview",
-    handlePageview
-  );
+  // Subscribe to SSE events (NEW architecture)
+  const { isConnected } = useLiveEventStream(projectId, {
+    onPageview: handlePageview,
+  });
 
   return {
     liveUsers: liveUsers ?? 0,
     isLoading,
     error,
     isRealtime: isConnected,
-    realtimeAvailable: isAvailable,
   };
 }

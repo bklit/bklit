@@ -1,14 +1,61 @@
 ---
-description: 
-globs: 
+description: shadcn/ui component library setup in monorepo
+globs:
 alwaysApply: true
 ---
-Always check to see if we have the available shadcn/ui component available in our components/ui directory.
 
-If we dont have the required shadcn component use the cmd line to install.
-`pnpm dlx shadcn@latest add ...`
+## shadcn/ui Components
 
-Under the hood shadcn/ui  components use radix primitives. We always have access to the default radix props with our shadcn components.
+Components live in `packages/ui/src/components/` and are shared across all apps.
 
-ref: https://ui.shadcn.com/docs/components
-ref: https://www.radix-ui.com/primitives
+### Checking for Components
+
+Before creating a new component, check if it exists:
+```bash
+ls packages/ui/src/components/
+```
+
+### Installing New Components
+
+Install from the `packages/ui` directory:
+```bash
+cd packages/ui
+pnpm dlx shadcn@latest add <component-name>
+```
+
+Or from root:
+```bash
+pnpm --filter=@bklit/ui dlx shadcn@latest add <component-name>
+```
+
+### Importing Components
+
+```tsx
+// Import from @bklit/ui
+import { Button } from "@bklit/ui/components/button";
+import { Card, CardHeader, CardContent } from "@bklit/ui/components/card";
+import { Skeleton } from "@bklit/ui/components/skeleton";
+```
+
+### Configuration
+
+- Style: `new-york`
+- Icon library: `lucide`
+- CSS variables: enabled
+- Base color: `neutral`
+
+See [components.json](mdc:packages/ui/components.json) for full config.
+
+### Radix Primitives
+
+All shadcn components use Radix primitives under the hood. You have access to all Radix props:
+
+```tsx
+<Dialog onOpenChange={setOpen} modal={false}>
+  {/* Radix Dialog props available */}
+</Dialog>
+```
+
+Refs:
+- https://ui.shadcn.com/docs/components
+- https://www.radix-ui.com/primitives

@@ -1,6 +1,6 @@
-import { config } from "dotenv";
-import { pushToQueue, publishDebugLog } from "@bklit/redis";
 import type { QueuedEvent } from "@bklit/redis";
+import { publishDebugLog, pushToQueue } from "@bklit/redis";
+import { config } from "dotenv";
 import { validateApiToken } from "./validate";
 
 config();
@@ -41,14 +41,14 @@ const server = createServer(async (req, res) => {
   // Track pageview endpoint
   if (req.method === "POST" && url.pathname === "/track") {
     let body = "";
-    
+
     req.on("data", (chunk) => {
       body += chunk.toString();
     });
-    
+
     req.on("end", async () => {
       const startTime = Date.now();
-      
+
       try {
         const payload = JSON.parse(body);
         const eventId = `evt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -68,20 +68,29 @@ const server = createServer(async (req, res) => {
         const token = authHeader?.replace("Bearer ", "");
 
         if (!token) {
-          res.writeHead(401, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+          res.writeHead(401, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          });
           res.end(JSON.stringify({ error: "Missing authorization" }));
           return;
         }
 
         const validation = await validateApiToken(token, payload.projectId);
         if (!validation.valid) {
-          res.writeHead(401, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+          res.writeHead(401, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          });
           res.end(JSON.stringify({ error: "Invalid token" }));
           return;
         }
 
         // Anonymize sensitive data
-        const clientIP = (req.headers["x-forwarded-for"] as string) || (req.headers["x-real-ip"] as string) || "";
+        const clientIP =
+          (req.headers["x-forwarded-for"] as string) ||
+          (req.headers["x-real-ip"] as string) ||
+          "";
         const anonymizedPayload = {
           ...payload,
           ip: anonymizeIP(clientIP),
@@ -100,7 +109,7 @@ const server = createServer(async (req, res) => {
         await pushToQueue(queuedEvent);
 
         const duration = Date.now() - startTime;
-        
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "ingestion",
@@ -112,11 +121,14 @@ const server = createServer(async (req, res) => {
           duration,
         });
 
-        res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        });
         res.end(JSON.stringify({ message: "Event queued", eventId }));
       } catch (error) {
         const duration = Date.now() - startTime;
-        
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "ingestion",
@@ -128,7 +140,10 @@ const server = createServer(async (req, res) => {
           },
         });
 
-        res.writeHead(500, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.writeHead(500, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        });
         res.end(JSON.stringify({ error: "Processing error" }));
       }
     });
@@ -138,14 +153,14 @@ const server = createServer(async (req, res) => {
   // Track event endpoint (custom events like click, add-to-cart, etc.)
   if (req.method === "POST" && url.pathname === "/track-event") {
     let body = "";
-    
+
     req.on("data", (chunk) => {
       body += chunk.toString();
     });
-    
+
     req.on("end", async () => {
       const startTime = Date.now();
-      
+
       try {
         const payload = JSON.parse(body);
         const eventId = `evt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -155,7 +170,11 @@ const server = createServer(async (req, res) => {
           stage: "ingestion",
           level: "info",
           message: "Custom event received",
-          data: { trackingId: payload.trackingId, eventType: payload.eventType, projectId: payload.projectId },
+          data: {
+            trackingId: payload.trackingId,
+            eventType: payload.eventType,
+            projectId: payload.projectId,
+          },
           eventId,
           projectId: payload.projectId,
         });
@@ -165,14 +184,20 @@ const server = createServer(async (req, res) => {
         const token = authHeader?.replace("Bearer ", "");
 
         if (!token) {
-          res.writeHead(401, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+          res.writeHead(401, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          });
           res.end(JSON.stringify({ error: "Missing authorization" }));
           return;
         }
 
         const validation = await validateApiToken(token, payload.projectId);
         if (!validation.valid) {
-          res.writeHead(401, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+          res.writeHead(401, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          });
           res.end(JSON.stringify({ error: "Invalid token" }));
           return;
         }
@@ -181,7 +206,7 @@ const server = createServer(async (req, res) => {
         const queuedEvent: QueuedEvent = {
           id: eventId,
           type: "event",
-          payload: payload,
+          payload,
           queuedAt: new Date().toISOString(),
           projectId: payload.projectId,
         };
@@ -190,23 +215,31 @@ const server = createServer(async (req, res) => {
         await pushToQueue(queuedEvent);
 
         const duration = Date.now() - startTime;
-        
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "ingestion",
           level: "info",
           message: "Custom event queued successfully",
-          data: { eventId, trackingId: payload.trackingId, eventType: payload.eventType, duration },
+          data: {
+            eventId,
+            trackingId: payload.trackingId,
+            eventType: payload.eventType,
+            duration,
+          },
           eventId,
           projectId: payload.projectId,
           duration,
         });
 
-        res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        });
         res.end(JSON.stringify({ message: "Event queued", eventId }));
       } catch (error) {
         const duration = Date.now() - startTime;
-        
+
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "ingestion",
@@ -218,7 +251,10 @@ const server = createServer(async (req, res) => {
           },
         });
 
-        res.writeHead(500, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.writeHead(500, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        });
         res.end(JSON.stringify({ error: "Processing error" }));
       }
     });
@@ -228,11 +264,11 @@ const server = createServer(async (req, res) => {
   // Session end endpoint (called when user closes tab)
   if (req.method === "POST" && url.pathname === "/session-end") {
     let body = "";
-    
+
     req.on("data", (chunk) => {
       body += chunk.toString();
     });
-    
+
     req.on("end", async () => {
       try {
         const payload = JSON.parse(body);
@@ -272,7 +308,10 @@ const server = createServer(async (req, res) => {
           projectId: payload.projectId,
         });
 
-        res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        });
         res.end(JSON.stringify({ message: "Session end queued", eventId }));
       } catch (error) {
         await publishDebugLog({
@@ -280,10 +319,15 @@ const server = createServer(async (req, res) => {
           stage: "ingestion",
           level: "error",
           message: "Session end error",
-          data: { error: error instanceof Error ? error.message : String(error) },
+          data: {
+            error: error instanceof Error ? error.message : String(error),
+          },
         });
 
-        res.writeHead(500, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.writeHead(500, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        });
         res.end(JSON.stringify({ error: "Processing error" }));
       }
     });
@@ -297,4 +341,3 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`🚀 Ingestion service running on http://localhost:${PORT}`);
 });
-

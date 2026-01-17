@@ -14,12 +14,12 @@ interface LiveWrapperProps {
 
 export function LiveWrapper({ projectId, organizationId }: LiveWrapperProps) {
   const { setOpen } = useSidebar();
-  
+
   // Collapse sidebar on mount for better map view
   useEffect(() => {
     setOpen(false);
   }, [setOpen]);
-  
+
   return (
     <LiveMapProvider>
       <LiveCardProvider>

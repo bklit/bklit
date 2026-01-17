@@ -53,7 +53,7 @@ export async function pushToQueue(event: QueuedEvent): Promise<void> {
   }
 }
 
-export async function popFromQueue(count: number = 100): Promise<QueuedEvent[]> {
+export async function popFromQueue(count = 100): Promise<QueuedEvent[]> {
   if (!isRedisAvailable()) {
     return [];
   }
@@ -65,12 +65,12 @@ export async function popFromQueue(count: number = 100): Promise<QueuedEvent[]> 
 
   try {
     const events: QueuedEvent[] = [];
-    
+
     // Pop multiple items from queue
     for (let i = 0; i < count; i++) {
       const item = await client.rpop(QUEUE_KEY);
       if (!item) break;
-      
+
       try {
         events.push(JSON.parse(item));
       } catch (error) {
@@ -131,4 +131,3 @@ export async function getFailedQueueDepth(): Promise<number> {
     return 0;
   }
 }
-

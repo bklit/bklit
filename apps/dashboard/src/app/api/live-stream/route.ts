@@ -1,53 +1,56 @@
-import { type DebugLog, getRedisClient } from "@bklit/redis";
+import {
+  getRedisClient,
+  LIVE_EVENTS_CHANNEL,
+  type LiveEvent,
+} from "@bklit/redis";
 import Redis from "ioredis";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const DEBUG_CHANNEL = "debug-logs";
-
 export function GET(request: NextRequest) {
   const encoder = new TextEncoder();
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("projectId");
 
+  if (!projectId) {
+    return new Response(JSON.stringify({ error: "projectId is required" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const stream = new ReadableStream({
     start(controller) {
       // Send initial connection message
       const initMessage = `data: ${JSON.stringify({
+        type: "connected",
+        projectId,
         timestamp: new Date().toISOString(),
-        stage: "websocket",
-        level: "info",
-        message: "Debug stream connected",
-        data: { projectId: projectId || "all" },
       })}\n\n`;
       controller.enqueue(encoder.encode(initMessage));
 
-      // Create a separate Redis client for subscribing (with offline queue enabled)
+      // Check Redis availability
       const baseClient = getRedisClient();
       if (!baseClient) {
         const errorMsg = `data: ${JSON.stringify({
-          timestamp: new Date().toISOString(),
-          stage: "websocket",
-          level: "error",
+          type: "error",
           message: "Redis not available",
-          data: {},
+          timestamp: new Date().toISOString(),
         })}\n\n`;
         controller.enqueue(encoder.encode(errorMsg));
         controller.close();
         return;
       }
 
-      // Duplicate the client for subscribing
+      // Create subscriber client
       const redisUrl = process.env.REDIS_URL;
       if (!redisUrl) {
         const errorMsg = `data: ${JSON.stringify({
-          timestamp: new Date().toISOString(),
-          stage: "websocket",
-          level: "error",
+          type: "error",
           message: "REDIS_URL not configured",
-          data: {},
+          timestamp: new Date().toISOString(),
         })}\n\n`;
         controller.enqueue(encoder.encode(errorMsg));
         controller.close();
@@ -55,42 +58,41 @@ export function GET(request: NextRequest) {
       }
 
       const subscriber = new Redis(redisUrl, {
-        enableOfflineQueue: true, // Required for pub/sub
+        enableOfflineQueue: true,
         lazyConnect: false,
       });
 
-      subscriber.subscribe(DEBUG_CHANNEL, (err) => {
+      subscriber.subscribe(LIVE_EVENTS_CHANNEL, (err) => {
         if (err) {
-          console.error("Failed to subscribe to debug logs:", err);
+          console.error("Failed to subscribe to live-events:", err);
           const errorData = `data: ${JSON.stringify({
+            type: "error",
+            message: "Subscription failed",
+            error: err.message,
             timestamp: new Date().toISOString(),
-            stage: "websocket",
-            level: "error",
-            message: "Subscriber error",
-            data: { error: err.message },
           })}\n\n`;
           controller.enqueue(encoder.encode(errorData));
         }
       });
 
       subscriber.on("message", (channel, message) => {
-        if (channel !== DEBUG_CHANNEL) {
+        if (channel !== LIVE_EVENTS_CHANNEL) {
           return;
         }
 
         try {
-          const log = JSON.parse(message) as DebugLog;
+          const event = JSON.parse(message) as LiveEvent;
 
-          // Filter by projectId if specified
-          if (projectId && log.projectId !== projectId) {
+          // Filter by projectId
+          if (event.projectId !== projectId) {
             return;
           }
 
-          // Format as Server-Sent Event
-          const data = `data: ${JSON.stringify(log)}\n\n`;
+          // Forward the event as SSE
+          const data = `data: ${JSON.stringify(event)}\n\n`;
           controller.enqueue(encoder.encode(data));
         } catch (error) {
-          console.error("Failed to parse debug log:", error);
+          console.error("Failed to parse live event:", error);
         }
       });
 
@@ -101,11 +103,25 @@ export function GET(request: NextRequest) {
       // Cleanup on abort
       request.signal.addEventListener("abort", async () => {
         try {
-          await subscriber.unsubscribe(DEBUG_CHANNEL);
+          await subscriber.unsubscribe(LIVE_EVENTS_CHANNEL);
           await subscriber.quit();
         } catch {
-          // Ignore errors during cleanup
+          // Ignore cleanup errors
         }
+      });
+
+      // Send heartbeat every 30s to keep connection alive
+      const heartbeat = setInterval(() => {
+        try {
+          const ping = `data: ${JSON.stringify({ type: "heartbeat", timestamp: new Date().toISOString() })}\n\n`;
+          controller.enqueue(encoder.encode(ping));
+        } catch {
+          clearInterval(heartbeat);
+        }
+      }, 30_000);
+
+      request.signal.addEventListener("abort", () => {
+        clearInterval(heartbeat);
       });
     },
   });
@@ -115,7 +131,7 @@ export function GET(request: NextRequest) {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
-      "X-Accel-Buffering": "no", // Disable nginx buffering
+      "X-Accel-Buffering": "no",
     },
   });
 }

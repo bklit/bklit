@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef } from "react";
-import { useSocketIOEvents } from "./use-socketio-client";
+import { useLiveEventStream } from "./use-live-event-stream";
 
 export type InvalidationScope =
   | "live-users"
@@ -81,21 +81,14 @@ export function useRealtimeInvalidation({
     }
   }, [debounceMs, invalidateScopes]);
 
-  // Subscribe to both pageview and event types
-  const { isConnected: pageviewConnected } = useSocketIOEvents(
-    projectId,
-    "pageview",
-    handleEvent
-  );
-  const { isConnected: eventConnected } = useSocketIOEvents(
-    projectId,
-    "event",
-    handleEvent
-  );
+  // Subscribe to SSE events (NEW architecture)
+  const { isConnected } = useLiveEventStream(projectId, {
+    onPageview: handleEvent,
+    onEvent: handleEvent,
+  });
 
   return {
-    isConnected: pageviewConnected || eventConnected,
+    isConnected,
     invalidateNow: invalidateScopes,
   };
 }
-

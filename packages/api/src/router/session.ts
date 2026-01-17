@@ -596,65 +596,63 @@ export const sessionRouter = createTRPCRouter({
       };
 
       // Filter to only sessions with valid location data and format as GeoJSON features
-      return liveSessionsData
-        .map((session) => {
-          let coordinates: [number, number] | null = null;
-          let city: string | null = null;
-          let country: string | null = null;
-          let countryCode: string | null = null;
+      return liveSessionsData.map((session) => {
+        let coordinates: [number, number] | null = null;
+        let city: string | null = null;
+        let country: string | null = null;
+        let countryCode: string | null = null;
 
-          // Use pageview coordinates if available and valid
-          if (
-            session.lat !== null &&
-            session.lon !== null &&
-            isValidCoordinate(session.lat, session.lon)
-          ) {
-            coordinates = [session.lon, session.lat] as [number, number];
+        // Use pageview coordinates if available and valid
+        if (
+          session.lat !== null &&
+          session.lon !== null &&
+          isValidCoordinate(session.lat, session.lon)
+        ) {
+          coordinates = [session.lon, session.lat] as [number, number];
+          city = session.city;
+          country = session.pageview_country || session.country;
+          countryCode = session.pageview_country_code;
+        } else if (session.pageview_country_code) {
+          // Fallback to country center coordinates
+          const countryCodeUpper = session.pageview_country_code.toUpperCase();
+          const centerCoords = countryCenterCoords[countryCodeUpper];
+
+          if (centerCoords) {
+            coordinates = centerCoords;
             city = session.city;
             country = session.pageview_country || session.country;
             countryCode = session.pageview_country_code;
-          } else if (session.pageview_country_code) {
-            // Fallback to country center coordinates
-            const countryCodeUpper =
-              session.pageview_country_code.toUpperCase();
-            const centerCoords = countryCenterCoords[countryCodeUpper];
-
-            if (centerCoords) {
-              coordinates = centerCoords;
-              city = session.city;
-              country = session.pageview_country || session.country;
-              countryCode = session.pageview_country_code;
-            } else {
-              console.log(
-                `No center coordinates for country code: ${countryCodeUpper}`
-              );
-            }
+          } else {
+            console.log(
+              `No center coordinates for country code: ${countryCodeUpper}`
+            );
           }
+        }
 
-          // If no coordinates found, use North Pole as fallback
-          // This ensures all sessions are visible on the map
-          if (!coordinates) {
-            coordinates = [0, 90] as [number, number]; // North Pole [longitude, latitude]
-            city = city || "Unknown";
-            country = country || "Unknown Location";
-            countryCode = countryCode || "XX";
-          }
+        // If no coordinates found, use North Pole as fallback
+        // This ensures all sessions are visible on the map
+        if (!coordinates) {
+          coordinates = [0, 90] as [number, number]; // North Pole [longitude, latitude]
+          city = city || "Unknown";
+          country = country || "Unknown Location";
+          countryCode = countryCode || "XX";
+        }
 
-          const userAgent = session.user_agent;
-          const browser = getBrowserFromUserAgent(userAgent);
-          const deviceType = getDeviceTypeFromUserAgent(userAgent);
+        const userAgent = session.user_agent;
+        const browser = getBrowserFromUserAgent(userAgent);
+        const deviceType = getDeviceTypeFromUserAgent(userAgent);
 
-          return {
-            id: session.id,
-            coordinates,
-            city,
-            country,
-            countryCode,
-            startedAt: parseClickHouseDate(session.started_at),
-            browser,
-            deviceType,
-          };
-        });
+        return {
+          id: session.id,
+          coordinates,
+          city,
+          country,
+          countryCode,
+          startedAt: parseClickHouseDate(session.started_at),
+          browser,
+          deviceType,
+        };
+      });
     }),
   recentSessions: protectedProcedure
     .input(

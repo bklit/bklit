@@ -19,7 +19,9 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 // Classify referrer into categories
 function classifyReferrer(hostname: string): string {
-  if (!hostname) return "direct";
+  if (!hostname) {
+    return "direct";
+  }
 
   // Search engines
   const searchEngines = [
@@ -153,14 +155,16 @@ export function initBklit(options: BklitOptions): void {
       const urlParams = new URLSearchParams(window.location.search);
 
       // Parse referrer data
-      let referrerHostname, referrerPath, referrerType;
+      let referrerHostname: string | undefined;
+      let referrerPath: string | undefined;
+      let referrerType: string | undefined;
       if (document.referrer) {
         try {
           const refUrl = new URL(document.referrer);
           referrerHostname = refUrl.hostname;
           referrerPath = refUrl.pathname;
           referrerType = classifyReferrer(refUrl.hostname);
-        } catch (e) {
+        } catch {
           // Invalid referrer URL, ignore
         }
       }
@@ -290,7 +294,7 @@ export function initBklit(options: BklitOptions): void {
       // Remove /track suffix if present to get base URL for session-end
       const baseUrl = finalConfig.apiHost.replace(/\/track$/, "");
       const endSessionUrl = `${baseUrl}/session-end`;
-      
+
       // Use sendBeacon for reliable delivery on page unload
       // sendBeacon is specifically designed for this use case
       const payload = JSON.stringify({
@@ -298,9 +302,9 @@ export function initBklit(options: BklitOptions): void {
         projectId,
         environment,
       });
-      
+
       const sent = navigator.sendBeacon(endSessionUrl, payload);
-      
+
       if (debug) {
         console.log("🔄 Bklit SDK: Session end beacon sent", {
           sessionId: currentSessionId,
@@ -313,14 +317,14 @@ export function initBklit(options: BklitOptions): void {
 
   window.removeEventListener("beforeunload", handlePageUnload); // Remove first to avoid duplicates
   window.addEventListener("beforeunload", handlePageUnload);
-  
+
   // Also handle visibility change for mobile/tab switching
   const handleVisibilityChange = () => {
     if (document.visibilityState === "hidden") {
       handlePageUnload();
     }
   };
-  
+
   document.removeEventListener("visibilitychange", handleVisibilityChange);
   document.addEventListener("visibilitychange", handleVisibilityChange);
 
@@ -445,14 +449,16 @@ export function trackPageView() {
   const currentUrl = window.location.href;
 
   // Parse referrer data
-  let referrerHostname, referrerPath, referrerType;
+  let referrerHostname: string | undefined;
+  let referrerPath: string | undefined;
+  let referrerType: string | undefined;
   if (document.referrer) {
     try {
       const refUrl = new URL(document.referrer);
       referrerHostname = refUrl.hostname;
       referrerPath = refUrl.pathname;
       referrerType = classifyReferrer(refUrl.hostname);
-    } catch (e) {
+    } catch {
       // Invalid referrer URL, ignore
     }
   }

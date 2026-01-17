@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
-import { useSocketIOEvents } from "@/hooks/use-socketio-client";
+import { useLiveEventStream } from "@/hooks/use-live-event-stream";
 import { getMarkerGradient } from "@/lib/maps/marker-colors";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { getDeviceIcon } from "@/lib/utils/get-device-icon";
@@ -118,9 +118,11 @@ export function LiveSessionDetail({
     [sessionId]
   );
 
-  // Subscribe to websocket events
-  useSocketIOEvents(projectId, "pageview", handlePageview);
-  useSocketIOEvents(projectId, "event", handleEvent);
+  // Subscribe to SSE events (NEW architecture)
+  useLiveEventStream(projectId, {
+    onPageview: handlePageview,
+    onEvent: handleEvent,
+  });
 
   // Reset real-time data when session changes
   const sessionIdForReset = sessionId;

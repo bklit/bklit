@@ -16,10 +16,10 @@ export async function publishLiveEvent(event: LiveEvent): Promise<void> {
 
     // Add timeout to prevent hanging
     const publishPromise = client.publish(LIVE_EVENTS_CHANNEL, message);
-    const timeoutPromise = new Promise<number>((_, reject) => 
-      setTimeout(() => reject(new Error('Publish timeout after 5000ms')), 5000)
+    const timeoutPromise = new Promise<number>((_, reject) =>
+      setTimeout(() => reject(new Error("Publish timeout after 5000ms")), 5000)
     );
-    
+
     await Promise.race([publishPromise, timeoutPromise]);
   } catch (error) {
     // Don't throw - real-time is optional enhancement

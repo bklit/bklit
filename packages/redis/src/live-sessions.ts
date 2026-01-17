@@ -22,15 +22,15 @@ export async function trackSessionStart(
   try {
     const sessionsKey = `${SESSIONS_ZSET_PREFIX}${projectId}`;
     const now = Date.now();
-    
+
     // Add or update session in sorted set with current timestamp as score
     await client.zadd(sessionsKey, now, sessionId);
-    
+
     // Set TTL on the sorted set itself (1 hour) to eventually clean up empty sets
     await client.expire(sessionsKey, SESSION_TTL * 2);
-    
+
     // Clean up expired sessions (older than 30 minutes)
-    await client.zremrangebyscore(sessionsKey, '-inf', now - SESSION_TTL_MS);
+    await client.zremrangebyscore(sessionsKey, "-inf", now - SESSION_TTL_MS);
   } catch (error) {
     console.error("Redis session tracking error:", error);
   }
@@ -47,13 +47,13 @@ export async function trackSessionEnd(
 
   try {
     const sessionsKey = `${SESSIONS_ZSET_PREFIX}${projectId}`;
-    
+
     // Remove session from sorted set
     await client.zrem(sessionsKey, sessionId);
-    
-    console.log('[DEBUG] Session ended and removed from sorted set:', { 
-      projectId, 
-      sessionId 
+
+    console.log("[DEBUG] Session ended and removed from sorted set:", {
+      projectId,
+      sessionId,
     });
   } catch (error) {
     console.error("Redis session end error:", error);
@@ -74,13 +74,13 @@ export async function getLiveUserCount(
     // Use sorted set approach - automatically removes expired sessions
     const sessionsKey = `${SESSIONS_ZSET_PREFIX}${projectId}`;
     const now = Date.now();
-    
+
     // Remove sessions that expired (score < now - SESSION_TTL_MS)
-    await client.zremrangebyscore(sessionsKey, '-inf', now - SESSION_TTL_MS);
-    
+    await client.zremrangebyscore(sessionsKey, "-inf", now - SESSION_TTL_MS);
+
     // Count remaining active sessions
     const count = await client.zcard(sessionsKey);
-    
+
     return Math.max(0, count); // Ensure never negative
   } catch (error) {
     console.error("Redis get count error:", error);

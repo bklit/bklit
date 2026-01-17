@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 import { toast } from "sonner";
-import { useSocketIOEvents } from "@/hooks/use-socketio-client";
+import { useLiveEventStream } from "@/hooks/use-live-event-stream";
 import { getCountryCodeForFlag } from "@/lib/maps/country-coordinates";
 import { isMobileDevice } from "@/lib/user-agent";
 import { useTRPC } from "@/trpc/react";
@@ -14,6 +14,14 @@ interface LiveVisitorToastsProps {
   organizationId: string;
 }
 
+interface PageviewEventData {
+  sessionId?: string;
+  country?: string;
+  city?: string;
+  mobile?: boolean;
+  isNewSession?: boolean;
+}
+
 export function LiveVisitorToasts({
   projectId,
   organizationId,
@@ -21,11 +29,6 @@ export function LiveVisitorToasts({
   const [seenSessionIds, setSeenSessionIds] = useState<Set<string>>(new Set());
   const lastToastTime = useRef<number>(0);
   const toastDebounceMs = 2000;
-
-  if (!(projectId && organizationId)) {
-    return null;
-  }
-
   const trpc = useTRPC();
 
   const preferencesQuery = useQuery(
@@ -77,9 +80,9 @@ export function LiveVisitorToasts({
     console.error("Error fetching recent sessions:", sessionsErrorData);
   }
 
-  // Real-time pageview handler (declare early) - only show toast for NEW sessions
+  // Real-time pageview handler - only show toast for NEW sessions
   const handleRealtimePageview = useCallback(
-    (data: any) => {
+    (data: PageviewEventData) => {
       if (!preferences?.liveVisitorToasts) return;
 
       // Only show toast for new sessions (first pageview)
@@ -92,7 +95,7 @@ export function LiveVisitorToasts({
       if (data.sessionId) {
         setSeenSessionIds((prev) => {
           const newSet = new Set(prev);
-          newSet.add(data.sessionId);
+          newSet.add(data.sessionId!);
           return newSet;
         });
       }
@@ -113,11 +116,10 @@ export function LiveVisitorToasts({
     [preferences?.liveVisitorToasts]
   );
 
-  const { isConnected } = useSocketIOEvents(
-    projectId,
-    "pageview",
-    handleRealtimePageview
-  );
+  // Subscribe to SSE events (NEW architecture)
+  useLiveEventStream(projectId, {
+    onPageview: handleRealtimePageview,
+  });
 
   useEffect(() => {
     // Keep polling toasts as fallback/verification even with real-time
@@ -184,6 +186,10 @@ export function LiveVisitorToasts({
 
     return () => clearInterval(cleanup);
   }, []);
+
+  if (!(projectId && organizationId)) {
+    return null;
+  }
 
   return null;
 }

@@ -2,10 +2,10 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTRPC } from "@/trpc/react";
 import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import { getMarkerGradient } from "@/lib/maps/marker-colors";
-import { useSocketIOEvents } from "./use-socketio-client";
+import { useTRPC } from "@/trpc/react";
+import { useLiveEventStream } from "./use-live-event-stream";
 
 export interface PageJourneyEntry {
   url: string;
@@ -158,76 +158,88 @@ export function useLiveSessions({
   }, [initialLocations, isInitialized]);
 
   // Handle real-time pageview events
-  const handlePageview = useCallback((data: PageviewEventData) => {
-    if (!data.sessionId) return;
+  const handlePageview = useCallback(
+    (data: PageviewEventData) => {
+      if (!data.sessionId) return;
 
-    const coordResult = getCoordinatesWithFallback(data);
-    
-    setSessions((prev) => {
-      const newSessions = new Map(prev);
-      const existing = newSessions.get(data.sessionId!);
+      const coordResult = getCoordinatesWithFallback(data);
 
-      if (data.isNewSession || !existing) {
-        // New session - add to map
-        if (coordResult) {
+      setSessions((prev) => {
+        const newSessions = new Map(prev);
+        const existing = newSessions.get(data.sessionId!);
+
+        if (data.isNewSession || !existing) {
+          // New session - add to map
+          if (coordResult) {
+            newSessions.set(data.sessionId!, {
+              id: data.sessionId!,
+              coordinates: coordResult.coordinates,
+              hasExactCoordinates: coordResult.hasExactCoordinates,
+              country: data.country || null,
+              countryCode: data.countryCode || null,
+              city: data.city || null,
+              gradient: getMarkerGradient(data.sessionId!),
+              pageJourney: [
+                {
+                  url: data.url,
+                  timestamp: data.timestamp
+                    ? new Date(data.timestamp)
+                    : new Date(),
+                  isCurrentPage: true,
+                },
+              ],
+              events: [],
+              startedAt: data.timestamp ? new Date(data.timestamp) : new Date(),
+              userAgent: data.userAgent || null,
+            });
+          }
+        } else {
+          // Existing session - update page journey
+          const updatedJourney = [
+            {
+              url: data.url,
+              timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
+              isCurrentPage: true,
+            },
+            ...existing.pageJourney.map((p) => ({
+              ...p,
+              isCurrentPage: false,
+            })),
+          ].slice(0, 20); // Keep last 20 pages
+
+          // Update coordinates if we got better ones
+          let newCoords = existing.coordinates;
+          let newHasExact = existing.hasExactCoordinates;
+          if (
+            coordResult &&
+            !existing.hasExactCoordinates &&
+            coordResult.hasExactCoordinates
+          ) {
+            newCoords = coordResult.coordinates;
+            newHasExact = true;
+          }
+
           newSessions.set(data.sessionId!, {
-            id: data.sessionId!,
-            coordinates: coordResult.coordinates,
-            hasExactCoordinates: coordResult.hasExactCoordinates,
-            country: data.country || null,
-            countryCode: data.countryCode || null,
-            city: data.city || null,
-            gradient: getMarkerGradient(data.sessionId!),
-            pageJourney: [
-              {
-                url: data.url,
-                timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
-                isCurrentPage: true,
-              },
-            ],
-            events: [],
-            startedAt: data.timestamp ? new Date(data.timestamp) : new Date(),
-            userAgent: data.userAgent || null,
+            ...existing,
+            coordinates: newCoords,
+            hasExactCoordinates: newHasExact,
+            pageJourney: updatedJourney,
+            country: data.country || existing.country,
+            countryCode: data.countryCode || existing.countryCode,
+            city: data.city || existing.city,
           });
         }
-      } else {
-        // Existing session - update page journey
-        const updatedJourney = [
-          {
-            url: data.url,
-            timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
-            isCurrentPage: true,
-          },
-          ...existing.pageJourney.map((p) => ({ ...p, isCurrentPage: false })),
-        ].slice(0, 20); // Keep last 20 pages
 
-        // Update coordinates if we got better ones
-        let newCoords = existing.coordinates;
-        let newHasExact = existing.hasExactCoordinates;
-        if (coordResult && (!existing.hasExactCoordinates && coordResult.hasExactCoordinates)) {
-          newCoords = coordResult.coordinates;
-          newHasExact = true;
-        }
+        return newSessions;
+      });
 
-        newSessions.set(data.sessionId!, {
-          ...existing,
-          coordinates: newCoords,
-          hasExactCoordinates: newHasExact,
-          pageJourney: updatedJourney,
-          country: data.country || existing.country,
-          countryCode: data.countryCode || existing.countryCode,
-          city: data.city || existing.city,
-        });
-      }
-
-      return newSessions;
-    });
-
-    // Invalidate live queries for counts
-    queryClient.invalidateQueries({
-      queryKey: [["session", "liveUsers"]],
-    });
-  }, [queryClient]);
+      // Invalidate live queries for counts
+      queryClient.invalidateQueries({
+        queryKey: [["session", "liveUsers"]],
+      });
+    },
+    [queryClient]
+  );
 
   // Handle real-time tracked events
   const handleTrackedEvent = useCallback((data: TrackedEventData) => {
@@ -255,24 +267,29 @@ export function useLiveSessions({
   }, []);
 
   // Handle session end events
-  const handleSessionEnd = useCallback((data: SessionEndEventData) => {
-    if (!data.sessionId) return;
+  const handleSessionEnd = useCallback(
+    (data: SessionEndEventData) => {
+      if (!data.sessionId) return;
 
-    setSessions((prev) => {
-      const newSessions = new Map(prev);
-      newSessions.delete(data.sessionId);
-      return newSessions;
-    });
+      setSessions((prev) => {
+        const newSessions = new Map(prev);
+        newSessions.delete(data.sessionId);
+        return newSessions;
+      });
 
-    queryClient.invalidateQueries({
-      queryKey: [["session", "liveUsers"]],
-    });
-  }, [queryClient]);
+      queryClient.invalidateQueries({
+        queryKey: [["session", "liveUsers"]],
+      });
+    },
+    [queryClient]
+  );
 
-  // Subscribe to websocket events
-  const { isConnected } = useSocketIOEvents(projectId, "pageview", handlePageview);
-  useSocketIOEvents(projectId, "event", handleTrackedEvent);
-  useSocketIOEvents(projectId, "session_end", handleSessionEnd);
+  // Subscribe to SSE events (NEW architecture)
+  const { isConnected } = useLiveEventStream(projectId, {
+    onPageview: handlePageview,
+    onEvent: handleTrackedEvent,
+    onSessionEnd: handleSessionEnd,
+  });
 
   // Separate sessions by coordinate type
   const { individualSessions, countryGroups, totalCount } = useMemo(() => {
@@ -327,4 +344,3 @@ export function useLiveSessions({
     isConnected,
   };
 }
-

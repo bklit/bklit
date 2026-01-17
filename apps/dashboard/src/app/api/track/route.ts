@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const payload: TrackingPayload = await request.json();
-    
+
     await publishDebugLog({
       timestamp: new Date().toISOString(),
       stage: "ingestion",
@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
       };
 
       await pushToQueue(queuedEvent);
-      
+
       await publishDebugLog({
         timestamp: new Date().toISOString(),
         stage: "queue",

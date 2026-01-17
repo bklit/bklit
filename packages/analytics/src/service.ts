@@ -104,7 +104,7 @@ export class AnalyticsService {
         eventDefinitionId: data.eventDefinitionId,
         projectId: data.projectId,
       });
-      
+
       const result = await this.client.insert({
         table: "tracked_event", // Client already has database: "analytics" set
         values: [
@@ -120,7 +120,7 @@ export class AnalyticsService {
         ],
         format: "JSONEachRow",
       });
-      
+
       console.log("[ClickHouse] Insert completed:", result);
     } catch (error) {
       console.error("[ClickHouse] Insert FAILED:", error);

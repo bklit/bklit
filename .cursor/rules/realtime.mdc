@@ -1,0 +1,109 @@
+---
+description: Real-time analytics architecture and patterns
+globs:
+alwaysApply: false
+---
+
+## Real-Time Architecture
+
+Bklit uses **Server-Sent Events (SSE)** for real-time analytics. No WebSocket server required.
+
+### Data Flow
+
+```
+SDK (browser) → Ingestion Server → Redis Queue → Worker → ClickHouse
+                                                    ↓
+                                              Redis Pub/Sub
+                                              (live-events)
+                                                    ↓
+                                        /api/live-stream (SSE)
+                                                    ↓
+                                        Dashboard (EventSource)
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| [/api/live-stream](mdc:apps/dashboard/src/app/api/live-stream/route.ts) | SSE endpoint subscribing to Redis |
+| [use-live-event-stream.ts](mdc:apps/dashboard/src/hooks/use-live-event-stream.ts) | Singleton EventSource hook |
+| [use-live-sessions.ts](mdc:apps/dashboard/src/hooks/use-live-sessions.ts) | Real-time session state management |
+| [packages/redis/src/types.ts](mdc:packages/redis/src/types.ts) | LiveEvent type definitions |
+
+### Using Real-Time Data
+
+```tsx
+import { useLiveEventStream } from "@/hooks/use-live-event-stream";
+
+function MyComponent({ projectId }: { projectId: string }) {
+  const { isConnected } = useLiveEventStream(projectId, {
+    onPageview: (data) => {
+      // data.url, data.sessionId, data.country, data.isNewSession, etc.
+    },
+    onEvent: (data) => {
+      // data.trackingId, data.eventType, data.sessionId, etc.
+    },
+    onSessionEnd: (data) => {
+      // data.sessionId
+    },
+  });
+
+  return <div>{isConnected ? "🟢 Live" : "🟡 Reconnecting..."}</div>;
+}
+```
+
+### Event Types
+
+```typescript
+// From @bklit/redis types
+interface PageviewEvent {
+  type: "pageview";
+  data: {
+    url: string;
+    sessionId?: string;
+    country?: string;
+    countryCode?: string;
+    city?: string;
+    lat?: number;
+    lon?: number;
+    isNewSession?: boolean;
+  };
+}
+
+interface TrackedEvent {
+  type: "event";
+  data: {
+    trackingId: string;
+    eventType: string;
+    sessionId?: string;
+  };
+}
+
+interface SessionEndEvent {
+  type: "session_end";
+  data: {
+    sessionId: string;
+  };
+}
+```
+
+### Singleton Pattern
+
+The `useLiveEventStream` hook uses a **singleton pattern** - only ONE EventSource connection per projectId is created, shared across all components. This prevents resource exhaustion.
+
+### Debugging Real-Time
+
+Use the terminal route to see live events flowing through the pipeline:
+```
+/[organizationId]/[projectId]/terminal
+```
+
+This shows: ingestion → queue → worker → clickhouse → pubsub stages.
+
+### Redis Channels
+
+| Channel | Purpose |
+|---------|---------|
+| `live-events` | Real-time analytics events for dashboard |
+| `debug-logs` | Pipeline debugging/monitoring |
+| `analytics:queue` | Event processing queue |

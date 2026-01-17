@@ -1,27 +1,39 @@
-import { prisma } from "@bklit/db/client";
-import { randomBytes, scrypt } from "node:crypto";
+import { scrypt } from "node:crypto";
 import { promisify } from "node:util";
+import { prisma } from "@bklit/db/client";
 
 const scryptAsync = promisify(scrypt);
 
 async function verifyToken(token: string, hash: string): Promise<boolean> {
   const [salt, storedHash] = hash.split(":");
-  if (!salt || !storedHash) return false;
+  if (!(salt && storedHash)) return false;
 
   const derivedHash = await scryptAsync(token, salt, 64);
   return (derivedHash as Buffer).toString("hex") === storedHash;
 }
 
-const tokenCache = new Map<string, { valid: boolean; organizationId: string; allowedDomains: string[] | null; expiresAt: number }>();
+const tokenCache = new Map<
+  string,
+  {
+    valid: boolean;
+    organizationId: string;
+    allowedDomains: string[] | null;
+    expiresAt: number;
+  }
+>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export async function validateApiToken(
   token: string,
   projectId: string
-): Promise<{ valid: boolean; organizationId?: string; allowedDomains?: string[] | null }> {
+): Promise<{
+  valid: boolean;
+  organizationId?: string;
+  allowedDomains?: string[] | null;
+}> {
   const cacheKey = `${token}:${projectId}`;
   const cached = tokenCache.get(cacheKey);
-  
+
   if (cached && cached.expiresAt > Date.now()) {
     return {
       valid: cached.valid,
@@ -88,5 +100,3 @@ export async function validateApiToken(
     return { valid: false };
   }
 }
-
-

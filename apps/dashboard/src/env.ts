@@ -71,11 +71,6 @@ export const env = createEnv({
      */
     NEXT_PUBLIC_MAPBOX_TOKEN: z.string().min(1).optional(),
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-
-    /**
-     * WebSocket - Real-time Analytics (OPTIONAL - will fallback to polling)
-     */
-    NEXT_PUBLIC_WS_URL: z.string().url().optional(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
@@ -84,7 +79,6 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
   },
   skipValidation:
     !!process.env.CI ||

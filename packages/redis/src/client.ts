@@ -21,7 +21,7 @@ export function createRedisClient(config?: RedisConfig): Redis | null {
         maxRetriesPerRequest: config?.maxRetries ?? 3,
         enableOfflineQueue: false, // Critical for serverless - don't queue commands if disconnected
         connectTimeout: 5000, // 5 second connection timeout
-        keepAlive: 30000, // Keep connection alive for 30 seconds
+        keepAlive: 30_000, // Keep connection alive for 30 seconds
         retryStrategy: (times) => {
           if (times > 3) {
             console.warn("Redis connection failed - using polling fallback");

@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { LiveSession, CountryGroup } from "@/hooks/use-live-sessions";
+import type { CountryGroup, LiveSession } from "@/hooks/use-live-sessions";
 
 interface LiveMapContextValue {
   // Map centering

@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 
 export function analyticsEnv() {
   const isDev = process.env.NODE_ENV === "development";
-  
+
   console.log("[analyticsEnv] Configuration:", {
     NODE_ENV: process.env.NODE_ENV,
     isDev,
