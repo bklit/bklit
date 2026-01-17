@@ -1,84 +1,156 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import mapboxgl from "mapbox-gl";
-import { useTRPC } from "@/trpc/react";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveMap } from "@/contexts/live-map-context";
-import { useSocketIOEvents } from "@/hooks/use-socketio-client";
+import { useLiveSessions } from "@/hooks/use-live-sessions";
 import {
   findCountryCoordinates,
   getCountryCoordinates,
 } from "@/lib/maps/country-coordinates";
-import { getMarkerGradient, parseRGB } from "@/lib/maps/marker-colors";
+import { parseRGB } from "@/lib/maps/marker-colors";
 
 interface LiveMapProps {
   projectId: string;
   organizationId: string;
 }
 
-// Helper function to create a pulsing dot with custom gradient
-function createPulsingDot(
+// Create a gradient circle marker for individual sessions
+function createGradientCircle(
   fromColor: string,
-  toColor: string
+  toColor: string,
+  size = 80
 ): mapboxgl.StyleImageInterface {
-  const size = 200;
   const from = parseRGB(fromColor);
   const to = parseRGB(toColor);
 
-  const pulsingDot: mapboxgl.StyleImageInterface & {
-    context?: CanvasRenderingContext2D | null;
-  } = {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return {
+      width: size,
+      height: size,
+      data: new Uint8Array(size * size * 4),
+      onAdd() {
+        // No-op
+      },
+      render() {
+        return false;
+      },
+    };
+  }
+
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const radius = size / 2 - 4;
+
+  const gradient = context.createRadialGradient(
+    centerX - radius * 0.3,
+    centerY - radius * 0.3,
+    0,
+    centerX,
+    centerY,
+    radius
+  );
+  gradient.addColorStop(0, `rgba(${from.r}, ${from.g}, ${from.b}, 1)`);
+  gradient.addColorStop(1, `rgba(${to.r}, ${to.g}, ${to.b}, 1)`);
+
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  context.fillStyle = gradient;
+  context.fill();
+
+  context.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  context.lineWidth = 2;
+  context.stroke();
+
+  const imageData = context.getImageData(0, 0, size, size);
+
+  return {
     width: size,
     height: size,
-    data: new Uint8Array(size * size * 4),
-
+    data: imageData.data,
     onAdd() {
-      const canvas = document.createElement("canvas");
-      canvas.width = this.width;
-      canvas.height = this.height;
-      this.context = canvas.getContext("2d");
+      // No-op - image already drawn
     },
-
     render() {
-      const duration = 1000;
-      const t = (performance.now() % duration) / duration;
-
-      const radius = (size / 2) * 0.3;
-      const outerRadius = (size / 2) * 0.7 * t + radius;
-      const context = this.context;
-
-      if (!context) {
-        return false;
-      }
-
-      // Draw the outer circle with custom color
-      context.clearRect(0, 0, this.width, this.height);
-      context.beginPath();
-      context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(${from.r}, ${from.g}, ${from.b}, ${1 - t})`;
-      context.fill();
-
-      // Draw the inner circle with custom color
-      context.beginPath();
-      context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(${to.r}, ${to.g}, ${to.b}, 1)`;
-      context.strokeStyle = "white";
-      context.lineWidth = 2 + 4 * (1 - t);
-      context.fill();
-      context.stroke();
-
-      // Update this image's data with data from the canvas
-      this.data = context.getImageData(0, 0, this.width, this.height).data;
-
-      // Return `true` to let the map know that the image was updated
-      return true;
+      return false;
     },
   };
+}
 
-  return pulsingDot;
+// Create a country group marker with count badge
+function createCountryGroupMarker(
+  count: number,
+  size = 100
+): mapboxgl.StyleImageInterface {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return {
+      width: size,
+      height: size,
+      data: new Uint8Array(size * size * 4),
+      onAdd() {
+        // No-op
+      },
+      render() {
+        return false;
+      },
+    };
+  }
+
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const radius = size / 2 - 8;
+
+  // Background gradient (indigo to purple)
+  const gradient = context.createRadialGradient(
+    centerX - radius * 0.3,
+    centerY - radius * 0.3,
+    0,
+    centerX,
+    centerY,
+    radius
+  );
+  gradient.addColorStop(0, "rgba(129, 140, 248, 1)"); // indigo-400
+  gradient.addColorStop(1, "rgba(99, 102, 241, 1)"); // indigo-500
+
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  context.fillStyle = gradient;
+  context.fill();
+
+  // White border
+  context.strokeStyle = "rgba(255, 255, 255, 0.95)";
+  context.lineWidth = 3;
+  context.stroke();
+
+  // Count text
+  context.fillStyle = "white";
+  context.font = `bold ${count > 99 ? 20 : 24}px system-ui, sans-serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(count > 99 ? "99+" : String(count), centerX, centerY);
+
+  const imageData = context.getImageData(0, 0, size, size);
+
+  return {
+    width: size,
+    height: size,
+    data: imageData.data,
+    onAdd() {
+      // No-op - image already drawn
+    },
+    render() {
+      return false;
+    },
+  };
 }
 
 export function LiveMap({ projectId, organizationId }: LiveMapProps) {
@@ -86,55 +158,23 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   const map = useRef<mapboxgl.Map | null>(null);
   const userInteracting = useRef(false);
   const spinEnabled = useRef(true);
-  const pulsingDotRef = useRef<mapboxgl.StyleImageInterface | null>(null);
   const spinGlobeRef = useRef<(() => void) | null>(null);
   const onMarkerClickRef = useRef<((sessionId: string) => void) | null>(null);
+  const addedImagesRef = useRef<Set<string>>(new Set());
+  const [mapLoaded, setMapLoaded] = useState(false);
+
   const { registerCenterFunction, onMarkerClick } = useLiveMap();
+  const { individualSessions, countryGroups, isConnected } = useLiveSessions({
+    projectId,
+    organizationId,
+  });
 
   // Keep ref updated with latest onMarkerClick
   useEffect(() => {
     onMarkerClickRef.current = onMarkerClick;
   }, [onMarkerClick]);
 
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { data: liveUserLocations = [] } = useQuery({
-    ...trpc.session.liveUserLocations.queryOptions(
-      { projectId, organizationId },
-      {
-        refetchInterval: 60_000, // Poll every 60s (was 15s) - real-time handles updates
-        staleTime: 50_000,
-      }
-    ),
-  });
-
-  // Real-time pageview handler for instant map updates
-  const handleRealtimePageview = useCallback(
-    (data: { lat?: number; lon?: number }) => {
-      // Validate coordinates
-      const lat = data.lat;
-      const lon = data.lon;
-
-      // Trigger refetch to get updated location data
-      setTimeout(() => {
-        queryClient.invalidateQueries({
-          queryKey: [["session", "liveUserLocations"]],
-        });
-      }, 500);
-
-      if (!(lat && lon) || (lat === 0 && lon === 0)) {
-        return;
-      }
-
-      if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-        return;
-      }
-    },
-    [queryClient]
-  );
-
-  useSocketIOEvents(projectId, "pageview", handleRealtimePageview);
-
+  // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) {
       return;
@@ -183,90 +223,19 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
       ) {
         let distancePerSecond = 360 / secondsPerRevolution;
         if (zoom > slowSpinZoom) {
-          // Slow spinning at higher zooms
           const zoomDif = (maxSpinZoom - zoom) / (maxSpinZoom - slowSpinZoom);
           distancePerSecond *= zoomDif;
         }
         const center = map.current.getCenter();
         center.lng -= distancePerSecond;
-        // Smoothly animate the map over one second.
-        // When this animation is complete, it calls a 'moveend' event.
         map.current.easeTo({ center, duration: 1000, easing: (n) => n });
       }
     };
 
-    // Store spinGlobe function in ref for access outside useEffect
     spinGlobeRef.current = spinGlobe;
-
-    // Create pulsing dot image
-    const size = 200;
-    const pulsingDot: mapboxgl.StyleImageInterface & {
-      context?: CanvasRenderingContext2D | null;
-    } = {
-      width: size,
-      height: size,
-      data: new Uint8Array(size * size * 4),
-
-      onAdd() {
-        const canvas = document.createElement("canvas");
-        canvas.width = this.width;
-        canvas.height = this.height;
-        this.context = canvas.getContext("2d");
-      },
-
-      render() {
-        const duration = 1000;
-        const t = (performance.now() % duration) / duration;
-
-        const radius = (size / 2) * 0.3;
-        const outerRadius = (size / 2) * 0.7 * t + radius;
-        const context = this.context;
-
-        if (!context) {
-          return false;
-        }
-
-        // Draw the outer circle.
-        context.clearRect(0, 0, this.width, this.height);
-        context.beginPath();
-        context.arc(
-          this.width / 2,
-          this.height / 2,
-          outerRadius,
-          0,
-          Math.PI * 2
-        );
-        context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
-        context.fill();
-
-        // Draw the inner circle.
-        context.beginPath();
-        context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
-        context.fillStyle = "rgba(255, 100, 100, 1)";
-        context.strokeStyle = "white";
-        context.lineWidth = 2 + 4 * (1 - t);
-        context.fill();
-        context.stroke();
-
-        // Update this image's data with data from the canvas.
-        this.data = context.getImageData(0, 0, this.width, this.height).data;
-
-        // Continuously repaint the map, resulting
-        // in the smooth animation of the dot.
-        if (map.current) {
-          map.current.triggerRepaint();
-        }
-
-        // Return `true` to let the map know that the image was updated.
-        return true;
-      },
-    };
-
-    pulsingDotRef.current = pulsingDot;
 
     map.current.on("style.load", () => {
       if (map.current) {
-        // Remove atmosphere completely
         map.current.setFog(null);
       }
     });
@@ -276,194 +245,272 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         return;
       }
 
-      // Add the default pulsing dot image (fallback)
-      map.current.addImage("pulsing-dot-default", pulsingDot, {
-        pixelRatio: 2,
-      });
-
-      // Add empty source initially
-      map.current.addSource("live-users", {
+      // Add sources for individual and country group markers
+      map.current.addSource("individual-sessions", {
         type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [],
-        },
+        data: { type: "FeatureCollection", features: [] },
       });
 
-      // Add layer for live users with dynamic icon images
+      map.current.addSource("country-groups", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+
+      // Layer for individual session markers
       map.current.addLayer({
-        id: "live-users-layer",
+        id: "individual-sessions-layer",
         type: "symbol",
-        source: "live-users",
+        source: "individual-sessions",
         layout: {
-          "icon-image": ["get", "iconImage"], // Use the iconImage property from the feature
+          "icon-image": ["get", "iconImage"],
           "icon-size": 0.5,
-          "icon-allow-overlap": true, // Allow markers to overlap
+          "icon-allow-overlap": true,
         },
       });
 
-      // Add click handler for markers
-      map.current.on("click", "live-users-layer", (e) => {
-        if (!e.features || e.features.length === 0) {
+      // Layer for country group markers
+      map.current.addLayer({
+        id: "country-groups-layer",
+        type: "symbol",
+        source: "country-groups",
+        layout: {
+          "icon-image": ["get", "iconImage"],
+          "icon-size": 0.6,
+          "icon-allow-overlap": true,
+        },
+      });
+
+      // Click handler for individual markers
+      map.current.on("click", "individual-sessions-layer", (e) => {
+        const feature = e.features?.[0];
+        if (!feature?.properties) {
           return;
         }
-
-        const feature = e.features[0];
-        if (!feature) {
-          return;
-        }
-
-        const properties = feature.properties;
-        if (!properties) {
-          return;
-        }
-
-        const sessionId =
-          (properties.sessionId as string) || (properties.id as string);
-
-        // Notify the Live component to show user details in the card
+        const sessionId = feature.properties.sessionId as string;
         if (sessionId && onMarkerClickRef.current) {
           onMarkerClickRef.current(sessionId);
         }
       });
 
-      // Change cursor on hover
-      map.current.on("mouseenter", "live-users-layer", () => {
-        if (map.current) {
-          map.current.getCanvas().style.cursor = "pointer";
+      // Click handler for country group markers (future: drill down)
+      map.current.on("click", "country-groups-layer", (e) => {
+        const feature = e.features?.[0];
+        if (!feature?.properties) {
+          return;
+        }
+        const countryCode = feature.properties.countryCode as string;
+        // For now, just center on the country
+        if (countryCode && map.current) {
+          const coords = findCountryCoordinates(countryCode);
+          if (coords) {
+            map.current.easeTo({
+              center: [coords.longitude, coords.latitude],
+              zoom: 4,
+              duration: 1500,
+            });
+          }
         }
       });
 
-      map.current.on("mouseleave", "live-users-layer", () => {
+      // Cursor changes
+      const setCursor = (cursor: string) => () => {
         if (map.current) {
-          map.current.getCanvas().style.cursor = "";
+          map.current.getCanvas().style.cursor = cursor;
         }
-      });
+      };
+
+      map.current.on(
+        "mouseenter",
+        "individual-sessions-layer",
+        setCursor("pointer")
+      );
+      map.current.on("mouseleave", "individual-sessions-layer", setCursor(""));
+      map.current.on(
+        "mouseenter",
+        "country-groups-layer",
+        setCursor("pointer")
+      );
+      map.current.on("mouseleave", "country-groups-layer", setCursor(""));
+
+      setMapLoaded(true);
     });
 
-    // Pause spinning on interaction
+    // Interaction handlers
     map.current.on("mousedown", () => {
       userInteracting.current = true;
     });
 
-    // Restart spinning the globe when interaction is complete
     map.current.on("mouseup", () => {
       userInteracting.current = false;
       spinGlobe();
     });
 
-    // These events account for cases where the mouse has moved
-    // off the map, so 'mouseup' will not be fired.
     map.current.on("dragend", () => {
       userInteracting.current = false;
       spinGlobe();
     });
+
     map.current.on("pitchend", () => {
       userInteracting.current = false;
       spinGlobe();
     });
+
     map.current.on("rotateend", () => {
       userInteracting.current = false;
       spinGlobe();
     });
 
-    // When animation is complete, start spinning if there is no ongoing interaction
     map.current.on("moveend", () => {
       spinGlobe();
     });
 
-    // Start the rotation
     spinGlobe();
 
     return () => {
       if (map.current) {
         try {
-          // Stop all animations and interactions
           map.current.stop();
-          // Remove the map (this also removes all event listeners)
           map.current.remove();
-        } catch (error) {
-          // Ignore errors during cleanup (map might already be removed)
-          console.warn("Error cleaning up map:", error);
+        } catch {
+          // Ignore cleanup errors
         } finally {
           map.current = null;
         }
       }
-      // Clear the spin function reference
       spinGlobeRef.current = null;
-      pulsingDotRef.current = null;
+      addedImagesRef.current.clear();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- onMarkerClick is from stable context, map should only init once
   }, []);
 
-  // Update map with live user locations
+  // Update individual session markers
   useEffect(() => {
-    if (!map.current) {
+    const mapInstance = map.current;
+    if (!mapInstance) {
+      return;
+    }
+    if (!mapLoaded) {
       return;
     }
 
-    const source = map.current.getSource("live-users") as
+    const source = mapInstance.getSource("individual-sessions") as
       | mapboxgl.GeoJSONSource
       | undefined;
-
     if (!source) {
       return;
     }
 
-    // Log for debugging
-    if (process.env.NODE_ENV === "development") {
-      console.log("Live user locations:", liveUserLocations);
-    }
+    // Create/update marker images for each session
+    for (const session of individualSessions) {
+      const iconId = `session-${session.id}`;
 
-    // Create dynamic pulsing dot images for each user
-    for (const user of liveUserLocations) {
-      const iconId = `pulsing-dot-${user.id}`;
+      if (!addedImagesRef.current.has(iconId)) {
+        // Create gradient marker for visual appeal
+        const markerImage = createGradientCircle(
+          session.gradient.from,
+          session.gradient.to
+        );
 
-      // Only add the image if it doesn't exist
-      if (map.current && !map.current.hasImage(iconId)) {
-        const gradient = getMarkerGradient(user.id);
-        const pulsingDotImage = createPulsingDot(gradient.from, gradient.to);
-        map.current.addImage(iconId, pulsingDotImage, { pixelRatio: 2 });
+        if (!mapInstance.hasImage(iconId)) {
+          mapInstance.addImage(iconId, markerImage, { pixelRatio: 2 });
+          addedImagesRef.current.add(iconId);
+        }
       }
     }
 
-    // Convert live user locations to GeoJSON format
+    // Build GeoJSON for individual sessions
     const geojson: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
-      features: liveUserLocations.map((user) => ({
+      features: individualSessions.map((session) => ({
         type: "Feature",
         geometry: {
           type: "Point",
-          coordinates: user.coordinates,
+          coordinates: session.coordinates,
         },
         properties: {
-          id: user.id,
-          sessionId: user.id, // Use id as sessionId since they're the same
-          city: user.city,
-          country: user.country,
-          countryCode: user.countryCode,
-          startedAt: user.startedAt.toISOString(),
-          browser: user.browser,
-          deviceType: user.deviceType,
-          iconImage: `pulsing-dot-${user.id}`, // Assign unique icon
+          sessionId: session.id,
+          city: session.city,
+          country: session.country,
+          countryCode: session.countryCode,
+          iconImage: `session-${session.id}`,
         },
       })),
     };
 
     source.setData(geojson);
-  }, [liveUserLocations]);
+  }, [individualSessions, mapLoaded]);
 
-  // Function to center the map on a country
+  // Update country group markers
+  useEffect(() => {
+    const mapInstance = map.current;
+    if (!mapInstance) {
+      return;
+    }
+    if (!mapLoaded) {
+      return;
+    }
+
+    const source = mapInstance.getSource("country-groups") as
+      | mapboxgl.GeoJSONSource
+      | undefined;
+    if (!source) {
+      return;
+    }
+
+    // Create/update marker images for each country group
+    for (const group of countryGroups) {
+      const iconId = `country-${group.countryCode}-${group.sessions.length}`;
+
+      // Remove old versions with different counts
+      const oldIconPattern = `country-${group.countryCode}-`;
+      for (const existingId of addedImagesRef.current) {
+        if (existingId.startsWith(oldIconPattern) && existingId !== iconId) {
+          if (mapInstance.hasImage(existingId)) {
+            mapInstance.removeImage(existingId);
+          }
+          addedImagesRef.current.delete(existingId);
+        }
+      }
+
+      if (!mapInstance.hasImage(iconId)) {
+        const markerImage = createCountryGroupMarker(group.sessions.length);
+        mapInstance.addImage(iconId, markerImage, { pixelRatio: 2 });
+        addedImagesRef.current.add(iconId);
+      }
+    }
+
+    // Build GeoJSON for country groups
+    const geojson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: countryGroups.map((group) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: group.coordinates,
+        },
+        properties: {
+          countryCode: group.countryCode,
+          countryName: group.countryName,
+          sessionCount: group.sessions.length,
+          iconImage: `country-${group.countryCode}-${group.sessions.length}`,
+        },
+      })),
+    };
+
+    source.setData(geojson);
+  }, [countryGroups, mapLoaded]);
+
+  // Center on country function
   const centerOnCountry = useCallback(
     (countryCode: string | null, countryName?: string | null) => {
-      if (!(map.current && countryCode)) {
+      if (!map.current) {
+        return;
+      }
+      if (!countryCode) {
         return;
       }
 
-      // Try to find coordinates by country code first
       let coordinates = findCountryCoordinates(countryCode);
 
-      // If not found and we have a country name, try to find by name
       if (!coordinates && countryName) {
         const coordinatesList = getCountryCoordinates();
         const found = coordinatesList.find(
@@ -479,19 +526,16 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         return;
       }
 
-      // Temporarily disable spinning
       spinEnabled.current = false;
       userInteracting.current = true;
 
-      // Center the map on the country with smooth animation
       map.current.easeTo({
         center: [coordinates.longitude, coordinates.latitude],
         zoom: 4,
         duration: 2000,
-        easing: (t) => t * (2 - t), // Ease-out animation
+        easing: (t) => t * (2 - t),
       });
 
-      // Re-enable spinning after animation completes (with a delay)
       setTimeout(() => {
         userInteracting.current = false;
         spinEnabled.current = true;
@@ -503,21 +547,26 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
     []
   );
 
-  // Register the center function with the context
+  // Register center function with context
   useEffect(() => {
     registerCenterFunction(centerOnCountry);
   }, [registerCenterFunction, centerOnCountry]);
-
-  const projection = map.current?.getProjection();
 
   return (
     <div
       className="absolute! inset-0! h-full! w-full! overflow-hidden rounded-lg"
       ref={mapContainer}
     >
-      {projection && (
+      {mapLoaded && (
         <div className="pointer-events-none absolute inset-0 h-full w-full bg-bklit-700/50 mix-blend-color" />
       )}
+      {/* Real-time connection indicator */}
+      <div className="absolute top-4 right-4 z-10">
+        <div
+          className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-yellow-500"}`}
+          title={isConnected ? "Real-time connected" : "Polling mode"}
+        />
+      </div>
     </div>
   );
 }

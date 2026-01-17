@@ -30,6 +30,15 @@ export interface TrackedEvent extends LiveEventBase {
   };
 }
 
-export type LiveEvent = PageviewEvent | TrackedEvent;
+export interface SessionEndEvent extends LiveEventBase {
+  type: "session_end";
+  data: {
+    sessionId: string;
+    countryCode?: string;
+    reason?: "timeout" | "closed" | "manual";
+  };
+}
+
+export type LiveEvent = PageviewEvent | TrackedEvent | SessionEndEvent;
 
 export const LIVE_EVENTS_CHANNEL = "live-events";

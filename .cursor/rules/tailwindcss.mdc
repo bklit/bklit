@@ -1,12 +1,46 @@
 ---
-description: 
-globs: 
+description: Tailwind CSS v4 patterns
+globs:
 alwaysApply: true
 ---
-When using TailwindCSS, always use v4.1^
-- Ref: https://tailwindcss.com/docs/installation/using-vite
 
-Example: tailwing.config.js is depracated and now not required.
-Example: w-4 h-4 has been replaced with size-4
+## Tailwind CSS v4
 
-Always adhere to good standards
+We use Tailwind CSS v4.1+ with the new CSS-first configuration.
+
+### Key Changes from v3
+
+- `tailwind.config.js` is **deprecated** - use CSS `@theme` directive
+- Size utilities: `w-4 h-4` → `size-4`
+- CSS variables for theming
+
+### Common Patterns
+
+```tsx
+// ✅ v4 syntax
+<div className="size-4" />           // width + height
+<div className="inset-0" />          // top/right/bottom/left: 0
+
+// ❌ Old v3 syntax
+<div className="w-4 h-4" />
+```
+
+### Theme Variables
+
+```css
+/* packages/ui/src/styles/globals.css */
+@theme {
+  --color-primary: oklch(0.7 0.15 200);
+  --radius-lg: 0.5rem;
+}
+```
+
+### Dark Mode
+
+Use `dark:` variant with CSS variables:
+
+```tsx
+<div className="bg-background text-foreground dark:bg-background" />
+```
+
+Ref: https://tailwindcss.com/docs

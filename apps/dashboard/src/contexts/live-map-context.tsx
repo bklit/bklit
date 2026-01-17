@@ -1,8 +1,17 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useRef } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
+import type { CountryGroup, LiveSession } from "@/hooks/use-live-sessions";
 
 interface LiveMapContextValue {
+  // Map centering
   centerOnCountry: (
     countryCode: string | null,
     countryName?: string | null
@@ -10,8 +19,27 @@ interface LiveMapContextValue {
   registerCenterFunction: (
     fn: (countryCode: string | null, countryName?: string | null) => void
   ) => void;
+
+  // Marker click handling
   registerMarkerClickHandler: (fn: (sessionId: string) => void) => void;
   onMarkerClick: (sessionId: string) => void;
+
+  // Selected session state
+  selectedSessionId: string | null;
+  setSelectedSessionId: (sessionId: string | null) => void;
+
+  // Live sessions data (optional - can be provided by parent)
+  sessions: Map<string, LiveSession>;
+  setSessions: (sessions: Map<string, LiveSession>) => void;
+  individualSessions: LiveSession[];
+  setIndividualSessions: (sessions: LiveSession[]) => void;
+  countryGroups: CountryGroup[];
+  setCountryGroups: (groups: CountryGroup[]) => void;
+  totalCount: number;
+  setTotalCount: (count: number) => void;
+
+  // Get a session by ID
+  getSession: (sessionId: string) => LiveSession | undefined;
 }
 
 const LiveMapContext = createContext<LiveMapContextValue | null>(null);
@@ -24,30 +52,58 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
     null
   );
 
-  const registerCenterFunction = (
-    fn: (countryCode: string | null, countryName?: string | null) => void
-  ) => {
-    centerFunctionRef.current = fn;
-  };
+  // Selected session state
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  );
 
-  const registerMarkerClickHandler = (fn: (sessionId: string) => void) => {
-    markerClickHandlerRef.current = fn;
-  };
+  // Live sessions data
+  const [sessions, setSessions] = useState<Map<string, LiveSession>>(new Map());
+  const [individualSessions, setIndividualSessions] = useState<LiveSession[]>(
+    []
+  );
+  const [countryGroups, setCountryGroups] = useState<CountryGroup[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const centerOnCountry = (
-    countryCode: string | null,
-    countryName?: string | null
-  ) => {
-    if (centerFunctionRef.current) {
-      centerFunctionRef.current(countryCode, countryName);
-    }
-  };
+  const registerCenterFunction = useCallback(
+    (fn: (countryCode: string | null, countryName?: string | null) => void) => {
+      centerFunctionRef.current = fn;
+    },
+    []
+  );
 
-  const onMarkerClick = (sessionId: string) => {
+  const registerMarkerClickHandler = useCallback(
+    (fn: (sessionId: string) => void) => {
+      markerClickHandlerRef.current = fn;
+    },
+    []
+  );
+
+  const centerOnCountry = useCallback(
+    (countryCode: string | null, countryName?: string | null) => {
+      if (centerFunctionRef.current) {
+        centerFunctionRef.current(countryCode, countryName);
+      }
+    },
+    []
+  );
+
+  const onMarkerClick = useCallback((sessionId: string) => {
+    // Set the selected session
+    setSelectedSessionId(sessionId);
+
+    // Also call any registered handler
     if (markerClickHandlerRef.current) {
       markerClickHandlerRef.current(sessionId);
     }
-  };
+  }, []);
+
+  const getSession = useCallback(
+    (sessionId: string): LiveSession | undefined => {
+      return sessions.get(sessionId);
+    },
+    [sessions]
+  );
 
   return (
     <LiveMapContext.Provider
@@ -56,6 +112,17 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
         registerCenterFunction,
         registerMarkerClickHandler,
         onMarkerClick,
+        selectedSessionId,
+        setSelectedSessionId,
+        sessions,
+        setSessions,
+        individualSessions,
+        setIndividualSessions,
+        countryGroups,
+        setCountryGroups,
+        totalCount,
+        setTotalCount,
+        getSession,
       }}
     >
       {children}

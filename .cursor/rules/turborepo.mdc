@@ -1,0 +1,111 @@
+---
+description: Turborepo monorepo patterns and best practices
+globs:
+alwaysApply: true
+---
+
+## Monorepo Structure
+
+```
+apps/
+  dashboard/     # Next.js dashboard (@bklit/dashboard)
+  docs/          # Documentation site (@bklit/docs)
+  playground/    # SDK testing playground (@bklit/playground)
+  website/       # Marketing website (@bklit/website)
+
+packages/
+  ui/            # Shared UI components (@bklit/ui)
+  db/            # Prisma schema & client (@bklit/db)
+  api/           # tRPC routers (@bklit/api)
+  redis/         # Redis client & types (@bklit/redis)
+  analytics/     # ClickHouse service (@bklit/analytics)
+  sdk/           # Client SDK (@bklit/sdk)
+  ingestion/     # Event ingestion server (@bklit/ingestion)
+  worker/        # Background job processor (@bklit/worker)
+```
+
+## Environment Variables
+
+### Turbo Configuration
+
+Define env vars in [turbo.json](mdc:turbo.json) for proper caching:
+
+```json
+{
+  "tasks": {
+    "build": {
+      "env": ["DATABASE_URL", "REDIS_URL", "CLICKHOUSE_HOST"]
+    },
+    "dev": {
+      "env": ["DATABASE_URL", "REDIS_URL"]
+    }
+  }
+}
+```
+
+### Package-Specific Env
+
+Use `@t3-oss/env-nextjs` for type-safe env in apps:
+
+```tsx
+// apps/dashboard/src/env.ts
+import { createEnv } from "@t3-oss/env-nextjs";
+
+export const env = createEnv({
+  server: { DATABASE_URL: z.string().url() },
+  client: { NEXT_PUBLIC_APP_URL: z.string().url().optional() },
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  },
+});
+```
+
+## Commands
+
+### Running Apps
+
+```bash
+pnpm dev                    # All apps in watch mode
+pnpm dev:services           # Docker + ingestion + worker
+pnpm dev:stop               # Stop all services
+```
+
+### Package-Specific Commands
+
+```bash
+pnpm --filter=@bklit/dashboard dev     # Run single app
+pnpm --filter=@bklit/sdk build         # Build single package
+pnpm --filter=@bklit/ui dlx shadcn@latest add button  # Add shadcn component
+```
+
+### Build & Type Check
+
+```bash
+pnpm build          # Build all packages
+pnpm typecheck      # Type check all packages
+pnpm lint           # Lint all packages
+```
+
+## Package Imports
+
+Always use package aliases, not relative paths across packages:
+
+```tsx
+// ✅ Good
+import { db } from "@bklit/db/client";
+import { Button } from "@bklit/ui/components/button";
+import { getRedisClient } from "@bklit/redis";
+
+// ❌ Bad
+import { db } from "../../../packages/db/src/client";
+```
+
+## Adding Dependencies
+
+```bash
+# Add to specific package
+pnpm --filter=@bklit/dashboard add lodash
+
+# Add to root (dev dependencies for tooling)
+pnpm add -D -w typescript
+```

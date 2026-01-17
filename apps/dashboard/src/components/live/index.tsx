@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useLiveMap } from "@/contexts/live-map-context";
-import { useSocketIOEvents } from "@/hooks/use-socketio-client";
+import { useLiveEventStream } from "@/hooks/use-live-event-stream";
 import { useTRPC } from "@/trpc/react";
 import {
   LiveCardWithData,
@@ -52,7 +52,10 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
     [selectedSessionId, queryClient]
   );
 
-  useSocketIOEvents(projectId, "pageview", handlePageviewForSession);
+  // Subscribe to SSE events (NEW architecture)
+  useLiveEventStream(projectId, {
+    onPageview: handlePageviewForSession,
+  });
 
   // Register handler for map marker clicks
   useEffect(() => {
@@ -108,7 +111,7 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
   }, [sessionData, selectedSessionId, hasOpenedSession, openUserDetail]);
 
   return (
-    <div className="pointer-events-none fixed bottom-0 left-1/2 z-50 flex -translate-x-1/2 justify-center p-6">
+    <div className="pointer-events-none absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 justify-center px-6">
       <div className="pointer-events-auto">
         <Suspense fallback={<LiveCardWithDataSkeleton />}>
           <LiveCardWithData

@@ -1,0 +1,22 @@
+{
+  "name": "@bklit/ingestion",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "NODE_ENV=development dotenv -e ../../.env -- tsx watch src/server.ts",
+    "start": "dotenv -e ../../.env -- node --loader tsx src/server.ts"
+  },
+  "dependencies": {
+    "@bklit/redis": "workspace:*",
+    "@bklit/db": "workspace:*",
+    "@bklit/utils": "workspace:*",
+    "@bklit/validators": "workspace:*",
+    "ioredis": "^5.4.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.7.0",
+    "dotenv-cli": "^10.0.0"
+  }
+}

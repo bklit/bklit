@@ -1,0 +1,7 @@
+{
+  "extends": "../../tooling/tsconfig/internal-package.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  }
+}

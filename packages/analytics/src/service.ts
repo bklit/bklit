@@ -30,7 +30,7 @@ export class AnalyticsService {
   async createPageView(data: PageViewData): Promise<void> {
     try {
       await this.client.insert({
-        table: "page_view_event",
+        table: "page_view_event", // Client already has database: "analytics" set
         values: [
           {
             id: data.id,
@@ -98,21 +98,34 @@ export class AnalyticsService {
   }
 
   async createTrackedEvent(data: TrackedEventData): Promise<void> {
-    await this.client.insert({
-      table: "tracked_event",
-      values: [
-        {
-          id: data.id,
-          timestamp: formatDateForInsert(data.timestamp),
-          metadata: data.metadata ? JSON.stringify(data.metadata) : null,
-          created_at: formatDateForInsert(data.createdAt || new Date()),
-          event_definition_id: data.eventDefinitionId,
-          project_id: data.projectId,
-          session_id: data.sessionId,
-        },
-      ],
-      format: "JSONEachRow",
-    });
+    try {
+      console.log("[ClickHouse] Inserting tracked_event:", {
+        id: data.id,
+        eventDefinitionId: data.eventDefinitionId,
+        projectId: data.projectId,
+      });
+
+      const result = await this.client.insert({
+        table: "tracked_event", // Client already has database: "analytics" set
+        values: [
+          {
+            id: data.id,
+            timestamp: formatDateForInsert(data.timestamp),
+            metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+            created_at: formatDateForInsert(data.createdAt || new Date()),
+            event_definition_id: data.eventDefinitionId,
+            project_id: data.projectId,
+            session_id: data.sessionId,
+          },
+        ],
+        format: "JSONEachRow",
+      });
+
+      console.log("[ClickHouse] Insert completed:", result);
+    } catch (error) {
+      console.error("[ClickHouse] Insert FAILED:", error);
+      throw error;
+    }
   }
 
   async sessionExists(sessionId: string, projectId: string): Promise<boolean> {
@@ -363,6 +376,13 @@ export class AnalyticsService {
       countryCode: session.country_code,
       city: session.city,
       projectId: session.project_id,
+    });
+  }
+
+  async endTrackedSession(sessionId: string): Promise<void> {
+    const now = new Date();
+    await this.updateTrackedSession(sessionId, {
+      endedAt: now,
     });
   }
 

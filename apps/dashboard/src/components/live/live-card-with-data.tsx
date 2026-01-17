@@ -4,8 +4,8 @@ import { LiveCard, type LiveCardData } from "@bklit/ui/components/live/card";
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import { useLiveEventStream } from "@/hooks/use-live-event-stream";
 import { useLiveUsers } from "@/hooks/use-live-users";
-import { useSocketIOEvents } from "@/hooks/use-socketio-client";
 import { useTRPC } from "@/trpc/react";
 
 /**
@@ -13,7 +13,7 @@ import { useTRPC } from "@/trpc/react";
  * and passes it to the LiveCard component.
  *
  * Features:
- * - Real-time updates via Socket.IO for pageview events
+ * - Real-time updates via SSE for pageview events
  * - 10-second polling fallback for reliability
  * - Automatic data transformation to LiveCardData format
  * - Live user count, top pages, top countries, and top referrers
@@ -103,7 +103,10 @@ export function LiveCardWithData({
     });
   }, [queryClient]);
 
-  useSocketIOEvents(projectId, "pageview", handlePageview);
+  // Subscribe to SSE events (NEW architecture)
+  useLiveEventStream(projectId, {
+    onPageview: handlePageview,
+  });
 
   // Transform data to LiveCardData format
   const cardData: LiveCardData = useMemo(() => {

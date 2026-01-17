@@ -19,7 +19,9 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 // Classify referrer into categories
 function classifyReferrer(hostname: string): string {
-  if (!hostname) return "direct";
+  if (!hostname) {
+    return "direct";
+  }
 
   // Search engines
   const searchEngines = [
@@ -153,14 +155,16 @@ export function initBklit(options: BklitOptions): void {
       const urlParams = new URLSearchParams(window.location.search);
 
       // Parse referrer data
-      let referrerHostname, referrerPath, referrerType;
+      let referrerHostname: string | undefined;
+      let referrerPath: string | undefined;
+      let referrerType: string | undefined;
       if (document.referrer) {
         try {
           const refUrl = new URL(document.referrer);
           referrerHostname = refUrl.hostname;
           referrerPath = refUrl.pathname;
           referrerType = classifyReferrer(refUrl.hostname);
-        } catch (e) {
+        } catch {
           // Invalid referrer URL, ignore
         }
       }
@@ -283,52 +287,46 @@ export function initBklit(options: BklitOptions): void {
   }
   trackPageView();
 
-  // Cleanup on page unload
-  const handlePageUnload = async () => {
+  // Cleanup on page unload - use sendBeacon for reliability
+  const handlePageUnload = () => {
     // End the session when user leaves
     if (currentSessionId) {
-      try {
-        if (debug) {
-          console.log("🔄 Bklit SDK: Ending session on page unload...", {
-            sessionId: currentSessionId,
-            projectId,
-          });
-        }
+      // Remove /track suffix if present to get base URL for session-end
+      const baseUrl = finalConfig.apiHost.replace(/\/track$/, "");
+      const endSessionUrl = `${baseUrl}/session-end`;
 
-        const endSessionUrl = `${finalConfig.apiHost}/session-end`;
-        const response = await fetch(endSessionUrl, {
-          method: "POST",
-          headers: buildHeaders(apiKey),
-          body: JSON.stringify({
-            sessionId: currentSessionId,
-            projectId,
-            environment,
-          }),
-          keepalive: true, // Important for sending data before page unloads
+      // Use sendBeacon for reliable delivery on page unload
+      // sendBeacon is specifically designed for this use case
+      const payload = JSON.stringify({
+        sessionId: currentSessionId,
+        projectId,
+        environment,
+      });
+
+      const sent = navigator.sendBeacon(endSessionUrl, payload);
+
+      if (debug) {
+        console.log("🔄 Bklit SDK: Session end beacon sent", {
+          sessionId: currentSessionId,
+          projectId,
+          sent,
         });
-
-        if (response.ok) {
-          if (debug) {
-            console.log("✅ Bklit SDK: Session ended successfully!", {
-              sessionId: currentSessionId,
-              status: response.status,
-            });
-          }
-        } else {
-          console.error("❌ Bklit SDK: Failed to end session", {
-            sessionId: currentSessionId,
-            status: response.status,
-            statusText: response.statusText,
-          });
-        }
-      } catch (error) {
-        console.error("❌ Bklit SDK: Error ending session:", error);
       }
     }
   };
 
   window.removeEventListener("beforeunload", handlePageUnload); // Remove first to avoid duplicates
   window.addEventListener("beforeunload", handlePageUnload);
+
+  // Also handle visibility change for mobile/tab switching
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "hidden") {
+      handlePageUnload();
+    }
+  };
+
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 
   // SPA navigation tracking
   let currentUrl = window.location.href;
@@ -451,14 +449,16 @@ export function trackPageView() {
   const currentUrl = window.location.href;
 
   // Parse referrer data
-  let referrerHostname, referrerPath, referrerType;
+  let referrerHostname: string | undefined;
+  let referrerPath: string | undefined;
+  let referrerType: string | undefined;
   if (document.referrer) {
     try {
       const refUrl = new URL(document.referrer);
       referrerHostname = refUrl.hostname;
       referrerPath = refUrl.pathname;
       referrerType = classifyReferrer(refUrl.hostname);
-    } catch (e) {
+    } catch {
       // Invalid referrer URL, ignore
     }
   }
@@ -616,11 +616,12 @@ export function trackEvent(
     });
   }
 
+  // Construct event API host by replacing /track with /track-event
   const eventApiHost = apiHost
-    ? apiHost.replace("/api/track", "/api/track-event")
+    ? apiHost.replace(/\/track$/, "/track-event")
     : getDefaultConfig(window.bklitEnvironment).apiHost.replace(
-        "/api/track",
-        "/api/track-event"
+        /\/track$/,
+        "/track-event"
       );
 
   const apiKey = window.bklitApiKey;

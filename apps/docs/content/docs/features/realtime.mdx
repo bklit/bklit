@@ -26,12 +26,20 @@ The live visitor counter in your dashboard header updates immediately. No more s
 
 ## How It Works
 
-Real-time analytics uses WebSocket connections to push updates from your server to your dashboard instantly. When a visitor arrives:
+Real-time analytics uses a queue-based architecture with Redis pub/sub and WebSockets:
 
-1. Event is tracked normally (saved to ClickHouse)
-2. Event is also published to Redis
-3. WebSocket server broadcasts to connected dashboards
-4. You see the update in less than 1 second
+1. **Event queued** - Ingestion service pushes to Redis queue (1-3ms)
+2. **Background processing** - Worker pops events in batches
+3. **ClickHouse insert** - Batch of 100 events saved (8-50ms)
+4. **Publish to Redis** - Worker publishes to `live-events` channel
+5. **WebSocket broadcast** - Server pushes to connected dashboards
+6. **Dashboard updates** - You see the update within 1 second
+
+This architecture ensures:
+- Fast API responses (no waiting for database)
+- Zero data loss (Redis queue persists)
+- Efficient database writes (batching)
+- Real-time updates (pub/sub)
 
 ### Automatic Fallback
 

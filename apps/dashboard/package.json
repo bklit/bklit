@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo .next dist node_modules",
-    "dev": "pnpm with-env next dev --turbopack",
+    "dev": "NODE_ENV=development REDIS_URL=redis://localhost:6379 pnpm with-env next dev --turbopack",
     "dev:trigger": "pnpm with-env npx trigger.dev@latest dev",
     "build": "pnpm run -F @bklit/db generate && pnpm with-env next build",
     "deploy:trigger": "pnpm with-env trigger.dev deploy",
@@ -13,6 +13,8 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@ai-sdk/react": "^3.0.40",
+    "@ai-sdk/ui-utils": "^1.2.11",
     "@bklit/analytics": "workspace:*",
     "@bklit/api": "workspace:*",
     "@bklit/auth": "workspace:*",
@@ -35,6 +37,7 @@
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "@types/dagre": "^0.7.53",
+    "ai": "^6.0.38",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
     "d3": "^7.9.0",

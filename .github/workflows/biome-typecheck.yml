@@ -31,6 +31,6 @@ jobs:
       - name: Run Biome lint
         run: |
           echo "::group::Running Biome Lint"
-          pnpm run format-and-lint
+          pnpm run lint
           echo "✅ Biome lint passed!"
           echo "::endgroup::"

@@ -11,9 +11,11 @@ import {
 import { Skeleton } from "@bklit/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
-import { useSocketIOEvents } from "@/hooks/use-socketio-client";
+import { useLiveEventStream } from "@/hooks/use-live-event-stream";
+import { getMarkerGradient } from "@/lib/maps/marker-colors";
 import { getBrowserIcon } from "@/lib/utils/get-browser-icon";
 import { getDeviceIcon } from "@/lib/utils/get-device-icon";
 import { useTRPC } from "@/trpc/react";
@@ -35,6 +37,19 @@ interface EventUpdate {
   timestamp: string;
 }
 
+interface PageviewEventData {
+  sessionId?: string;
+  url: string;
+  timestamp?: string;
+}
+
+interface TrackedEventData {
+  sessionId?: string;
+  trackingId: string;
+  eventType: string;
+  timestamp?: string;
+}
+
 export function LiveSessionDetail({
   sessionId,
   projectId,
@@ -45,6 +60,12 @@ export function LiveSessionDetail({
     []
   );
   const [realtimeEvents, setRealtimeEvents] = useState<EventUpdate[]>([]);
+  const [newPageAnimation, setNewPageAnimation] = useState(false);
+
+  // Get consistent gradient colors for this session (matches map marker)
+  const sessionGradient = useMemo(() => {
+    return getMarkerGradient(sessionId || "default");
+  }, [sessionId]);
 
   // Fetch session details
   const { data: session, isLoading } = useQuery({
@@ -57,43 +78,92 @@ export function LiveSessionDetail({
     ),
   });
 
-  // Real-time pageview updates
-  useSocketIOEvents(projectId, "pageview", (data: any) => {
-    if (data.sessionId === sessionId) {
-      setRealtimePageviews((prev) =>
-        [
-          {
-            url: data.url,
-            timestamp: data.timestamp || new Date().toISOString(),
-          },
-          ...prev,
-        ].slice(0, 10)
-      ); // Keep last 10
-    }
-  });
+  // Real-time pageview handler
+  const handlePageview = useCallback(
+    (data: PageviewEventData) => {
+      if (data.sessionId === sessionId) {
+        setRealtimePageviews((prev) =>
+          [
+            {
+              url: data.url,
+              timestamp: data.timestamp || new Date().toISOString(),
+            },
+            ...prev,
+          ].slice(0, 10)
+        );
 
-  // Real-time event updates
-  useSocketIOEvents(projectId, "event", (data: any) => {
-    if (data.sessionId === sessionId) {
-      setRealtimeEvents((prev) =>
-        [
-          {
-            trackingId: data.trackingId,
-            eventType: data.eventType,
-            timestamp: data.timestamp || new Date().toISOString(),
-          },
-          ...prev,
-        ].slice(0, 10)
-      );
-    }
+        setNewPageAnimation(true);
+        setTimeout(() => setNewPageAnimation(false), 1000);
+      }
+    },
+    [sessionId]
+  );
+
+  // Real-time event handler
+  const handleEvent = useCallback(
+    (data: TrackedEventData) => {
+      if (data.sessionId === sessionId) {
+        setRealtimeEvents((prev) =>
+          [
+            {
+              trackingId: data.trackingId,
+              eventType: data.eventType,
+              timestamp: data.timestamp || new Date().toISOString(),
+            },
+            ...prev,
+          ].slice(0, 10)
+        );
+      }
+    },
+    [sessionId]
+  );
+
+  // Subscribe to SSE events (NEW architecture)
+  useLiveEventStream(projectId, {
+    onPageview: handlePageview,
+    onEvent: handleEvent,
   });
 
   // Reset real-time data when session changes
+  const sessionIdForReset = sessionId;
   useEffect(() => {
-    setRealtimePageviews([]);
-    setRealtimeEvents([]);
-  }, [sessionId]);
+    // Use sessionIdForReset to trigger reset when session changes
+    if (sessionIdForReset !== undefined) {
+      setRealtimePageviews([]);
+      setRealtimeEvents([]);
+    }
+  }, [sessionIdForReset]);
 
+  // Compute all pageviews
+  const allPageviews = useMemo(() => {
+    if (!session) {
+      return realtimePageviews;
+    }
+
+    interface PageViewEvent {
+      url: string;
+      timestamp: string | Date;
+    }
+
+    const sessionPageviews = (session.pageViewEvents || []).map(
+      (pv: PageViewEvent) => ({
+        url: pv.url,
+        timestamp:
+          typeof pv.timestamp === "string"
+            ? pv.timestamp
+            : pv.timestamp.toISOString(),
+      })
+    );
+
+    return [...realtimePageviews, ...sessionPageviews].sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [session, realtimePageviews]);
+
+  const currentPage = allPageviews[0]?.url || session?.entryPage || "";
+
+  // Early returns after all hooks
   if (!sessionId) {
     return (
       <Card className="bg-card/80 backdrop-blur-sm">
@@ -133,26 +203,23 @@ export function LiveSessionDetail({
     );
   }
 
-  const DeviceIcon = getDeviceIcon(session.userAgent || "");
-  const BrowserIcon = getBrowserIcon(session.userAgent || "");
+  const deviceIcon = getDeviceIcon(session.userAgent || "");
+  const browserIcon = getBrowserIcon(session.userAgent || "");
   const countryCode = session.country?.toLowerCase() || "us";
-  const allPageviews = [
-    ...realtimePageviews,
-    ...(session.pageViewEvents || []).map((pv: any) => ({
-      url: pv.url,
-      timestamp: pv.timestamp,
-    })),
-  ].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-
-  const currentPage = allPageviews[0]?.url || session.entryPage;
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CircleFlag className="size-6" countryCode={countryCode} />
+        <div className="flex items-center gap-3">
+          {/* Profile avatar with session gradient (matches map marker) */}
+          <div
+            className="flex size-10 shrink-0 items-center justify-center rounded-full"
+            style={{
+              background: `linear-gradient(135deg, ${sessionGradient.from}, ${sessionGradient.to})`,
+            }}
+          >
+            <CircleFlag className="size-5" countryCode={countryCode} />
+          </div>
           <div>
             <CardTitle className="text-base">
               Visitor from {session.country || "Unknown"}
@@ -160,8 +227,10 @@ export function LiveSessionDetail({
             <CardDescription className="flex items-center gap-2 text-xs">
               {session.city && <span>{session.city}</span>}
               {session.city && <span>•</span>}
-              {deviceIcon}
-              {browserIcon}
+              <div className="flex items-center gap-1.5">
+                {deviceIcon}
+                {browserIcon}
+              </div>
             </CardDescription>
           </div>
         </div>
@@ -183,26 +252,50 @@ export function LiveSessionDetail({
             <h3 className="mb-2 font-medium text-muted-foreground text-xs">
               Page Journey
             </h3>
-            <div className="space-y-1">
-              {allPageviews.slice(0, 5).map((pv, index) => (
-                <div
-                  className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-3 py-2"
-                  key={`${pv.url}-${pv.timestamp}`}
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="shrink-0 font-mono text-muted-foreground text-xs">
-                      {index + 1}.
-                    </span>
-                    <span className="truncate font-mono text-xs">{pv.url}</span>
-                  </div>
-                  <span className="shrink-0 text-muted-foreground text-xs">
-                    {formatDistanceToNow(new Date(pv.timestamp), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <AnimatePresence mode="popLayout">
+              <div className="space-y-1">
+                {allPageviews.slice(0, 5).map((pv, index) => {
+                  const isCurrent = index === 0;
+                  const isNew = index === 0 && newPageAnimation;
+                  return (
+                    <motion.div
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex items-center justify-between gap-2 rounded-md px-3 py-2 transition-all ${
+                        isCurrent ? "bg-primary/10" : "bg-muted/50"
+                      } ${isNew ? "ring-2 ring-primary/50" : ""}`}
+                      initial={isCurrent ? { opacity: 0, y: -10 } : false}
+                      key={`${pv.url}-${pv.timestamp}`}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        {isCurrent ? (
+                          <div className="relative flex size-3 shrink-0">
+                            <div
+                              className="relative inline-flex size-3 rounded-full"
+                              style={{
+                                background: `linear-gradient(135deg, ${sessionGradient.from}, ${sessionGradient.to})`,
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="size-3 shrink-0 rounded-full bg-muted" />
+                        )}
+                        <span
+                          className={`truncate font-mono text-xs ${isCurrent ? "font-semibold text-primary" : ""}`}
+                        >
+                          {pv.url}
+                        </span>
+                      </div>
+                      <span className="shrink-0 text-muted-foreground text-xs">
+                        {formatDistanceToNow(new Date(pv.timestamp), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </AnimatePresence>
           </div>
         )}
 
