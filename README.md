@@ -73,26 +73,55 @@ bklit/
 │   └── website/            # Marketing website (Next.js 16)
 │
 ├── packages/
-│   ├── analytics/          # ClickHouse analytics engine
+│   ├── analytics/          # ClickHouse analytics service
 │   ├── api/                # tRPC API routes
 │   ├── auth/               # Better Auth + Polar integration
 │   ├── db/                 # Prisma ORM (PostgreSQL)
 │   ├── email/              # React Email templates
 │   ├── extensions/         # Extension system (Discord, etc.)
+│   ├── ingestion/          # Event ingestion server (receives SDK events)
+│   ├── redis/              # Redis client, queue, and pub/sub utilities
 │   ├── sdk/                # Analytics SDK (published to npm)
 │   ├── ui/                 # Shared UI components (shadcn/ui)
 │   ├── utils/              # Common utilities
-│   └── validators/         # Zod schemas for validation
+│   ├── validators/         # Zod schemas for validation
+│   └── worker/             # Background worker (processes events → ClickHouse)
 │
 └── scripts/
     ├── backup-database.sh
     └── verify-clickhouse-migration.sh
 ```
 
+## **Architecture**
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Browser   │────▶│  Ingestion  │────▶│    Redis    │────▶│   Worker    │
+│    (SDK)    │     │   Server    │     │   Queue     │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘     └──────┬──────┘
+                                                                   │
+                    ┌──────────────────────────────────────────────┼───────┐
+                    │                                              ▼       │
+                    │  ┌─────────────┐     ┌─────────────┐   ┌──────────┐ │
+                    │  │  Dashboard  │◀────│ Redis Pub/Sub│◀──│ClickHouse│ │
+                    │  │    (SSE)    │     │ (live-events)│   │          │ │
+                    │  └─────────────┘     └─────────────┘   └──────────┘ │
+                    │                                                      │
+                    └──────────────────────────────────────────────────────┘
+```
+
+**Data Flow:**
+1. **SDK** sends events to the **Ingestion Server**
+2. **Ingestion** validates and queues events in **Redis**
+3. **Worker** processes the queue, stores in **ClickHouse**, and publishes to **Redis Pub/Sub**
+4. **Dashboard** receives real-time updates via **Server-Sent Events (SSE)**
+
 ## **Tech Stack**
 
 - **Frontend:** Next.js 16 (App Router), React 19, Tailwind CSS v4
 - **Database:** PostgreSQL (Prisma ORM) + ClickHouse (analytics events)
+- **Queue & Pub/Sub:** Redis (Upstash in production)
+- **Real-time:** Server-Sent Events (SSE) via Next.js API routes
 - **Auth:** Better Auth with GitHub/Google OAuth
 - **Billing:** Polar.sh for subscriptions and payments
 - **Email:** Resend with React Email templates
@@ -100,10 +129,9 @@ bklit/
 - **API:** tRPC for end-to-end type-safe APIs
 - **Analytics Engine:** ClickHouse for high-performance event storage and queries
 - **Geolocation:** Cloudflare headers (country, city, region, timezone, coordinates)
-- **Background Jobs:** Trigger.dev v4 for scheduled tasks and health checks
-- **Monorepo:** Turborepo + pnpm workspaces (pnpm 10.11.1)
+- **Monorepo:** Turborepo + pnpm workspaces
 - **Documentation:** Fumadocs (Next.js-based docs framework)
-- **Maps:** Nivo Geo, D3, ReactFlow for visualizations
+- **Maps:** Mapbox GL JS for globe visualization
 
 ## **Manual Setup**
 
@@ -111,15 +139,30 @@ If you prefer manual setup or can't use Docker:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/bklit.git
+git clone https://github.com/bklit/bklit.git
 cd bklit
 
-# 2. Run interactive setup
-pnpm setup
+# 2. Install dependencies
+pnpm install
 
-# 3. Start development
+# 3. Copy environment file
+cp .env.example .env
+# Edit .env with your database credentials
+
+# 4. Start backend services (Docker + Ingestion + Worker)
+pnpm dev:services
+
+# 5. Start frontend apps (Dashboard, Playground, Website)
 pnpm dev
+
+# 6. Stop all services
+pnpm dev:stop
 ```
+
+**Development URLs:**
+- Dashboard: http://localhost:3000
+- Playground: http://localhost:5173
+- Website: http://localhost:4000
 
 ## **What's Optional?**
 
