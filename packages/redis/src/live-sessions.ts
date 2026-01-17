@@ -40,21 +40,20 @@ export async function trackSessionEnd(
   projectId: string,
   sessionId: string
 ): Promise<void> {
-  if (!isRedisAvailable()) return;
+  if (!isRedisAvailable()) {
+    return;
+  }
 
   const client = getRedisClient();
-  if (!client) return;
+  if (!client) {
+    return;
+  }
 
   try {
     const sessionsKey = `${SESSIONS_ZSET_PREFIX}${projectId}`;
 
     // Remove session from sorted set
     await client.zrem(sessionsKey, sessionId);
-
-    console.log("[DEBUG] Session ended and removed from sorted set:", {
-      projectId,
-      sessionId,
-    });
   } catch (error) {
     console.error("Redis session end error:", error);
   }
@@ -68,7 +67,9 @@ export async function getLiveUserCount(
   }
 
   const client = getRedisClient();
-  if (!client) return null;
+  if (!client) {
+    return null;
+  }
 
   try {
     // Use sorted set approach - automatically removes expired sessions

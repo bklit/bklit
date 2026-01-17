@@ -5,6 +5,7 @@ import {
   popFromQueue,
   publishDebugLog,
   publishLiveEvent,
+  trackSessionEnd,
 } from "@bklit/redis";
 import { config } from "dotenv";
 import { verifyEventInClickHouse } from "./verify";
@@ -195,6 +196,9 @@ async function processBatch() {
             if (endSessionId) {
               await analytics.endTrackedSession(endSessionId);
               seenSessions.delete(endSessionId);
+
+              // Remove session from Redis live count
+              await trackSessionEnd(event.projectId, endSessionId);
 
               await publishDebugLog({
                 timestamp: new Date().toISOString(),
