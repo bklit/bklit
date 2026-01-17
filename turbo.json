@@ -87,11 +87,13 @@
         "NEXT_PUBLIC_MAPBOX_TOKEN",
         "POLAR_SERVER_MODE",
         "POLAR_ACCESS_TOKEN",
-        "POLAR_WEBHOOK_SECRET"
+        "POLAR_WEBHOOK_SECRET",
+        "REDIS_URL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "passThroughEnv": ["NODE_ENV"]
     },
     "dev:trigger": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],

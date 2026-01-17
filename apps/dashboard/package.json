@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo .next dist node_modules",
-    "dev": "pnpm with-env next dev --turbopack",
+    "dev": "NODE_ENV=development REDIS_URL=redis://localhost:6379 pnpm with-env next dev --turbopack",
     "dev:trigger": "pnpm with-env npx trigger.dev@latest dev",
     "build": "pnpm run -F @bklit/db generate && pnpm with-env next build",
     "deploy:trigger": "pnpm with-env trigger.dev deploy",

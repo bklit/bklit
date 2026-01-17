@@ -84,9 +84,12 @@ export async function GET(request: NextRequest) {
 
       // Cleanup on abort
       request.signal.addEventListener("abort", async () => {
-        await subscriber.unsubscribe(DEBUG_CHANNEL);
-        await subscriber.quit();
-        controller.close();
+        try {
+          await subscriber.unsubscribe(DEBUG_CHANNEL);
+          await subscriber.quit();
+        } catch (error) {
+          // Ignore errors during cleanup
+        }
       });
     },
   });

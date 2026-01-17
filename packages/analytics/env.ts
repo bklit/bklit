@@ -3,6 +3,13 @@ import { z } from "zod/v4";
 
 export function analyticsEnv() {
   const isDev = process.env.NODE_ENV === "development";
+  
+  console.log("[analyticsEnv] Configuration:", {
+    NODE_ENV: process.env.NODE_ENV,
+    isDev,
+    CLICKHOUSE_HOST: process.env.CLICKHOUSE_HOST?.substring(0, 30),
+    DEV_CLICKHOUSE_HOST: process.env.DEV_CLICKHOUSE_HOST,
+  });
 
   return createEnv({
     server: {

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e ../../.env -- tsx watch src/server.ts",
+    "dev": "NODE_ENV=development dotenv -e ../../.env -- tsx watch src/server.ts",
     "start": "dotenv -e ../../.env -- node --loader tsx src/server.ts"
   },
   "dependencies": {

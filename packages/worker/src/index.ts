@@ -8,8 +8,18 @@ import {
 } from "@bklit/redis";
 import { AnalyticsService } from "@bklit/analytics";
 import { verifyEventInClickHouse } from "./verify";
+import { prisma } from "@bklit/db/client";
 
 config();
+
+console.log("[Worker] Environment check:", {
+  NODE_ENV: process.env.NODE_ENV,
+  DEV_CLICKHOUSE_HOST: process.env.DEV_CLICKHOUSE_HOST,
+  CLICKHOUSE_HOST: process.env.CLICKHOUSE_HOST?.substring(0, 30),
+});
+
+// Cache EventDefinition IDs to avoid repeated Postgres queries
+const eventDefinitionCache = new Map<string, string>(); // trackingId:projectId -> UUID
 
 const POLL_INTERVAL_MS = 1000; // Poll every 1 second
 const BATCH_SIZE = 100; // Process up to 100 events per batch
@@ -80,14 +90,55 @@ async function processBatch() {
               timestamp: new Date(event.payload.timestamp as string),
             } as any);
           } else if (event.type === "event") {
+            // Look up EventDefinition UUID from Postgres by trackingId (BACKWARDS COMPATIBLE!)
+            const trackingId = event.payload.trackingId as string;
+            const cacheKey = `${trackingId}:${event.projectId}`;
+            
+            let eventDefinitionId = eventDefinitionCache.get(cacheKey);
+            
+            if (!eventDefinitionId) {
+              // Query Postgres for EventDefinition
+              const eventDef = await prisma.eventDefinition.findUnique({
+                where: {
+                  projectId_trackingId: {
+                    projectId: event.projectId,
+                    trackingId: trackingId,
+                  },
+                },
+                select: { id: true },
+              });
+              
+              if (eventDef) {
+                eventDefinitionId = eventDef.id;
+                eventDefinitionCache.set(cacheKey, eventDefinitionId);
+              } else {
+                // Event definition doesn't exist yet - skip this event
+                await publishDebugLog({
+                  timestamp: new Date().toISOString(),
+                  stage: "worker",
+                  level: "warn",
+                  message: "EventDefinition not found - skipping event",
+                  data: { trackingId, projectId: event.projectId },
+                  eventId: event.id,
+                  projectId: event.projectId,
+                });
+                continue; // Skip to next event
+              }
+            }
+            
+            // Store eventType in metadata so we can differentiate click/view/hover
+            const enrichedMetadata = {
+              ...(event.payload.metadata as Record<string, unknown> || {}),
+              eventType: event.payload.eventType,
+            };
+            
             await analytics.createTrackedEvent({
               id: event.id,
               timestamp: new Date(event.payload.timestamp as string),
               projectId: event.projectId,
-              trackingId: event.payload.trackingId as string,
-              eventType: event.payload.eventType as string,
+              eventDefinitionId: eventDefinitionId, // Now using UUID from Postgres ✅
               sessionId: event.payload.sessionId as string | null,
-              metadata: event.payload.metadata as Record<string, unknown> | null,
+              metadata: enrichedMetadata,
             } as any);
           }
         } catch (chError) {
