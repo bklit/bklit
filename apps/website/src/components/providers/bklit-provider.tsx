@@ -5,7 +5,7 @@ import { BklitComponent } from "@bklit/sdk/nextjs";
 export function BklitProvider({ children }: { children: React.ReactNode }) {
   const isDevelopment = process.env.NODE_ENV === "development";
 
-  const wsHost = isDevelopment ? "ws://localhost:8080" : "wss://bklit.ws";
+  const wsHost = isDevelopment ? "ws://localhost:8080" : "wss://bklit.ws:8080";
 
   const apiKey = process.env.NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN;
 
