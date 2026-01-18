@@ -1,0 +1,219 @@
+---
+title: Migrating to v1.0.0
+description: Guide for upgrading from SDK v0.x to v1.0.0 (WebSocket architecture)
+---
+
+# Migrating to v1.0.0
+
+v1.0.0 introduces WebSocket architecture for instant real-time analytics.
+
+## Breaking Changes
+
+### Configuration API Changed
+
+The SDK configuration has changed from HTTP-based (`apiHost`) to WebSocket-based (`wsHost`).
+
+## Step-by-Step Migration
+
+### For Vanilla JavaScript / React
+
+**Before (v0.x):**
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+initBklit({
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  apiHost: "https://app.bklit.com/api/track",  // ❌ Remove this
+});
+```
+
+**After (v1.0.0):**
+
+```javascript
+import { initBklit } from '@bklit/sdk';
+
+initBklit({
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  // wsHost auto-detected - no config needed!
+});
+```
+
+**Or explicitly:**
+
+```javascript
+initBklit({
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  wsHost: "wss://bklit.ws:8080",  // Optional override
+});
+```
+
+### For Next.js Apps
+
+**Before (v0.x):**
+
+```tsx
+import { BklitComponent } from '@bklit/sdk/nextjs';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <BklitComponent
+          projectId="your-project-id"
+          apiKey="your-api-key"
+          apiHost="https://app.bklit.com/api/track"  // ❌ Remove this
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+**After (v1.0.0):**
+
+```tsx
+import { BklitComponent } from '@bklit/sdk/nextjs';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <BklitComponent
+          projectId="your-project-id"
+          apiKey="your-api-key"
+          // wsHost auto-detected - no config needed!
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+## What You Get
+
+### Instant Session Ending
+
+**Before:** Sessions ended 30 seconds to 4 minutes after visitors left  
+**After:** Sessions end in less than 1 second (120-240x faster)
+
+### Real-Time Updates
+
+**Before:** 10-second polling for dashboard updates  
+**After:** Instant WebSocket broadcast (event-driven)
+
+### Better Reliability
+
+**Before:** `beforeunload` handlers (unreliable in many browsers)  
+**After:** WebSocket disconnect detection (browser-native, 100% reliable)
+
+## Removed Features
+
+These features are no longer needed:
+
+- ❌ **`endSession()` function** - Sessions end automatically when WebSocket disconnects
+- ❌ **`apiHost` config** - Replaced by `wsHost`
+- ❌ **Manual session management** - Fully automatic now
+
+## Upgrade Checklist
+
+- [ ] Update to `@bklit/sdk@1.0.0`
+- [ ] Remove `apiHost` from config
+- [ ] (Optional) Add `wsHost` if you need custom WebSocket server
+- [ ] Remove any `endSession()` calls (automatic now)
+- [ ] Test that events are tracked correctly
+- [ ] Verify sessions end when closing tabs
+
+## Testing After Migration
+
+### 1. Install the Update
+
+```bash
+npm install @bklit/sdk@latest
+# or
+pnpm add @bklit/sdk@latest
+```
+
+### 2. Update Configuration
+
+Remove `apiHost`, SDK auto-detects the WebSocket server.
+
+### 3. Test in Browser
+
+Open your site and check the browser console (with debug enabled):
+
+```javascript
+initBklit({
+  projectId: "...",
+  apiKey: "...",
+  debug: true,  // Enable for testing
+});
+```
+
+**Look for:**
+```
+✅ Bklit SDK: WebSocket connected
+✅ Bklit SDK: Event acknowledged pageview
+```
+
+### 4. Test Session Ending
+
+- Open your site in an incognito tab
+- Navigate a few pages
+- Go to your Bklit dashboard `/live` page
+- Close the incognito tab
+- **Session should disappear within 1 second** ✅
+
+## Troubleshooting
+
+### WebSocket Won't Connect
+
+**Issue:** SDK can't connect to WebSocket server
+
+**Solution:**
+- Check browser console for errors
+- Verify `wsHost` is correct (or omit for auto-detection)
+- Ensure your API key is valid
+- Check network tab for WebSocket upgrade request
+
+### Sessions Not Ending
+
+**Issue:** Sessions stay active after closing tabs
+
+**Solution:**
+- Wait 1-2 seconds (should be instant)
+- Check browser console for disconnect messages
+- Verify WebSocket connection was established
+- Try hard refresh (Cmd+Shift+R)
+
+### Events Not Tracking
+
+**Issue:** No pageviews appearing in dashboard
+
+**Solution:**
+- Enable `debug: true` to see SDK logs
+- Check for WebSocket connection success
+- Verify API key is correct
+- Check Bklit dashboard for errors
+
+## Need Help?
+
+- **GitHub Issues:** https://github.com/bklit/bklit/issues
+- **Discord:** https://discord.gg/9yyK8FwPcU
+- **Documentation:** https://docs.bklit.com
+
+## Benefits of WebSocket Architecture
+
+- ⚡ **Faster:** Sub-second latency for all events
+- 🔒 **Reliable:** Browser-native connection management
+- 📊 **Real-time:** Instant dashboard updates
+- 🚀 **Scalable:** Persistent connections, event-driven
+- 🎯 **Simple:** Less code, automatic session management
+
+The migration is straightforward and brings significant performance improvements!
+
