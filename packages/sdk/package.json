@@ -1,6 +1,6 @@
 {
   "name": "@bklit/sdk",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": false,
   "author": "Matt Litherland",
   "license": "MIT",
@@ -19,6 +19,9 @@
     "page-views",
     "sessions",
     "web-analytics",
+    "websocket",
+    "real-time",
+    "realtime-analytics",
     "bklit"
   ],
   "main": "./dist/index.js",
