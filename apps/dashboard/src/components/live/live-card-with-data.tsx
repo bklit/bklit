@@ -8,27 +8,12 @@ import { useLiveEventStream } from "@/hooks/use-live-event-stream";
 import { useLiveUsers } from "@/hooks/use-live-users";
 import { useTRPC } from "@/trpc/react";
 
-/**
- * LiveCardWithData - A wrapper component that fetches live analytics data
- * and passes it to the LiveCard component.
- *
- * Features:
- * - Real-time updates via SSE for pageview events
- * - 10-second polling fallback for reliability
- * - Automatic data transformation to LiveCardData format
- * - Live user count, top pages, top countries, and top referrers
- *
- * @param projectId - The project to fetch analytics for
- * @param organizationId - The organization that owns the project
- * @param className - Optional className for styling
- */
 interface LiveCardWithDataProps {
   projectId: string;
   organizationId: string;
   className?: string;
 }
 
-// Country code to emoji flag mapper
 function getFlagEmoji(countryCode: string): string {
   if (!countryCode || countryCode.length !== 2) return "🌍";
 
@@ -48,28 +33,21 @@ export function LiveCardWithData({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'live-card-with-data.tsx:INIT',message:'LiveCardWithData mounted',data:{projectId,organizationId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
-  // #endregion
-
-  // Get live users count with real-time updates
   const { liveUsers } = useLiveUsers({
     projectId,
     organizationId,
   });
 
-  // Get top countries
   const { data: topCountries = [] } = useQuery({
     ...trpc.session.liveTopCountries.queryOptions(
       { projectId, organizationId },
       {
-        refetchInterval: 10_000, // More frequent updates
-        staleTime: 0, // No stale time for instant updates
+        refetchInterval: 10_000,
+        staleTime: 0,
       }
     ),
   });
 
-  // Get top pages
   const { data: topPages = [] } = useQuery({
     ...trpc.session.liveTopPages.queryOptions(
       { projectId, organizationId, limit: 10 },
@@ -80,7 +58,6 @@ export function LiveCardWithData({
     ),
   });
 
-  // Get top referrers
   const { data: topReferrers = [] } = useQuery({
     ...trpc.session.liveTopReferrers.queryOptions(
       { projectId, organizationId, limit: 5 },
@@ -91,7 +68,6 @@ export function LiveCardWithData({
     ),
   });
 
-  // Real-time invalidation on pageview events - immediate, no delay
   const handlePageview = useCallback(() => {
     queryClient.invalidateQueries({
       queryKey: [["session", "liveTopPages"]],
@@ -107,24 +83,16 @@ export function LiveCardWithData({
     });
   }, [queryClient]);
 
-  // Subscribe to SSE events (NEW architecture)
   useLiveEventStream(projectId, {
     onPageview: handlePageview,
   });
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'live-card-with-data.tsx:DATA',message:'Data state',data:{liveUsers,topCountriesCount:topCountries.length,topPagesCount:topPages.length,topReferrersCount:topReferrers.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
-  // #endregion
-
-  // Transform data to LiveCardData format
   const cardData: LiveCardData = useMemo(() => {
-    // Transform pages
     const pages = topPages.map((page) => ({
       path: page.path,
       count: page.count,
     }));
 
-    // Transform countries with emoji flags
     const countries = topCountries.map((country) => ({
       name: country.country,
       code: country.countryCode,
@@ -132,7 +100,6 @@ export function LiveCardWithData({
       count: country.views,
     }));
 
-    // Transform referrers
     const referrers = topReferrers.map((referrer) => ({
       name: referrer.name,
       count: referrer.count,
@@ -143,7 +110,7 @@ export function LiveCardWithData({
       referrers,
       countries,
       liveUsers,
-      users: [], // We'd need to implement a users endpoint for this
+      users: [],
     };
   }, [topPages, topCountries, topReferrers, liveUsers]);
 

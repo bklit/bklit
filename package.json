@@ -12,12 +12,12 @@
     "seed": "tsx packages/db/src/seed.ts"
   },
   "scripts": {
-    "dev:services": "docker-compose up -d && sleep 5 && pnpm dev:init:db && concurrently -n prisma,ingestion,worker \"npx prisma dev\" \"pnpm dev:ingestion\" \"pnpm dev:worker\"",
+    "dev:services": "docker-compose up -d && sleep 5 && pnpm dev:init:db && concurrently -n prisma,websocket,worker \"npx prisma dev\" \"pnpm dev:websocket\" \"pnpm dev:worker\"",
     "dev": "NODE_ENV=development turbo watch dev --filter=@bklit/dashboard --filter=@bklit/playground --filter=@bklit/website --continue",
     "dev:init:db": "pnpm --filter=@bklit/analytics with-env tsx src/migrations/init-tables.ts",
-    "dev:ingestion": "NODE_ENV=development REDIS_URL=redis://localhost:6379 pnpm --filter=@bklit/ingestion dev",
+    "dev:websocket": "NODE_ENV=development REDIS_URL=redis://localhost:6379 pnpm --filter=@bklit/websocket dev",
     "dev:worker": "NODE_ENV=development REDIS_URL=redis://localhost:6379 pnpm --filter=@bklit/worker dev",
-    "dev:stop": "pkill -9 -f turbo || true; pkill -9 -f 'next dev' || true; pkill -9 -f prisma || true; pkill -9 -f 'tsx.*worker' || true; pkill -9 -f 'tsx.*ingestion' || true; lsof -ti:3000,3001,3002,3003,4000 | xargs kill -9 2>/dev/null || true; docker-compose down",
+    "dev:stop": "pkill -9 -f turbo || true; pkill -9 -f 'next dev' || true; pkill -9 -f prisma || true; pkill -9 -f 'tsx.*worker' || true; pkill -9 -f 'tsx.*websocket' || true; lsof -ti:3000,3001,3002,3003,4000,8080 | xargs kill -9 2>/dev/null || true; docker-compose down",
     "clean": "turbo run clean && rm -rf node_modules",
     "clean:next": "rm -rf apps/dashboard/.next apps/docs/.next",
     "clean:all": "pnpm clean && pnpm clean:next && git clean -xdf .turbo",

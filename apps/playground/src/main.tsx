@@ -1,13 +1,5 @@
 import "@bklit/ui/globals.css";
-import { initBklit, endSession } from "@bklit/sdk";
-
-// #region agent log - DEBUG: Track beforeunload
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", () => {
-    fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'playground/main.tsx:beforeunload',message:'Browser beforeunload fired',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A'})}).catch(()=>{});
-  });
-}
-// #endregion
+import { initBklit } from "@bklit/sdk";
 import { Button } from "@bklit/ui/components/button";
 import { Toaster } from "@bklit/ui/components/sonner";
 import { BklitLogo } from "@bklit/ui/icons/bklit";
@@ -20,17 +12,12 @@ import routes from "./routes";
 const YOUR_PROJECT_ID = import.meta.env.VITE_BKLIT_PROJECT_ID;
 const PROJECT_ID = YOUR_PROJECT_ID || "cmh1rrwf7000122floz152tfo";
 
-const NGROK_URL = import.meta.env.VITE_NGROK_URL;
 const IS_DEV = import.meta.env.DEV;
 
-// In development, use the new ingestion service (port 3001)
-// In production, use the dashboard API
-// Note: SDK will auto-replace /track with /track-event for custom events
-const API_HOST = NGROK_URL
-  ? `${NGROK_URL}/api/track`
-  : IS_DEV
-    ? "http://localhost:3001/track"
-    : "http://localhost:3000/api/track";
+// WebSocket configuration
+// Development: ws://localhost:8080 (local WebSocket server)
+// Production: wss://bklit.ws
+const WS_HOST = IS_DEV ? "ws://localhost:8080" : "wss://bklit.ws";
 
 const API_KEY =
   import.meta.env.VITE_BKLIT_API_KEY || import.meta.env.BKLIT_API_KEY;
@@ -38,14 +25,14 @@ const API_KEY =
 if (PROJECT_ID) {
   console.log("🎯 Playground: Initializing Bklit SDK...", {
     projectId: PROJECT_ID,
-    apiHost: API_HOST,
-    mode: IS_DEV ? "development (ingestion service)" : "production",
+    wsHost: WS_HOST,
+    mode: IS_DEV ? "development (WebSocket)" : "production",
   });
 
   try {
     initBklit({
       projectId: PROJECT_ID,
-      apiHost: API_HOST,
+      wsHost: WS_HOST,
       apiKey: API_KEY,
       debug: true,
     });
@@ -87,16 +74,6 @@ ReactDOM.createRoot(rootElement).render(
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                endSession();
-                console.log("🔴 Manual session end triggered");
-              }}
-            >
-              End Session
-            </Button>
             <Button asChild size="sm" variant="mono">
               <a
                 href="https://app.bklit.com/?utm_source=playground&utm_medium=referral&utm_campaign=playground"

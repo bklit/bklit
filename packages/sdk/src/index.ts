@@ -4,18 +4,25 @@ import { type BklitConfig, getDefaultConfig, validateConfig } from "./config";
 
 interface BklitOptions {
   projectId: string;
-  apiHost?: string;
+  wsHost?: string;
   environment?: "development" | "production";
   debug?: boolean;
   apiKey?: string;
 }
 
-let currentSessionId: string | null = null; // Keep track of current session
-let lastTrackedUrl: string | null = null; // Track last URL to prevent duplicates
-let lastTrackedTime = 0; // Track last tracking time
-const TRACKING_DEBOUNCE_MS = 1000; // Debounce tracking by 1 second
+let ws: WebSocket | null = null;
+let currentSessionId: string | null = null;
+let lastTrackedUrl: string | null = null;
+let lastTrackedTime = 0;
+let reconnectAttempts = 0;
+let isReconnecting = false;
+const messageQueue: Record<string, unknown>[] = [];
+
+const TRACKING_DEBOUNCE_MS = 1000;
 const SESSION_STORAGE_KEY = "bklit_session_id";
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_BASE_DELAY = 1000; // 1 second
 
 // Classify referrer into categories
 function classifyReferrer(hostname: string): string {
@@ -23,7 +30,6 @@ function classifyReferrer(hostname: string): string {
     return "direct";
   }
 
-  // Search engines
   const searchEngines = [
     "google",
     "bing",
@@ -36,7 +42,6 @@ function classifyReferrer(hostname: string): string {
     return "organic";
   }
 
-  // Social media
   const socialPlatforms = [
     "facebook",
     "twitter",
@@ -54,23 +59,192 @@ function classifyReferrer(hostname: string): string {
   return "referral";
 }
 
+// Generate or retrieve session ID
+function getOrCreateSessionId(): string {
+  try {
+    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (stored) {
+      const { id, timestamp } = JSON.parse(stored);
+      const now = Date.now();
+      if (now - timestamp < SESSION_TIMEOUT_MS) {
+        currentSessionId = id;
+        return id;
+      }
+    }
+  } catch {
+    // Ignore sessionStorage errors
+  }
+
+  // Generate new session ID
+  const sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  currentSessionId = sessionId;
+
+  try {
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ id: sessionId, timestamp: Date.now() })
+    );
+  } catch {
+    // Ignore sessionStorage errors
+  }
+
+  return sessionId;
+}
+
+// Send message over WebSocket with queuing
+function sendMessage(message: Record<string, unknown>, debug = false): void {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
+    if (debug) {
+      console.log("🚀 Bklit SDK: Message sent via WebSocket", message.type);
+    }
+  } else {
+    // Queue message for when connection is established
+    messageQueue.push(message);
+    if (debug) {
+      console.log(
+        "📦 Bklit SDK: Message queued (WebSocket not ready)",
+        message.type
+      );
+    }
+  }
+}
+
+// Flush queued messages
+function flushQueue(debug = false): void {
+  if (ws && ws.readyState === WebSocket.OPEN && messageQueue.length > 0) {
+    if (debug) {
+      console.log(
+        `📤 Bklit SDK: Flushing ${messageQueue.length} queued messages`
+      );
+    }
+    while (messageQueue.length > 0) {
+      const message = messageQueue.shift();
+      ws.send(JSON.stringify(message));
+    }
+  }
+}
+
+// Initialize WebSocket connection
+function initWebSocket(
+  projectId: string,
+  sessionId: string,
+  wsHost: string,
+  apiKey: string | undefined,
+  debug: boolean
+): void {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    if (debug) {
+      console.log("✅ Bklit SDK: WebSocket already connected");
+    }
+    return;
+  }
+
+  if (isReconnecting) {
+    return; // Avoid multiple reconnection attempts
+  }
+
+  const url = `${wsHost}?projectId=${projectId}&sessionId=${sessionId}`;
+
+  if (debug) {
+    console.log("🔌 Bklit SDK: Connecting to WebSocket", url);
+  }
+
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    reconnectAttempts = 0;
+    isReconnecting = false;
+
+    if (debug) {
+      console.log("✅ Bklit SDK: WebSocket connected");
+    }
+
+    // Send authentication if API key provided
+    if (apiKey) {
+      sendMessage({ type: "auth", apiKey }, debug);
+    }
+
+    // Flush any queued messages
+    flushQueue(debug);
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+
+      if (debug) {
+        console.log("📨 Bklit SDK: Received message", data.type);
+      }
+
+      // Handle different message types
+      if (data.type === "connected" && debug) {
+        console.log("🎯 Bklit SDK: Connection confirmed", data);
+      } else if (data.type === "ack" && debug) {
+        console.log("✅ Bklit SDK: Event acknowledged", data.messageType);
+      } else if (data.type === "auth_success" && debug) {
+        console.log("🔐 Bklit SDK: Authentication successful");
+      }
+    } catch (error) {
+      console.error("❌ Bklit SDK: Error parsing message", error);
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error("❌ Bklit SDK: WebSocket error", error);
+  };
+
+  ws.onclose = () => {
+    if (debug) {
+      console.log("🔌 Bklit SDK: WebSocket disconnected");
+    }
+
+    // Don't reconnect if page is unloading
+    if (document.visibilityState === "hidden") {
+      return;
+    }
+
+    // Attempt reconnection with exponential backoff
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      isReconnecting = true;
+      const delay = RECONNECT_BASE_DELAY * 2 ** reconnectAttempts;
+      reconnectAttempts++;
+
+      if (debug) {
+        console.log(
+          `🔄 Bklit SDK: Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`
+        );
+      }
+
+      setTimeout(() => {
+        isReconnecting = false;
+        initWebSocket(projectId, sessionId, wsHost, apiKey, debug);
+      }, delay);
+    } else {
+      console.error(
+        "❌ Bklit SDK: Max reconnection attempts reached. Events will be queued."
+      );
+    }
+  };
+}
+
 export function initBklit(options: BklitOptions): void {
   if (typeof window === "undefined") {
     return;
   }
 
-  const { projectId, apiHost, environment, debug, apiKey } = options;
+  const { projectId, wsHost, environment, debug, apiKey } = options;
 
   // Determine values: use provided options, fall back to defaults only if needed
   const finalEnvironment = environment || "production";
   const finalDebug =
     debug !== undefined ? debug : finalEnvironment === "development";
 
-  // Only get default apiHost if not provided
-  const finalApiHost = apiHost || getDefaultConfig(finalEnvironment).apiHost;
+  // Only get default wsHost if not provided
+  const finalWsHost = wsHost || getDefaultConfig(finalEnvironment).wsHost;
 
   const finalConfig: BklitConfig = {
-    apiHost: finalApiHost,
+    wsHost: finalWsHost,
     environment: finalEnvironment,
     debug: finalDebug,
   };
@@ -86,7 +260,7 @@ export function initBklit(options: BklitOptions): void {
   if (finalConfig.debug) {
     console.log("🎯 Bklit SDK: Initializing with configuration", {
       projectId,
-      apiHost: finalConfig.apiHost,
+      wsHost: finalConfig.wsHost,
       environment: finalConfig.environment,
       debug: finalConfig.debug,
       hasApiKey: !!apiKey,
@@ -96,517 +270,142 @@ export function initBklit(options: BklitOptions): void {
 
   // Store configuration globally for manual tracking
   window.bklitprojectId = projectId;
-  window.bklitApiHost = finalConfig.apiHost;
+  window.bklitWsHost = finalConfig.wsHost;
   window.bklitEnvironment = finalConfig.environment;
   window.bklitDebug = finalConfig.debug;
   window.bklitApiKey = apiKey;
 
-  // Generate or get existing session ID
-  if (!currentSessionId) {
-    // Try to get existing session from storage first
-    const storedSessionId = getStoredSessionId();
-    if (storedSessionId) {
-      currentSessionId = storedSessionId;
-      if (debug) {
-        console.log("🔄 Bklit SDK: Restored session from storage", {
-          sessionId: currentSessionId,
-        });
-      }
-    } else {
-      // Create new session
-      currentSessionId = generateSessionId();
-      storeSessionId(currentSessionId);
-      // Reset tracking state for new session
-      lastTrackedUrl = null;
-      lastTrackedTime = 0;
-      if (debug) {
-        console.log("🆔 Bklit SDK: New session created", {
-          sessionId: currentSessionId,
-        });
-      }
-    }
-  } else if (debug) {
-    console.log("🔄 Bklit SDK: Using existing session", {
-      sessionId: currentSessionId,
-    });
+  // Get or create session ID
+  const sessionId = getOrCreateSessionId();
+
+  if (finalConfig.debug) {
+    console.log("🔑 Bklit SDK: Session ID", sessionId);
   }
 
-  async function trackPageView() {
-    const currentUrl = window.location.href;
-    const now = Date.now();
+  // Initialize WebSocket connection
+  initWebSocket(
+    projectId,
+    sessionId,
+    finalConfig.wsHost,
+    apiKey,
+    finalConfig.debug
+  );
 
-    // Check if we should skip this tracking request
-    if (
-      lastTrackedUrl === currentUrl &&
-      now - lastTrackedTime < TRACKING_DEBOUNCE_MS
-    ) {
-      if (debug) {
-        console.log("⏭️ Bklit SDK: Skipping duplicate page view tracking", {
-          url: currentUrl,
-          timeSinceLastTrack: now - lastTrackedTime,
-          debounceMs: TRACKING_DEBOUNCE_MS,
-        });
-      }
-      return;
-    }
-
-    try {
-      // Extract UTM parameters from URL
-      const urlParams = new URLSearchParams(window.location.search);
-
-      // Parse referrer data
-      let referrerHostname: string | undefined;
-      let referrerPath: string | undefined;
-      let referrerType: string | undefined;
-      if (document.referrer) {
-        try {
-          const refUrl = new URL(document.referrer);
-          referrerHostname = refUrl.hostname;
-          referrerPath = refUrl.pathname;
-          referrerType = classifyReferrer(refUrl.hostname);
-        } catch {
-          // Invalid referrer URL, ignore
-        }
-      }
-
-      const data = {
-        url: currentUrl,
-        timestamp: new Date().toISOString(),
-        projectId,
-        userAgent: navigator.userAgent,
-        sessionId: currentSessionId,
-        referrer: document.referrer || undefined,
-        environment,
-
-        // Page metadata
-        title: document.title,
-        description: (
-          document.querySelector('meta[name="description"]') as HTMLMetaElement
-        )?.content,
-        ogImage: (
-          document.querySelector('meta[property="og:image"]') as HTMLMetaElement
-        )?.content,
-        ogTitle: (
-          document.querySelector('meta[property="og:title"]') as HTMLMetaElement
-        )?.content,
-        favicon:
-          (document.querySelector('link[rel="icon"]') as HTMLLinkElement)
-            ?.href ||
-          (
-            document.querySelector(
-              'link[rel="shortcut icon"]'
-            ) as HTMLLinkElement
-          )?.href,
-        canonicalUrl: (
-          document.querySelector('link[rel="canonical"]') as HTMLLinkElement
-        )?.href,
-        language: document.documentElement.lang,
-        robots: (
-          document.querySelector('meta[name="robots"]') as HTMLMetaElement
-        )?.content,
-
-        // Referrer data
-        referrerHostname,
-        referrerPath,
-        referrerType,
-
-        // Standard UTMs
-        utmSource: urlParams.get("utm_source") || undefined,
-        utmMedium: urlParams.get("utm_medium") || undefined,
-        utmCampaign: urlParams.get("utm_campaign") || undefined,
-        utmTerm: urlParams.get("utm_term") || undefined,
-        utmContent: urlParams.get("utm_content") || undefined,
-        utmId: urlParams.get("utm_id") || undefined,
-
-        // Click IDs
-        gclid: urlParams.get("gclid") || undefined,
-        fbclid: urlParams.get("fbclid") || undefined,
-        msclkid: urlParams.get("msclkid") || undefined,
-        ttclid: urlParams.get("ttclid") || undefined,
-        liFatId: urlParams.get("li_fat_id") || undefined,
-        twclid: urlParams.get("twclid") || undefined,
-
-        // Session tracking
-        isNewVisitor: !localStorage.getItem("bklit_has_visited"),
-        landingPage: sessionStorage.getItem("bklit_landing_page") || currentUrl,
-      };
-
-      // Mark as visited
-      if (!localStorage.getItem("bklit_has_visited")) {
-        localStorage.setItem("bklit_has_visited", "true");
-      }
-
-      // Store landing page
-      if (!sessionStorage.getItem("bklit_landing_page")) {
-        sessionStorage.setItem("bklit_landing_page", currentUrl);
-      }
-
-      if (debug) {
-        console.log("🚀 Bklit SDK: Tracking page view...", {
-          url: data.url,
-          sessionId: data.sessionId,
-          projectId: data.projectId,
-          environment: data.environment,
-        });
-      }
-
-      const response = await fetch(finalConfig.apiHost, {
-        method: "POST",
-        headers: buildHeaders(apiKey),
-        body: JSON.stringify(data),
-        keepalive: true,
-      });
-
-      if (response.ok) {
-        lastTrackedUrl = currentUrl;
-        lastTrackedTime = now;
-
-        if (debug) {
-          console.log("✅ Bklit SDK: Page view tracked successfully!", {
-            url: data.url,
-            sessionId: data.sessionId,
-            status: response.status,
-          });
-        }
-      } else {
-        console.error(
-          `❌ Bklit SDK: Failed to track page view for site ${projectId}. Status: ${response.statusText}`
-        );
-      }
-    } catch (error) {
-      console.error(
-        `❌ Bklit SDK: Error tracking page view for site ${projectId}:`,
-        error
-      );
-    }
-  }
-
-  // Track initial page view
-  if (debug) {
-    console.log("🎯 Bklit SDK: Initializing page view tracking...");
-  }
+  // Track initial pageview
   trackPageView();
 
-  // Cleanup on page unload - use sendBeacon for reliability
-  let sessionEndSent = false; // Prevent duplicate sends if both events fire
+  // Track navigation changes
+  let previousUrl = window.location.href;
 
-  const handlePageUnload = (event?: Event) => {
-    const eventType = event?.type || "unknown";
-
-    // #region agent log
-    fetch("http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "sdk/index.ts:handlePageUnload:ENTER",
-        message: `handlePageUnload called via ${eventType}`,
-        data: {
-          eventType,
-          hasSessionId: !!currentSessionId,
-          sessionId: currentSessionId,
-          projectId,
-          alreadySent: sessionEndSent,
-        },
-        timestamp: Date.now(),
-        sessionId: "debug-session",
-        hypothesisId: "H1D_PAGEHIDE",
-      }),
-    }).catch(() => {});
-    // #endregion
-
-    // Prevent duplicate sends
-    if (sessionEndSent) return;
-
-    // End the session when user leaves
-    if (currentSessionId) {
-      sessionEndSent = true;
-      // Remove /track suffix if present to get base URL for session-end
-      const baseUrl = finalConfig.apiHost.replace(/\/track$/, "");
-      const endSessionUrl = `${baseUrl}/session-end`;
-
-      // Use sendBeacon for reliable delivery on page unload
-      // sendBeacon is specifically designed for this use case
-      const payload = JSON.stringify({
-        sessionId: currentSessionId,
-        projectId,
-        environment,
-      });
-
-      // Write to localStorage for debugging (will persist after tab closes)
-      const beaconSent = false;
-      try {
-        const debugInfo = {
-          sessionId: currentSessionId,
-          timestamp: Date.now(),
-          eventType,
-          endSessionUrl,
-          step: "before_beacon",
-        };
-        localStorage.setItem("bklit_last_unload", JSON.stringify(debugInfo));
-      } catch {
-        // Ignore localStorage errors
-      }
-
-      // Use fetch with keepalive instead of sendBeacon for better reliability
-      // Based on OpenPanel SDK: https://github.com/Openpanel-dev/openpanel
-      fetch(endSessionUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: payload,
-        keepalive: true, // Ensures request completes even if page unloads
-      })
-        .then((response) => {
-          // Update localStorage with success
-          try {
-            const debugInfo = {
-              sessionId: currentSessionId,
-              timestamp: Date.now(),
-              eventType,
-              endSessionUrl,
-              success: response.ok,
-              status: response.status,
-            };
-            localStorage.setItem(
-              "bklit_last_unload",
-              JSON.stringify(debugInfo)
-            );
-          } catch {
-            // Ignore localStorage errors
-          }
-        })
-        .catch((error) => {
-          // Update localStorage with error
-          try {
-            const debugInfo = {
-              sessionId: currentSessionId,
-              timestamp: Date.now(),
-              eventType,
-              endSessionUrl,
-              success: false,
-              error: error.message,
-            };
-            localStorage.setItem(
-              "bklit_last_unload",
-              JSON.stringify(debugInfo)
-            );
-          } catch {
-            // Ignore localStorage errors
-          }
-        });
-
-      if (debug) {
-        console.log(
-          "🔄 Bklit SDK: Session end request sent (fetch + keepalive)",
-          {
-            sessionId: currentSessionId,
-            projectId,
-            url: endSessionUrl,
-          }
-        );
-      }
+  const handleUrlChange = () => {
+    const currentUrl = window.location.href;
+    if (currentUrl !== previousUrl) {
+      previousUrl = currentUrl;
+      trackPageView();
     }
   };
 
-  // Use multiple events for better reliability across browsers/modes
-  // pagehide is more reliable in incognito/mobile Safari
-  window.removeEventListener("beforeunload", handlePageUnload);
-  window.removeEventListener("pagehide", handlePageUnload);
-  window.addEventListener("beforeunload", handlePageUnload);
-  window.addEventListener("pagehide", handlePageUnload);
+  // Listen for popstate (back/forward button)
+  window.addEventListener("popstate", handleUrlChange);
 
-  // NOTE: We intentionally do NOT end sessions on visibility change (tab switch)
-  // This was causing sessions to end when users simply switch tabs, which is
-  // not the desired behavior for live analytics. Sessions should only end on
-  // actual page unload (beforeunload event) or explicit navigation away.
+  // Listen for hashchange
+  window.addEventListener("hashchange", handleUrlChange);
 
-  // SPA navigation tracking
-  let currentUrl = window.location.href;
-
-  const handleRouteChange = () => {
-    const newUrl = window.location.href;
-    if (newUrl !== currentUrl) {
-      if (debug) {
-        console.log("🔄 Bklit SDK: Route change detected", {
-          from: currentUrl,
-          to: newUrl,
-          sessionId: currentSessionId,
-        });
-      }
-      currentUrl = newUrl;
-      trackPageView(); // Track the new page view
-    }
-  };
-
-  // Listen for popstate (browser back/forward)
-  window.addEventListener("popstate", handleRouteChange);
-
-  // Override pushState and replaceState for SPA navigation
+  // Intercept pushState and replaceState
   const originalPushState = history.pushState;
   const originalReplaceState = history.replaceState;
 
-  history.pushState = (...args) => {
-    originalPushState.apply(history, args);
-    setTimeout(handleRouteChange, 0);
+  history.pushState = function (...args) {
+    originalPushState.apply(this, args);
+    handleUrlChange();
   };
 
-  history.replaceState = (...args) => {
-    originalReplaceState.apply(history, args);
-    setTimeout(handleRouteChange, 0);
+  history.replaceState = function (...args) {
+    originalReplaceState.apply(this, args);
+    handleUrlChange();
   };
 
-  if (debug) {
-    console.log("🎯 Bklit SDK: SPA navigation tracking enabled");
-  }
+  // Expose global functions
+  window.bklit = {
+    trackPageView,
+    trackEvent,
+  };
 
-  setupEventTracking();
-}
-
-// Helper function to generate a unique session ID
-function generateSessionId(): string {
-  // Generate a unique session ID based on timestamp and random number
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 15);
-  return `${timestamp}-${random}`;
-}
-
-// Helper function to get session ID from storage
-function getStoredSessionId(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (!stored) {
-      return null;
-    }
-
-    const { sessionId, timestamp } = JSON.parse(stored);
-    const now = Date.now();
-
-    // Check if session has expired
-    if (now - timestamp > SESSION_TIMEOUT_MS) {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      return null;
-    }
-
-    return sessionId;
-  } catch (error) {
-    console.warn("Bklit SDK: Error reading session from storage:", error);
-    return null;
+  if (finalConfig.debug) {
+    console.log("✅ Bklit SDK: Initialization complete");
+    console.log("📊 Bklit SDK: Auto-tracking enabled for page views");
+    console.log(
+      "🎯 Bklit SDK: Use window.bklit.trackEvent() for custom events"
+    );
   }
 }
 
-// Helper function to store session ID
-function storeSessionId(sessionId: string): void {
+// Track page view
+export function trackPageView(): void {
   if (typeof window === "undefined") {
     return;
   }
 
-  try {
-    const data = {
-      sessionId,
-      timestamp: Date.now(),
-    };
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.warn("Bklit SDK: Error storing session:", error);
-  }
-}
+  const projectId = window.bklitprojectId;
+  const debug = window.bklitDebug;
 
-// Global function for manual page view tracking
-export function trackPageView() {
-  if (typeof window === "undefined") {
+  if (!projectId) {
     console.warn(
-      "❌ Bklit SDK: trackPageView can only be called in browser environment"
+      "❌ Bklit SDK: No projectId configured. Call initBklit() first."
     );
     return;
   }
 
-  if (!currentSessionId) {
-    console.warn("❌ Bklit SDK: No active session. Call initBklit() first.");
+  const currentUrl = window.location.href;
+  const now = Date.now();
+
+  // Debounce tracking
+  if (
+    currentUrl === lastTrackedUrl &&
+    now - lastTrackedTime < TRACKING_DEBOUNCE_MS
+  ) {
+    if (debug) {
+      console.log("⏭️ Bklit SDK: Skipping duplicate pageview (debounced)");
+    }
     return;
   }
 
-  const debug = window.bklitDebug;
+  lastTrackedUrl = currentUrl;
+  lastTrackedTime = now;
 
-  if (debug) {
-    console.log("🎯 Bklit SDK: Manual page view tracking triggered");
-  }
+  // Get referrer information
+  const referrer = document.referrer;
+  const referrerHostname = referrer ? new URL(referrer).hostname : "";
+  const currentHostname = window.location.hostname;
 
-  // Call the internal trackPageView function
-  // We need to recreate it here since it's scoped inside initBklit
-  const urlParams = new URLSearchParams(window.location.search);
-  const currentUrl = window.location.href;
-
-  // Parse referrer data
-  let referrerHostname: string | undefined;
-  let referrerPath: string | undefined;
-  let referrerType: string | undefined;
-  if (document.referrer) {
-    try {
-      const refUrl = new URL(document.referrer);
-      referrerHostname = refUrl.hostname;
-      referrerPath = refUrl.pathname;
-      referrerType = classifyReferrer(refUrl.hostname);
-    } catch {
-      // Invalid referrer URL, ignore
-    }
+  // Determine referrer type
+  let referrerType = "direct";
+  if (referrerHostname) {
+    referrerType =
+      referrerHostname === currentHostname
+        ? "internal"
+        : classifyReferrer(referrerHostname);
   }
 
   const data = {
     url: currentUrl,
     timestamp: new Date().toISOString(),
-    projectId: window.bklitprojectId || "unknown",
-    userAgent: navigator.userAgent,
-    sessionId: currentSessionId,
-    referrer: document.referrer || undefined,
-    environment: window.bklitEnvironment || "production",
-
-    // Page metadata
-    title: document.title,
-    description: (
-      document.querySelector('meta[name="description"]') as HTMLMetaElement
-    )?.content,
-    ogImage: (
-      document.querySelector('meta[property="og:image"]') as HTMLMetaElement
-    )?.content,
-    ogTitle: (
-      document.querySelector('meta[property="og:title"]') as HTMLMetaElement
-    )?.content,
-    favicon:
-      (document.querySelector('link[rel="icon"]') as HTMLLinkElement)?.href ||
-      (document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement)
-        ?.href,
-    canonicalUrl: (
-      document.querySelector('link[rel="canonical"]') as HTMLLinkElement
-    )?.href,
-    language: document.documentElement.lang,
-    robots: (document.querySelector('meta[name="robots"]') as HTMLMetaElement)
-      ?.content,
-
-    // Referrer data
-    referrerHostname,
-    referrerPath,
+    referrer: referrer || null,
+    referrerHostname: referrerHostname || null,
     referrerType,
-
-    // Standard UTMs
-    utmSource: urlParams.get("utm_source") || undefined,
-    utmMedium: urlParams.get("utm_medium") || undefined,
-    utmCampaign: urlParams.get("utm_campaign") || undefined,
-    utmTerm: urlParams.get("utm_term") || undefined,
-    utmContent: urlParams.get("utm_content") || undefined,
-    utmId: urlParams.get("utm_id") || undefined,
-
-    // Click IDs
-    gclid: urlParams.get("gclid") || undefined,
-    fbclid: urlParams.get("fbclid") || undefined,
-    msclkid: urlParams.get("msclkid") || undefined,
-    ttclid: urlParams.get("ttclid") || undefined,
-    liFatId: urlParams.get("li_fat_id") || undefined,
-    twclid: urlParams.get("twclid") || undefined,
+    userAgent: navigator.userAgent,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+    screen: {
+      width: window.screen.width,
+      height: window.screen.height,
+    },
+    language: navigator.language,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    sessionId: currentSessionId,
+    projectId,
 
     // Session tracking
     isNewVisitor: !localStorage.getItem("bklit_has_visited"),
@@ -624,52 +423,30 @@ export function trackPageView() {
   }
 
   if (debug) {
-    console.log("🚀 Bklit SDK: Manual page view tracking...", {
+    console.log("🚀 Bklit SDK: Tracking page view...", {
       url: data.url,
       sessionId: data.sessionId,
       projectId: data.projectId,
-      environment: data.environment,
     });
   }
 
-  const apiHost =
-    window.bklitApiHost || getDefaultConfig(window.bklitEnvironment).apiHost;
-  const apiKey = window.bklitApiKey;
-
-  fetch(apiHost, {
-    method: "POST",
-    headers: buildHeaders(apiKey),
-    body: JSON.stringify(data),
-    keepalive: true,
-  })
-    .then((response) => {
-      if (response.ok) {
-        if (debug) {
-          console.log("✅ Bklit SDK: Manual page view tracked successfully!", {
-            url: data.url,
-            sessionId: data.sessionId,
-            status: response.status,
-          });
-        }
-      } else {
-        console.error("❌ Bklit SDK: Failed to track manual page view", {
-          status: response.status,
-          statusText: response.statusText,
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("❌ Bklit SDK: Error tracking manual page view:", error);
-    });
+  sendMessage(
+    {
+      type: "pageview",
+      data,
+      apiKey: window.bklitApiKey,
+    },
+    debug
+  );
 }
 
-// Event tracking functionality
+// Track custom event
 export function trackEvent(
   trackingId: string,
   eventType: string,
   metadata?: Record<string, unknown>,
   triggerMethod?: "automatic" | "manual"
-) {
+): void {
   if (typeof window === "undefined") {
     console.warn(
       "❌ Bklit SDK: trackEvent can only be called in browser environment"
@@ -678,7 +455,6 @@ export function trackEvent(
   }
 
   const projectId = window.bklitprojectId;
-  const apiHost = window.bklitApiHost;
   const debug = window.bklitDebug;
 
   if (!projectId) {
@@ -694,7 +470,7 @@ export function trackEvent(
     timestamp: new Date().toISOString(),
     metadata: {
       ...metadata,
-      triggerMethod: triggerMethod || "manual", // Default to manual if not specified
+      triggerMethod: triggerMethod || "manual",
     },
     projectId,
     sessionId: currentSessionId || undefined,
@@ -709,317 +485,27 @@ export function trackEvent(
     });
   }
 
-  // Construct event API host by replacing /track with /track-event
-  const eventApiHost = apiHost
-    ? apiHost.replace(/\/track$/, "/track-event")
-    : getDefaultConfig(window.bklitEnvironment).apiHost.replace(
-        /\/track$/,
-        "/track-event"
-      );
-
-  const apiKey = window.bklitApiKey;
-
-  fetch(eventApiHost, {
-    method: "POST",
-    headers: buildHeaders(apiKey),
-    body: JSON.stringify(data),
-    keepalive: true,
-  })
-    .then((response) => {
-      if (response.ok) {
-        if (debug) {
-          console.log("✅ Bklit SDK: Event tracked successfully!", {
-            trackingId: data.trackingId,
-            eventType: data.eventType,
-            status: response.status,
-          });
-        }
-      } else {
-        console.error("❌ Bklit SDK: Failed to track event", {
-          trackingId: data.trackingId,
-          status: response.status,
-          statusText: response.statusText,
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("❌ Bklit SDK: Error tracking event:", error);
-    });
-}
-
-// Manually end the current session (useful for testing)
-export function endSession(): void {
-  if (typeof window === "undefined") {
-    console.warn(
-      "❌ Bklit SDK: endSession can only be called in browser environment"
-    );
-    return;
-  }
-
-  const projectId = window.bklitprojectId;
-  const apiHost = window.bklitApiHost;
-  const debug = window.bklitDebug;
-
-  if (!currentSessionId) {
-    console.warn("❌ Bklit SDK: No active session to end");
-    return;
-  }
-
-  if (!projectId) {
-    console.warn(
-      "❌ Bklit SDK: No projectId configured. Call initBklit() first."
-    );
-    return;
-  }
-
-  const sessionId = currentSessionId;
-  const baseUrl = apiHost
-    ? apiHost.replace(/\/track$/, "")
-    : "http://localhost:3001";
-  const endSessionUrl = `${baseUrl}/session-end`;
-
-  const payload = JSON.stringify({
-    sessionId,
-    projectId,
-    environment: window.bklitEnvironment,
-  });
-
-  // Use fetch with keepalive instead of sendBeacon
-  fetch(endSessionUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  sendMessage(
+    {
+      type: "event",
+      data,
+      apiKey: window.bklitApiKey,
     },
-    body: payload,
-    keepalive: true,
-  })
-    .then((response) => {
-      if (debug) {
-        console.log("✅ Bklit SDK: Manual session end sent successfully", {
-          sessionId,
-          projectId,
-          status: response.status,
-          url: endSessionUrl,
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("❌ Bklit SDK: Failed to send manual session end", error);
-    });
-
-  // Clear the session ID immediately (don't wait for response)
-  currentSessionId = null;
+    debug
+  );
 }
 
-// Auto-track events with data attributes and IDs
-function setupEventTracking() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const debug = window.bklitDebug;
-  const trackedElements = new WeakSet<Element>();
-
-  function attachEventListeners(element: Element) {
-    if (trackedElements.has(element)) {
-      return;
-    }
-    trackedElements.add(element);
-
-    const dataEventAttr = element.getAttribute("data-bklit-event");
-    const elementId = element.id;
-
-    let trackingId: string | null = null;
-
-    if (dataEventAttr) {
-      trackingId = dataEventAttr;
-    } else if (elementId?.startsWith("bklit-event-")) {
-      trackingId = elementId.replace("bklit-event-", "");
-    }
-
-    if (!trackingId) {
-      return;
-    }
-
-    if (debug && trackingId) {
-      console.log("🔗 Bklit SDK: Setting up event tracking (all types)", {
-        trackingId,
-        element: element.tagName,
-      });
-    }
-
-    // Track click events
-    element.addEventListener("click", () => {
-      if (debug) {
-        console.log("👆 Bklit SDK: Click event detected", { trackingId });
-      }
-      if (trackingId) {
-        trackEvent(trackingId, "click", {}, "automatic");
-      }
-    });
-
-    // Track view events with IntersectionObserver
-    const viewObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            if (debug) {
-              console.log("👁️ Bklit SDK: View event detected", {
-                trackingId,
-              });
-            }
-            if (trackingId) {
-              trackEvent(trackingId, "view", {}, "automatic");
-            }
-            viewObserver.unobserve(element);
-          }
-        }
-      },
-      { threshold: 0.5 }
-    );
-    viewObserver.observe(element);
-
-    // Track hover events
-    let hoverTimeout: NodeJS.Timeout | null = null;
-    element.addEventListener("mouseenter", () => {
-      if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
-      }
-      hoverTimeout = setTimeout(() => {
-        if (debug) {
-          console.log("🖱️ Bklit SDK: Hover event detected", {
-            trackingId,
-          });
-        }
-        if (trackingId) {
-          trackEvent(trackingId, "hover", {}, "automatic");
-        }
-      }, 500);
-    });
-    element.addEventListener("mouseleave", () => {
-      if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
-        hoverTimeout = null;
-      }
-    });
-  }
-
-  function scanForEventElements() {
-    const dataAttrElements = document.querySelectorAll("[data-bklit-event]");
-    const idElements = document.querySelectorAll("[id^='bklit-event-']");
-
-    for (const element of dataAttrElements) {
-      attachEventListeners(element);
-    }
-    for (const element of idElements) {
-      attachEventListeners(element);
-    }
-  }
-
-  scanForEventElements();
-
-  const mutationObserver = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type === "childList") {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const element = node as Element;
-            attachEventListeners(element);
-
-            const childDataAttrElements =
-              element.querySelectorAll("[data-bklit-event]");
-            const childIdElements = element.querySelectorAll(
-              "[id^='bklit-event-']"
-            );
-
-            for (const child of childDataAttrElements) {
-              attachEventListeners(child);
-            }
-            for (const child of childIdElements) {
-              attachEventListeners(child);
-            }
-          }
-        }
-      } else if (mutation.type === "attributes") {
-        const element = mutation.target as Element;
-        if (
-          mutation.attributeName === "data-bklit-event" ||
-          mutation.attributeName === "id"
-        ) {
-          attachEventListeners(element);
-        }
-      }
-    }
-  });
-
-  mutationObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["data-bklit-event", "id"],
-  });
-
-  if (debug) {
-    console.log("✅ Bklit SDK: Event tracking setup complete");
-  }
-}
-
-// Global function to clear session (useful for testing)
-export function clearBklitSession(): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  currentSessionId = null;
-  lastTrackedUrl = null;
-  lastTrackedTime = 0;
-
-  try {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    console.log("✅ Bklit SDK: Session cleared");
-  } catch (error) {
-    console.warn("Bklit SDK: Error clearing session:", error);
-  }
-}
-
-// Helper function to build headers with optional Authorization
-function buildHeaders(apiKey?: string): HeadersInit {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
-
-  return headers;
-}
-
-// Store configuration globally for manual tracking
+// Type declarations for window
 declare global {
   interface Window {
-    initBklit?: (options: BklitOptions) => void;
-    trackPageView?: () => void;
-    trackEvent?: (
-      trackingId: string,
-      eventType: string,
-      metadata?: Record<string, unknown>,
-      triggerMethod?: "automatic" | "manual"
-    ) => void;
-    clearBklitSession?: () => void;
     bklitprojectId?: string;
-    bklitApiHost?: string;
-    bklitEnvironment?: "development" | "production";
+    bklitWsHost?: string;
+    bklitEnvironment?: string;
     bklitDebug?: boolean;
     bklitApiKey?: string;
+    bklit: {
+      trackPageView: typeof trackPageView;
+      trackEvent: typeof trackEvent;
+    };
   }
-}
-
-// Make functions available globally
-// Only expose to window in browser environment
-if (typeof window !== "undefined") {
-  window.initBklit = initBklit;
-  window.trackPageView = trackPageView;
-  window.trackEvent = trackEvent;
-  window.clearBklitSession = clearBklitSession;
 }

@@ -118,7 +118,6 @@ export function LiveSessionDetail({
     [sessionId]
   );
 
-  // Subscribe to SSE events (NEW architecture)
   useLiveEventStream(projectId, {
     onPageview: handlePageview,
     onEvent: handleEvent,

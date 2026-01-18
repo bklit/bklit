@@ -35,27 +35,21 @@ export function SDKConnectionStepForm({
   // Dumped this here, get's removed in production
   console.log("projectDomain", projectDomain);
 
-  // Determine API host based on current dashboard location
-  const getApiHost = () => {
+  const getWsHost = () => {
     if (typeof window === "undefined") {
-      return "http://localhost:3000/api/track";
+      return "ws://localhost:8080";
     }
 
-    const { hostname, protocol, port } = window.location;
+    const { hostname } = window.location;
 
-    // If on localhost, use localhost
     if (hostname === "localhost" || hostname === "127.0.0.1") {
-      const portSuffix =
-        port && port !== "80" && port !== "443" ? `:${port}` : "";
-      return `${protocol}//${hostname}${portSuffix}/api/track`;
+      return "ws://localhost:8080";
     }
 
-    // Otherwise, use current dashboard URL
-    const baseUrl = `${protocol}//${hostname}`;
-    return `${baseUrl}/api/track`;
+    return "wss://bklit.ws";
   };
 
-  const apiHost = getApiHost();
+  const wsHost = getWsHost();
 
   // Auto-create API token on mount
   const createToken = useMutation(
@@ -163,8 +157,8 @@ pnpm add @bklit/sdk`}</CodeBlockClient>
         <CodeBlockClient
           footer={
             <>
-              The SDK will automatically use the correct API endpoint based on
-              your environment.
+              The SDK connects via WebSocket for real-time analytics and instant
+              session tracking.
             </>
           }
           language="typescript"
@@ -174,7 +168,8 @@ pnpm add @bklit/sdk`}</CodeBlockClient>
 initBklit({
   projectId: "${projectId}",
   apiKey: "${createdToken}",
-  apiHost: "${apiHost}",
+  // Optional: defaults to wss://bklit.ws in production
+  // wsHost: "${wsHost}",
 });`}</CodeBlockClient>
       </div>
     </div>

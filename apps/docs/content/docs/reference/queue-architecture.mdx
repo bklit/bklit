@@ -17,29 +17,30 @@ Instead of inserting events directly into ClickHouse on every request, events ar
 ## Architecture Diagram
 
 ```
-Tracker SDK → Ingestion Service → Redis Queue → Background Worker → ClickHouse
-                  (1-3ms)            (durable)      (batch 100)      (8-50ms)
-                                                          ↓
-                                                    Redis PubSub
-                                                          ↓
-                                                  WebSocket Server
-                                                          ↓
-                                                    Dashboard UI
+Tracker SDK ←→ WebSocket Server → Redis Queue → Background Worker → ClickHouse
+            (bklit.ws:8080)         (durable)      (batch 100)      (8-50ms)
+                   ↓
+            Broadcast to Dashboard
+                   ↓
+            Dashboard UI (WebSocket)
 ```
 
 ## Components
 
-### 1. Ingestion Service
+### 1. WebSocket Server
 
-**Location:** `packages/ingestion`  
-**Port:** 3001 (local), deployed to edge in production
+**Location:** `packages/websocket`  
+**Port:** 8080  
+**URL:** `wss://bklit.ws` (production), `ws://localhost:8080` (development)
 
 **Purpose:**
-- Receive events via HTTP
+- Maintain persistent connections with SDK (visitor browsers) and dashboards
+- Receive events via WebSocket (pageviews, custom events)
 - Validate API tokens (with Redis caching)
-- Anonymize IP addresses
+- Anonymize IP addresses and enrich with geolocation
 - Push to Redis queue
-- Respond immediately (~1-3ms)
+- Broadcast events to connected dashboards
+- Detect instant session end on WebSocket disconnect
 
 **Benefits:**
 - Ultra-fast response times
@@ -112,7 +113,7 @@ pnpm dev:services
 
 Wait for:
 - `[prisma] Prisma dev running...`
-- `[ingestion] 🚀 Ingestion service running`
+- `[websocket] 🌐 WebSocket server ready`
 - `[worker] 🔄 Background worker started`
 
 **Terminal 2:**
@@ -170,9 +171,10 @@ The architecture guarantees zero data loss through:
 > **Status:** Production deployment guide coming soon.
 > 
 > The architecture is production-ready and tested locally. Deployment involves:
-> - Ingestion service → Cloudflare Workers (edge) or Hetzner
+> - WebSocket server → Hetzner VPS (bklit.ws, port 8080, gray cloud DNS)
 > - Background worker → Hetzner (systemd service, co-located with ClickHouse)
-> - Monitor queue depth and worker performance
+> - Dashboard → Vercel (Next.js app with tRPC API routes)
+> - Monitor queue depth and WebSocket connections
 
 ## Backwards Compatibility
 
