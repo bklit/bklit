@@ -29,7 +29,7 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
     const wsHost =
       process.env.NODE_ENV === "development"
         ? "ws://localhost:8080"
-        : "wss://bklit.ws";
+        : "wss://bklit.ws:8080";
 
     const ws = new WebSocket(`${wsHost}/dashboard?projectId=${projectId}`);
 
