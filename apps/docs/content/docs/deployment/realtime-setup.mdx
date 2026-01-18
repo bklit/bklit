@@ -11,12 +11,12 @@ This guide shows you how to enable real-time analytics on your self-hosted Bklit
 
 Bklit uses **WebSockets** for real-time analytics, hosted on **bklit.ws**:
 
-1. **SDK** → Opens WebSocket to `wss://bklit.ws`
-2. **WebSocket Server** → Receives events, queues to Redis, broadcasts to dashboards
-3. **Worker** → Processes queue, saves to ClickHouse
-4. **Dashboard** → Connects to WebSocket for instant updates
+1. **SDK** - Opens WebSocket to `wss://bklit.ws`
+2. **WebSocket Server** - Receives events, queues to Redis, broadcasts to dashboards
+3. **Worker** - Processes queue, saves to ClickHouse
+4. **Dashboard** - Connects to WebSocket for instant updates
 
-**Key Feature:** Sessions end **instantly** (<1 second) when visitors close browser tabs via WebSocket disconnect detection.
+**Key Feature:** Sessions end **instantly** (under 1 second) when visitors close browser tabs via WebSocket disconnect detection.
 
 ## Prerequisites
 

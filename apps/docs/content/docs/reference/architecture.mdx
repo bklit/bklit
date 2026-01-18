@@ -30,9 +30,9 @@ Bklit is built as a modern, scalable analytics platform with the following archi
 1. **SDK** connects to WebSocket server (wss://bklit.ws)
 2. **WebSocket Server** validates tokens and enriches with geolocation
 3. **Events queued** in Redis for reliable processing
-4. **Worker** processes queue in batches → ClickHouse
+4. **Worker** processes queue in batches and stores in ClickHouse
 5. **WebSocket broadcasts** events instantly to connected dashboards
-6. **Dashboard** receives real-time updates (<1 second latency)
+6. **Dashboard** receives real-time updates (under 1 second latency)
 
 ## Technology Stack
 
