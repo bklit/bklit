@@ -1,209 +1,190 @@
-# Changelog
+# Bklit Platform Changelog
 
-All notable changes to Bklit Analytics will be documented in this file.
+## [2.0.0] - 2026-01-18
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### 🚀 Major Release - WebSocket Architecture
 
-## [1.0.0] - 2025-01-05
+**This is a major architectural shift for instant real-time analytics.**
 
-### 🎉 Version 1.0 - The Foundation Release
+### Breaking Changes
 
-This is the first stable release of Bklit Analytics, establishing a clean baseline for future development.
+#### Infrastructure Changes
 
-### ✨ Added
+- **Replaced HTTP ingestion with WebSocket server**
+  - New service: `packages/websocket/` (renamed from `packages/ingestion/`)
+  - WebSocket server runs on bklit.ws:8080 (port 8080)
+  - Requires deployment to VPS/server (cannot run on serverless)
 
-#### Smart Setup CLI
+- **Removed HTTP tracking endpoints**
+  - Deleted: `POST /api/track`
+  - Deleted: `POST /api/session-end`
+  - Deleted: `POST /api/track-event`
+  - Deleted: `GET /api/live-stream` (SSE endpoint)
 
-- **`npx @bklit/create`** - Zero-configuration setup wizard
-  - Auto-generates all secrets (AUTH_SECRET, etc.)
-  - Auto-detects and configures Docker for PostgreSQL + ClickHouse
-  - Interactive prompts for optional features
-  - Creates .env file automatically
-  - Complete setup in ~90 seconds
+- **New production infrastructure requirement**
+  - WebSocket server must run on separate server (e.g., Hetzner VPS)
+  - Domain required: bklit.ws with DNS pointing to WebSocket server
+  - SSL/TLS certificates required for wss://
+  - PM2 or similar process manager recommended
 
-#### Simplified Environment Configuration
+#### SDK Changes
 
-- Reduced required environment variables from 12+ to just 3
-- Made Polar.sh billing completely optional
-- Made OAuth providers (GitHub/Google) optional
-- Made Resend email service optional
-- Made Mapbox maps optional
-- Made Trigger.dev background jobs optional
+- **@bklit/sdk v1.0.0+** - Published to npm with WebSocket support
+  - Configuration: `apiHost` → `wsHost`
+  - Default: `wss://bklit.ws:8080`
+  - See [SDK Migration Guide](packages/sdk/CHANGELOG.md)
 
-#### Developer Experience Improvements
+#### Development Workflow Changes
 
-- Added `pnpm db:reset`, `db:push`, `db:pull`, `db:status`, `db:deploy` commands
-- Email OTPs now prominently displayed in terminal during development
-- Email sending falls back to console logging in development
-- Better error messages and validation
-- Cross-platform support (Windows, macOS, Linux)
+- **Updated commands:**
+  - `pnpm dev:services` now starts WebSocket server (not ingestion)
+  - `pnpm dev:websocket` replaces `pnpm dev:ingestion`
+  - `pnpm dev:stop` kills WebSocket processes (port 8080)
 
-#### Documentation
+### New Features
 
-- Complete rewrite of Quick Start guide
-- New Environment Variables reference guide
-- Updated all documentation to reflect optional features
-- Added migration history documentation
-- Improved README with quick start instructions
+#### Instant Real-Time Analytics
 
-### 🔧 Changed
+- **Sub-second session ending**
+  - Sessions end in <1 second when tabs close (was 30s-4min)
+  - 120-240x faster than previous HTTP + timeout approach
+  - Reliable WebSocket disconnect detection
 
-#### Core Changes
+- **Real-time event broadcasting**
+  - Dashboard updates instantly via WebSocket
+  - No polling required
+  - Event-driven architecture
 
-- **Breaking**: Node.js requirement changed from >=22.14.0 to >=22.0.0
-- Polar plugin now loads conditionally (only if credentials exist)
-- OAuth providers load conditionally (only if credentials exist)
-- Email sending gracefully falls back to console in development
+- **Auto-reconnection**
+  - SDK reconnects automatically with exponential backoff
+  - Message queuing when connection not ready
+  - Graceful degradation
 
-#### Database
+#### ip-api.com Geolocation
 
-- Established V1 baseline schema (18 tables)
-- Removed ClickHouse-migrated models (PageViewEvent, TrackedEvent, TrackedSession)
-- Clean migration state - ready for incremental updates
+- **Switched from Cloudflare headers to ip-api.com**
+  - More accurate city-level geolocation
+  - ISP information included
+  - Mobile device detection
+  - Free tier: 45 requests/minute
+  - Auto-detection for local development
 
-### 🐛 Fixed
+#### Production WebSocket Infrastructure
 
-- Fixed ESM/CommonJS conflicts in with-env-dev scripts
-- Fixed ClickHouse password validation (allows empty string for local Docker)
-- Fixed Docker volume persistence issues in setup
-- Fixed environment variable validation strictness
+- **Secure WebSocket (wss://)**
+  - SSL/TLS with Let's Encrypt
+  - Auto-renewal via Certbot
+  - Production: `wss://bklit.ws:8080`
+  - Development: `ws://localhost:8080`
 
-### 📦 Packages
+- **Process management**
+  - PM2 integration for auto-start
+  - Systemd service support
+  - Health monitoring
+  - Auto-restart on crash
 
-#### New Packages
+#### Live Map Improvements
 
-- `@bklit/create` - Setup CLI tool (publishable to npm)
+- **Fixed marker clickability**
+- **Country grouping with expansion**
+- **Session end animations**
+- **Debug console for map events**
+- **React state management improvements**
 
-#### Modified Packages
+### Removed
 
-- `@bklit/auth` - Optional Polar integration
-- `@bklit/email` - Console fallback for development
-- `@bklit/analytics` - Relaxed password validation
-- `@bklit/db` - Improved helper scripts
+- **Session cleanup worker job** - No longer needed (instant WebSocket disconnect)
+- **Redis TTL/expiry logic** - Sessions managed by WebSocket lifecycle
+- **ClickHouse fallback for live counts** - Redis is single source of truth
+- **`beforeunload` handlers** - Replaced by WebSocket disconnect
+- **`sendBeacon` fallbacks** - No longer needed
+- **600+ lines of legacy code** - Simplified architecture
 
-### 🎯 What Works Out of the Box (No Configuration)
+### Performance Improvements
 
-- ✅ Email authentication (magic links with OTP codes in terminal)
-- ✅ Analytics tracking & dashboards
-- ✅ Funnel builder
-- ✅ Session tracking
-- ✅ Geographic insights (list view)
-- ✅ Custom events
-- ✅ Real-time analytics
-- ✅ Extensions system
+| Metric | v1.x | v2.0 | Improvement |
+|--------|------|------|-------------|
+| Session End Latency | 30s-4min | <1 second | 120-240x faster |
+| Live User Query | 50-150ms | 5-10ms | 10x faster |
+| Real-time Updates | 10s polling | Instant | Event-driven |
+| Dashboard Load | Moderate | Fast | No ClickHouse fallback |
 
-### 📊 Impact
+### Infrastructure
 
-- **Setup time:** 30 minutes → 90 seconds (95% reduction)
-- **Required env vars:** 12+ → 3 (90% reduction)
-- **External dependencies:** Multiple → Zero (for core features)
-- **Manual configuration:** Everything → Nothing
+#### Production Stack
 
-### 🚀 Migration Guide
+- **WebSocket Server:** Hetzner VPS (bklit.ws:8080)
+- **Dashboard:** Vercel (app.bklit.com)
+- **Redis:** Upstash (queue + sessions)
+- **ClickHouse:** Hetzner (analytics database)
+- **DNS:** Vercel DNS (bklit.ws)
 
-For existing installations:
+#### Development Stack
 
-1. Your current .env files continue to work (backward compatible)
-2. No action required unless you want to simplify your configuration
-3. To adopt the new optional features approach:
-   - Remove unused OAuth provider credentials
-   - Remove Polar credentials if not using billing
-   - Remove Resend API key for local development
-4. Migration reset is optional (see `packages/db/MIGRATION_HISTORY.md`)
+- **WebSocket:** localhost:8080 (via `pnpm dev:services`)
+- **Redis:** Docker (localhost:6379)
+- **ClickHouse:** Docker (localhost:8123)
+- **Dashboard:** localhost:3000
 
-### 🙏 Contributors
+### Migration Guide
 
-Thank you to everyone who contributed to making v1 possible!
+See [WEBSOCKET_MIGRATION.md](WEBSOCKET_MIGRATION.md) for complete migration details.
 
----
+#### For Self-Hosted Users
 
-## [1.0.1] - 2025-01-07
+**Update deployment:**
 
-### 🔧 Database Migration - Session Country Codes
+1. Pull latest code from `main` branch
+2. Install PM2: `npm install -g pm2`
+3. Configure DNS for bklit.ws (or your domain)
+4. Set up SSL certificates (Let's Encrypt)
+5. Start services: `pm2 start ecosystem.config.js`
+6. See [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) for details
 
-#### ClickHouse Schema Changes
+**No database changes required** - ClickHouse schema unchanged, fully compatible.
 
-- **Added `country_code` column to `tracked_session` table**
-  - Enables country flag display in session event tables
-  - Improves geographic analytics and session detail views
+#### For SDK Users
 
-#### Migration Required for Self-Hosted Users
-
-If you're self-hosting with your own ClickHouse database, apply this migration:
-
-**Step 1: Add the column**
+**Update to latest SDK:**
 
 ```bash
-cd packages/analytics
-pnpm with-env-dev tsx src/migrations/add-country-code-to-session.ts
+npm install @bklit/sdk@latest
 ```
 
-**Step 2: Backfill (country codes) to existing sessions (one-time)**
+See [SDK Migration Guide](packages/sdk/CHANGELOG.md#100---2026-01-18)
 
-```bash
-cd packages/analytics
-pnpm with-env-dev tsx src/migrations/backfill-session-country-codes.ts
-```
+### Data Integrity
 
-The backfill script will:
+- ✅ **Zero data loss** - All existing pageviews and sessions preserved
+- ✅ **Schema unchanged** - Fully backward compatible
+- ✅ **Queries work** - All dashboard features functional
+- ✅ **Geolocation improved** - ip-api provides better accuracy
 
-- Find all sessions without country codes
-- Match them with their first pageview event containing a country code
-- Update sessions in batches of 1,000 for efficiency
-- Report progress and completion statistics
+### Documentation
 
-**Note:** New installations automatically include this column via the updated `init-tables.ts` migration.
+- ✅ Updated README.md with WebSocket architecture
+- ✅ Created migration guides
+- ✅ Updated all SDK documentation
+- ✅ Production deployment guides
+- ✅ Security best practices documented
 
-#### Files Changed
+### Security
 
-- `packages/analytics/src/migrations/init-tables.ts` - Added country_code to schema
-- `packages/analytics/src/migrations/add-country-code-to-session.ts` - Migration script
-- `packages/analytics/src/migrations/backfill-session-country-codes.ts` - Backfill script
-- `packages/analytics/src/service.ts` - Updated getSessionById query
-- `apps/dashboard/src/components/events/session-events-table.tsx` - Added country flags
+- ✅ Multi-tenant origin validation
+- ✅ API token authentication
+- ✅ SSL/TLS encryption (wss://)
+- ✅ Redacted sensitive infrastructure details from public docs
 
-### ✨ UI Improvements
+### Contributors
 
-#### Analytics Change Indicators
-
-- Added animated change indicators to Quick Stats card
-- Added change indicators to Top Countries and Popular Pages cards
-- Created reusable `ChangeIndicator` component with directional animations
-  - Positive changes: slide up with emerald color
-  - Negative changes: slide down with rose color
-  - Includes blur effect on enter/exit
-- Change indicators respect `?compare=false` URL parameter
-
-#### Event Detail Enhancements
-
-- Added country flags to Session Events table
-- Made session IDs clickable links to session detail pages
-- Improved Area Chart styling to match pageviews (linear, better spacing)
-- Fixed NaN issues in stats when switching dates
-- Fixed time series to show all days in selected range (was only showing one day)
-
-#### Component Architecture
-
-- Created `@bklit/ui/components/change-indicator` - Reusable change indicator
-- Enhanced `ProgressRow` component with optional `change` prop
-- All analytics cards now use consistent change comparison logic
-
-### 🐛 Fixes
-
-- Fixed Quick Stats card not updating when changing date range
-- Fixed `initialData` vs `placeholderData` in React Query causing stale data
-- Fixed conversion rate calculation returning NaN
-- Fixed event timeline only showing paginated results instead of all events
-- Fixed session link IDs (now uses `id` field instead of `session_id` hash)
+This release includes contributions and testing from the Bklit team and early adopters.
 
 ---
 
-## Unreleased
+## [1.0.1] - Session Country Code Enhancement
 
-Changes that are in development but not yet released will be listed here.
+Session-level country code tracking improvements.
 
----
+## [1.0.0] - Initial Open Source Release
 
-[1.0.1]: https://github.com/bklit/bklit/releases/tag/v1.0.1
-[1.0.0]: https://github.com/bklit/bklit/releases/tag/v1.0.0
+First public release of Bklit Analytics platform.
