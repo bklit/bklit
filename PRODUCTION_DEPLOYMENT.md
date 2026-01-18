@@ -1,5 +1,7 @@
 # Production Deployment Guide - WebSocket Architecture
 
+> ⚠️ **INTERNAL USE ONLY** - This document contains sensitive infrastructure details including server IPs, SSH access, and deployment credentials. Do not commit this file with real values to public repositories.
+
 ## 🎯 **Overview**
 
 This guide covers deploying the WebSocket-based real-time analytics to production.
@@ -109,7 +111,7 @@ Run deployment script:
 
 ```bash
 # Download and run the deployment script
-curl -o deploy.sh https://raw.githubusercontent.com/yourusername/bklit/feat/ipapi-first-cloudflare-second/scripts/deploy-hetzner.sh
+curl -o deploy.sh https://raw.githubusercontent.com/bklit/bklit/main/scripts/deploy-hetzner.sh
 chmod +x deploy.sh
 sudo bash deploy.sh
 ```
@@ -119,9 +121,9 @@ sudo bash deploy.sh
 ```bash
 # Clone repo
 cd /opt
-git clone https://github.com/yourusername/bklit.git
+git clone https://github.com/bklit/bklit.git
 cd bklit
-git checkout feat/ipapi-first-cloudflare-second
+git checkout main  # or your feature branch
 
 # Install deps
 pnpm install

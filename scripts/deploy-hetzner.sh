@@ -2,13 +2,21 @@
 
 # Deploy WebSocket server and Worker to Hetzner
 # Run this ON your Hetzner server
+#
+# Usage:
+#   sudo bash deploy-hetzner.sh
+#
+# Optional environment variables:
+#   REPO_URL - Git repository URL (default: https://github.com/bklit/bklit.git)
+#   Example (custom repo): REPO_URL=git@github.com:myorg/bklit.git sudo bash deploy-hetzner.sh
 
 set -e
 
 echo "🚀 Deploying Bklit WebSocket + Worker to Hetzner..."
 echo ""
 
-# Configuration
+# Configuration (can be overridden via environment variables)
+REPO_URL="${REPO_URL:-https://github.com/bklit/bklit.git}"
 PROJECT_DIR="/opt/bklit"
 BRANCH="feat/ipapi-first-cloudflare-second"
 NODE_VERSION="22"
@@ -64,10 +72,10 @@ if [ -d "$PROJECT_DIR" ]; then
   git checkout $BRANCH
   git pull origin $BRANCH
 else
-  echo "   Cloning repository..."
+  echo "   Cloning repository from $REPO_URL..."
   mkdir -p /opt
   cd /opt
-  git clone https://github.com/yourusername/bklit.git
+  git clone $REPO_URL bklit
   cd bklit
   git checkout $BRANCH
 fi

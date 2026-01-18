@@ -130,56 +130,40 @@ pnpm rebuild:sdk
 
 ## 🌐 Production Infrastructure
 
-### DNS Configuration
+> **Note:** Detailed deployment instructions, server IPs, and credentials are maintained in our internal deployment runbook. See `PRODUCTION_DEPLOYMENT.md` for general deployment guidance.
 
-**Domain:** bklit.ws  
-**IP:** 46.224.125.208 (Hetzner)  
-**DNS Provider:** Vercel DNS  
-**Propagation:** ~2 minutes
+### Architecture Components
 
-### Services on Hetzner
+**WebSocket Server:**
+- Hosted on Hetzner VPS
+- Domain: bklit.ws
+- Ports: 8080 (WebSocket), 443 (HTTPS with nginx proxy option)
+- Process manager: PM2
+- Auto-start: systemd
 
-**Process Manager:** PM2
+**Worker:**
+- Background event processor
+- Co-located with WebSocket server
+- Managed by PM2
 
-```
-┌─────┬─────────────────┬─────────┬─────────┐
-│ ID  │ Name            │ Status  │ Port    │
-├─────┼─────────────────┼─────────┼─────────┤
-│ 0   │ bklit-websocket │ online  │ 8080    │
-│ 1   │ bklit-worker    │ online  │ -       │
-└─────┴─────────────────┴─────────┴─────────┘
-```
+**SSL/TLS:**
+- Certificate provider: Let's Encrypt
+- Auto-renewal: Certbot systemd timer
+- Supports both ws:// (development) and wss:// (production)
 
-**Auto-start:** Enabled via PM2 systemd service
-
-### SSL/TLS
-
-**Certificate:** Let's Encrypt  
-**Paths:**
-- Cert: `/etc/letsencrypt/live/bklit.ws/fullchain.pem`
-- Key: `/etc/letsencrypt/live/bklit.ws/privkey.pem`
-
-**Expiry:** April 18, 2026  
-**Auto-renewal:** Certbot systemd timer
-
-### Firewall (UFW)
-
-**Open Ports:**
-- 22 (SSH)
-- 80 (HTTP - nginx)
-- 443 (HTTPS - nginx)
-- 8080 (WebSocket)
-- 8123 (ClickHouse HTTP)
-- 9000 (ClickHouse native)
+**Firewall:**
+- Required ports: 22 (SSH), 80/443 (HTTP/HTTPS), 8080 (WebSocket)
+- Configured via UFW
 
 ---
 
-## 📊 Data Integrity Verified
+## 📊 Data Integrity
 
-**Production ClickHouse:**
-- Page views: 9,406 (verified after migration)
-- Sessions: 17,489 (verified after migration)
-- **Zero data loss** ✅
+**Migration Verification:**
+- ✅ All existing pageviews preserved
+- ✅ All existing sessions preserved
+- ✅ Zero data loss during migration
+- ✅ Production tested and verified
 
 ---
 
@@ -188,13 +172,13 @@ pnpm rebuild:sdk
 ### Test WebSocket Connection
 
 ```bash
-# From terminal
+# Test connectivity
 nc -zv bklit.ws 8080
 
-# With wscat
+# Test WebSocket handshake
 wscat -c wss://bklit.ws:8080
 
-# With Node.js script
+# Run automated test
 node scripts/test-production-websocket.js
 ```
 
@@ -204,25 +188,17 @@ node scripts/test-production-websocket.js
 // apps/playground/.env
 VITE_BKLIT_WS_HOST=wss://bklit.ws:8080
 
-// Then run:
+// Start playground
 pnpm --filter=@bklit/playground dev
 ```
 
 ### Monitor Production
 
-```bash
-# SSH to Hetzner
-ssh root@46.224.125.208
+> **Note:** Production monitoring commands and access details are in the internal operations runbook.
 
-# Check service status
-pm2 status
-
-# Live logs
-pm2 logs bklit-websocket --lines 0
-
-# Check Redis sessions
-redis-cli -u $REDIS_URL ZCARD live:sessions:<project-id>
-```
+**Public endpoints to verify:**
+- WebSocket: `wss://bklit.ws:8080`
+- Dashboard: `https://app.bklit.com`
 
 ---
 
@@ -272,13 +248,13 @@ redis-cli -u $REDIS_URL ZCARD live:sessions:<project-id>
 
 ## 🎯 Production Deployment Checklist
 
-- [x] DNS configured (bklit.ws → 46.224.125.208)
-- [x] WebSocket server deployed (Hetzner)
-- [x] Worker deployed (Hetzner)
-- [x] SSL/TLS configured (Let's Encrypt)
-- [x] PM2 auto-start enabled
-- [x] Firewall configured (UFW)
-- [x] Production tested (wss://bklit.ws:8080)
+- [x] DNS configured for bklit.ws
+- [x] WebSocket server deployed
+- [x] Worker deployed
+- [x] SSL/TLS certificates configured
+- [x] Process manager configured for auto-start
+- [x] Firewall rules applied
+- [x] Production connectivity tested
 - [x] Data integrity verified
 - [ ] Dashboard deployed to Vercel
 - [ ] Fix Prisma Accelerate issue
