@@ -255,16 +255,20 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   const sessionId = url.searchParams.get("sessionId");
   const type = url.pathname.includes("/dashboard") ? "dashboard" : "sdk";
 
-  // Verify origin (using configured allowedOrigins from top of file)
+  // Verify origin for DASHBOARD connections only
+  // SDK connections are from customer websites and validated by API token instead
   const origin = req.headers.origin || "";
 
-  if (origin && !allowedOrigins.includes(origin)) {
+  if (type === "dashboard" && origin && !allowedOrigins.includes(origin)) {
     console.warn(
-      `[WS] Rejected connection from unauthorized origin: ${origin}`
+      `[WS] Rejected dashboard connection from unauthorized origin: ${origin}`
     );
     ws.close(1008, "Unauthorized origin");
     return;
   }
+  
+  // SDK connections (from customer websites) are validated by API token, not origin
+  // This allows users to track any website they own
 
   if (!projectId) {
     console.warn("[WS] Rejected connection: missing projectId");
