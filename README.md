@@ -26,7 +26,7 @@
 
 Bklit Analytics provides 150+ features including:
 
-- Real-time analytics with live visitor tracking
+- Real-time analytics with instant WebSocket-based live tracking
 - Visual funnel builder for conversion optimization
 - Geographic insights with city-level precision
 - Unlimited data retention on all plans
@@ -79,12 +79,12 @@ bklit/
 │   ├── db/                 # Prisma ORM (PostgreSQL)
 │   ├── email/              # React Email templates
 │   ├── extensions/         # Extension system (Discord, etc.)
-│   ├── ingestion/          # Event ingestion server (receives SDK events)
 │   ├── redis/              # Redis client, queue, and pub/sub utilities
 │   ├── sdk/                # Analytics SDK (published to npm)
 │   ├── ui/                 # Shared UI components (shadcn/ui)
 │   ├── utils/              # Common utilities
 │   ├── validators/         # Zod schemas for validation
+│   ├── websocket/          # WebSocket server (real-time tracking)
 │   └── worker/             # Background worker (processes events → ClickHouse)
 │
 └── scripts/
@@ -96,39 +96,43 @@ bklit/
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Browser   │────▶│  Ingestion  │────▶│    Redis    │────▶│   Worker    │
+│   Browser   │◀───▶│  WebSocket  │────▶│    Redis    │────▶│   Worker    │
 │    (SDK)    │     │   Server    │     │   Queue     │     │             │
-└─────────────┘     └─────────────┘     └─────────────┘     └──────┬──────┘
-                                                                   │
-                    ┌──────────────────────────────────────────────┼───────┐
-                    │                                              ▼       │
-                    │  ┌─────────────┐     ┌─────────────┐   ┌──────────┐ │
-                    │  │  Dashboard  │◀────│ Redis Pub/Sub│◀──│ClickHouse│ │
-                    │  │    (SSE)    │     │ (live-events)│   │          │ │
-                    │  └─────────────┘     └─────────────┘   └──────────┘ │
-                    │                                                      │
-                    └──────────────────────────────────────────────────────┘
+│             │     │ (bklit.ws)  │     │             │     │             │
+└─────────────┘     └──────┬──────┘     └─────────────┘     └──────┬──────┘
+                           │                                        │
+                           │ Instant broadcast                      ▼
+                           │                                   ┌──────────┐
+                           │                                   │ClickHouse│
+                           │                                   │          │
+                           └──────────────────────────────────▶└──────────┘
+                                        │
+                                   ┌────▼─────┐
+                                   │Dashboard │
+                                   │(WebSocket)│
+                                   └──────────┘
 ```
 
 **Data Flow:**
-1. **SDK** sends events to the **Ingestion Server**
-2. **Ingestion** validates and queues events in **Redis**
-3. **Worker** processes the queue, stores in **ClickHouse**, and publishes to **Redis Pub/Sub**
-4. **Dashboard** receives real-time updates via **Server-Sent Events (SSE)**
+1. **SDK** connects to **WebSocket Server** (wss://bklit.ws) via persistent connection
+2. **WebSocket** validates, enriches with geolocation, and queues events in **Redis**
+3. **WebSocket** broadcasts events instantly to connected **Dashboards**
+4. **Worker** processes the queue in batches and stores in **ClickHouse**
+5. **Sessions end instantly** when browser tab closes (WebSocket disconnect detection)
 
 ## **Tech Stack**
 
 - **Frontend:** Next.js 16 (App Router), React 19, Tailwind CSS v4
 - **Database:** PostgreSQL (Prisma ORM) + ClickHouse (analytics events)
-- **Queue & Pub/Sub:** Redis (Upstash in production)
-- **Real-time:** Server-Sent Events (SSE) via Next.js API routes
+- **Queue:** Redis (Upstash in production)
+- **Real-time:** WebSockets (wss://bklit.ws) for instant session tracking
 - **Auth:** Better Auth with GitHub/Google OAuth
 - **Billing:** Polar.sh for subscriptions and payments
 - **Email:** Resend with React Email templates
 - **UI:** shadcn/ui components + Radix UI primitives
 - **API:** tRPC for end-to-end type-safe APIs
 - **Analytics Engine:** ClickHouse for high-performance event storage and queries
-- **Geolocation:** Cloudflare headers (country, city, region, timezone, coordinates)
+- **Geolocation:** ip-api.com (country, city, coordinates, ISP, timezone)
 - **Monorepo:** Turborepo + pnpm workspaces
 - **Documentation:** Fumadocs (Next.js-based docs framework)
 - **Maps:** Mapbox GL JS for globe visualization
@@ -149,13 +153,13 @@ pnpm install
 cp .env.example .env
 # Edit .env with your database credentials
 
-# 4. Start backend services (Docker + Ingestion + Worker)
+# 4. Start backend services (Docker + WebSocket + Worker)
 pnpm dev:services
 
 # 5. Start frontend apps (Dashboard, Playground, Website)
 pnpm dev
 
-# 6. Stop all services
+# 6. Stop all services and cleanup
 pnpm dev:stop
 ```
 
@@ -163,6 +167,13 @@ pnpm dev:stop
 - Dashboard: http://localhost:3000
 - Playground: http://localhost:5173
 - Website: http://localhost:4000
+- WebSocket: ws://localhost:8080
+
+**Development Services (started by `pnpm dev:services`):**
+- Docker (Redis + ClickHouse)
+- WebSocket server (port 8080)
+- Background worker (queue processor)
+- Prisma Studio (optional database GUI)
 
 ## **What's Optional?**
 
@@ -181,6 +192,25 @@ pnpm dev:stop
 - Background jobs (Trigger.dev) - for scheduled tasks
 
 Enable these by adding their API keys to `.env`.
+
+## **Real-Time Analytics**
+
+Bklit uses **WebSockets** for instant real-time analytics:
+
+- **Sub-second latency:** Visitors appear on the map within 1 second
+- **Instant session ending:** Sessions end immediately when tabs close (<1 second)
+- **Live page tracking:** See which pages visitors are viewing in real-time
+- **WebSocket architecture:** Industry-standard approach for instant real-time analytics
+
+**Key Features:**
+- Persistent WebSocket connections from SDK and Dashboard
+- Automatic reconnection with exponential backoff
+- Message queuing when connection is not ready
+- No polling required - pure event-driven updates
+
+**Infrastructure:**
+- Production: `wss://bklit.ws` (Hetzner VPS with SSL/TLS)
+- Development: `ws://localhost:8080`
 
 ## **Documentation**
 

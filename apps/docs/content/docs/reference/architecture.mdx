@@ -27,11 +27,12 @@ Bklit is built as a modern, scalable analytics platform with the following archi
 
 ### Data Flow
 
-1. **SDK** tracks events in user's browser
-2. **API Endpoints** receive tracking data
-3. **Validation** checks tokens and limits
-4. **Analytics Service** stores in ClickHouse
-5. **Dashboard** queries and displays data
+1. **SDK** connects to WebSocket server (wss://bklit.ws)
+2. **WebSocket Server** validates tokens and enriches with geolocation
+3. **Events queued** in Redis for reliable processing
+4. **Worker** processes queue in batches → ClickHouse
+5. **WebSocket broadcasts** events instantly to connected dashboards
+6. **Dashboard** receives real-time updates (<1 second latency)
 
 ## Technology Stack
 
@@ -88,16 +89,17 @@ Stores:
 4. Protected routes check session
 5. tRPC procedures verify authentication
 
-## Analytics Flow (Queue-Based Architecture)
+## Analytics Flow (WebSocket Architecture)
 
-Bklit uses a queue-based architecture inspired by [Visitors.now](https://visitors.now/blog/tech-stack) for high performance and zero data loss:
+Bklit uses WebSocket architecture for instant real-time analytics:
 
-### Event Ingestion
-1. SDK sends event to ingestion service
-2. Token validation (with Redis caching)
-3. IP anonymization and geolocation
-4. Event pushed to Redis queue
-5. Response returned immediately (~1-3ms)
+### Event Tracking
+1. SDK establishes WebSocket connection to wss://bklit.ws
+2. Events sent over persistent connection (pageviews, custom events)
+3. Token validation with Redis caching
+4. IP geolocation via ip-api.com
+5. Events queued in Redis for processing
+6. Instant broadcast to connected dashboards
 
 ### Background Processing
 1. Worker polls Redis queue every 1 second
