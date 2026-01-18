@@ -30,6 +30,7 @@ interface UserData {
   os: string;
   pageJourney?: PageJourneyItem[];
   triggeredEvents?: EventItem[];
+  gradient?: { from: string; to: string };
 }
 
 interface LiveCardContextValue {
@@ -60,6 +61,10 @@ export function LiveCardProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const goBack = useCallback(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'card-context.tsx:goBack',message:'goBack called',data:{currentView:view,historyLength:viewHistory.length,selectedUserId:selectedUser?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2A,H2B'})}).catch(()=>{});
+    // #endregion
+
     setViewHistory((prev) => {
       if (prev.length > 1) {
         const newHistory = prev.slice(0, -1);
@@ -70,11 +75,15 @@ export function LiveCardProvider({ children }: { children: ReactNode }) {
           setSelectedUser(null);
         }
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'card-context.tsx:goBack:AFTER',message:'goBack completed',data:{previousView,newHistoryLength:newHistory.length,clearedUser:previousView!=='user'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2A'})}).catch(()=>{});
+        // #endregion
+        
         return newHistory;
       }
       return prev;
     });
-  }, []);
+  }, [view, viewHistory.length, selectedUser?.id]);
 
   const canGoBack = viewHistory.length > 1;
 

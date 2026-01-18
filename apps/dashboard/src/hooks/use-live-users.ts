@@ -39,8 +39,8 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
     enabled,
   });
 
-  // Real-time enhancement - invalidate cache when pageview received
-  const handlePageview = useCallback(() => {
+  // Real-time enhancement - invalidate cache when events occur
+  const handleInvalidate = useCallback(() => {
     // Immediately invalidate to trigger refetch
     queryClient.invalidateQueries({
       queryKey: [["session", "liveUsers"]],
@@ -48,8 +48,10 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
   }, [queryClient]);
 
   // Subscribe to SSE events (NEW architecture)
+  // Listen to both pageview AND session_end to update count
   const { isConnected } = useLiveEventStream(projectId, {
-    onPageview: handlePageview,
+    onPageview: handleInvalidate,
+    onSessionEnd: handleInvalidate, // Decrement count when session ends
   });
 
   return {

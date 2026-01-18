@@ -21,6 +21,8 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "clean:next": "rm -rf apps/dashboard/.next apps/docs/.next",
     "clean:all": "pnpm clean && pnpm clean:next && git clean -xdf .turbo",
+    "clean:services": "bash scripts/clean-live-sessions.sh",
+    "rebuild:sdk": "bash scripts/rebuild-sdk.sh",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "format": "ultracite fix",

@@ -48,6 +48,10 @@ export function LiveCardWithData({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'live-card-with-data.tsx:INIT',message:'LiveCardWithData mounted',data:{projectId,organizationId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
+
   // Get live users count with real-time updates
   const { liveUsers } = useLiveUsers({
     projectId,
@@ -107,6 +111,10 @@ export function LiveCardWithData({
   useLiveEventStream(projectId, {
     onPageview: handlePageview,
   });
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'live-card-with-data.tsx:DATA',message:'Data state',data:{liveUsers,topCountriesCount:topCountries.length,topPagesCount:topPages.length,topReferrersCount:topReferrers.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
 
   // Transform data to LiveCardData format
   const cardData: LiveCardData = useMemo(() => {

@@ -1,5 +1,13 @@
 import "@bklit/ui/globals.css";
-import { initBklit } from "@bklit/sdk";
+import { initBklit, endSession } from "@bklit/sdk";
+
+// #region agent log - DEBUG: Track beforeunload
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", () => {
+    fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'playground/main.tsx:beforeunload',message:'Browser beforeunload fired',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A'})}).catch(()=>{});
+  });
+}
+// #endregion
 import { Button } from "@bklit/ui/components/button";
 import { Toaster } from "@bklit/ui/components/sonner";
 import { BklitLogo } from "@bklit/ui/icons/bklit";
@@ -78,16 +86,28 @@ ReactDOM.createRoot(rootElement).render(
               </a>
             </span>
           </div>
-          <Button asChild size="sm" variant="mono">
-            <a
-              href="https://app.bklit.com/?utm_source=playground&utm_medium=referral&utm_campaign=playground"
-              rel="noopener noreferrer"
-              target="_blank"
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                endSession();
+                console.log("🔴 Manual session end triggered");
+              }}
             >
-              <BklitLogo className="text-black" size={16} />
-              Open in Bklit
-            </a>
-          </Button>
+              End Session
+            </Button>
+            <Button asChild size="sm" variant="mono">
+              <a
+                href="https://app.bklit.com/?utm_source=playground&utm_medium=referral&utm_campaign=playground"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <BklitLogo className="text-black" size={16} theme="light" />
+                Open in Bklit
+              </a>
+            </Button>
+          </div>
         </div>
         <div className="absolute -bottom-4 left-0 z-10 flex size-4 bg-blue-700 after:absolute after:bottom-0 after:left-0 after:h-4 after:w-full after:rounded-tl-xl after:bg-background after:content-['']" />
         <div className="absolute right-0 -bottom-4 z-10 flex size-4 bg-blue-700 after:absolute after:right-0 after:bottom-0 after:h-4 after:w-full after:rounded-tr-xl after:bg-background after:content-['']" />

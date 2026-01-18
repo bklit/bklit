@@ -5,11 +5,13 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLiveMap } from "@/contexts/live-map-context";
 import { useLiveSessions } from "@/hooks/use-live-sessions";
+import { useMapEvents } from "@/hooks/use-map-events";
 import {
   findCountryCoordinates,
   getCountryCoordinates,
 } from "@/lib/maps/country-coordinates";
 import { parseRGB } from "@/lib/maps/marker-colors";
+import { MapDebugConsole } from "./map-debug-console";
 
 interface LiveMapProps {
   projectId: string;
@@ -20,7 +22,7 @@ interface LiveMapProps {
 function createGradientCircle(
   fromColor: string,
   toColor: string,
-  size = 80
+  size = 100
 ): mapboxgl.StyleImageInterface {
   const from = parseRGB(fromColor);
   const to = parseRGB(toColor);
@@ -63,10 +65,6 @@ function createGradientCircle(
   context.fillStyle = gradient;
   context.fill();
 
-  context.strokeStyle = "rgba(255, 255, 255, 0.95)";
-  context.lineWidth = 2;
-  context.stroke();
-
   const imageData = context.getImageData(0, 0, size, size);
 
   return {
@@ -85,7 +83,7 @@ function createGradientCircle(
 // Create a country group marker with count badge
 function createCountryGroupMarker(
   count: number,
-  size = 100
+  size = 120
 ): mapboxgl.StyleImageInterface {
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -126,11 +124,6 @@ function createCountryGroupMarker(
   context.fillStyle = gradient;
   context.fill();
 
-  // White border
-  context.strokeStyle = "rgba(255, 255, 255, 0.95)";
-  context.lineWidth = 3;
-  context.stroke();
-
   // Count text
   context.fillStyle = "white";
   context.font = `bold ${count > 99 ? 20 : 24}px system-ui, sans-serif`;
@@ -160,19 +153,58 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   const spinEnabled = useRef(true);
   const spinGlobeRef = useRef<(() => void) | null>(null);
   const onMarkerClickRef = useRef<((sessionId: string) => void) | null>(null);
+  const logEventRef = useRef<typeof logEvent | null>(null);
   const addedImagesRef = useRef<Set<string>>(new Set());
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [expandedCountries, setExpandedCountries] = useState<Set<string>>(
+    new Set()
+  );
 
   const { registerCenterFunction, onMarkerClick } = useLiveMap();
-  const { individualSessions, countryGroups, isConnected } = useLiveSessions({
-    projectId,
-    organizationId,
-  });
+  const { individualSessions, countryGroups, isConnected, sessions } =
+    useLiveSessions({
+      projectId,
+      organizationId,
+      expandedCountries,
+    });
+  const { logEvent } = useMapEvents();
 
-  // Keep ref updated with latest onMarkerClick
+  // Clean up expanded countries when they have no more sessions
+  useEffect(() => {
+    if (expandedCountries.size === 0) return;
+
+    // Get all country codes that have sessions
+    const activeCountryCodes = new Set<string>();
+    for (const session of sessions.values()) {
+      if (session.countryCode) {
+        activeCountryCodes.add(session.countryCode);
+      }
+    }
+
+    // Remove expanded countries that have no sessions
+    const toRemove: string[] = [];
+    for (const code of expandedCountries) {
+      if (!activeCountryCodes.has(code)) {
+        toRemove.push(code);
+      }
+    }
+
+    if (toRemove.length > 0) {
+      setExpandedCountries((prev) => {
+        const next = new Set(prev);
+        for (const code of toRemove) {
+          next.delete(code);
+        }
+        return next;
+      });
+    }
+  }, [sessions, expandedCountries]);
+
+  // Keep refs updated with latest callbacks
   useEffect(() => {
     onMarkerClickRef.current = onMarkerClick;
-  }, [onMarkerClick]);
+    logEventRef.current = logEvent;
+  }, [onMarkerClick, logEvent]);
 
   // Initialize map
   useEffect(() => {
@@ -256,27 +288,40 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         data: { type: "FeatureCollection", features: [] },
       });
 
-      // Layer for individual session markers
-      map.current.addLayer({
-        id: "individual-sessions-layer",
-        type: "symbol",
-        source: "individual-sessions",
-        layout: {
-          "icon-image": ["get", "iconImage"],
-          "icon-size": 0.5,
-          "icon-allow-overlap": true,
-        },
-      });
-
-      // Layer for country group markers
+      // Layer for country group markers (added FIRST so individual markers render on top)
       map.current.addLayer({
         id: "country-groups-layer",
         type: "symbol",
         source: "country-groups",
         layout: {
           "icon-image": ["get", "iconImage"],
-          "icon-size": 0.6,
+          "icon-size": 0.7,
           "icon-allow-overlap": true,
+        },
+      });
+
+      // Layer for individual session markers (added AFTER so they appear on top)
+      map.current.addLayer({
+        id: "individual-sessions-layer",
+        type: "symbol",
+        source: "individual-sessions",
+        layout: {
+          "icon-image": ["get", "iconImage"],
+          "icon-size": 0.65, // Slightly larger for better hit detection
+          "icon-allow-overlap": true,
+        },
+        paint: {
+          // Animate opacity based on isEnding property
+          "icon-opacity": [
+            "case",
+            ["==", ["get", "isEnding"], true],
+            0.3, // Fading out
+            1, // Normal
+          ],
+          "icon-opacity-transition": {
+            duration: 800,
+            delay: 0,
+          },
         },
       });
 
@@ -288,24 +333,68 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         }
         const sessionId = feature.properties.sessionId as string;
         if (sessionId && onMarkerClickRef.current) {
+          logEventRef.current?.(
+            "marker_clicked",
+            "Individual session marker clicked",
+            {
+              sessionId,
+              country: feature.properties.country,
+              city: feature.properties.city,
+            }
+          );
           onMarkerClickRef.current(sessionId);
         }
       });
 
-      // Click handler for country group markers (future: drill down)
+      // Click handler for country group markers - expand to show individual markers
       map.current.on("click", "country-groups-layer", (e) => {
         const feature = e.features?.[0];
         if (!feature?.properties) {
           return;
         }
         const countryCode = feature.properties.countryCode as string;
-        // For now, just center on the country
+        const countryName = feature.properties.countryName as string;
+        const sessionCount = feature.properties.sessionCount as number;
+
         if (countryCode && map.current) {
+          logEventRef.current?.(
+            "country_clicked",
+            `Country group clicked: ${countryName}`,
+            {
+              countryCode,
+              countryName,
+              sessionCount,
+            }
+          );
+
+          // Mark country as expanded to show individual markers
+          setExpandedCountries((prev) => new Set(prev).add(countryCode));
+
+          logEventRef.current?.(
+            "country_expanded",
+            `Expanded ${countryName} to show ${sessionCount} individual markers`,
+            {
+              countryCode,
+              sessionCount,
+            }
+          );
+
+          // Zoom to the country
           const coords = findCountryCoordinates(countryCode);
           if (coords) {
+            logEventRef.current?.(
+              "zoom_to_country",
+              `Zooming to ${countryName}`,
+              {
+                countryCode,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+              }
+            );
+
             map.current.easeTo({
               center: [coords.longitude, coords.latitude],
-              zoom: 4,
+              zoom: 5,
               duration: 1500,
             });
           }
@@ -399,6 +488,32 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
       return;
     }
 
+    // Track current session IDs
+    const currentSessionIds = new Set(
+      individualSessions.map((s) => `session-${s.id}`)
+    );
+
+    // Remove stale marker images (sessions that have ended)
+    for (const existingId of addedImagesRef.current) {
+      if (
+        existingId.startsWith("session-") &&
+        !currentSessionIds.has(existingId)
+      ) {
+        if (mapInstance.hasImage(existingId)) {
+          mapInstance.removeImage(existingId);
+          logEvent(
+            "marker_image_removed",
+            "Cleaned up marker image for ended session",
+            {
+              iconId: existingId,
+              sessionId: existingId.replace("session-", ""),
+            }
+          );
+        }
+        addedImagesRef.current.delete(existingId);
+      }
+    }
+
     // Create/update marker images for each session
     for (const session of individualSessions) {
       const iconId = `session-${session.id}`;
@@ -413,6 +528,12 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         if (!mapInstance.hasImage(iconId)) {
           mapInstance.addImage(iconId, markerImage, { pixelRatio: 2 });
           addedImagesRef.current.add(iconId);
+          logEvent("marker_image_added", "Created marker for session", {
+            sessionId: session.id,
+            country: session.country,
+            city: session.city,
+            hasExactCoordinates: session.hasExactCoordinates,
+          });
         }
       }
     }
@@ -432,12 +553,13 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
           country: session.country,
           countryCode: session.countryCode,
           iconImage: `session-${session.id}`,
+          isEnding: session.isEnding ?? false, // For fade-out animation
         },
       })),
     };
 
     source.setData(geojson);
-  }, [individualSessions, mapLoaded]);
+  }, [individualSessions, mapLoaded, logEvent]);
 
   // Update country group markers
   useEffect(() => {
@@ -454,6 +576,36 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
       | undefined;
     if (!source) {
       return;
+    }
+
+    // Track current country codes
+    const currentCountryCodes = new Set(
+      countryGroups.map((g) => g.countryCode)
+    );
+
+    // Remove stale country marker images (countries with no more grouped sessions)
+    for (const existingId of addedImagesRef.current) {
+      if (existingId.startsWith("country-")) {
+        // Extract country code from iconId (format: country-XX-N)
+        const parts = existingId.split("-");
+        if (parts.length >= 2 && parts[1]) {
+          const countryCode = parts[1];
+          if (!currentCountryCodes.has(countryCode)) {
+            if (mapInstance.hasImage(existingId)) {
+              mapInstance.removeImage(existingId);
+              logEvent(
+                "marker_image_removed",
+                "Cleaned up country group marker",
+                {
+                  iconId: existingId,
+                  countryCode,
+                }
+              );
+            }
+            addedImagesRef.current.delete(existingId);
+          }
+        }
+      }
     }
 
     // Create/update marker images for each country group
@@ -475,6 +627,11 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
         const markerImage = createCountryGroupMarker(group.sessions.length);
         mapInstance.addImage(iconId, markerImage, { pixelRatio: 2 });
         addedImagesRef.current.add(iconId);
+        logEvent("marker_image_added", "Created country group marker", {
+          countryCode: group.countryCode,
+          countryName: group.countryName,
+          sessionCount: group.sessions.length,
+        });
       }
     }
 
@@ -497,7 +654,7 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
     };
 
     source.setData(geojson);
-  }, [countryGroups, mapLoaded]);
+  }, [countryGroups, mapLoaded, logEvent]);
 
   // Center on country function
   const centerOnCountry = useCallback(
@@ -553,20 +710,21 @@ export function LiveMap({ projectId, organizationId }: LiveMapProps) {
   }, [registerCenterFunction, centerOnCountry]);
 
   return (
-    <div
-      className="absolute! inset-0! h-full! w-full! overflow-hidden rounded-lg"
-      ref={mapContainer}
-    >
+    <div className="absolute! inset-0! h-full! w-full! overflow-hidden rounded-lg">
+      <div className="absolute! inset-0! h-full! w-full!" ref={mapContainer} />
       {mapLoaded && (
-        <div className="pointer-events-none absolute inset-0 h-full w-full bg-bklit-700/50 mix-blend-color" />
+        <div className="pointer-events-none! absolute inset-0 h-full w-full bg-bklit-700/50 mix-blend-color" />
       )}
       {/* Real-time connection indicator */}
-      <div className="absolute top-4 right-4 z-10">
+      <div className="pointer-events-none absolute top-4 right-4 z-10">
         <div
           className={`size-2 rounded-full ${isConnected ? "bg-green-500" : "bg-yellow-500"}`}
           title={isConnected ? "Real-time connected" : "Polling mode"}
         />
       </div>
+
+      {/* Debug console */}
+      <MapDebugConsole />
     </div>
   );
 }

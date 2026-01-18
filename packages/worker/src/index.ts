@@ -6,6 +6,7 @@ import {
   publishDebugLog,
   publishLiveEvent,
   trackSessionEnd,
+  getExpiredSessions,
 } from "@bklit/redis";
 import { config } from "dotenv";
 import { verifyEventInClickHouse } from "./verify";
@@ -40,7 +41,7 @@ async function processBatch() {
 
   try {
     const queueDepth = await getQueueDepth();
-
+    
     if (queueDepth === 0) {
       isProcessing = false;
       return;
@@ -74,8 +75,8 @@ async function processBatch() {
                 trackingId: event.payload.trackingId,
                 eventType: event.payload.eventType,
               }
-            : { url: event.payload.url };
-
+          : { url: event.payload.url };
+        
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "worker",
@@ -92,7 +93,7 @@ async function processBatch() {
 
         // Insert into ClickHouse (using existing AnalyticsService)
         const clickhouseStartTime = Date.now();
-
+        
         try {
           if (event.type === "pageview") {
             await analytics.createPageView({
@@ -100,7 +101,7 @@ async function processBatch() {
               ...event.payload,
               timestamp: new Date(event.payload.timestamp as string),
             } as any);
-
+            
             // Handle session creation/update for pageviews
             if (sessionId) {
               if (isNewSession) {
@@ -109,7 +110,7 @@ async function processBatch() {
                   sessionId,
                   event.projectId
                 );
-
+                
                 if (!exists) {
                   // Create new session
                   const sessionDbId = `sess_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -129,7 +130,7 @@ async function processBatch() {
                     city: event.payload.city as string | null,
                     projectId: event.projectId,
                   } as any);
-
+                  
                   seenSessions.add(sessionId);
                 }
               } else {
@@ -143,9 +144,9 @@ async function processBatch() {
             // Look up EventDefinition UUID from Postgres by trackingId (BACKWARDS COMPATIBLE!)
             const trackingId = event.payload.trackingId as string;
             const cacheKey = `${trackingId}:${event.projectId}`;
-
+            
             let eventDefinitionId = eventDefinitionCache.get(cacheKey);
-
+            
             if (!eventDefinitionId) {
               // Query Postgres for EventDefinition
               const eventDef = await prisma.eventDefinition.findUnique({
@@ -157,7 +158,7 @@ async function processBatch() {
                 },
                 select: { id: true },
               });
-
+              
               if (eventDef) {
                 eventDefinitionId = eventDef.id;
                 eventDefinitionCache.set(cacheKey, eventDefinitionId);
@@ -175,13 +176,13 @@ async function processBatch() {
                 continue; // Skip to next event
               }
             }
-
+            
             // Store eventType in metadata so we can differentiate click/view/hover
             const enrichedMetadata = {
               ...((event.payload.metadata as Record<string, unknown>) || {}),
               eventType: event.payload.eventType,
             };
-
+            
             await analytics.createTrackedEvent({
               id: event.id,
               timestamp: new Date(event.payload.timestamp as string),
@@ -265,8 +266,8 @@ async function processBatch() {
                 eventType: event.payload.eventType,
                 table: tableName,
               }
-            : { url: event.payload.url, table: tableName };
-
+          : { url: event.payload.url, table: tableName };
+        
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "clickhouse",
@@ -292,8 +293,8 @@ async function processBatch() {
                 trackingId: event.payload.trackingId,
                 eventType: event.payload.eventType,
               }
-            : { url: event.payload.url };
-
+          : { url: event.payload.url };
+        
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "pubsub",
@@ -309,7 +310,7 @@ async function processBatch() {
           event.id,
           event.projectId
         );
-
+        
         if (!verification.match) {
           await publishDebugLog({
             timestamp: new Date().toISOString(),
@@ -328,7 +329,7 @@ async function processBatch() {
         totalProcessed++;
       } catch (error) {
         totalErrors++;
-
+        
         await publishDebugLog({
           timestamp: new Date().toISOString(),
           stage: "worker",
@@ -386,6 +387,90 @@ async function processBatch() {
 
 // Start polling loop
 setInterval(processBatch, POLL_INTERVAL_MS);
+
+// ============================================
+// SESSION EXPIRY CLEANUP JOB
+// Checks for expired sessions every 30 seconds
+// and publishes session_end events
+// ============================================
+
+const SESSION_CLEANUP_INTERVAL_MS = 30_000; // 30 seconds
+
+async function cleanupExpiredSessions() {
+  try {
+    // Get all projects with active sessions
+    // We'll scan for all live:sessions:* keys in Redis
+    const baseClient = require("@bklit/redis").getRedisClient();
+    if (!baseClient) {
+      console.log("🔍 Cleanup: No Redis client available");
+      return;
+    }
+
+    const sessionKeys = await baseClient.keys("live:sessions:*");
+    console.log(`🔍 Cleanup: Found ${sessionKeys.length} project(s) with sessions:`, sessionKeys);
+
+    for (const key of sessionKeys) {
+      // Extract projectId from key (format: live:sessions:PROJECT_ID)
+      const projectId = key.replace("live:sessions:", "");
+      
+      // Get expired sessions for this project
+      const expiredSessionIds = await getExpiredSessions(projectId);
+      
+      console.log(`🔍 Cleanup: Project ${projectId} has ${expiredSessionIds.length} expired session(s)`);
+
+      if (expiredSessionIds.length > 0) {
+        console.log(`🧹 Found ${expiredSessionIds.length} expired sessions for project ${projectId}`);
+
+        // Process each expired session
+        for (const sessionId of expiredSessionIds) {
+          // End the session in ClickHouse
+          const analytics = new AnalyticsService();
+          await analytics.endTrackedSession(sessionId);
+
+          // Remove from Redis
+          await trackSessionEnd(projectId, sessionId);
+
+          // Publish session_end event to live-events
+          await publishLiveEvent({
+            projectId,
+            type: "session_end",
+            timestamp: new Date().toISOString(),
+            data: {
+              sessionId,
+              reason: "timeout",
+            },
+          });
+
+          await publishDebugLog({
+            timestamp: new Date().toISOString(),
+            stage: "worker",
+            level: "info",
+            message: "Session expired due to inactivity",
+            data: { sessionId, projectId },
+            projectId,
+          });
+
+          console.log(`✅ Ended expired session: ${sessionId}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Session cleanup error:", error);
+    await publishDebugLog({
+      timestamp: new Date().toISOString(),
+      stage: "worker",
+      level: "error",
+      message: "Session cleanup error",
+      data: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+  }
+}
+
+// Start session cleanup loop
+setInterval(cleanupExpiredSessions, SESSION_CLEANUP_INTERVAL_MS);
+console.log("🧹 Session cleanup job started (runs every 30 seconds)");
 
 console.log(
   `🔄 Background worker started (polling every ${POLL_INTERVAL_MS}ms, batch size: ${BATCH_SIZE})`

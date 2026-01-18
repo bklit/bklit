@@ -1,12 +1,16 @@
 ---
 description: Real-time analytics architecture and patterns
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
 
 ## Real-Time Architecture
 
-Bklit uses **Server-Sent Events (SSE)** for real-time analytics. No WebSocket server required.
+Bklit uses **Server-Sent Events (SSE)** for real-time analytics. No WebSocket server required. Our [/terminal](<mdc:apps/dashboard/src/app/(dashboard)/[organizationId]/[projectId]/terminal/>) directory has a page and terminal-client.tsx that logs our ingestion and storage flow - use this as the source of truth.
+
+## Animated cards
+
+Use the motion mcp - we use motion/react for animated components that display real-time data.
 
 ### Data Flow
 
@@ -23,12 +27,12 @@ SDK (browser) → Ingestion Server → Redis Queue → Worker → ClickHouse
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| [/api/live-stream](mdc:apps/dashboard/src/app/api/live-stream/route.ts) | SSE endpoint subscribing to Redis |
-| [use-live-event-stream.ts](mdc:apps/dashboard/src/hooks/use-live-event-stream.ts) | Singleton EventSource hook |
-| [use-live-sessions.ts](mdc:apps/dashboard/src/hooks/use-live-sessions.ts) | Real-time session state management |
-| [packages/redis/src/types.ts](mdc:packages/redis/src/types.ts) | LiveEvent type definitions |
+| File                                                                              | Purpose                            |
+| --------------------------------------------------------------------------------- | ---------------------------------- |
+| [/api/live-stream](mdc:apps/dashboard/src/app/api/live-stream/route.ts)           | SSE endpoint subscribing to Redis  |
+| [use-live-event-stream.ts](mdc:apps/dashboard/src/hooks/use-live-event-stream.ts) | Singleton EventSource hook         |
+| [use-live-sessions.ts](mdc:apps/dashboard/src/hooks/use-live-sessions.ts)         | Real-time session state management |
+| [packages/redis/src/types.ts](mdc:packages/redis/src/types.ts)                    | LiveEvent type definitions         |
 
 ### Using Real-Time Data
 
@@ -94,6 +98,7 @@ The `useLiveEventStream` hook uses a **singleton pattern** - only ONE EventSourc
 ### Debugging Real-Time
 
 Use the terminal route to see live events flowing through the pipeline:
+
 ```
 /[organizationId]/[projectId]/terminal
 ```
@@ -102,8 +107,8 @@ This shows: ingestion → queue → worker → clickhouse → pubsub stages.
 
 ### Redis Channels
 
-| Channel | Purpose |
-|---------|---------|
-| `live-events` | Real-time analytics events for dashboard |
-| `debug-logs` | Pipeline debugging/monitoring |
-| `analytics:queue` | Event processing queue |
+| Channel           | Purpose                                  |
+| ----------------- | ---------------------------------------- |
+| `live-events`     | Real-time analytics events for dashboard |
+| `debug-logs`      | Pipeline debugging/monitoring            |
+| `analytics:queue` | Event processing queue                   |

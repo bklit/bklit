@@ -41,6 +41,10 @@ const connections = new Map<string, ProjectConnection>();
 function getOrCreateConnection(projectId: string): ProjectConnection {
   let connection = connections.get(projectId);
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-live-event-stream.ts:getOrCreate',message:'Getting/creating SSE connection',data:{projectId,exists:!!connection},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
+
   if (!connection) {
     const eventSource = new EventSource(
       `/api/live-stream?projectId=${projectId}`
@@ -57,6 +61,9 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
     const conn = connection; // Capture for closures
 
     eventSource.onopen = () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-live-event-stream.ts:onopen',message:'SSE connected',data:{projectId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       conn.isConnected = true;
       conn.connectionListeners.forEach((cb) => cb(true));
     };
@@ -141,6 +148,22 @@ export function useLiveEventStream(
 
     // Event listener
     const handleEvent = (event: LiveEvent) => {
+      // #region agent log
+      if (event.type === "session_end") {
+        fetch("http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: "use-live-event-stream.ts:handleEvent",
+            message: "SSE session_end event received",
+            data: { eventType: event.type, sessionId: event.data?.sessionId },
+            timestamp: Date.now(),
+            sessionId: "debug-session",
+            hypothesisId: "H",
+          }),
+        }).catch(() => {});
+      }
+      // #endregion
       switch (event.type) {
         case "pageview":
           optionsRef.current.onPageview?.(event.data);

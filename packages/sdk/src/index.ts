@@ -288,9 +288,38 @@ export function initBklit(options: BklitOptions): void {
   trackPageView();
 
   // Cleanup on page unload - use sendBeacon for reliability
-  const handlePageUnload = () => {
+  let sessionEndSent = false; // Prevent duplicate sends if both events fire
+
+  const handlePageUnload = (event?: Event) => {
+    const eventType = event?.type || "unknown";
+
+    // #region agent log
+    fetch("http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        location: "sdk/index.ts:handlePageUnload:ENTER",
+        message: `handlePageUnload called via ${eventType}`,
+        data: {
+          eventType,
+          hasSessionId: !!currentSessionId,
+          sessionId: currentSessionId,
+          projectId,
+          alreadySent: sessionEndSent,
+        },
+        timestamp: Date.now(),
+        sessionId: "debug-session",
+        hypothesisId: "H1D_PAGEHIDE",
+      }),
+    }).catch(() => {});
+    // #endregion
+
+    // Prevent duplicate sends
+    if (sessionEndSent) return;
+
     // End the session when user leaves
     if (currentSessionId) {
+      sessionEndSent = true;
       // Remove /track suffix if present to get base URL for session-end
       const baseUrl = finalConfig.apiHost.replace(/\/track$/, "");
       const endSessionUrl = `${baseUrl}/session-end`;
@@ -303,30 +332,94 @@ export function initBklit(options: BklitOptions): void {
         environment,
       });
 
-      const sent = navigator.sendBeacon(endSessionUrl, payload);
+      // Write to localStorage for debugging (will persist after tab closes)
+      const beaconSent = false;
+      try {
+        const debugInfo = {
+          sessionId: currentSessionId,
+          timestamp: Date.now(),
+          eventType,
+          endSessionUrl,
+          step: "before_beacon",
+        };
+        localStorage.setItem("bklit_last_unload", JSON.stringify(debugInfo));
+      } catch {
+        // Ignore localStorage errors
+      }
+
+      // Use fetch with keepalive instead of sendBeacon for better reliability
+      // Based on OpenPanel SDK: https://github.com/Openpanel-dev/openpanel
+      fetch(endSessionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: payload,
+        keepalive: true, // Ensures request completes even if page unloads
+      })
+        .then((response) => {
+          // Update localStorage with success
+          try {
+            const debugInfo = {
+              sessionId: currentSessionId,
+              timestamp: Date.now(),
+              eventType,
+              endSessionUrl,
+              success: response.ok,
+              status: response.status,
+            };
+            localStorage.setItem(
+              "bklit_last_unload",
+              JSON.stringify(debugInfo)
+            );
+          } catch {
+            // Ignore localStorage errors
+          }
+        })
+        .catch((error) => {
+          // Update localStorage with error
+          try {
+            const debugInfo = {
+              sessionId: currentSessionId,
+              timestamp: Date.now(),
+              eventType,
+              endSessionUrl,
+              success: false,
+              error: error.message,
+            };
+            localStorage.setItem(
+              "bklit_last_unload",
+              JSON.stringify(debugInfo)
+            );
+          } catch {
+            // Ignore localStorage errors
+          }
+        });
 
       if (debug) {
-        console.log("🔄 Bklit SDK: Session end beacon sent", {
-          sessionId: currentSessionId,
-          projectId,
-          sent,
-        });
+        console.log(
+          "🔄 Bklit SDK: Session end request sent (fetch + keepalive)",
+          {
+            sessionId: currentSessionId,
+            projectId,
+            url: endSessionUrl,
+          }
+        );
       }
     }
   };
 
-  window.removeEventListener("beforeunload", handlePageUnload); // Remove first to avoid duplicates
+  // Use multiple events for better reliability across browsers/modes
+  // pagehide is more reliable in incognito/mobile Safari
+  window.removeEventListener("beforeunload", handlePageUnload);
+  window.removeEventListener("pagehide", handlePageUnload);
   window.addEventListener("beforeunload", handlePageUnload);
+  window.addEventListener("pagehide", handlePageUnload);
 
-  // Also handle visibility change for mobile/tab switching
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === "hidden") {
-      handlePageUnload();
-    }
-  };
-
-  document.removeEventListener("visibilitychange", handleVisibilityChange);
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+  // NOTE: We intentionally do NOT end sessions on visibility change (tab switch)
+  // This was causing sessions to end when users simply switch tabs, which is
+  // not the desired behavior for live analytics. Sessions should only end on
+  // actual page unload (beforeunload event) or explicit navigation away.
 
   // SPA navigation tracking
   let currentUrl = window.location.href;
@@ -652,6 +745,70 @@ export function trackEvent(
     .catch((error) => {
       console.error("❌ Bklit SDK: Error tracking event:", error);
     });
+}
+
+// Manually end the current session (useful for testing)
+export function endSession(): void {
+  if (typeof window === "undefined") {
+    console.warn(
+      "❌ Bklit SDK: endSession can only be called in browser environment"
+    );
+    return;
+  }
+
+  const projectId = window.bklitprojectId;
+  const apiHost = window.bklitApiHost;
+  const debug = window.bklitDebug;
+
+  if (!currentSessionId) {
+    console.warn("❌ Bklit SDK: No active session to end");
+    return;
+  }
+
+  if (!projectId) {
+    console.warn(
+      "❌ Bklit SDK: No projectId configured. Call initBklit() first."
+    );
+    return;
+  }
+
+  const sessionId = currentSessionId;
+  const baseUrl = apiHost
+    ? apiHost.replace(/\/track$/, "")
+    : "http://localhost:3001";
+  const endSessionUrl = `${baseUrl}/session-end`;
+
+  const payload = JSON.stringify({
+    sessionId,
+    projectId,
+    environment: window.bklitEnvironment,
+  });
+
+  // Use fetch with keepalive instead of sendBeacon
+  fetch(endSessionUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: payload,
+    keepalive: true,
+  })
+    .then((response) => {
+      if (debug) {
+        console.log("✅ Bklit SDK: Manual session end sent successfully", {
+          sessionId,
+          projectId,
+          status: response.status,
+          url: endSessionUrl,
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("❌ Bklit SDK: Failed to send manual session end", error);
+    });
+
+  // Clear the session ID immediately (don't wait for response)
+  currentSessionId = null;
 }
 
 // Auto-track events with data attributes and IDs

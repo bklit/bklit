@@ -89,13 +89,22 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
   );
 
   const onMarkerClick = useCallback((sessionId: string) => {
-    // Set the selected session
-    setSelectedSessionId(sessionId);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/70a8a99e-af48-4f0c-b4a4-d25670350550',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'live-map-context.tsx:onMarkerClick',message:'Marker clicked',data:{sessionId,hasHandler:!!markerClickHandlerRef.current},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
 
-    // Also call any registered handler
-    if (markerClickHandlerRef.current) {
-      markerClickHandlerRef.current(sessionId);
-    }
+    // Force refresh by clearing first - this ensures re-clicking same session works
+    setSelectedSessionId(null);
+    
+    // Use microtask to ensure null state propagates before setting new value
+    queueMicrotask(() => {
+      setSelectedSessionId(sessionId);
+      
+      // Also call any registered handler
+      if (markerClickHandlerRef.current) {
+        markerClickHandlerRef.current(sessionId);
+      }
+    });
   }, []);
 
   const getSession = useCallback(

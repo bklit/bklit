@@ -1,11 +1,18 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import { getMarkerGradient } from "@/lib/maps/marker-colors";
 import { useTRPC } from "@/trpc/react";
 import { useLiveEventStream } from "./use-live-event-stream";
+import { useMapEvents, type MapEventType } from "./use-map-events";
+
+interface MapEventData {
+  type: MapEventType;
+  message: string;
+  data?: Record<string, unknown>;
+}
 
 export interface PageJourneyEntry {
   url: string;
@@ -31,6 +38,7 @@ export interface LiveSession {
   events: TrackedEventEntry[];
   startedAt: Date;
   userAgent: string | null;
+  isEnding?: boolean; // True when session is fading out
 }
 
 export interface CountryGroup {
@@ -68,6 +76,7 @@ interface TrackedEventData {
 interface UseLiveSessionsOptions {
   projectId: string;
   organizationId: string;
+  expandedCountries?: Set<string>;
 }
 
 function isValidCoordinate(lat?: number | null, lon?: number | null): boolean {
@@ -109,11 +118,48 @@ function getCoordinatesWithFallback(
 export function useLiveSessions({
   projectId,
   organizationId,
+  expandedCountries,
 }: UseLiveSessionsOptions) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { logEvent } = useMapEvents();
   const [sessions, setSessions] = useState<Map<string, LiveSession>>(new Map());
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Refs for deferred logging to avoid state updates during render
+  const pendingLogEvents = useRef<MapEventData[]>([]);
+  const logEventTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Deferred logging to avoid state updates during render
+  const scheduleLogEvent = useCallback((type: MapEventType, message: string, data?: Record<string, unknown>) => {
+    pendingLogEvents.current.push({ type, message, data });
+
+    // Debounce logging to next tick
+    if (logEventTimeout.current) {
+      clearTimeout(logEventTimeout.current);
+    }
+
+    logEventTimeout.current = setTimeout(() => {
+      const events = pendingLogEvents.current.splice(0);
+      events.forEach(event => {
+        logEvent(event.type, event.message, event.data);
+      });
+    }, 0);
+  }, [logEvent]);
+
+  // Process pending log events after render
+  useEffect(() => {
+    return () => {
+      if (logEventTimeout.current) {
+        clearTimeout(logEventTimeout.current);
+      }
+      // Process any remaining events on cleanup
+      const events = pendingLogEvents.current.splice(0);
+      events.forEach(event => {
+        logEvent(event.type, event.message, event.data);
+      });
+    };
+  }, [logEvent]);
 
   // Initial load from tRPC (only once)
   const { data: initialLocations, isLoading } = useQuery({
@@ -171,7 +217,7 @@ export function useLiveSessions({
         if (data.isNewSession || !existing) {
           // New session - add to map
           if (coordResult) {
-            newSessions.set(data.sessionId!, {
+            const newSession = {
               id: data.sessionId!,
               coordinates: coordResult.coordinates,
               hasExactCoordinates: coordResult.hasExactCoordinates,
@@ -191,6 +237,16 @@ export function useLiveSessions({
               events: [],
               startedAt: data.timestamp ? new Date(data.timestamp) : new Date(),
               userAgent: data.userAgent || null,
+            };
+            newSessions.set(data.sessionId!, newSession);
+
+            scheduleLogEvent("session_added", `New session from ${data.city || data.country || "Unknown"}`, {
+              sessionId: data.sessionId,
+              country: data.country,
+              countryCode: data.countryCode,
+              city: data.city,
+              hasExactCoordinates: coordResult.hasExactCoordinates,
+              url: data.url,
             });
           }
         } else {
@@ -227,6 +283,12 @@ export function useLiveSessions({
             country: data.country || existing.country,
             countryCode: data.countryCode || existing.countryCode,
             city: data.city || existing.city,
+          });
+
+          scheduleLogEvent("session_updated", `Session navigated to ${data.url}`, {
+            sessionId: data.sessionId,
+            newUrl: data.url,
+            pageCount: updatedJourney.length,
           });
         }
 
@@ -266,22 +328,84 @@ export function useLiveSessions({
     });
   }, []);
 
-  // Handle session end events
+  // Handle session end events - mark as ending first, then remove after animation
   const handleSessionEnd = useCallback(
     (data: SessionEndEventData) => {
-      if (!data.sessionId) return;
+      console.log("🔴 [handleSessionEnd] Called with data:", data);
+      scheduleLogEvent("session_ended", `Session end handler called`, {
+        sessionId: data.sessionId,
+        hasSessionId: !!data.sessionId,
+        reason: data.reason,
+      });
+
+      if (!data.sessionId) {
+        console.warn("⚠️ [handleSessionEnd] No sessionId in data, skipping");
+        scheduleLogEvent("error", "Session end event missing sessionId", { data });
+        return;
+      }
 
       setSessions((prev) => {
+        const existing = prev.get(data.sessionId);
+        
+        console.log(`🔍 [handleSessionEnd] Looking for session ${data.sessionId}:`, {
+          found: !!existing,
+          totalSessions: prev.size,
+          allSessionIds: Array.from(prev.keys()),
+        });
+
+        if (!existing) {
+          console.warn(`⚠️ [handleSessionEnd] Session ${data.sessionId} not found in map`);
+          scheduleLogEvent("error", `Session not found in map`, {
+            sessionId: data.sessionId,
+            availableSessions: Array.from(prev.keys()),
+          });
+          return prev;
+        }
+
+        // Log the session end event
+        scheduleLogEvent("session_ended", `Session ending from ${existing.city || existing.country || "Unknown"}`, {
+          sessionId: data.sessionId,
+          country: existing.country,
+          countryCode: existing.countryCode,
+          city: existing.city,
+          duration: Date.now() - existing.startedAt.getTime(),
+          reason: data.reason,
+        });
+
+        // Mark as ending for fade-out animation
         const newSessions = new Map(prev);
-        newSessions.delete(data.sessionId);
+        newSessions.set(data.sessionId, { ...existing, isEnding: true });
+        console.log(`✅ [handleSessionEnd] Marked session ${data.sessionId} as ending`);
         return newSessions;
       });
+
+      // After animation delay, actually remove the session
+      setTimeout(() => {
+        setSessions((prev) => {
+          const newSessions = new Map(prev);
+          const removed = newSessions.delete(data.sessionId);
+          
+          console.log(`🗑️ [handleSessionEnd] Attempted to remove session ${data.sessionId}:`, removed);
+          
+          if (removed) {
+            scheduleLogEvent("session_removed", `Session removed from map`, {
+              sessionId: data.sessionId,
+            });
+          } else {
+            scheduleLogEvent("error", `Failed to remove session from map`, {
+              sessionId: data.sessionId,
+            });
+          }
+          
+          return newSessions;
+        });
+      }, 800); // Match the icon-opacity-transition duration
 
       queryClient.invalidateQueries({
         queryKey: [["session", "liveUsers"]],
       });
     },
-    [queryClient]
+    [queryClient, scheduleLogEvent]
   );
 
   // Subscribe to SSE events (NEW architecture)
@@ -292,6 +416,8 @@ export function useLiveSessions({
   });
 
   // Separate sessions by coordinate type
+  // Only group countries with 2+ sessions - single sessions show as individual markers
+  // Expanded countries show all sessions as individual markers (after clicking a group)
   const { individualSessions, countryGroups, totalCount } = useMemo(() => {
     const individual: LiveSession[] = [];
     const byCountry = new Map<string, LiveSession[]>();
@@ -306,16 +432,27 @@ export function useLiveSessions({
     }
 
     // Convert country map to CountryGroup array
+    // Only create groups for countries with 2+ sessions that aren't expanded
     const groups: CountryGroup[] = [];
     for (const [countryCode, countrySessions] of byCountry) {
-      const firstSession = countrySessions[0];
-      if (firstSession) {
-        groups.push({
-          countryCode,
-          countryName: firstSession.country || "Unknown",
-          coordinates: firstSession.coordinates,
-          sessions: countrySessions,
-        });
+      const isExpanded = expandedCountries?.has(countryCode);
+
+      if (countrySessions.length === 1 || isExpanded) {
+        // Single session OR expanded country - show as individual markers
+        for (const session of countrySessions) {
+          individual.push(session);
+        }
+      } else {
+        // Multiple sessions (not expanded) - create country group with count
+        const firstSession = countrySessions[0];
+        if (firstSession) {
+          groups.push({
+            countryCode,
+            countryName: firstSession.country || "Unknown",
+            coordinates: firstSession.coordinates,
+            sessions: countrySessions,
+          });
+        }
       }
     }
 
@@ -324,7 +461,7 @@ export function useLiveSessions({
       countryGroups: groups,
       totalCount: sessions.size,
     };
-  }, [sessions]);
+  }, [sessions, expandedCountries]);
 
   // Get a specific session by ID
   const getSession = useCallback(

@@ -100,9 +100,15 @@ export async function getLocationFromIP(
       return null;
     }
 
-    const isDevelopment = process.env.NODE_ENV === "development";
+    // PRIMARY: Try ip-api.com first (more accurate coordinates)
+    // TODO: Upgrade to Pro ($12/mo) for HTTPS + higher rate limits
+    // Change endpoint to: https://pro.ip-api.com/json/${ip}?key=${IP_API_KEY}&fields=...
+    const ipApiLocation = await getLocationFromIPApi(ip);
+    if (ipApiLocation) {
+      return ipApiLocation;
+    }
 
-    // First, try to get geolocation from Cloudflare headers (if request is provided)
+    // FALLBACK: Use Cloudflare headers if ip-api fails
     if (request) {
       const cfLocation = getLocationFromCloudflareHeaders(request, ip);
       if (cfLocation) {
@@ -110,16 +116,6 @@ export async function getLocationFromIP(
       }
     }
 
-    // Cloudflare headers not available - fallback to ip-api only in development
-    if (isDevelopment) {
-      return await getLocationFromIPApi(ip);
-    }
-
-    // In production, if CF headers are missing, return null
-    // This shouldn't happen if Cloudflare is properly configured
-    console.warn(
-      "Cloudflare geolocation headers not found. Ensure Cloudflare is configured as proxy."
-    );
     return null;
   } catch (error) {
     console.error(`Error fetching location data for IP ${ip}:`, error);
