@@ -1,5 +1,27 @@
 # @bklit/sdk Changelog
 
+## [1.0.1] - 2026-01-18
+
+### 🐛 Bug Fixes
+
+**Critical fix for production WebSocket connections:**
+
+- **Fixed default WebSocket URL** - Now correctly defaults to `wss://bklit.ws:8080` instead of `wss://bklit.ws`
+- **Impact:** v1.0.0 users couldn't connect without manually specifying `wsHost`
+- **Action:** Update to v1.0.1 immediately if using default configuration
+
+**Who should upgrade:**
+- Anyone using v1.0.0 without explicitly setting `wsHost`
+- If you're seeing WebSocket connection errors in console
+- If events aren't tracking after upgrading to v1.0.0
+
+**No code changes needed** - just update:
+```bash
+npm install @bklit/sdk@latest
+```
+
+---
+
 ## [1.0.0] - 2026-01-18
 
 ### 🚀 Major Release - WebSocket Architecture

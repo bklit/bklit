@@ -12,7 +12,7 @@ export interface BklitConfig {
 const getDefaultWsHost = (env: "development" | "production"): string => {
   // Production: Use WebSocket server on bklit.ws
   if (env === "production") {
-    return "wss://bklit.ws";
+    return "wss://bklit.ws:8080";
   }
 
   // Development: Use local WebSocket server
