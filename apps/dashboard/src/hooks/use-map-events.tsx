@@ -87,7 +87,12 @@ export function MapEventsProvider({ children }: { children: ReactNode }) {
 export function useMapEvents() {
   const context = useContext(MapEventsContext);
   if (!context) {
-    throw new Error("useMapEvents must be used within MapEventsProvider");
+    // Return no-op functions for SSR/build
+    return {
+      events: [],
+      logEvent: () => {},
+      clearEvents: () => {},
+    };
   }
   return context;
 }

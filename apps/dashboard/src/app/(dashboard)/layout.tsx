@@ -21,9 +21,7 @@ export default async function DashboardLayout({
   return (
     <WorkspaceProvider organizations={organizations} session={session}>
       <SidebarProvider className="flex flex-col sm:overflow-hidden">
-        <div suppressHydrationWarning={true}>
-          <SiteHeader />
-        </div>
+        <SiteHeader />
         <div className="flex flex-1 pt-(--header-height)">
           <AppSidebar />
 

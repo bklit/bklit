@@ -503,6 +503,7 @@ declare global {
     bklitEnvironment?: string;
     bklitDebug?: boolean;
     bklitApiKey?: string;
+    initBklit: typeof initBklit;
     bklit: {
       trackPageView: typeof trackPageView;
       trackEvent: typeof trackEvent;
