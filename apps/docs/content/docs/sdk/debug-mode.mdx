@@ -48,12 +48,16 @@ When debug mode is enabled, you'll see logs like:
 ```
 🎯 Bklit SDK: Initializing with configuration {
   projectId: "your-project-id",
-  apiHost: "https://app.bklit.com/api/track",
+  wsHost: "wss://bklit.ws:8080",
   environment: "production",
   debug: true,
   hasApiKey: true,
   userAgent: "Mozilla/5.0..."
 }
+🔑 Bklit SDK: Session ID 1234567890-abcdefg
+🔌 Bklit SDK: Connecting to WebSocket wss://bklit.ws:8080
+✅ Bklit SDK: WebSocket connected
+🔐 Bklit SDK: Authentication successful
 ```
 
 ### Session Creation

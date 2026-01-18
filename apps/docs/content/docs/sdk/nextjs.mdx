@@ -107,11 +107,13 @@ export default MyApp;
 <BklitComponent
   projectId="your-project-id"
   apiKey="your-api-key"
-  apiHost="https://app.bklit.com/api/track"
+  wsHost="wss://bklit.ws:8080"  // Optional - auto-detected
   environment={process.env.NODE_ENV === 'production' ? 'production' : 'development'}
   debug={process.env.NODE_ENV === 'development'}
 />
 ```
+
+**Note:** `wsHost` is optional and auto-detected in most cases. Only specify if you need to override the default WebSocket server.
 
 ## Environment Variables
 

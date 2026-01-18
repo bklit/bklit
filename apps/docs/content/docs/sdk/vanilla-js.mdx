@@ -115,11 +115,13 @@ initBklit({
 initBklit({
   projectId: 'your-project-id',
   apiKey: 'your-api-key',
-  apiHost: 'https://app.bklit.com/api/track', // Optional
+  wsHost: 'wss://bklit.ws:8080', // Optional - auto-detected
   environment: 'production', // 'development' or 'production'
   debug: false, // Enable debug logging
 });
 ```
+
+**Note:** `wsHost` is optional and defaults to `wss://bklit.ws:8080` in production and `ws://localhost:8080` in development.
 
 ## Environment Variables
 
