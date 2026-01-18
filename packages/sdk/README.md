@@ -2,6 +2,8 @@
 
 A lightweight analytics SDK for tracking page views, sessions, and user behavior via WebSocket.
 
+> **⚠️ Upgrading from v0.x?** See the [Migration Guide](#migrating-from-v0x) below.
+
 ## Installation
 
 ```bash
@@ -150,6 +152,83 @@ Auto-reconnect                          Real-time Dashboard
 - **Sub-second latency** for real-time analytics
 - **Instant session tracking** - Sessions appear/disappear immediately
 - **Reliable** - Browser handles WebSocket cleanup automatically
+
+## Migrating from v0.x
+
+### Breaking Changes in v1.0.0
+
+v1.0.0 migrates from HTTP to WebSocket architecture. This requires a configuration change:
+
+**Before (v0.x):**
+```javascript
+import { initBklit } from "@bklit/sdk";
+
+initBklit({
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  apiHost: "https://app.bklit.com/api/track",  // ❌ No longer used
+});
+```
+
+**After (v1.0.0):**
+```javascript
+import { initBklit } from "@bklit/sdk";
+
+initBklit({
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  wsHost: "wss://bklit.ws:8080",  // Optional - auto-detected in most cases
+});
+```
+
+**Or simplest (recommended):**
+```javascript
+initBklit({
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  // wsHost auto-detected based on environment
+});
+```
+
+### For Next.js Apps
+
+**Before (v0.x):**
+```tsx
+<BklitComponent
+  projectId="..."
+  apiKey="..."
+  apiHost="https://app.bklit.com/api/track"  // ❌ Remove this
+/>
+```
+
+**After (v1.0.0):**
+```tsx
+<BklitComponent
+  projectId="..."
+  apiKey="..."
+  wsHost="wss://bklit.ws:8080"  // Optional - auto-detected
+/>
+```
+
+**Or simplest:**
+```tsx
+<BklitComponent
+  projectId="..."
+  apiKey="..."
+  // wsHost auto-detected
+/>
+```
+
+### What Changed
+
+- ✅ **HTTP → WebSocket:** Persistent connection instead of HTTP requests
+- ✅ **Instant session ending:** <1 second instead of 30s-4min
+- ✅ **Auto-reconnection:** Handles network issues gracefully
+- ✅ **Removed:** `endSession()` function (automatic now)
+
+### Need Help?
+
+See the full [CHANGELOG](https://github.com/bklit/bklit/blob/main/packages/sdk/CHANGELOG.md) or [open an issue](https://github.com/bklit/bklit/issues).
 
 ## License
 
