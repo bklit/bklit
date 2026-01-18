@@ -25,6 +25,7 @@ const SSL_KEY_PATH = process.env.SSL_KEY_PATH || "/etc/letsencrypt/live/bklit.ws
 const defaultOrigins = [
   "https://bklit.com",
   "https://www.bklit.com",
+  "https://app.bklit.com", // production dashboard
   "http://localhost:5173", // playground
   "http://localhost:3000", // dashboard dev
   "http://localhost:3002", // dashboard dev alt
