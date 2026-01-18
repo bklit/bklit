@@ -1,8 +1,8 @@
-import { getCountryNameFromCode } from "@/lib/maps/country-coordinates";
-import type { GeoLocation, IpGeoResponse } from "@/types/geo";
+import path from "node:path";
 import { Reader } from "@maxmind/geoip2-node";
 import type ReaderModel from "@maxmind/geoip2-node/dist/src/readerModel";
-import path from "node:path";
+import { getCountryNameFromCode } from "@/lib/maps/country-coordinates";
+import type { GeoLocation, IpGeoResponse } from "@/types/geo";
 
 interface LocationData extends GeoLocation {
   ip: string;
@@ -29,7 +29,10 @@ async function getGeoIPReader(): Promise<ReaderModel | null> {
     console.log("GeoIP2 database loaded successfully");
     return geoipReader;
   } catch (error) {
-    console.warn("GeoIP2 database not found. Falling back to Cloudflare headers.", error);
+    console.warn(
+      "GeoIP2 database not found. Falling back to Cloudflare headers.",
+      error
+    );
     return null;
   }
 }
@@ -179,7 +182,7 @@ async function getLocationFromGeoIP(ip: string): Promise<LocationData | null> {
     const latitude = response.location?.latitude ?? null;
     const longitude = response.location?.longitude ?? null;
     const timezone = response.location?.timeZone || undefined;
-    
+
     // MaxMind provides subdivision info (state/region)
     const subdivision = response.subdivisions?.[0];
     const regionCode = subdivision?.isoCode || undefined;
@@ -219,7 +222,7 @@ async function getLocationFromIPApi(ip: string): Promise<LocationData | null> {
   try {
     const fields =
       "status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query";
-    
+
     // Use HTTPS for encrypted transmission (previously was HTTP)
     // Note: Free tier may not support HTTPS - consider upgrading to Pro or removing this fallback
     const url = `https://ip-api.com/json/${ip}?fields=${fields}`;
