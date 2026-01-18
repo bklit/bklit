@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import { createServer as createHttpServer } from "node:http";
 import type { IncomingMessage } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
 import { AnalyticsService } from "@bklit/analytics";
 import type { QueuedEvent } from "@bklit/redis";
 import {
@@ -15,6 +18,8 @@ import { validateApiToken } from "./validate";
 config();
 
 const PORT = Number(process.env.WEBSOCKET_PORT) || 8080;
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || "/etc/letsencrypt/live/bklit.ws/fullchain.pem";
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || "/etc/letsencrypt/live/bklit.ws/privkey.pem";
 
 // Parse allowed origins from environment variable or use defaults
 const defaultOrigins = [
@@ -215,10 +220,33 @@ function broadcastToProject(projectId: string, event: Record<string, unknown>) {
   console.log(`[WS] 📤 Broadcast ${event.type} to ${broadcastCount} dashboard(s) for project ${projectId}`);
 }
 
-// Create WebSocket server
-const wss = new WebSocketServer({ port: PORT });
+// Create WebSocket server with SSL if certificates exist
+let server;
+let protocol = "ws";
 
-console.log(`🚀 WebSocket server starting on ws://localhost:${PORT}`);
+try {
+  // Check if SSL certificates exist
+  const cert = readFileSync(SSL_CERT_PATH);
+  const key = readFileSync(SSL_KEY_PATH);
+  
+  // Create HTTPS server
+  server = createHttpsServer({ cert, key });
+  protocol = "wss";
+  console.log(`🔒 SSL certificates found - using secure WebSocket (wss://)`);
+} catch (error) {
+  // Fall back to HTTP
+  server = createHttpServer();
+  console.log(`⚠️ No SSL certificates - using insecure WebSocket (ws://)`);
+}
+
+// Attach WebSocket to server
+const wss = new WebSocketServer({ server });
+
+// Start listening
+server.listen(PORT, () => {
+  console.log(`🚀 WebSocket server ready on ${protocol}://bklit.ws:${PORT}`);
+  console.log(`📊 Active connections will be tracked and displayed here`);
+});
 
 wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   const url = new URL(req.url || "", `ws://localhost:${PORT}`);
@@ -551,6 +579,3 @@ setInterval(() => {
     conn.ws.ping();
   });
 }, 30_000); // Check every 30 seconds
-
-console.log(`🌐 WebSocket server ready on ws://localhost:${PORT}`);
-console.log("📊 Active connections will be tracked and displayed here");
