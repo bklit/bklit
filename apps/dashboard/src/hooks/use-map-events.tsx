@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useCallback, useState, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 
 export type MapEventType =
   | "marker_clicked"
@@ -26,7 +33,11 @@ export interface MapEvent {
 
 interface MapEventsContextValue {
   events: MapEvent[];
-  logEvent: (type: MapEventType, message: string, data?: Record<string, unknown>) => void;
+  logEvent: (
+    type: MapEventType,
+    message: string,
+    data?: Record<string, unknown>
+  ) => void;
   clearEvents: () => void;
 }
 
@@ -38,26 +49,29 @@ export function MapEventsProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<MapEvent[]>([]);
   const eventIdCounter = useRef(0);
 
-  const logEvent = useCallback((type: MapEventType, message: string, data?: Record<string, unknown>) => {
-    const event: MapEvent = {
-      id: `event-${Date.now()}-${eventIdCounter.current++}`,
-      type,
-      message,
-      data,
-      timestamp: new Date(),
-    };
+  const logEvent = useCallback(
+    (type: MapEventType, message: string, data?: Record<string, unknown>) => {
+      const event: MapEvent = {
+        id: `event-${Date.now()}-${eventIdCounter.current++}`,
+        type,
+        message,
+        data,
+        timestamp: new Date(),
+      };
 
-    // Log to browser console in development
-    if (process.env.NODE_ENV === "development") {
-      const icon = getEventIcon(type);
-      console.log(`${icon} [MapEvent] ${type}:`, message, data || "");
-    }
+      // Log to browser console in development
+      if (process.env.NODE_ENV === "development") {
+        const icon = getEventIcon(type);
+        console.log(`${icon} [MapEvent] ${type}:`, message, data || "");
+      }
 
-    setEvents((prev) => {
-      const newEvents = [event, ...prev];
-      return newEvents.slice(0, MAX_EVENTS);
-    });
-  }, []);
+      setEvents((prev) => {
+        const newEvents = [event, ...prev];
+        return newEvents.slice(0, MAX_EVENTS);
+      });
+    },
+    []
+  );
 
   const clearEvents = useCallback(() => {
     setEvents([]);
@@ -101,4 +115,3 @@ function getEventIcon(type: MapEventType): string {
       return "⚪";
   }
 }
-

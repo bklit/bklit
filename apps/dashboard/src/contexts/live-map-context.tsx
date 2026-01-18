@@ -90,10 +90,10 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
 
   const onMarkerClick = useCallback((sessionId: string) => {
     setSelectedSessionId(null);
-    
+
     queueMicrotask(() => {
       setSelectedSessionId(sessionId);
-      
+
       if (markerClickHandlerRef.current) {
         markerClickHandlerRef.current(sessionId);
       }

@@ -1,16 +1,16 @@
-import { WebSocketServer, WebSocket } from "ws";
+import type { IncomingMessage } from "node:http";
+import { AnalyticsService } from "@bklit/analytics";
 import type { QueuedEvent } from "@bklit/redis";
 import {
   publishDebugLog,
-  pushToQueue,
-  trackSessionStart,
-  trackSessionEnd,
   publishLiveEvent,
+  pushToQueue,
+  trackSessionEnd,
+  trackSessionStart,
 } from "@bklit/redis";
-import { AnalyticsService } from "@bklit/analytics";
 import { config } from "dotenv";
+import { WebSocket, WebSocketServer } from "ws";
 import { validateApiToken } from "./validate";
-import type { IncomingMessage } from "http";
 
 config();
 
@@ -41,6 +41,9 @@ interface ConnectionInfo {
 
 // Track active connections
 const connections = new Map<string, ConnectionInfo>();
+
+// Track which sessions we've seen (to detect new sessions)
+const seenSessions = new Set<string>();
 
 // Get geolocation from ip-api.com
 async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
@@ -111,10 +114,7 @@ function getClientIP(req: IncomingMessage): string {
   const socketIP = req.socket?.remoteAddress?.replace("::ffff:", "") || "";
 
   return (
-    (Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : forwardedFor
-    )
+    (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor)
       ?.split(",")[0]
       ?.trim() ||
     (realIP as string) ||
@@ -123,16 +123,19 @@ function getClientIP(req: IncomingMessage): string {
 }
 
 // Broadcast event to all dashboard connections for a project
-function broadcastToProject(projectId: string, event: any) {
-  connections.forEach((conn) => {
+function broadcastToProject(projectId: string, event: Record<string, unknown>) {
+  let broadcastCount = 0;
+  for (const conn of connections.values()) {
     if (
       conn.type === "dashboard" &&
       conn.projectId === projectId &&
       conn.ws.readyState === WebSocket.OPEN
     ) {
       conn.ws.send(JSON.stringify(event));
+      broadcastCount++;
     }
-  });
+  }
+  console.log(`[WS] 📤 Broadcast ${event.type} to ${broadcastCount} dashboard(s) for project ${projectId}`);
 }
 
 // Create WebSocket server
@@ -145,7 +148,7 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   const projectId = url.searchParams.get("projectId");
   const sessionId = url.searchParams.get("sessionId");
   const type = url.pathname.includes("/dashboard") ? "dashboard" : "sdk";
-  
+
   // Verify origin
   const origin = req.headers.origin || "";
   const allowedOrigins = [
@@ -157,7 +160,9 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   ];
 
   if (origin && !allowedOrigins.includes(origin)) {
-    console.warn(`[WS] Rejected connection from unauthorized origin: ${origin}`);
+    console.warn(
+      `[WS] Rejected connection from unauthorized origin: ${origin}`
+    );
     ws.close(1008, "Unauthorized origin");
     return;
   }
@@ -174,11 +179,14 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
     return;
   }
 
-  const connId = type === "sdk" 
-    ? `sdk:${projectId}:${sessionId}`
-    : `dashboard:${projectId}:${Date.now()}`;
+  const connId =
+    type === "sdk"
+      ? `sdk:${projectId}:${sessionId}`
+      : `dashboard:${projectId}:${Date.now()}`;
 
-  console.log(`[WS] New ${type} connection: ${connId} from ${origin || 'unknown'}`);
+  console.log(
+    `[WS] New ${type} connection: ${connId} from ${origin || "unknown"}`
+  );
 
   // Store connection
   connections.set(connId, {
@@ -211,11 +219,12 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
         return;
       }
 
-      // Validate API token on first message (or every message for extra security)
-      if (message.apiKey) {
+      // Validate API token on first message
+      if (message.apiKey && !conn.isAuthenticated) {
         const validation = await validateApiToken(message.apiKey, projectId);
         if (validation.valid) {
           conn.isAuthenticated = true;
+          console.log(`[WS] ✅ Authenticated ${connId}`);
         } else {
           console.warn(`[WS] Invalid API key for ${connId}`);
           ws.close(1008, "Invalid API key");
@@ -223,9 +232,9 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
         }
       }
 
-      // Only process events from authenticated connections
-      if (!conn.isAuthenticated && message.type !== "auth") {
-        console.warn(`[WS] Unauthenticated message from ${connId}`);
+      // Dashboard connections don't need auth, SDK connections do
+      if (conn.type === "sdk" && !conn.isAuthenticated && message.type !== "auth") {
+        console.warn(`[WS] Unauthenticated SDK message from ${connId}, type: ${message.type}`);
         return;
       }
 
@@ -235,12 +244,19 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
       if (message.type === "pageview") {
         // Get IP and geolocation
         const clientIP = getClientIP(req);
-        const isLocalIP = !clientIP || clientIP === "127.0.0.1" || clientIP === "::1";
+        const isLocalIP =
+          !clientIP || clientIP === "127.0.0.1" || clientIP === "::1";
         const location = await getLocationFromIP(isLocalIP ? "" : clientIP);
 
         // Track session start in Redis
         if (sessionId) {
           await trackSessionStart(projectId, sessionId);
+        }
+
+        // Check if this is a new session
+        const isNewSession = sessionId ? !seenSessions.has(sessionId) : false;
+        if (sessionId && isNewSession) {
+          seenSessions.add(sessionId);
         }
 
         // Build enriched payload
@@ -259,6 +275,7 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
           timezone: location?.timezone,
           isp: location?.isp,
           mobile: location?.mobile,
+          isNewSession,
         };
 
         // Queue for worker processing
@@ -277,20 +294,24 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
           stage: "websocket",
           level: "info",
           message: "Pageview received via WebSocket",
-          data: { url: message.data?.url, sessionId },
+          data: { url: message.data?.url, sessionId, isNewSession },
           eventId,
           projectId,
         });
 
         // Broadcast pageview to dashboards immediately
+        console.log(`[WS] 📡 Broadcasting pageview to dashboards for project ${projectId}`);
         broadcastToProject(projectId, {
           type: "pageview",
           data: enrichedPayload,
           timestamp: new Date().toISOString(),
         });
+        console.log(`[WS] ✅ Pageview broadcast complete`);
 
         // Send acknowledgment
-        ws.send(JSON.stringify({ type: "ack", eventId, messageType: "pageview" }));
+        ws.send(
+          JSON.stringify({ type: "ack", eventId, messageType: "pageview" })
+        );
       } else if (message.type === "event") {
         // Queue custom event
         const queuedEvent: QueuedEvent = {
@@ -354,7 +375,9 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   // Handle disconnect - INSTANT SESSION END
   ws.on("close", async () => {
     const conn = connections.get(connId);
-    if (!conn) return;
+    if (!conn) {
+      return;
+    }
 
     console.log(`[WS] Connection closed: ${connId} (${type})`);
     connections.delete(connId);
@@ -370,6 +393,9 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 
         // Remove from Redis
         await trackSessionEnd(projectId, sessionId);
+
+        // Remove from seen sessions
+        seenSessions.delete(sessionId);
 
         // Broadcast session_end to dashboards
         await publishLiveEvent({
@@ -426,7 +452,7 @@ setInterval(() => {
       connections.delete(connId);
     }
   });
-}, 30000); // Check every 30 seconds
+}, 30_000); // Check every 30 seconds
 
 console.log(`🌐 WebSocket server ready on ws://localhost:${PORT}`);
-console.log(`📊 Active connections will be tracked and displayed here`);
+console.log("📊 Active connections will be tracked and displayed here");

@@ -122,7 +122,7 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
   }, [sessionData, selectedSessionId, hasOpenedSession, openUserDetail]);
 
   return (
-    <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 z-50 flex justify-center px-6">
+    <div className="pointer-events-none absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 justify-center px-6">
       <div className="pointer-events-auto">
         <Suspense fallback={<LiveCardWithDataSkeleton />}>
           <LiveCardWithData
@@ -137,9 +137,11 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
 
 function getBrowserFromUserAgent(userAgent: string): string {
   if (!userAgent) return "Unknown";
-  if (userAgent.includes("Chrome") && !userAgent.includes("Edge")) return "Chrome";
+  if (userAgent.includes("Chrome") && !userAgent.includes("Edge"))
+    return "Chrome";
   if (userAgent.includes("Firefox")) return "Firefox";
-  if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) return "Safari";
+  if (userAgent.includes("Safari") && !userAgent.includes("Chrome"))
+    return "Safari";
   if (userAgent.includes("Edge")) return "Edge";
   return "Other";
 }
@@ -147,7 +149,10 @@ function getBrowserFromUserAgent(userAgent: string): string {
 function getDeviceFromUserAgent(userAgent: string): string {
   if (!userAgent) return "Unknown";
   const ua = userAgent.toLowerCase();
-  if (ua.includes("ipad") || (ua.includes("android") && !ua.includes("mobile"))) {
+  if (
+    ua.includes("ipad") ||
+    (ua.includes("android") && !ua.includes("mobile"))
+  ) {
     return "Tablet";
   }
   if (
@@ -167,7 +172,11 @@ function getOSFromUserAgent(userAgent: string): string {
   if (userAgent.includes("Mac OS")) return "macOS";
   if (userAgent.includes("Linux")) return "Linux";
   if (userAgent.includes("Android")) return "Android";
-  if (userAgent.includes("iPhone") || userAgent.includes("iPad") || userAgent.includes("iOS")) {
+  if (
+    userAgent.includes("iPhone") ||
+    userAgent.includes("iPad") ||
+    userAgent.includes("iOS")
+  ) {
     return "iOS";
   }
   return "Other";

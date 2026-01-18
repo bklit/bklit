@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, X, Activity } from "lucide-react";
-import { useMapEvents, type MapEvent, type MapEventType } from "@/hooks/use-map-events";
 import { cn } from "@bklit/ui/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { Activity, ChevronDown, ChevronUp, X } from "lucide-react";
+import { useState } from "react";
+import {
+  type MapEvent,
+  type MapEventType,
+  useMapEvents,
+} from "@/hooks/use-map-events";
 
 export function MapDebugConsole() {
   const { events, clearEvents } = useMapEvents();
   const [isExpanded, setIsExpanded] = useState(true);
-  const [expandedEventIds, setExpandedEventIds] = useState<Set<string>>(new Set());
+  const [expandedEventIds, setExpandedEventIds] = useState<Set<string>>(
+    new Set()
+  );
 
   const toggleEventExpansion = (eventId: string) => {
     setExpandedEventIds((prev) => {
@@ -25,10 +31,10 @@ export function MapDebugConsole() {
 
   if (!isExpanded) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed right-4 bottom-4 z-50">
         <button
-          onClick={() => setIsExpanded(true)}
           className="flex items-center gap-2 rounded-lg bg-bklit-800/95 px-3 py-2 text-bklit-200 shadow-lg backdrop-blur-sm transition-colors hover:bg-bklit-700/95"
+          onClick={() => setIsExpanded(true)}
         >
           <Activity className="size-4" />
           <span className="font-medium text-xs">Map Events</span>
@@ -44,12 +50,14 @@ export function MapDebugConsole() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex w-96 flex-col rounded-lg bg-bklit-800/95 shadow-xl backdrop-blur-sm">
+    <div className="fixed right-4 bottom-4 z-50 flex w-96 flex-col rounded-lg bg-bklit-800/95 shadow-xl backdrop-blur-sm">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-bklit-700 px-3 py-2">
+      <div className="flex items-center justify-between border-bklit-700 border-b px-3 py-2">
         <div className="flex items-center gap-2">
           <Activity className="size-4 text-indigo-400" />
-          <span className="font-semibold text-bklit-100 text-sm">Map Events</span>
+          <span className="font-semibold text-bklit-100 text-sm">
+            Map Events
+          </span>
           {events.length > 0 && (
             <span className="rounded-full bg-bklit-700 px-1.5 py-0.5 font-medium text-bklit-300 text-xs">
               {events.length}
@@ -58,15 +66,15 @@ export function MapDebugConsole() {
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={clearEvents}
             className="rounded p-1 text-bklit-400 transition-colors hover:bg-bklit-700 hover:text-bklit-200"
+            onClick={clearEvents}
             title="Clear events"
           >
             <X className="size-3.5" />
           </button>
           <button
-            onClick={() => setIsExpanded(false)}
             className="rounded p-1 text-bklit-400 transition-colors hover:bg-bklit-700 hover:text-bklit-200"
+            onClick={() => setIsExpanded(false)}
             title="Minimize"
           >
             <ChevronDown className="size-3.5" />
@@ -84,9 +92,9 @@ export function MapDebugConsole() {
           <div className="space-y-px p-2">
             {events.map((event) => (
               <EventItem
-                key={event.id}
                 event={event}
                 isExpanded={expandedEventIds.has(event.id)}
+                key={event.id}
                 onToggle={() => toggleEventExpansion(event.id)}
               />
             ))}
@@ -116,15 +124,15 @@ function EventItem({
       )}
     >
       <button
-        onClick={onToggle}
-        disabled={!hasData}
         className="w-full text-left"
+        disabled={!hasData}
+        onClick={onToggle}
       >
         <div className="flex items-start gap-2">
           <span className="text-sm" title={event.type}>
             {getEventIcon(event.type)}
           </span>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2">
               <span className="font-mono text-bklit-400 text-xs">
                 {formatDistanceToNow(event.timestamp, { addSuffix: true })}
@@ -212,4 +220,3 @@ function getEventLabel(type: MapEventType): string {
       return type;
   }
 }
-

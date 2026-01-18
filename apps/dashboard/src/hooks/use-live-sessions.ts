@@ -6,7 +6,7 @@ import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import { getMarkerGradient } from "@/lib/maps/marker-colors";
 import { useTRPC } from "@/trpc/react";
 import { useLiveEventStream } from "./use-live-event-stream";
-import { useMapEvents, type MapEventType } from "./use-map-events";
+import { type MapEventType, useMapEvents } from "./use-map-events";
 
 interface MapEventData {
   type: MapEventType;
@@ -131,21 +131,24 @@ export function useLiveSessions({
   const logEventTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Deferred logging to avoid state updates during render
-  const scheduleLogEvent = useCallback((type: MapEventType, message: string, data?: Record<string, unknown>) => {
-    pendingLogEvents.current.push({ type, message, data });
+  const scheduleLogEvent = useCallback(
+    (type: MapEventType, message: string, data?: Record<string, unknown>) => {
+      pendingLogEvents.current.push({ type, message, data });
 
-    // Debounce logging to next tick
-    if (logEventTimeout.current) {
-      clearTimeout(logEventTimeout.current);
-    }
+      // Debounce logging to next tick
+      if (logEventTimeout.current) {
+        clearTimeout(logEventTimeout.current);
+      }
 
-    logEventTimeout.current = setTimeout(() => {
-      const events = pendingLogEvents.current.splice(0);
-      events.forEach(event => {
-        logEvent(event.type, event.message, event.data);
-      });
-    }, 0);
-  }, [logEvent]);
+      logEventTimeout.current = setTimeout(() => {
+        const events = pendingLogEvents.current.splice(0);
+        events.forEach((event) => {
+          logEvent(event.type, event.message, event.data);
+        });
+      }, 0);
+    },
+    [logEvent]
+  );
 
   // Process pending log events after render
   useEffect(() => {
@@ -155,7 +158,7 @@ export function useLiveSessions({
       }
       // Process any remaining events on cleanup
       const events = pendingLogEvents.current.splice(0);
-      events.forEach(event => {
+      events.forEach((event) => {
         logEvent(event.type, event.message, event.data);
       });
     };
@@ -206,13 +209,30 @@ export function useLiveSessions({
   // Handle real-time pageview events
   const handlePageview = useCallback(
     (data: PageviewEventData) => {
-      if (!data.sessionId) return;
+      console.log("🔵 [handlePageview] Pageview received", {
+        sessionId: data.sessionId,
+        url: data.url,
+        isNewSession: data.isNewSession,
+      });
+
+      if (!data.sessionId) {
+        console.warn("⚠️ [handlePageview] No sessionId");
+        return;
+      }
 
       const coordResult = getCoordinatesWithFallback(data);
 
       setSessions((prev) => {
         const newSessions = new Map(prev);
         const existing = newSessions.get(data.sessionId!);
+
+        console.log("🔍 [handlePageview] Check", {
+          sessionId: data.sessionId,
+          exists: !!existing,
+          isNewSession: data.isNewSession,
+          willAdd: data.isNewSession || !existing,
+          totalSessions: prev.size,
+        });
 
         if (data.isNewSession || !existing) {
           // New session - add to map
@@ -240,14 +260,18 @@ export function useLiveSessions({
             };
             newSessions.set(data.sessionId!, newSession);
 
-            scheduleLogEvent("session_added", `New session from ${data.city || data.country || "Unknown"}`, {
-              sessionId: data.sessionId,
-              country: data.country,
-              countryCode: data.countryCode,
-              city: data.city,
-              hasExactCoordinates: coordResult.hasExactCoordinates,
-              url: data.url,
-            });
+            scheduleLogEvent(
+              "session_added",
+              `New session from ${data.city || data.country || "Unknown"}`,
+              {
+                sessionId: data.sessionId,
+                country: data.country,
+                countryCode: data.countryCode,
+                city: data.city,
+                hasExactCoordinates: coordResult.hasExactCoordinates,
+                url: data.url,
+              }
+            );
           }
         } else {
           // Existing session - update page journey
@@ -285,11 +309,15 @@ export function useLiveSessions({
             city: data.city || existing.city,
           });
 
-          scheduleLogEvent("session_updated", `Session navigated to ${data.url}`, {
-            sessionId: data.sessionId,
-            newUrl: data.url,
-            pageCount: updatedJourney.length,
-          });
+          scheduleLogEvent(
+            "session_updated",
+            `Session navigated to ${data.url}`,
+            {
+              sessionId: data.sessionId,
+              newUrl: data.url,
+              pageCount: updatedJourney.length,
+            }
+          );
         }
 
         return newSessions;
@@ -332,7 +360,7 @@ export function useLiveSessions({
   const handleSessionEnd = useCallback(
     (data: SessionEndEventData) => {
       console.log("🔴 [handleSessionEnd] Called with data:", data);
-      scheduleLogEvent("session_ended", `Session end handler called`, {
+      scheduleLogEvent("session_ended", "Session end handler called", {
         sessionId: data.sessionId,
         hasSessionId: !!data.sessionId,
         reason: data.reason,
@@ -340,22 +368,29 @@ export function useLiveSessions({
 
       if (!data.sessionId) {
         console.warn("⚠️ [handleSessionEnd] No sessionId in data, skipping");
-        scheduleLogEvent("error", "Session end event missing sessionId", { data });
+        scheduleLogEvent("error", "Session end event missing sessionId", {
+          data,
+        });
         return;
       }
 
       setSessions((prev) => {
         const existing = prev.get(data.sessionId);
-        
-        console.log(`🔍 [handleSessionEnd] Looking for session ${data.sessionId}:`, {
-          found: !!existing,
-          totalSessions: prev.size,
-          allSessionIds: Array.from(prev.keys()),
-        });
+
+        console.log(
+          `🔍 [handleSessionEnd] Looking for session ${data.sessionId}:`,
+          {
+            found: !!existing,
+            totalSessions: prev.size,
+            allSessionIds: Array.from(prev.keys()),
+          }
+        );
 
         if (!existing) {
-          console.warn(`⚠️ [handleSessionEnd] Session ${data.sessionId} not found in map`);
-          scheduleLogEvent("error", `Session not found in map`, {
+          console.warn(
+            `⚠️ [handleSessionEnd] Session ${data.sessionId} not found in map`
+          );
+          scheduleLogEvent("error", "Session not found in map", {
             sessionId: data.sessionId,
             availableSessions: Array.from(prev.keys()),
           });
@@ -363,19 +398,25 @@ export function useLiveSessions({
         }
 
         // Log the session end event
-        scheduleLogEvent("session_ended", `Session ending from ${existing.city || existing.country || "Unknown"}`, {
-          sessionId: data.sessionId,
-          country: existing.country,
-          countryCode: existing.countryCode,
-          city: existing.city,
-          duration: Date.now() - existing.startedAt.getTime(),
-          reason: data.reason,
-        });
+        scheduleLogEvent(
+          "session_ended",
+          `Session ending from ${existing.city || existing.country || "Unknown"}`,
+          {
+            sessionId: data.sessionId,
+            country: existing.country,
+            countryCode: existing.countryCode,
+            city: existing.city,
+            duration: Date.now() - existing.startedAt.getTime(),
+            reason: data.reason,
+          }
+        );
 
         // Mark as ending for fade-out animation
         const newSessions = new Map(prev);
         newSessions.set(data.sessionId, { ...existing, isEnding: true });
-        console.log(`✅ [handleSessionEnd] Marked session ${data.sessionId} as ending`);
+        console.log(
+          `✅ [handleSessionEnd] Marked session ${data.sessionId} as ending`
+        );
         return newSessions;
       });
 
@@ -384,19 +425,22 @@ export function useLiveSessions({
         setSessions((prev) => {
           const newSessions = new Map(prev);
           const removed = newSessions.delete(data.sessionId);
-          
-          console.log(`🗑️ [handleSessionEnd] Attempted to remove session ${data.sessionId}:`, removed);
-          
+
+          console.log(
+            `🗑️ [handleSessionEnd] Attempted to remove session ${data.sessionId}:`,
+            removed
+          );
+
           if (removed) {
-            scheduleLogEvent("session_removed", `Session removed from map`, {
+            scheduleLogEvent("session_removed", "Session removed from map", {
               sessionId: data.sessionId,
             });
           } else {
-            scheduleLogEvent("error", `Failed to remove session from map`, {
+            scheduleLogEvent("error", "Failed to remove session from map", {
               sessionId: data.sessionId,
             });
           }
-          
+
           return newSessions;
         });
       }, 800); // Match the icon-opacity-transition duration

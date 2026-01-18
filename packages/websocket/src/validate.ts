@@ -6,7 +6,9 @@ const scryptAsync = promisify(scrypt);
 
 async function verifyToken(token: string, hash: string): Promise<boolean> {
   const [salt, storedHash] = hash.split(":");
-  if (!(salt && storedHash)) return false;
+  if (!(salt && storedHash)) {
+    return false;
+  }
 
   const derivedHash = await scryptAsync(token, salt, 64);
   return (derivedHash as Buffer).toString("hex") === storedHash;
@@ -55,7 +57,7 @@ export async function validateApiToken(
     }
 
     // Find matching token by verifying hash
-    let matchedToken = null;
+    let matchedToken: (typeof tokens)[0] | null = null;
     for (const apiToken of tokens) {
       const isValid = await verifyToken(token, apiToken.tokenHash);
       if (isValid) {

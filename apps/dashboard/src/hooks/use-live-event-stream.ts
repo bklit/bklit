@@ -30,7 +30,7 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
       process.env.NODE_ENV === "development"
         ? "ws://localhost:8080"
         : "wss://bklit.ws";
-    
+
     const ws = new WebSocket(`${wsHost}/dashboard?projectId=${projectId}`);
 
     connection = {
@@ -53,13 +53,18 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
       try {
         const data = JSON.parse(event.data);
 
+        console.log(`[WebSocket] 📨 Received message:`, data.type, data);
+
         // Handle different message types
         if (data.type === "connected") {
-          console.log(`[WebSocket] Connection confirmed for project ${projectId}`);
+          console.log(
+            `[WebSocket] Connection confirmed for project ${projectId}`
+          );
           return;
         }
 
         // Forward the event to all listeners
+        console.log(`[WebSocket] 📢 Forwarding to ${conn.listeners.size} listener(s)`);
         conn.listeners.forEach((listener) => listener(data));
       } catch (error) {
         console.error("[WebSocket] Failed to parse message:", error);
@@ -83,7 +88,7 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
           console.log(`[WebSocket] Reconnecting to project ${projectId}...`);
           connections.delete(projectId);
           getOrCreateConnection(projectId);
-          
+
           // Re-add all existing listeners to new connection
           const newConn = connections.get(projectId);
           if (newConn) {
@@ -173,7 +178,9 @@ export function useLiveEventStream(
 
       // Close connection if no more listeners
       if (connection.refCount === 0) {
-        console.log(`[WebSocket] Closing connection to project ${projectId} (no more listeners)`);
+        console.log(
+          `[WebSocket] Closing connection to project ${projectId} (no more listeners)`
+        );
         connection.ws.close();
         connections.delete(projectId);
       }

@@ -1,10 +1,6 @@
 import { AnalyticsService } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
-import {
-  getQueueDepth,
-  popFromQueue,
-  publishDebugLog,
-} from "@bklit/redis";
+import { getQueueDepth, popFromQueue, publishDebugLog } from "@bklit/redis";
 import { config } from "dotenv";
 import { verifyEventInClickHouse } from "./verify";
 

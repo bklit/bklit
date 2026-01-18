@@ -389,7 +389,9 @@ export const sessionRouter = createTRPCRouter({
       });
 
       // Note: input.sessionId is the client-generated session_id, not the database id
-      const sessionData = sessions.find((s) => s.session_id === input.sessionId);
+      const sessionData = sessions.find(
+        (s) => s.session_id === input.sessionId
+      );
 
       if (!sessionData) {
         throw new Error("Session not found");
