@@ -359,7 +359,9 @@ export function useLiveSessions({
   // Handle session end events - mark as ending first, then remove after animation
   const handleSessionEnd = useCallback(
     (data: SessionEndEventData) => {
-      console.log("🔴 [handleSessionEnd] Called with data:", data);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("🔴 [handleSessionEnd] Called with data:", data);
+      }
       scheduleLogEvent("session_ended", "Session end handler called", {
         sessionId: data.sessionId,
         hasSessionId: !!data.sessionId,
@@ -367,7 +369,9 @@ export function useLiveSessions({
       });
 
       if (!data.sessionId) {
-        console.warn("⚠️ [handleSessionEnd] No sessionId in data, skipping");
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("⚠️ [handleSessionEnd] No sessionId in data, skipping");
+        }
         scheduleLogEvent("error", "Session end event missing sessionId", {
           data,
         });
@@ -377,19 +381,23 @@ export function useLiveSessions({
       setSessions((prev) => {
         const existing = prev.get(data.sessionId);
 
-        console.log(
-          `🔍 [handleSessionEnd] Looking for session ${data.sessionId}:`,
-          {
-            found: !!existing,
-            totalSessions: prev.size,
-            allSessionIds: Array.from(prev.keys()),
-          }
-        );
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            `🔍 [handleSessionEnd] Looking for session ${data.sessionId}:`,
+            {
+              found: !!existing,
+              totalSessions: prev.size,
+              allSessionIds: Array.from(prev.keys()),
+            }
+          );
+        }
 
         if (!existing) {
-          console.warn(
-            `⚠️ [handleSessionEnd] Session ${data.sessionId} not found in map`
-          );
+          if (process.env.NODE_ENV !== "production") {
+            console.warn(
+              `⚠️ [handleSessionEnd] Session ${data.sessionId} not found in map`
+            );
+          }
           scheduleLogEvent("error", "Session not found in map", {
             sessionId: data.sessionId,
             availableSessions: Array.from(prev.keys()),
@@ -414,9 +422,11 @@ export function useLiveSessions({
         // Mark as ending for fade-out animation
         const newSessions = new Map(prev);
         newSessions.set(data.sessionId, { ...existing, isEnding: true });
-        console.log(
-          `✅ [handleSessionEnd] Marked session ${data.sessionId} as ending`
-        );
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            `✅ [handleSessionEnd] Marked session ${data.sessionId} as ending`
+          );
+        }
         return newSessions;
       });
 
@@ -426,10 +436,12 @@ export function useLiveSessions({
           const newSessions = new Map(prev);
           const removed = newSessions.delete(data.sessionId);
 
-          console.log(
-            `🗑️ [handleSessionEnd] Attempted to remove session ${data.sessionId}:`,
-            removed
-          );
+          if (process.env.NODE_ENV !== "production") {
+            console.log(
+              `🗑️ [handleSessionEnd] Attempted to remove session ${data.sessionId}:`,
+              removed
+            );
+          }
 
           if (removed) {
             scheduleLogEvent("session_removed", "Session removed from map", {

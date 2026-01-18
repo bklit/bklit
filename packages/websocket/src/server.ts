@@ -16,6 +16,22 @@ config();
 
 const PORT = Number(process.env.WEBSOCKET_PORT) || 8080;
 
+// Parse allowed origins from environment variable or use defaults
+const defaultOrigins = [
+  "https://bklit.com",
+  "https://www.bklit.com",
+  "http://localhost:5173", // playground
+  "http://localhost:3000", // dashboard dev
+  "http://localhost:3002", // dashboard dev alt
+];
+
+const allowedOrigins = process.env.ALLOWED_WS_ORIGINS
+  ? process.env.ALLOWED_WS_ORIGINS.split(",").map((origin) => origin.trim())
+  : defaultOrigins;
+
+// Initialize shared AnalyticsService instance for reuse
+const analyticsService = new AnalyticsService();
+
 interface GeoLocation {
   country?: string;
   countryCode?: string;
@@ -37,6 +53,7 @@ interface ConnectionInfo {
   connectedAt: Date;
   type: "sdk" | "dashboard";
   isAuthenticated: boolean;
+  isAlive: boolean;
 }
 
 // Track active connections
@@ -48,16 +65,29 @@ const seenSessions = new Set<string>();
 // Get geolocation from ip-api.com
 async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
   // Skip private/local IPs (but allow empty string for auto-detection)
+  // Check for 172.16.0.0 - 172.31.255.255 (private range)
+  let isPrivate172 = false;
+  if (ip.startsWith("172.")) {
+    const octets = ip.split(".");
+    if (octets.length >= 2) {
+      const secondOctet = Number(octets[1]);
+      isPrivate172 = secondOctet >= 16 && secondOctet <= 31;
+    }
+  }
+
   if (
     ip === "127.0.0.1" ||
     ip === "localhost" ||
     ip.startsWith("192.168.") ||
     ip.startsWith("10.") ||
-    ip.startsWith("172.") ||
+    isPrivate172 ||
     ip === "::1"
   ) {
     return null;
   }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
   try {
     const fields =
@@ -69,7 +99,10 @@ async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
     const response = await fetch(url, {
       method: "GET",
       headers: { Accept: "application/json" },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return null;
@@ -94,17 +127,61 @@ async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
     }
 
     return null;
-  } catch {
+  } catch (error) {
+    clearTimeout(timeoutId);
+    // Treat AbortError or any fetch error as null result
     return null;
   }
 }
 
 function anonymizeIP(ip: string): string {
-  const parts = ip.split(".");
-  if (parts.length === 4) {
-    return `${parts[0]}.${parts[1]}.${parts[2]}.0`;
+  // Handle IPv4
+  if (!ip.includes(":")) {
+    const parts = ip.split(".");
+    if (parts.length === 4) {
+      return `${parts[0]}.${parts[1]}.${parts[2]}.0`;
+    }
+    return ip;
   }
-  return ip;
+
+  // Handle IPv6
+  try {
+    // Expand shorthand IPv6 notation
+    let expanded = ip;
+    
+    // Handle :: shorthand
+    if (expanded.includes("::")) {
+      const parts = expanded.split("::");
+      const leftParts = parts[0] ? parts[0].split(":") : [];
+      const rightParts = parts[1] ? parts[1].split(":") : [];
+      const missingParts = 8 - leftParts.length - rightParts.length;
+      
+      const middleParts = Array(missingParts).fill("0000");
+      expanded = [...leftParts, ...middleParts, ...rightParts].join(":");
+    }
+
+    // Pad each hextet to 4 digits
+    const hextets = expanded.split(":");
+    const paddedHextets = hextets.map((h) => h.padStart(4, "0"));
+
+    // Keep first 4 hextets (64 bits), zero out the rest
+    if (paddedHextets.length >= 8) {
+      const anonymized = [
+        ...paddedHextets.slice(0, 4),
+        "0000",
+        "0000",
+        "0000",
+        "0000",
+      ];
+      // Return compressed format
+      return anonymized.join(":").replace(/(:0000)+$/, "::");
+    }
+
+    return ip;
+  } catch {
+    // If parsing fails, return original
+    return ip;
+  }
 }
 
 // Extract client IP from request
@@ -149,15 +226,8 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   const sessionId = url.searchParams.get("sessionId");
   const type = url.pathname.includes("/dashboard") ? "dashboard" : "sdk";
 
-  // Verify origin
+  // Verify origin (using configured allowedOrigins from top of file)
   const origin = req.headers.origin || "";
-  const allowedOrigins = [
-    "https://bklit.com",
-    "https://www.bklit.com",
-    "http://localhost:5173", // playground
-    "http://localhost:3000", // dashboard dev
-    "http://localhost:3002", // dashboard dev alt
-  ];
 
   if (origin && !allowedOrigins.includes(origin)) {
     console.warn(
@@ -189,13 +259,23 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   );
 
   // Store connection
-  connections.set(connId, {
+  const conn: ConnectionInfo = {
     ws,
     sessionId: sessionId || "",
     projectId,
     connectedAt: new Date(),
     type,
     isAuthenticated: false, // Will be set on first message with valid token
+    isAlive: true,
+  };
+  connections.set(connId, conn);
+
+  // Handle pong responses to track connection liveness
+  ws.on("pong", () => {
+    const connection = connections.get(connId);
+    if (connection) {
+      connection.isAlive = true;
+    }
   });
 
   // Send connection confirmation
@@ -387,9 +467,8 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
       try {
         console.log(`[WS] Ending session ${sessionId} due to disconnect`);
 
-        // End session in ClickHouse
-        const analytics = new AnalyticsService();
-        await analytics.endTrackedSession(sessionId);
+        // End session in ClickHouse (using shared analyticsService instance)
+        await analyticsService.endTrackedSession(sessionId);
 
         // Remove from Redis
         await trackSessionEnd(projectId, sessionId);
@@ -444,13 +523,27 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   });
 });
 
-// Heartbeat to detect broken connections
+// Heartbeat to detect broken connections using ping/pong
 setInterval(() => {
   connections.forEach((conn, connId) => {
+    // Remove connections that are not OPEN
     if (conn.ws.readyState !== WebSocket.OPEN) {
       console.log(`[WS] Removing stale connection: ${connId}`);
       connections.delete(connId);
+      return;
     }
+
+    // Check if connection responded to last ping
+    if (!conn.isAlive) {
+      console.log(`[WS] Terminating unresponsive connection: ${connId}`);
+      connections.delete(connId);
+      conn.ws.terminate();
+      return;
+    }
+
+    // Mark as not alive and send ping
+    conn.isAlive = false;
+    conn.ws.ping();
   });
 }, 30_000); // Check every 30 seconds
 

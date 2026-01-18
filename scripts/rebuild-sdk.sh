@@ -3,18 +3,19 @@
 # Rebuild SDK and clear all caches
 # Use this when you make changes to the SDK that need to be picked up by the playground
 
-set -e
+set -euo pipefail
 
 echo "🔨 Rebuilding SDK and clearing caches..."
 echo ""
 
 # 1. Build SDK (skip DTS to avoid d3-sankey error)
 echo "1️⃣ Building SDK..."
-cd packages/sdk
+pushd packages/sdk > /dev/null
 pnpm build --no-dts || {
-  echo "⚠️  DTS build failed, but ESM/CJS succeeded"
+  echo "⚠️  Build had warnings or partial failures"
+  true
 }
-cd ../..
+popd > /dev/null
 echo "✅ SDK built"
 echo ""
 

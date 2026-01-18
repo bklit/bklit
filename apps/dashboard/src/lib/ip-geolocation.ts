@@ -1,8 +1,37 @@
 import { getCountryNameFromCode } from "@/lib/maps/country-coordinates";
 import type { GeoLocation, IpGeoResponse } from "@/types/geo";
+import { Reader } from "@maxmind/geoip2-node";
+import type ReaderModel from "@maxmind/geoip2-node/dist/src/readerModel";
+import path from "node:path";
 
 interface LocationData extends GeoLocation {
   ip: string;
+}
+
+// Singleton instance of GeoIP2 reader
+let geoipReader: ReaderModel | null = null;
+
+/**
+ * Initialize MaxMind GeoIP2 reader
+ * Downloads GeoLite2 database from MaxMind (requires free account)
+ * @see https://dev.maxmind.com/geoip/geolite2-free-geolocation-data
+ */
+async function getGeoIPReader(): Promise<ReaderModel | null> {
+  if (geoipReader) {
+    return geoipReader;
+  }
+
+  try {
+    // Path to GeoLite2-City.mmdb database file
+    // Download from: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data
+    const dbPath = path.join(process.cwd(), "data", "GeoLite2-City.mmdb");
+    geoipReader = await Reader.open(dbPath);
+    console.log("GeoIP2 database loaded successfully");
+    return geoipReader;
+  } catch (error) {
+    console.warn("GeoIP2 database not found. Falling back to Cloudflare headers.", error);
+    return null;
+  }
 }
 
 /**
@@ -100,20 +129,25 @@ export async function getLocationFromIP(
       return null;
     }
 
-    // PRIMARY: Try ip-api.com first (more accurate coordinates)
-    // TODO: Upgrade to Pro ($12/mo) for HTTPS + higher rate limits
-    // Change endpoint to: https://pro.ip-api.com/json/${ip}?key=${IP_API_KEY}&fields=...
-    const ipApiLocation = await getLocationFromIPApi(ip);
-    if (ipApiLocation) {
-      return ipApiLocation;
+    // PRIMARY: Try local MaxMind GeoIP2 database (GDPR-compliant, no external API calls)
+    const geoipLocation = await getLocationFromGeoIP(ip);
+    if (geoipLocation) {
+      return geoipLocation;
     }
 
-    // FALLBACK: Use Cloudflare headers if ip-api fails
+    // FALLBACK 1: Use Cloudflare headers (privacy-friendly, no external calls)
     if (request) {
       const cfLocation = getLocationFromCloudflareHeaders(request, ip);
       if (cfLocation) {
         return cfLocation;
       }
+    }
+
+    // FALLBACK 2: Use ip-api.com ONLY if both above methods fail
+    // Note: This sends IP to third-party service - use sparingly
+    const ipApiLocation = await getLocationFromIPApi(ip);
+    if (ipApiLocation) {
+      return ipApiLocation;
     }
 
     return null;
@@ -123,11 +157,72 @@ export async function getLocationFromIP(
   }
 }
 
+/**
+ * Get geolocation from local MaxMind GeoIP2 database
+ * GDPR-compliant: No external API calls, all lookups are local
+ */
+async function getLocationFromGeoIP(ip: string): Promise<LocationData | null> {
+  try {
+    const reader = await getGeoIPReader();
+    if (!reader) {
+      return null;
+    }
+
+    // reader.city() is synchronous and returns the response directly
+    const response = reader.city(ip);
+
+    // Extract location data from MaxMind response
+    const country = response.country?.names?.en || undefined;
+    const countryCode = response.country?.isoCode;
+    const city = response.city?.names?.en || undefined;
+    const postalCode = response.postal?.code || undefined;
+    const latitude = response.location?.latitude ?? null;
+    const longitude = response.location?.longitude ?? null;
+    const timezone = response.location?.timeZone || undefined;
+    
+    // MaxMind provides subdivision info (state/region)
+    const subdivision = response.subdivisions?.[0];
+    const regionCode = subdivision?.isoCode || undefined;
+    const regionName = subdivision?.names?.en || undefined;
+
+    // If we don't have a country code, return null (invalid/incomplete geolocation data)
+    if (!countryCode) {
+      return null;
+    }
+
+    return {
+      ip,
+      country,
+      countryCode,
+      region: regionCode,
+      regionName,
+      city,
+      zip: postalCode,
+      lat: latitude ?? 0,
+      lon: longitude ?? 0,
+      timezone,
+      isp: undefined, // MaxMind City DB doesn't include ISP (need GeoIP2-ISP for that)
+      mobile: undefined,
+    };
+  } catch (error) {
+    console.error(`Error looking up IP ${ip} in GeoIP database:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fallback: Get geolocation from ip-api.com
+ * WARNING: Sends IP to third-party service - use as last resort only
+ * Now uses HTTPS for encrypted transmission (still not GDPR-ideal)
+ */
 async function getLocationFromIPApi(ip: string): Promise<LocationData | null> {
   try {
     const fields =
       "status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,currency,isp,mobile,query";
-    const url = `http://ip-api.com/json/${ip}?fields=${fields}`;
+    
+    // Use HTTPS for encrypted transmission (previously was HTTP)
+    // Note: Free tier may not support HTTPS - consider upgrading to Pro or removing this fallback
+    const url = `https://ip-api.com/json/${ip}?fields=${fields}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -183,7 +278,7 @@ export function extractClientIP(request: Request): string | null {
   const forwardedFor = headers.get("x-forwarded-for");
   if (forwardedFor) {
     // x-forwarded-for can contain multiple IPs, take the first one
-    return forwardedFor.split(",")[0].trim();
+    return forwardedFor.split(",")[0]?.trim() ?? null;
   }
 
   const realIP = headers.get("x-real-ip");

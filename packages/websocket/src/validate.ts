@@ -45,6 +45,11 @@ export async function validateApiToken(
   }
 
   try {
+    // Validate token length before computing prefix
+    if (token.length < 8) {
+      return { valid: false };
+    }
+
     // Use tokenPrefix to narrow search
     const tokenPrefix = token.substring(0, 8);
     const tokens = await prisma.apiToken.findMany({

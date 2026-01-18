@@ -30,11 +30,13 @@ Bklit uses **WebSockets** for real-time analytics, hosted on **bklit.ws**:
 ### Option 1: Hetzner VPS (Recommended)
 
 **Specifications:**
+
 - **Server:** CCX13 or higher (4 vCPU, 16GB RAM minimum)
 - **Cost:** ~$40-80/month
 - **Location:** Europe (for GDPR compliance)
 
 **Services to run:**
+
 - WebSocket server (port 8080)
 - Worker (background processing)
 - ClickHouse (optional - can use managed)
@@ -148,12 +150,12 @@ certbot certonly --standalone -d bklit.ws
 Update WebSocket server to use SSL (add to `packages/websocket/src/server.ts`):
 
 ```typescript
-import { readFileSync } from 'fs';
-import { createServer } from 'https';
+import { readFileSync } from "fs";
+import { createServer } from "https";
 
 const server = createServer({
-  cert: readFileSync('/etc/letsencrypt/live/bklit.ws/fullchain.pem'),
-  key: readFileSync('/etc/letsencrypt/live/bklit.ws/privkey.pem'),
+  cert: readFileSync("/etc/letsencrypt/live/bklit.ws/fullchain.pem"),
+  key: readFileSync("/etc/letsencrypt/live/bklit.ws/privkey.pem"),
 });
 
 const wss = new WebSocketServer({ server });
@@ -169,6 +171,7 @@ pm2 status
 ```
 
 Should show:
+
 ```
 websocket  │ online
 worker     │ online
@@ -177,11 +180,12 @@ worker     │ online
 ### 2. Test WebSocket Connection
 
 ```bash
-curl -i -N -H "Connection: Upgrade" \
+curl -i -N --http1.1 \
+  -H "Connection: Upgrade" \
   -H "Upgrade: websocket" \
   -H "Sec-WebSocket-Version: 13" \
-  -H "Sec-WebSocket-Key: test" \
-  ws://localhost:8080
+  -H "Sec-WebSocket-Key: $(openssl rand -base64 16)" \
+  http://localhost:8080
 ```
 
 Should return `101 Switching Protocols`.
@@ -194,6 +198,7 @@ pm2 logs worker
 ```
 
 Look for:
+
 - `[WS] New sdk connection` when a visitor arrives
 - `[WS] Pageview received via WebSocket`
 - `[Worker] Event processed`
@@ -203,6 +208,7 @@ Look for:
 Your dashboard on Vercel needs no WebSocket configuration - it connects to `wss://bklit.ws` automatically.
 
 **Environment Variables for Vercel:**
+
 ```bash
 REDIS_URL=redis://:<password>@<host>:6379
 CLICKHOUSE_HOST=<clickhouse-host>
@@ -241,17 +247,20 @@ Shows current active WebSocket connections.
 ## Troubleshooting
 
 **WebSocket won't connect:**
+
 - Check firewall allows port 8080
 - Verify DNS is gray cloud (not orange)
 - Check SSL certificate if using wss://
 - Test with ws:// first, then add SSL
 
 **Sessions not ending:**
+
 - Verify WebSocket server `onclose` handler is working
 - Check PM2 logs for disconnect events
 - Ensure no proxy is buffering connections
 
 **High latency:**
+
 - Use CDN/edge locations closer to users
 - Check Redis latency
 - Monitor WebSocket server CPU/memory
@@ -270,6 +279,7 @@ WebSockets can scale horizontally with Redis Pub/Sub:
 ### Recommended Stack
 
 For production at scale:
+
 - **WebSocket Servers:** 2-3 instances behind load balancer
 - **Redis:** Upstash (managed, auto-scaling)
 - **ClickHouse:** ClickHouse Cloud or Hetzner dedicated server

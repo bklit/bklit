@@ -17,7 +17,7 @@ interface SDKConnectionStepFormProps {
   organizationId: string;
   projectId: string;
   projectName: string;
-  projectDomain: string;
+  projectDomain?: string;
   onTokenCreated?: (token: string) => void;
 }
 
@@ -25,15 +25,11 @@ export function SDKConnectionStepForm({
   organizationId,
   projectId,
   projectName,
-  projectDomain,
   onTokenCreated,
 }: SDKConnectionStepFormProps) {
   const trpc = useTRPC();
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const hasCreatedToken = useRef(false);
-
-  // Dumped this here, get's removed in production
-  console.log("projectDomain", projectDomain);
 
   const getWsHost = () => {
     if (typeof window === "undefined") {
