@@ -47,11 +47,9 @@ export function useLiveUsers({ projectId, organizationId }: UseLiveUsersProps) {
     });
   }, [queryClient]);
 
-  // Subscribe to SSE events (NEW architecture)
-  // Listen to both pageview AND session_end to update count
   const { isConnected } = useLiveEventStream(projectId, {
     onPageview: handleInvalidate,
-    onSessionEnd: handleInvalidate, // Decrement count when session ends
+    onSessionEnd: handleInvalidate,
   });
 
   return {

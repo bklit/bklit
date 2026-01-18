@@ -1,6 +1,6 @@
 # Bklit Analytics SDK
 
-A lightweight analytics SDK for tracking page views, sessions, and user behavior.
+A lightweight analytics SDK for tracking page views, sessions, and user behavior via WebSocket.
 
 ## Installation
 
@@ -17,7 +17,6 @@ pnpm add @bklit/sdk
 ```javascript
 import { initBklit } from "@bklit/sdk";
 
-// Initialize the SDK
 initBklit({
   projectId: "your-project-id",
   apiKey: "your-api-key",
@@ -62,7 +61,7 @@ Get your `projectId` and `apiKey` from your [Bklit Dashboard](https://app.bklit.
 
 - `projectId` (string, **required**) - Your unique project identifier
 - `apiKey` (string, optional) - Your API authentication token
-- `apiHost` (string, optional) - API endpoint URL. Defaults to `https://app.bklit.com/api/track`
+- `wsHost` (string, optional) - WebSocket server URL. Defaults to `wss://bklit.ws` in production, `ws://localhost:8080` in development
 - `environment` (string, optional) - Environment mode: `"development"` or `"production"`. Defaults to `"production"`
 - `debug` (boolean, optional) - Enable debug logging. Defaults to `false`
 
@@ -75,7 +74,7 @@ Get your `projectId` and `apiKey` from your [Bklit Dashboard](https://app.bklit.
 
 **Optional Parameters:**
 
-- `apiHost` (string) - API endpoint URL. Defaults to `https://app.bklit.com/api/track`
+- `wsHost` (string) - WebSocket server URL. Defaults to `wss://bklit.ws` in production, `ws://localhost:8080` in development
 - `environment` (string) - Set to `"development"` for local testing. Defaults to `"production"`
 - `debug` (boolean) - Enable detailed console logging. Defaults to `false`
 
@@ -85,149 +84,72 @@ Get your `projectId` and `apiKey` from your [Bklit Dashboard](https://app.bklit.
 initBklit({
   projectId: "your-project-id",
   apiKey: "your-api-key",
-  apiHost: "https://app.bklit.com/api/track", // Optional
+  wsHost: "wss://bklit.ws", // Optional - auto-detected
   environment: "production", // Optional
   debug: false, // Optional
 });
 ```
 
-## Console Logging
+## How It Works
 
-When `debug: true` is enabled, the SDK provides detailed console logs to help you monitor tracking events.
+The SDK establishes a WebSocket connection to track analytics in real-time:
 
-**Note:** Error messages (using `console.error` and `console.warn`) will always appear regardless of the debug setting.
-
-### Example Debug Output
-
-```
-🎯 Bklit SDK: Initializing with configuration {
-  projectId: "your-project-id",
-  apiHost: "https://app.bklit.com/api/track",
-  environment: "production",
-  debug: true
-}
-
-🆔 Bklit SDK: New session created {
-  sessionId: "1703123456789-abc123def456"
-}
-
-🚀 Bklit SDK: Tracking page view... {
-  url: "https://yoursite.com/page",
-  sessionId: "1703123456789-abc123def456",
-  projectId: "your-project-id"
-}
-
-✅ Bklit SDK: Page view tracked successfully!
-```
-
-## Features
-
-### Automatic Tracking
-
-- **Page View Tracking** - Automatically tracks when pages load
-- **Session Management** - Creates and manages user sessions across page visits
-- **SPA Support** - Detects route changes in single-page applications
-- **Session Ending** - Automatically ends sessions when users close the tab
-
-### Event Tracking
-
-Track user interactions automatically with data attributes or IDs:
-
-```html
-<!-- Using data attribute -->
-<button data-bklit-event="cta-signup">Sign Up</button>
-
-<!-- Using ID -->
-<button id="bklit-event-cta-login">Login</button>
-```
-
-The SDK automatically tracks:
-
-- **Click events** - When users click the element
-- **View events** - When the element becomes visible (50% threshold)
-- **Hover events** - When users hover for 500ms
-
-### Manual Tracking
-
-#### Track Page Views
-
-```javascript
-window.trackPageView();
-```
-
-Useful for custom routing or manual page tracking.
-
-#### Track Custom Events
-
-```javascript
-window.trackEvent(
-  "purchase-button", // trackingId
-  "click", // eventType: "click", "view", "hover", or custom
-  {
-    // metadata (optional)
-    product: "Pro Plan",
-    price: 29.99,
-  },
-  "manual", // triggerMethod: "automatic" or "manual"
-);
-```
-
-### UTM Parameter Tracking
-
-The SDK automatically captures UTM parameters from the URL:
-
-- `utm_source`
-- `utm_medium`
-- `utm_campaign`
-- `utm_term`
-- `utm_content`
-
-These are included with every page view event.
+1. **Persistent Connection** - Opens WebSocket to `wss://bklit.ws` on initialization
+2. **Automatic Tracking** - Sends pageviews and navigation events over WebSocket
+3. **Instant Session End** - Sessions end automatically when the browser tab closes (WebSocket disconnect)
+4. **Auto-Reconnect** - Reconnects automatically with exponential backoff if connection drops
+5. **Message Queuing** - Queues events when connection is not ready
 
 ## API Reference
 
-### `initBklit(options)`
+### `trackPageView()`
 
-Initialize the Bklit SDK.
+Manually track a page view. Usually not needed as the SDK auto-tracks navigation.
 
-**Parameters:**
+```javascript
+import { trackPageView } from "@bklit/sdk";
 
-- `options.projectId` (string, **required**) - Your unique project identifier
-- `options.apiKey` (string, **required**) - Your API authentication token
-- `options.apiHost` (string, optional) - API endpoint URL. Defaults to `https://app.bklit.com/api/track`
-- `options.environment` (string, optional) - Environment mode: `"development"` or `"production"`. Defaults to `"production"`
-- `options.debug` (boolean, optional) - Enable debug logging. Defaults to `false`
+trackPageView();
+```
 
-### `window.trackPageView()`
+### `trackEvent(trackingId, eventType, metadata, triggerMethod)`
 
-Manually trigger a page view tracking event.
+Track custom events like button clicks, form submissions, etc.
 
-**Returns:** void
+```javascript
+import { trackEvent } from "@bklit/sdk";
 
-### `window.trackEvent(trackingId, eventType, metadata?, triggerMethod?)`
+trackEvent(
+  "cta-button", // tracking ID
+  "click", // event type
+  { buttonText: "Sign Up", position: "hero" }, // metadata (optional)
+  "automatic" // trigger method (optional)
+);
+```
 
-Manually trigger a custom event.
+## Console Logging
 
-**Parameters:**
+When `debug: true` is enabled, the SDK provides detailed console logs:
 
-- `trackingId` (string, required) - Unique identifier for the event
-- `eventType` (string, required) - Type of event: `"click"`, `"view"`, `"hover"`, or custom
-- `metadata` (object, optional) - Additional data to attach to the event
-- `triggerMethod` (string, optional) - `"automatic"` or `"manual"`. Defaults to `"manual"`
+- `🔌 Bklit SDK: Connecting to WebSocket`
+- `✅ Bklit SDK: WebSocket connected`
+- `🚀 Bklit SDK: Message sent via WebSocket`
+- `📦 Bklit SDK: Message queued (WebSocket not ready)`
+- `🔄 Bklit SDK: Reconnecting...`
 
-**Returns:** void
+Error messages (using `console.error` and `console.warn`) always appear regardless of the debug setting.
 
-### `window.clearBklitSession()`
+## Architecture
 
-Clear the current session (useful for testing).
+```
+Browser SDK → WebSocket (wss://bklit.ws) → Queue → ClickHouse
+     ↓                                         ↓
+Auto-reconnect                          Real-time Dashboard
+```
 
-**Returns:** void
-
-## Support
-
-- **Documentation:** [https://bklit.com](https://bklit.com)
-- **Issues:** [https://github.com/bklit/bklit/issues](https://github.com/bklit/bklit/issues)
-- **Discord:** [https://discord.gg/GFfD67gZGf](https://discord.gg/GFfD67gZGf)
+- **Sub-second latency** for real-time analytics
+- **Instant session tracking** - Sessions appear/disappear immediately
+- **Reliable** - Browser handles WebSocket cleanup automatically
 
 ## License
 

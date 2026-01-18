@@ -41,21 +41,21 @@ initBklit({
 
 ## Optional Options
 
-### apiHost
+### wsHost
 
-API endpoint URL. Defaults to production URL.
+WebSocket server URL. Defaults to production WebSocket server.
 
 ```javascript
 initBklit({
-  apiHost: 'https://app.bklit.com/api/track',
+  wsHost: 'wss://bklit.ws',
   // ...
 });
 ```
 
 **Type:** `string`  
-**Default:** `'https://app.bklit.com/api/track'`  
+**Default:** `'wss://bklit.ws'` (production) or `'ws://localhost:8080'` (development)  
 **Use cases:**
-- Custom API endpoint
+- Custom WebSocket endpoint
 - Development with local server
 - Testing with staging environment
 
@@ -107,7 +107,7 @@ initBklit({
   apiKey: 'bk_live_your-token-here',
   
   // Optional
-  apiHost: 'https://app.bklit.com/api/track',
+  wsHost: 'wss://bklit.ws',
   environment: 'production',
   debug: false,
 });
@@ -142,15 +142,14 @@ initBklit({
 The SDK validates configuration on initialization:
 
 - **Missing projectId:** Error logged, SDK not initialized
-- **Missing apiKey:** Error logged, SDK not initialized
-- **Invalid apiHost:** Warning logged, uses default
+- **Invalid wsHost:** Warning logged, uses default
 - **Invalid environment:** Warning logged, uses default
 
 ## Default Behavior
 
 If options are not provided:
 
-- **apiHost:** Uses production URL
+- **wsHost:** `wss://bklit.ws` (production) or `ws://localhost:8080` (development)
 - **environment:** Defaults to `'production'`
 - **debug:** Defaults to `false` (or `true` if development)
 

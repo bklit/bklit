@@ -4,7 +4,6 @@
 import Script from "next/script";
 import { initBklit } from "./index";
 
-// Ensure initBklit is available on window for the inline script
 if (typeof window !== "undefined") {
   window.initBklit = initBklit;
 }
@@ -12,7 +11,7 @@ if (typeof window !== "undefined") {
 interface BklitComponentProps {
   projectId: string;
   apiKey?: string;
-  apiHost?: string;
+  wsHost?: string;
   environment?: "development" | "production";
   debug?: boolean;
 }
@@ -30,7 +29,7 @@ const stringify = (value: unknown): string => {
 export function BklitComponent({
   projectId,
   apiKey,
-  apiHost,
+  wsHost,
   environment,
   debug,
 }: BklitComponentProps) {
@@ -44,7 +43,7 @@ export function BklitComponent({
         window.initBklit({
           projectId: ${stringify(projectId)},
           apiKey: ${stringify(apiKey)},
-          apiHost: ${stringify(apiHost)},
+          wsHost: ${stringify(wsHost)},
           environment: ${stringify(environment)},
           debug: ${stringify(debug)},
         });
@@ -58,7 +57,6 @@ export function BklitComponent({
         __html: initCode,
       }}
       id="bklit-init"
-      // biome-ignore lint: dangerouslySetInnerHTML is fine here
       strategy="afterInteractive"
     />
   );

@@ -454,29 +454,11 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Try Redis first (real-time source of truth)
       const redisCount = await getLiveUserCount(input.projectId);
 
-      // #region agent log
-      const fs = await import("fs");
-      fs.appendFileSync("/Users/matt/Bklit/bklit/.cursor/debug.log", JSON.stringify({location:"session.ts:liveUsers:REDIS",message:"Redis count result",data:{redisCount,projectId:input.projectId},timestamp:Date.now(),sessionId:"debug-session",hypothesisId:"TRPC"})+"\n");
-      // #endregion
-
-      // Use Redis if available AND has a count > 0
-      // If Redis returns 0, it might be out of sync, so check ClickHouse as fallback
-      if (redisCount !== null && redisCount > 0) {
-        return redisCount;
-      }
-
-      // Fallback to ClickHouse if Redis unavailable or returns 0
-      await ctx.analytics.cleanupStaleSessions(input.projectId);
-      const liveUsers = await ctx.analytics.getLiveUsers(input.projectId);
-
-      // #region agent log
-      fs.appendFileSync("/Users/matt/Bklit/bklit/.cursor/debug.log", JSON.stringify({location:"session.ts:liveUsers:CLICKHOUSE",message:"ClickHouse fallback result",data:{liveUsers,projectId:input.projectId},timestamp:Date.now(),sessionId:"debug-session",hypothesisId:"TRPC"})+"\n");
-      // #endregion
-
-      return liveUsers;
+      // Redis is the source of truth for live sessions (instant WebSocket updates)
+      // If Redis is unavailable, return 0 rather than querying ClickHouse (which can be stale)
+      return redisCount ?? 0;
     }),
   liveUserLocations: protectedProcedure
     .input(

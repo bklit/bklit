@@ -188,6 +188,7 @@ async function processBatch() {
               sessionId: event.payload.sessionId as string | null,
               metadata: enrichedMetadata,
             } as any);
+          }
         } catch (chError) {
           await publishDebugLog({
             timestamp: new Date().toISOString(),
