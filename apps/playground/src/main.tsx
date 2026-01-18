@@ -15,9 +15,9 @@ const PROJECT_ID = YOUR_PROJECT_ID || "cmh1rrwf7000122floz152tfo";
 const IS_DEV = import.meta.env.DEV;
 
 // WebSocket configuration
-// Development: ws://localhost:8080 (local WebSocket server)
-// Production: wss://bklit.ws
-const WS_HOST = IS_DEV ? "ws://localhost:8080" : "wss://bklit.ws";
+// Can override with VITE_BKLIT_WS_HOST for testing production
+const WS_HOST = import.meta.env.VITE_BKLIT_WS_HOST || 
+  (IS_DEV ? "ws://localhost:8080" : "wss://bklit.ws");
 
 const API_KEY =
   import.meta.env.VITE_BKLIT_API_KEY || import.meta.env.BKLIT_API_KEY;
