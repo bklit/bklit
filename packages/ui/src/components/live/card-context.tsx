@@ -30,6 +30,7 @@ interface UserData {
   os: string;
   pageJourney?: PageJourneyItem[];
   triggeredEvents?: EventItem[];
+  gradient?: { from: string; to: string };
 }
 
 interface LiveCardContextValue {
@@ -74,7 +75,7 @@ export function LiveCardProvider({ children }: { children: ReactNode }) {
       }
       return prev;
     });
-  }, []);
+  }, [view, viewHistory.length, selectedUser?.id]);
 
   const canGoBack = viewHistory.length > 1;
 

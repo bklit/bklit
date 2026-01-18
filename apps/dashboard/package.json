@@ -25,6 +25,7 @@
     "@bklit/ui": "workspace:*",
     "@bklit/utils": "workspace:*",
     "@bklit/validators": "workspace:*",
+    "@maxmind/geoip2-node": "^6.3.4",
     "@nivo/geo": "^0.99.0",
     "@polar-sh/nextjs": "^0.4.11",
     "@polar-sh/sdk": "^0.34.17",

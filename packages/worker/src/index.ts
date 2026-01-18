@@ -1,12 +1,6 @@
 import { AnalyticsService } from "@bklit/analytics";
 import { prisma } from "@bklit/db/client";
-import {
-  getQueueDepth,
-  popFromQueue,
-  publishDebugLog,
-  publishLiveEvent,
-  trackSessionEnd,
-} from "@bklit/redis";
+import { getQueueDepth, popFromQueue, publishDebugLog } from "@bklit/redis";
 import { config } from "dotenv";
 import { verifyEventInClickHouse } from "./verify";
 
@@ -190,50 +184,6 @@ async function processBatch() {
               sessionId: event.payload.sessionId as string | null,
               metadata: enrichedMetadata,
             } as any);
-          } else if (event.type === "session_end") {
-            // Handle session end - mark session as ended in ClickHouse
-            const endSessionId = event.payload.sessionId as string;
-            if (endSessionId) {
-              await analytics.endTrackedSession(endSessionId);
-              seenSessions.delete(endSessionId);
-
-              // Remove session from Redis live count
-              await trackSessionEnd(event.projectId, endSessionId);
-
-              await publishDebugLog({
-                timestamp: new Date().toISOString(),
-                stage: "worker",
-                level: "info",
-                message: "Session ended",
-                data: { sessionId: endSessionId },
-                eventId: event.id,
-                projectId: event.projectId,
-              });
-
-              // Publish session_end to live-events for real-time marker removal
-              await publishLiveEvent({
-                projectId: event.projectId,
-                type: "session_end",
-                timestamp: new Date().toISOString(),
-                data: {
-                  sessionId: endSessionId,
-                },
-              });
-
-              await publishDebugLog({
-                timestamp: new Date().toISOString(),
-                stage: "pubsub",
-                level: "info",
-                message: "Session end published to live-events",
-                data: { sessionId: endSessionId },
-                eventId: event.id,
-                projectId: event.projectId,
-              });
-            }
-
-            // Skip the rest of the processing for session_end events
-            totalProcessed++;
-            continue;
           }
         } catch (chError) {
           await publishDebugLog({
@@ -276,32 +226,6 @@ async function processBatch() {
           eventId: event.id,
           projectId: event.projectId,
           duration: clickhouseDuration,
-        });
-
-        // Publish to live-events for SSE (include isNewSession for real-time marker creation)
-        await publishLiveEvent({
-          projectId: event.projectId,
-          type: event.type,
-          timestamp: new Date().toISOString(),
-          data: { ...event.payload, isNewSession },
-        } as any);
-
-        const pubsubDetails =
-          event.type === "event"
-            ? {
-                trackingId: event.payload.trackingId,
-                eventType: event.payload.eventType,
-              }
-            : { url: event.payload.url };
-
-        await publishDebugLog({
-          timestamp: new Date().toISOString(),
-          stage: "pubsub",
-          level: "info",
-          message: "Event published to live-events",
-          data: { queueType: event.type, ...pubsubDetails },
-          eventId: event.id,
-          projectId: event.projectId,
         });
 
         // Verify event exists in ClickHouse (dual-write verification)

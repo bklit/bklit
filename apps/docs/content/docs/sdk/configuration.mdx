@@ -15,7 +15,7 @@ Your unique project identifier from the Bklit dashboard.
 
 ```javascript
 initBklit({
-  projectId: 'your-project-id',
+  projectId: "your-project-id",
   // ...
 });
 ```
@@ -30,7 +30,7 @@ Your API authentication token from the Bklit dashboard.
 
 ```javascript
 initBklit({
-  apiKey: 'bk_live_your-token-here',
+  apiKey: "bk_live_your-token-here",
   // ...
 });
 ```
@@ -41,21 +41,22 @@ initBklit({
 
 ## Optional Options
 
-### apiHost
+### wsHost
 
-API endpoint URL. Defaults to production URL.
+WebSocket server URL. Defaults to production WebSocket server.
 
 ```javascript
 initBklit({
-  apiHost: 'https://app.bklit.com/api/track',
+  wsHost: "wss://bklit.ws",
   // ...
 });
 ```
 
 **Type:** `string`  
-**Default:** `'https://app.bklit.com/api/track'`  
+**Default:** `'wss://bklit.ws'` (production) or `'ws://localhost:8080'` (development)  
 **Use cases:**
-- Custom API endpoint
+
+- Custom WebSocket endpoint
 - Development with local server
 - Testing with staging environment
 
@@ -65,7 +66,7 @@ Environment mode for the SDK.
 
 ```javascript
 initBklit({
-  environment: 'production', // or 'development'
+  environment: "production", // or 'development'
   // ...
 });
 ```
@@ -73,6 +74,7 @@ initBklit({
 **Type:** `'development' | 'production'`  
 **Default:** `'production'`  
 **Effects:**
+
 - Development: Debug mode enabled by default
 - Production: Optimized for performance
 
@@ -90,6 +92,7 @@ initBklit({
 **Type:** `boolean`  
 **Default:** `false` (or `true` if `environment === 'development'`)  
 **Output:**
+
 - SDK initialization logs
 - Session creation logs
 - Event tracking logs
@@ -99,16 +102,16 @@ initBklit({
 ## Complete Example
 
 ```javascript
-import { initBklit } from '@bklit/sdk';
+import { initBklit } from "@bklit/sdk";
 
 initBklit({
   // Required
-  projectId: 'your-project-id',
-  apiKey: 'bk_live_your-token-here',
-  
+  projectId: "your-project-id",
+  apiKey: "bk_live_your-token-here",
+
   // Optional
-  apiHost: 'https://app.bklit.com/api/track',
-  environment: 'production',
+  wsHost: "wss://bklit.ws",
+  environment: "production",
   debug: false,
 });
 ```
@@ -121,7 +124,7 @@ initBklit({
 initBklit({
   projectId: process.env.BKLIT_PROJECT_ID,
   apiKey: process.env.BKLIT_API_KEY,
-  environment: 'development',
+  environment: "development",
   debug: true,
 });
 ```
@@ -132,7 +135,7 @@ initBklit({
 initBklit({
   projectId: process.env.BKLIT_PROJECT_ID,
   apiKey: process.env.BKLIT_API_KEY,
-  environment: 'production',
+  environment: "production",
   debug: false,
 });
 ```
@@ -142,15 +145,14 @@ initBklit({
 The SDK validates configuration on initialization:
 
 - **Missing projectId:** Error logged, SDK not initialized
-- **Missing apiKey:** Error logged, SDK not initialized
-- **Invalid apiHost:** Warning logged, uses default
+- **Invalid wsHost:** Error thrown, SDK not initialized
 - **Invalid environment:** Warning logged, uses default
 
 ## Default Behavior
 
 If options are not provided:
 
-- **apiHost:** Uses production URL
+- **wsHost:** `wss://bklit.ws` (production) or `ws://localhost:8080` (development)
 - **environment:** Defaults to `'production'`
 - **debug:** Defaults to `false` (or `true` if development)
 
@@ -169,9 +171,9 @@ initBklit({
 
 ```javascript
 initBklit({
-  projectId: 'your-project-id',
-  apiKey: 'your-api-key',
-  debug: process.env.NODE_ENV === 'development',
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  debug: process.env.NODE_ENV === "development",
 });
 ```
 
@@ -179,9 +181,10 @@ initBklit({
 
 ```javascript
 initBklit({
-  projectId: 'your-project-id',
-  apiKey: 'your-api-key',
-  environment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  projectId: "your-project-id",
+  apiKey: "your-api-key",
+  environment:
+    process.env.NODE_ENV === "production" ? "production" : "development",
 });
 ```
 
@@ -190,4 +193,3 @@ initBklit({
 - [Installation](/sdk/installation) - Installing the SDK
 - [Debug Mode](/sdk/debug-mode) - Using debug mode
 - [API Reference](/sdk/api-reference) - Complete API docs
-

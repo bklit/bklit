@@ -382,14 +382,16 @@ export const sessionRouter = createTRPCRouter({
         domain: project.domain,
       };
 
-      // Get session from ClickHouse - need to find by id first
-      // Since ClickHouse uses session_id, we need to query sessions and find by id
+      // Get session from ClickHouse by session_id (client-generated identifier)
       const sessions = await ctx.analytics.getSessions({
         projectId: input.projectId,
         limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
       });
 
-      const sessionData = sessions.find((s) => s.id === input.sessionId);
+      // Note: input.sessionId is the client-generated session_id, not the database id
+      const sessionData = sessions.find(
+        (s) => s.session_id === input.sessionId
+      );
 
       if (!sessionData) {
         throw new Error("Session not found");
@@ -454,20 +456,11 @@ export const sessionRouter = createTRPCRouter({
         throw new Error("Forbidden");
       }
 
-      // Try Redis first (real-time source of truth)
       const redisCount = await getLiveUserCount(input.projectId);
 
-      // Use Redis if available AND has a count > 0
-      // If Redis returns 0, it might be out of sync, so check ClickHouse as fallback
-      if (redisCount !== null && redisCount > 0) {
-        return redisCount;
-      }
-
-      // Fallback to ClickHouse if Redis unavailable or returns 0
-      await ctx.analytics.cleanupStaleSessions(input.projectId);
-      const liveUsers = await ctx.analytics.getLiveUsers(input.projectId);
-
-      return liveUsers;
+      // Redis is the source of truth for live sessions (instant WebSocket updates)
+      // If Redis is unavailable, return 0 rather than querying ClickHouse (which can be stale)
+      return redisCount ?? 0;
     }),
   liveUserLocations: protectedProcedure
     .input(

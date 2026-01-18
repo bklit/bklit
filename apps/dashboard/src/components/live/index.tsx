@@ -4,9 +4,10 @@ import { useLiveCard } from "@bklit/ui/components/live/card";
 import type { UserData } from "@bklit/ui/components/live/card-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useLiveMap } from "@/contexts/live-map-context";
 import { useLiveEventStream } from "@/hooks/use-live-event-stream";
+import { getMarkerGradient } from "@/lib/maps/marker-colors";
 import { useTRPC } from "@/trpc/react";
 import {
   LiveCardWithData,
@@ -19,71 +20,80 @@ interface LiveProps {
 }
 
 export const Live = ({ projectId, organizationId }: LiveProps) => {
-  const { registerMarkerClickHandler } = useLiveMap();
-  const { openUserDetail } = useLiveCard();
+  const { selectedSessionId, setSelectedSessionId } = useLiveMap();
+  const { openUserDetail, view } = useLiveCard();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    null
-  );
   const [hasOpenedSession, setHasOpenedSession] = useState<string | null>(null);
+  const prevViewRef = useRef<string>(view);
 
-  // Fetch session details when a marker is clicked
-  const { data: sessionData } = useQuery({
+  useEffect(() => {
+    const wasUserView = prevViewRef.current === "user";
+    const isNoLongerUserView = view !== "user";
+
+    if (wasUserView && isNoLongerUserView) {
+      setHasOpenedSession(null);
+      setSelectedSessionId(null);
+    }
+
+    prevViewRef.current = view;
+  }, [view, hasOpenedSession, selectedSessionId, setSelectedSessionId]);
+
+  const queryEnabled =
+    !!selectedSessionId && hasOpenedSession !== selectedSessionId;
+  const {
+    data: sessionData,
+    isLoading: isLoadingSession,
+    error: sessionError,
+  } = useQuery({
     ...trpc.session.getById.queryOptions(
       { sessionId: selectedSessionId || "", projectId, organizationId },
       {
-        enabled: !!selectedSessionId,
-        refetchInterval: 5000, // Refetch every 5 seconds to show live updates
-        staleTime: 0, // No stale time for instant timeline updates
+        enabled: queryEnabled,
+        staleTime: 30_000,
+        refetchOnWindowFocus: false,
       }
     ),
   });
 
-  // Real-time update for session details when pageview occurs
   const handlePageviewForSession = useCallback(
     (data: { sessionId?: string }) => {
-      if (data.sessionId === selectedSessionId) {
+      if (
+        data.sessionId &&
+        data.sessionId === selectedSessionId &&
+        hasOpenedSession === selectedSessionId
+      ) {
         queryClient.invalidateQueries({
           queryKey: [["session", "getById"]],
         });
       }
     },
-    [selectedSessionId, queryClient]
+    [selectedSessionId, hasOpenedSession, queryClient]
   );
 
-  // Subscribe to SSE events (NEW architecture)
   useLiveEventStream(projectId, {
     onPageview: handlePageviewForSession,
   });
 
-  // Register handler for map marker clicks
   useEffect(() => {
-    registerMarkerClickHandler((sessionId: string) => {
-      setSelectedSessionId(sessionId);
-      setHasOpenedSession(null); // Reset when a new session is clicked
-    });
-  }, [registerMarkerClickHandler]);
-
-  // When session data is loaded, show it in the card's user view (only once per session)
-  useEffect(() => {
-    if (
+    const conditionMet = !!(
       sessionData &&
       selectedSessionId &&
       hasOpenedSession !== selectedSessionId
-    ) {
-      // Get the most recent pageview
+    );
+
+    if (conditionMet) {
       const latestPageview = sessionData.pageViewEvents?.[0];
 
-      // Build page journey from pageViewEvents (most recent first)
       const pageJourney =
         sessionData.pageViewEvents?.map((event, index) => ({
           url: event.url,
           timestamp: new Date(event.timestamp),
-          isCurrentPage: index === 0, // First item is current page
+          isCurrentPage: index === 0,
         })) || [];
 
-      // Transform session data to UserData format
+      const sessionGradient = getMarkerGradient(selectedSessionId);
+
       const userData: UserData = {
         id: sessionData.sessionId ?? sessionData.id ?? "unknown",
         name: `Visitor from ${sessionData.city || sessionData.country || "Unknown"}`,
@@ -97,16 +107,17 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
         sessions: 1,
         events: sessionData.pageViewEvents?.length || 0,
         currentPage: latestPageview?.url || sessionData.entryPage || "/",
-        referrer: "Direct", // Pageview data doesn't include referrer in this endpoint
+        referrer: "Direct",
         browser: getBrowserFromUserAgent(sessionData.userAgent || ""),
         device: getDeviceFromUserAgent(sessionData.userAgent || ""),
         os: getOSFromUserAgent(sessionData.userAgent || ""),
         pageJourney,
-        triggeredEvents: [], // We can add event tracking later if needed
+        triggeredEvents: [],
+        gradient: sessionGradient,
       };
 
       openUserDetail(userData);
-      setHasOpenedSession(selectedSessionId); // Mark this session as opened
+      setHasOpenedSession(selectedSessionId);
     }
   }, [sessionData, selectedSessionId, hasOpenedSession, openUserDetail]);
 
@@ -124,30 +135,19 @@ export const Live = ({ projectId, organizationId }: LiveProps) => {
   );
 };
 
-// Helper functions to parse user agent
 function getBrowserFromUserAgent(userAgent: string): string {
-  if (!userAgent) {
-    return "Unknown";
-  }
-  if (userAgent.includes("Chrome") && !userAgent.includes("Edge")) {
+  if (!userAgent) return "Unknown";
+  if (userAgent.includes("Chrome") && !userAgent.includes("Edge"))
     return "Chrome";
-  }
-  if (userAgent.includes("Firefox")) {
-    return "Firefox";
-  }
-  if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
+  if (userAgent.includes("Firefox")) return "Firefox";
+  if (userAgent.includes("Safari") && !userAgent.includes("Chrome"))
     return "Safari";
-  }
-  if (userAgent.includes("Edge")) {
-    return "Edge";
-  }
+  if (userAgent.includes("Edge")) return "Edge";
   return "Other";
 }
 
 function getDeviceFromUserAgent(userAgent: string): string {
-  if (!userAgent) {
-    return "Unknown";
-  }
+  if (!userAgent) return "Unknown";
   const ua = userAgent.toLowerCase();
   if (
     ua.includes("ipad") ||
@@ -167,21 +167,11 @@ function getDeviceFromUserAgent(userAgent: string): string {
 }
 
 function getOSFromUserAgent(userAgent: string): string {
-  if (!userAgent) {
-    return "Unknown";
-  }
-  if (userAgent.includes("Windows")) {
-    return "Windows";
-  }
-  if (userAgent.includes("Mac OS")) {
-    return "macOS";
-  }
-  if (userAgent.includes("Linux")) {
-    return "Linux";
-  }
-  if (userAgent.includes("Android")) {
-    return "Android";
-  }
+  if (!userAgent) return "Unknown";
+  if (userAgent.includes("Windows")) return "Windows";
+  if (userAgent.includes("Mac OS")) return "macOS";
+  if (userAgent.includes("Linux")) return "Linux";
+  if (userAgent.includes("Android")) return "Android";
   if (
     userAgent.includes("iPhone") ||
     userAgent.includes("iPad") ||

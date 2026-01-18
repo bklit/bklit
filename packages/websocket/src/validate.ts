@@ -6,7 +6,9 @@ const scryptAsync = promisify(scrypt);
 
 async function verifyToken(token: string, hash: string): Promise<boolean> {
   const [salt, storedHash] = hash.split(":");
-  if (!(salt && storedHash)) return false;
+  if (!(salt && storedHash)) {
+    return false;
+  }
 
   const derivedHash = await scryptAsync(token, salt, 64);
   return (derivedHash as Buffer).toString("hex") === storedHash;
@@ -43,6 +45,11 @@ export async function validateApiToken(
   }
 
   try {
+    // Validate token length before computing prefix
+    if (token.length < 8) {
+      return { valid: false };
+    }
+
     // Use tokenPrefix to narrow search
     const tokenPrefix = token.substring(0, 8);
     const tokens = await prisma.apiToken.findMany({
@@ -55,7 +62,7 @@ export async function validateApiToken(
     }
 
     // Find matching token by verifying hash
-    let matchedToken = null;
+    let matchedToken: (typeof tokens)[0] | null = null;
     for (const apiToken of tokens) {
       const isValid = await verifyToken(token, apiToken.tokenHash);
       if (isValid) {

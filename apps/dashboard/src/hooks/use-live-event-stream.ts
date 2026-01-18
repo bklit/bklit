@@ -1,37 +1,20 @@
 "use client";
 
-import type {
-  LiveEvent,
-  PageviewEvent,
-  SessionEndEvent,
-  TrackedEvent,
-} from "@bklit/redis";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-type EventHandler<T> = (data: T) => void;
+type LiveEventType = "pageview" | "event" | "session_end";
 
-interface UseLiveEventStreamOptions {
-  onPageview?: EventHandler<PageviewEvent["data"]>;
-  onEvent?: EventHandler<TrackedEvent["data"]>;
-  onSessionEnd?: EventHandler<SessionEndEvent["data"]>;
-  onConnected?: () => void;
-  onError?: (error: string) => void;
+interface LiveEventData {
+  type: LiveEventType;
+  timestamp: string;
+  data: Record<string, unknown>;
+  projectId?: string;
 }
-
-interface UseLiveEventStreamReturn {
-  isConnected: boolean;
-  error: string | null;
-}
-
-// ============================================
-// SINGLETON EVENT SOURCE MANAGER
-// Only ONE EventSource per projectId, shared across all components
-// ============================================
 
 interface ProjectConnection {
-  eventSource: EventSource;
-  listeners: Set<(event: LiveEvent) => void>;
-  connectionListeners: Set<(connected: boolean) => void>;
+  ws: WebSocket;
+  listeners: Set<(data: LiveEventData) => void>;
+  connectionListeners: Set<(isConnected: boolean) => void>;
   isConnected: boolean;
   refCount: number;
 }
@@ -42,12 +25,16 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
   let connection = connections.get(projectId);
 
   if (!connection) {
-    const eventSource = new EventSource(
-      `/api/live-stream?projectId=${projectId}`
-    );
+    // Determine WebSocket URL based on environment
+    const wsHost =
+      process.env.NODE_ENV === "development"
+        ? "ws://localhost:8080"
+        : "wss://bklit.ws";
+
+    const ws = new WebSocket(`${wsHost}/dashboard?projectId=${projectId}`);
 
     connection = {
-      eventSource,
+      ws,
       listeners: new Set(),
       connectionListeners: new Set(),
       isConnected: false,
@@ -56,184 +43,151 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
 
     const conn = connection; // Capture for closures
 
-    eventSource.onopen = () => {
+    ws.onopen = () => {
+      console.log(`[WebSocket] Connected to project ${projectId}`);
       conn.isConnected = true;
       conn.connectionListeners.forEach((cb) => cb(true));
     };
 
-    eventSource.onmessage = (e) => {
+    ws.onmessage = (event) => {
       try {
-        const event = JSON.parse(e.data) as
-          | LiveEvent
-          | { type: "connected" | "heartbeat" | "error"; message?: string };
+        const data = JSON.parse(event.data);
 
-        // Handle system messages
-        if (event.type === "connected") {
-          conn.isConnected = true;
-          conn.connectionListeners.forEach((cb) => cb(true));
+        console.log(`[WebSocket] 📨 Received message:`, data.type, data);
+
+        // Handle different message types
+        if (data.type === "connected") {
+          console.log(
+            `[WebSocket] Connection confirmed for project ${projectId}`
+          );
           return;
         }
 
-        if (event.type === "heartbeat") {
-          return;
-        }
-
-        if (event.type === "error") {
-          conn.isConnected = false;
-          conn.connectionListeners.forEach((cb) => cb(false));
-          return;
-        }
-
-        // Broadcast to all listeners
-        conn.listeners.forEach((cb) => cb(event as LiveEvent));
-      } catch (err) {
-        console.error("Failed to parse SSE event:", err);
+        // Forward the event to all listeners
+        console.log(`[WebSocket] 📢 Forwarding to ${conn.listeners.size} listener(s)`);
+        conn.listeners.forEach((listener) => listener(data));
+      } catch (error) {
+        console.error("[WebSocket] Failed to parse message:", error);
       }
     };
 
-    eventSource.onerror = () => {
+    ws.onerror = (error) => {
+      console.error(`[WebSocket] Error for project ${projectId}:`, error);
       conn.isConnected = false;
       conn.connectionListeners.forEach((cb) => cb(false));
+    };
+
+    ws.onclose = () => {
+      console.log(`[WebSocket] Disconnected from project ${projectId}`);
+      conn.isConnected = false;
+      conn.connectionListeners.forEach((cb) => cb(false));
+
+      // Attempt to reconnect after a delay if there are still active listeners
+      setTimeout(() => {
+        if (conn.refCount > 0) {
+          console.log(`[WebSocket] Reconnecting to project ${projectId}...`);
+          connections.delete(projectId);
+          getOrCreateConnection(projectId);
+
+          // Re-add all existing listeners to new connection
+          const newConn = connections.get(projectId);
+          if (newConn) {
+            conn.listeners.forEach((listener) => {
+              newConn.listeners.add(listener);
+            });
+            conn.connectionListeners.forEach((listener) => {
+              newConn.connectionListeners.add(listener);
+            });
+            newConn.refCount = conn.refCount;
+          }
+        }
+      }, 3000); // Reconnect after 3 seconds
     };
 
     connections.set(projectId, connection);
   }
 
-  connection.refCount++;
   return connection;
 }
 
-function releaseConnection(projectId: string) {
-  const connection = connections.get(projectId);
-  if (!connection) return;
-
-  connection.refCount--;
-
-  // Close connection when no more subscribers
-  if (connection.refCount <= 0) {
-    connection.eventSource.close();
-    connections.delete(projectId);
-  }
+interface UseLiveEventStreamOptions {
+  onPageview?: (data: any) => void;
+  onEvent?: (data: any) => void;
+  onSessionEnd?: (data: any) => void;
+  onConnectionChange?: (isConnected: boolean) => void;
 }
-
-// ============================================
-// MAIN HOOK
-// ============================================
 
 export function useLiveEventStream(
   projectId: string,
-  options: UseLiveEventStreamOptions = {}
-): UseLiveEventStreamReturn {
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const optionsRef = useRef(options);
+  options: UseLiveEventStreamOptions
+) {
+  const { onPageview, onEvent, onSessionEnd, onConnectionChange } = options;
 
-  // Keep options ref up to date
-  optionsRef.current = options;
+  // Use refs to avoid recreating listeners on every render
+  const onPageviewRef = useRef(onPageview);
+  const onEventRef = useRef(onEvent);
+  const onSessionEndRef = useRef(onSessionEnd);
+  const onConnectionChangeRef = useRef(onConnectionChange);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onPageviewRef.current = onPageview;
+    onEventRef.current = onEvent;
+    onSessionEndRef.current = onSessionEnd;
+    onConnectionChangeRef.current = onConnectionChange;
+  }, [onPageview, onEvent, onSessionEnd, onConnectionChange]);
 
   useEffect(() => {
     if (!projectId) return;
 
     const connection = getOrCreateConnection(projectId);
+    connection.refCount++;
 
-    // Set initial connection state
-    setIsConnected(connection.isConnected);
-
-    // Event listener
-    const handleEvent = (event: LiveEvent) => {
-      switch (event.type) {
-        case "pageview":
-          optionsRef.current.onPageview?.(event.data);
-          break;
-        case "event":
-          optionsRef.current.onEvent?.(event.data);
-          break;
-        case "session_end":
-          optionsRef.current.onSessionEnd?.(event.data);
-          break;
+    // Create listener function
+    const listener = (data: LiveEventData) => {
+      if (data.type === "pageview" && onPageviewRef.current) {
+        onPageviewRef.current(data.data);
+      } else if (data.type === "event" && onEventRef.current) {
+        onEventRef.current(data.data);
+      } else if (data.type === "session_end" && onSessionEndRef.current) {
+        onSessionEndRef.current(data.data);
       }
     };
 
-    // Connection state listener
-    const handleConnectionChange = (connected: boolean) => {
-      setIsConnected(connected);
-      if (connected) {
-        setError(null);
-        optionsRef.current.onConnected?.();
-      } else {
-        setError("Connection lost - reconnecting...");
+    // Create connection listener
+    const connectionListener = (isConnected: boolean) => {
+      if (onConnectionChangeRef.current) {
+        onConnectionChangeRef.current(isConnected);
       }
     };
 
-    // Subscribe
-    connection.listeners.add(handleEvent);
-    connection.connectionListeners.add(handleConnectionChange);
+    // Add listeners
+    connection.listeners.add(listener);
+    connection.connectionListeners.add(connectionListener);
 
+    // Notify initial connection state
+    if (onConnectionChangeRef.current) {
+      onConnectionChangeRef.current(connection.isConnected);
+    }
+
+    // Cleanup
     return () => {
-      // Unsubscribe
-      connection.listeners.delete(handleEvent);
-      connection.connectionListeners.delete(handleConnectionChange);
-      releaseConnection(projectId);
+      connection.listeners.delete(listener);
+      connection.connectionListeners.delete(connectionListener);
+      connection.refCount--;
+
+      // Close connection if no more listeners
+      if (connection.refCount === 0) {
+        console.log(
+          `[WebSocket] Closing connection to project ${projectId} (no more listeners)`
+        );
+        connection.ws.close();
+        connections.delete(projectId);
+      }
     };
   }, [projectId]);
 
-  return { isConnected, error };
-}
-
-// ============================================
-// CONVENIENCE HOOKS
-// ============================================
-
-export function useLivePageviews(
-  projectId: string,
-  onPageview: EventHandler<PageviewEvent["data"]>
-): { isConnected: boolean } {
-  const onPageviewRef = useRef(onPageview);
-  onPageviewRef.current = onPageview;
-
-  const stableOnPageview = useCallback((data: PageviewEvent["data"]) => {
-    onPageviewRef.current(data);
-  }, []);
-
-  const { isConnected } = useLiveEventStream(projectId, {
-    onPageview: stableOnPageview,
-  });
-
-  return { isConnected };
-}
-
-export function useLiveEvents(
-  projectId: string,
-  onEvent: EventHandler<TrackedEvent["data"]>
-): { isConnected: boolean } {
-  const onEventRef = useRef(onEvent);
-  onEventRef.current = onEvent;
-
-  const stableOnEvent = useCallback((data: TrackedEvent["data"]) => {
-    onEventRef.current(data);
-  }, []);
-
-  const { isConnected } = useLiveEventStream(projectId, {
-    onEvent: stableOnEvent,
-  });
-
-  return { isConnected };
-}
-
-export function useLiveSessionEnd(
-  projectId: string,
-  onSessionEnd: EventHandler<SessionEndEvent["data"]>
-): { isConnected: boolean } {
-  const onSessionEndRef = useRef(onSessionEnd);
-  onSessionEndRef.current = onSessionEnd;
-
-  const stableOnSessionEnd = useCallback((data: SessionEndEvent["data"]) => {
-    onSessionEndRef.current(data);
-  }, []);
-
-  const { isConnected } = useLiveEventStream(projectId, {
-    onSessionEnd: stableOnSessionEnd,
-  });
-
-  return { isConnected };
+  return {
+    isConnected: connections.get(projectId)?.isConnected ?? false,
+  };
 }

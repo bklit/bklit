@@ -51,6 +51,7 @@ export interface LiveUserData {
   os: string;
   pageJourney?: PageJourneyItem[];
   triggeredEvents?: EventItem[];
+  gradient?: { from: string; to: string };
 }
 
 export interface LiveCardData {
@@ -389,11 +390,19 @@ function UserView({ user, data }: { user: LiveUserData; data: LiveCardData }) {
   const country = data.countries.find(c => c.code === user.countryCode);
   const journey = user.pageJourney || [];
   
+  // Use gradient from session marker, or fallback to default
+  const gradientStyle = user.gradient 
+    ? { background: `linear-gradient(to bottom right, ${user.gradient.from}, ${user.gradient.to})` }
+    : { background: "linear-gradient(to bottom right, rgb(34, 211, 238), rgb(99, 102, 241))" };
+  
   return (
     <div className="space-y-4 pt-4">
       {/* User Header */}
       <div className="flex flex-col items-center gap-3 text-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-linear-to-br from-cyan-400 to-indigo-500" />
+        <div 
+          className="flex size-16 items-center justify-center rounded-full" 
+          style={gradientStyle}
+        />
         
         <div>
           <h2 className="font-semibold text-base text-white">{user.name}</h2>

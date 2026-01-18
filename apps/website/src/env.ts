@@ -44,10 +44,6 @@ export const env = createEnv({
      * Bklit Website API Token
      */
     NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN: z.string().min(1),
-    /**
-     * Optional API Host override (for development with ngrok)
-     */
-    NEXT_PUBLIC_BKLIT_API_HOST: z.string().url().optional(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
@@ -56,7 +52,6 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN:
       process.env.NEXT_PUBLIC_BKLIT_WEBSITE_API_TOKEN,
-    NEXT_PUBLIC_BKLIT_API_HOST: process.env.NEXT_PUBLIC_BKLIT_API_HOST,
   },
   skipValidation:
     !!process.env.CI || process.env.npm_lifecycle_event === "lint",

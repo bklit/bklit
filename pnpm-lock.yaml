@@ -164,6 +164,9 @@ importers:
       '@bklit/validators':
         specifier: workspace:*
         version: link:../../packages/validators
+      '@maxmind/geoip2-node':
+        specifier: ^6.3.4
+        version: 6.3.4
       '@nivo/geo':
         specifier: ^0.99.0
         version: 0.99.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -785,37 +788,6 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
-  packages/ingestion:
-    dependencies:
-      '@bklit/db':
-        specifier: workspace:*
-        version: link:../db
-      '@bklit/redis':
-        specifier: workspace:*
-        version: link:../redis
-      '@bklit/utils':
-        specifier: workspace:*
-        version: link:../utils
-      '@bklit/validators':
-        specifier: workspace:*
-        version: link:../validators
-      dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
-      ioredis:
-        specifier: ^5.4.1
-        version: 5.9.1
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.19.3
-      dotenv-cli:
-        specifier: ^10.0.0
-        version: 10.0.0
-      tsx:
-        specifier: ^4.7.0
-        version: 4.21.0
-
   packages/redis:
     dependencies:
       ioredis:
@@ -1033,6 +1005,46 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+
+  packages/websocket:
+    dependencies:
+      '@bklit/analytics':
+        specifier: workspace:*
+        version: link:../analytics
+      '@bklit/db':
+        specifier: workspace:*
+        version: link:../db
+      '@bklit/redis':
+        specifier: workspace:*
+        version: link:../redis
+      '@bklit/utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@bklit/validators':
+        specifier: workspace:*
+        version: link:../validators
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
+      ioredis:
+        specifier: ^5.4.1
+        version: 5.9.1
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.3
+      '@types/ws':
+        specifier: ^8.5.12
+        version: 8.18.1
+      dotenv-cli:
+        specifier: ^10.0.0
+        version: 10.0.0
+      tsx:
+        specifier: ^4.7.0
+        version: 4.21.0
 
   packages/worker:
     dependencies:
@@ -2401,6 +2413,9 @@ packages:
   '@mapbox/whoots-js@3.1.0':
     resolution: {integrity: sha512-Es6WcD0nO5l+2BOQS4uLfNPYQaNDfbot3X1XUoloz+x0mPDS3eeORZJl06HXjwBG1fOGwCRnzK88LMdxKRrd6Q==}
     engines: {node: '>=6.0.0'}
+
+  '@maxmind/geoip2-node@6.3.4':
+    resolution: {integrity: sha512-BTRFHCX7Uie4wVSPXsWQfg0EVl4eGZgLCts0BTKAP+Eiyt1zmF2UPyuUZkaj0R59XSDYO+84o1THAtaenUoQYg==}
 
   '@mdx-js/mdx@3.1.1':
     resolution: {integrity: sha512-f6ZO2ifpwAQIpzGWaBQT2TXxPv6z3RBzQKpVftEWN78Vl/YweF1uwussDx8ECAXVtr3Rs89fKyG9YlzUs9DyGQ==}
@@ -4591,6 +4606,9 @@ packages:
 
   '@types/use-sync-external-store@0.0.6':
     resolution: {integrity: sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@typescript-eslint/eslint-plugin@8.46.2':
     resolution: {integrity: sha512-ZGBMToy857/NIPaaCucIUQgqueOiq7HeAKkhlvqVV4lm089zUFW6ikRySx2v+cAhKeUCPuWVHeimyk6Dw1iY3w==}
@@ -6866,6 +6884,10 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
+  maxmind@5.0.3:
+    resolution: {integrity: sha512-oMtZwLrsp0LcZehfYKIirtwKMBycMMqMA1/Dc9/BlUqIEtXO75mIzMJ3PYCV1Ji+BpoUCk+lTzRfh9c+ptGdyQ==}
+    engines: {node: '>=12', npm: '>=6'}
+
   mdast-util-find-and-replace@3.0.2:
     resolution: {integrity: sha512-Tmd1Vg/m3Xz43afeNxDIhWRtFZgM2VLyaf4vSTYwudTyeuTneoL3qtWMA5jeLyz/O1vDJmmV4QuScFCA2tBPwg==}
 
@@ -7117,6 +7139,10 @@ packages:
 
   mlly@1.8.0:
     resolution: {integrity: sha512-l8D9ODSRWLe2KHJSifWGwBqpTZXIXTeo8mlKjY+E2HAakaTeNpqAyBZ8GSqLzHgw4XmHmC8whvpjJNMbFZN7/g==}
+
+  mmdb-lib@3.0.1:
+    resolution: {integrity: sha512-dyAyMR+cRykZd1mw5altC9f4vKpCsuywPwo8l/L5fKqDay2zmqT0mF/BvUoXnQiqGn+nceO914rkPKJoyFnGxA==}
+    engines: {node: '>=10', npm: '>=6'}
 
   module-details-from-path@1.0.4:
     resolution: {integrity: sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==}
@@ -8511,6 +8537,10 @@ packages:
 
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
+
+  tiny-lru@11.4.5:
+    resolution: {integrity: sha512-hkcz3FjNJfKXjV4mjQ1OrXSLAehg8Hw+cEZclOVT+5c/cWQWImQ9wolzTjth+dmmDe++p3bme3fTxz6Q4Etsqw==}
+    engines: {node: '>=12'}
 
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
@@ -10268,6 +10298,10 @@ snapshots:
       pbf: 4.0.1
 
   '@mapbox/whoots-js@3.1.0': {}
+
+  '@maxmind/geoip2-node@6.3.4':
+    dependencies:
+      maxmind: 5.0.3
 
   '@mdx-js/mdx@3.1.1':
     dependencies:
@@ -12765,6 +12799,10 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@types/use-sync-external-store@0.0.6': {}
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 22.19.3
 
   '@typescript-eslint/eslint-plugin@8.46.2(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.8.3))(eslint@9.38.0(jiti@2.6.1))(typescript@5.8.3)':
     dependencies:
@@ -15279,6 +15317,11 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
+  maxmind@5.0.3:
+    dependencies:
+      mmdb-lib: 3.0.1
+      tiny-lru: 11.4.5
+
   mdast-util-find-and-replace@3.0.2:
     dependencies:
       '@types/mdast': 4.0.4
@@ -15782,6 +15825,8 @@ snapshots:
       pathe: 2.0.3
       pkg-types: 1.3.1
       ufo: 1.6.1
+
+  mmdb-lib@3.0.1: {}
 
   module-details-from-path@1.0.4: {}
 
@@ -17422,6 +17467,8 @@ snapshots:
   through@2.3.8: {}
 
   tiny-invariant@1.3.3: {}
+
+  tiny-lru@11.4.5: {}
 
   tinycolor2@1.6.0: {}
 

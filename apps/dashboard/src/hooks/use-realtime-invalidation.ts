@@ -81,7 +81,6 @@ export function useRealtimeInvalidation({
     }
   }, [debounceMs, invalidateScopes]);
 
-  // Subscribe to SSE events (NEW architecture)
   const { isConnected } = useLiveEventStream(projectId, {
     onPageview: handleEvent,
     onEvent: handleEvent,

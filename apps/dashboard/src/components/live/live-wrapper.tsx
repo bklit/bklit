@@ -5,6 +5,7 @@ import { useSidebar } from "@bklit/ui/components/sidebar";
 import { useEffect } from "react";
 import { LiveMap } from "@/components/maps/live-map";
 import { LiveMapProvider } from "@/contexts/live-map-context";
+import { MapEventsProvider } from "@/hooks/use-map-events";
 import { Live } from "./index";
 
 interface LiveWrapperProps {
@@ -21,11 +22,13 @@ export function LiveWrapper({ projectId, organizationId }: LiveWrapperProps) {
   }, [setOpen]);
 
   return (
-    <LiveMapProvider>
-      <LiveCardProvider>
-        <LiveMap organizationId={organizationId} projectId={projectId} />
-        <Live organizationId={organizationId} projectId={projectId} />
-      </LiveCardProvider>
-    </LiveMapProvider>
+    <MapEventsProvider>
+      <LiveMapProvider>
+        <LiveCardProvider>
+          <LiveMap organizationId={organizationId} projectId={projectId} />
+          <Live organizationId={organizationId} projectId={projectId} />
+        </LiveCardProvider>
+      </LiveMapProvider>
+    </MapEventsProvider>
   );
 }

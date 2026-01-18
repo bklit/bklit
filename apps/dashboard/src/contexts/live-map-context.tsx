@@ -89,13 +89,15 @@ export function LiveMapProvider({ children }: { children: ReactNode }) {
   );
 
   const onMarkerClick = useCallback((sessionId: string) => {
-    // Set the selected session
-    setSelectedSessionId(sessionId);
+    setSelectedSessionId(null);
 
-    // Also call any registered handler
-    if (markerClickHandlerRef.current) {
-      markerClickHandlerRef.current(sessionId);
-    }
+    queueMicrotask(() => {
+      setSelectedSessionId(sessionId);
+
+      if (markerClickHandlerRef.current) {
+        markerClickHandlerRef.current(sessionId);
+      }
+    });
   }, []);
 
   const getSession = useCallback(

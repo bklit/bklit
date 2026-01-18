@@ -5,140 +5,294 @@ description: Enable real-time analytics for your self-hosted Bklit instance
 
 # Real-Time Setup (Self-Hosted)
 
-This guide shows you how to enable real-time analytics on your self-hosted Bklit instance. If you don't set this up, Bklit works perfectly fine with polling mode.
+This guide shows you how to enable real-time analytics on your self-hosted Bklit instance using WebSockets.
 
 ## Architecture Overview
 
-Bklit uses **Server-Sent Events (SSE)** for real-time updates. This is simpler than WebSockets and doesn't require a separate server:
+Bklit uses **WebSockets** for real-time analytics, hosted on **bklit.ws**:
 
-1. **Ingestion Service** → Receives events from SDK
-2. **Redis Queue** → Buffers events for processing
-3. **Worker** → Processes events, saves to ClickHouse, publishes to Redis Pub/Sub
-4. **Dashboard API** → SSE endpoint subscribes to Redis Pub/Sub
-5. **Browser** → Native `EventSource` receives real-time updates
+1. **SDK** - Opens WebSocket to `wss://bklit.ws`
+2. **WebSocket Server** - Receives events, queues to Redis, broadcasts to dashboards
+3. **Worker** - Processes queue, saves to ClickHouse
+4. **Dashboard** - Connects to WebSocket for instant updates
 
-**No separate WebSocket server needed!** Real-time is built into the Next.js dashboard.
+**Key Feature:** Sessions end **instantly** (under 1 second) when visitors close browser tabs via WebSocket disconnect detection.
 
 ## Prerequisites
 
-- A server with Ubuntu/Debian (we use Hetzner in this example)
-- Your Bklit dashboard already deployed
-- Redis installed (see below)
+- A server for WebSocket hosting (we use Hetzner)
+- Your Bklit dashboard deployed (Vercel recommended)
+- Redis (Upstash recommended, or self-hosted)
+- ClickHouse for analytics database
 
-## Step 1: Install Redis
+## Infrastructure Setup
 
-SSH into your server and run:
+### Option 1: Hetzner VPS (Recommended)
 
-```bash
-apt update && apt install redis-server -y
+**Specifications:**
+
+- **Server:** CCX13 or higher (4 vCPU, 16GB RAM minimum)
+- **Cost:** ~$40-80/month
+- **Location:** Europe (for GDPR compliance)
+
+**Services to run:**
+
+- WebSocket server (port 8080)
+- Worker (background processing)
+- ClickHouse (optional - can use managed)
+
+### Option 2: Managed Services
+
+- **WebSocket:** Deploy to any VPS or container platform
+- **Redis:** Upstash Redis (generous free tier)
+- **ClickHouse:** ClickHouse Cloud or self-hosted
+- **Dashboard:** Vercel (serverless)
+
+## DNS Configuration
+
+Point your WebSocket domain to your server:
+
+```
+Type: A
+Name: @ (for bklit.ws) or ws (for ws.yourdomain.com)
+Content: <your-server-ip>
+Proxy: DNS only (gray cloud in Cloudflare) ⚪ IMPORTANT!
+TTL: Auto
 ```
 
-Generate a strong password:
+**Critical:** Must use **gray cloud** (DNS only), not orange cloud (proxied). Cloudflare proxy has 100-second timeout on free plan which kills WebSocket connections.
+
+## Server Setup
+
+### 1. Install Dependencies
 
 ```bash
-openssl rand -base64 32
+# Install Node.js 22+
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+apt-get install -y nodejs
+
+# Install pnpm
+npm install -g pnpm
+
+# Clone your repo
+git clone https://github.com/bklit/bklit.git
+cd bklit
+pnpm install
 ```
 
-Copy that password, then configure Redis:
+### 2. Configure Environment
+
+Create `.env` file:
 
 ```bash
-cat > /etc/redis/redis.conf << 'EOF'
-bind 127.0.0.1 ::1
-port 6379
-requirepass YOUR_PASSWORD_HERE
-maxmemory 2gb
-maxmemory-policy allkeys-lru
-dir /var/lib/redis
-EOF
+# Redis
+REDIS_URL=redis://:<password>@<host>:6379
 
-systemctl restart redis-server
-systemctl enable redis-server
+# ClickHouse
+CLICKHOUSE_HOST=<clickhouse-host>
+CLICKHOUSE_USER=default
+CLICKHOUSE_PASSWORD=<password>
+CLICKHOUSE_DATABASE=analytics
+
+# WebSocket
+WEBSOCKET_PORT=8080
+NODE_ENV=production
 ```
 
-Test it works:
+### 3. Start Services with PM2
 
 ```bash
-redis-cli -a 'YOUR_PASSWORD' ping
-# Should return: PONG
+# Install PM2
+npm install -g pm2
+
+# Start WebSocket server
+pm2 start packages/websocket/src/server.ts --name websocket --interpreter tsx
+
+# Start worker
+pm2 start packages/worker/src/index.ts --name worker --interpreter tsx
+
+# Save PM2 config
+pm2 save
+
+# Enable auto-start on boot
+pm2 startup
 ```
 
-## Step 2: Configure Environment Variables
-
-Add these environment variables to your dashboard deployment:
+### 4. Configure Firewall
 
 ```bash
-REDIS_URL=redis://:YOUR_PASSWORD@YOUR_SERVER:6379
+# Allow WebSocket port
+ufw allow 8080/tcp
+
+# Allow SSH (if not already)
+ufw allow 22/tcp
+
+# Enable firewall
+ufw enable
 ```
 
-For **Vercel**: Add this in Project Settings → Environment Variables
+## SSL/TLS Setup (Production)
 
-For **self-hosted**: Add to your `.env` file or systemd service
+For production WebSocket (`wss://`), you need SSL. Use Let's Encrypt:
 
-## Step 3: Deploy
+```bash
+# Install Certbot
+apt install certbot
 
-Push your code and the real-time features will activate automatically!
+# Get certificate
+certbot certonly --standalone -d bklit.ws
 
-The dashboard includes two SSE endpoints:
-- `/api/live-stream` - Real-time analytics events (pageviews, custom events, session ends)
-- `/api/debug-stream` - Pipeline monitoring (for the terminal view)
+# Certificate location:
+# /etc/letsencrypt/live/bklit.ws/fullchain.pem
+# /etc/letsencrypt/live/bklit.ws/privkey.pem
+```
+
+Update WebSocket server to use SSL (add to `packages/websocket/src/server.ts`):
+
+```typescript
+import { readFileSync } from "fs";
+import { createServer } from "https";
+
+const server = createServer({
+  cert: readFileSync("/etc/letsencrypt/live/bklit.ws/fullchain.pem"),
+  key: readFileSync("/etc/letsencrypt/live/bklit.ws/privkey.pem"),
+});
+
+const wss = new WebSocketServer({ server });
+server.listen(8080);
+```
 
 ## Verify It's Working
 
-Check the health endpoint:
+### 1. Check Services
 
 ```bash
-curl https://your-domain.com/api/health/realtime
+pm2 status
 ```
 
-Should return:
-```json
-{"status":"healthy","redis":"connected","mode":"realtime"}
+Should show:
+
+```
+websocket  │ online
+worker     │ online
 ```
 
-Open your dashboard and you should see:
-- Green indicator dot next to live user count
-- Instant toast notifications when visitors arrive
-- Map markers appear in real-time
-- Session details update live
+### 2. Test WebSocket Connection
 
-## How It Works
+```bash
+curl -i -N --http1.1 \
+  -H "Connection: Upgrade" \
+  -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" \
+  -H "Sec-WebSocket-Key: $(openssl rand -base64 16)" \
+  http://localhost:8080
+```
 
-When a visitor triggers an event:
+Should return `101 Switching Protocols`.
 
-1. SDK sends event to ingestion service
-2. Event is queued in Redis
-3. Worker processes event, saves to ClickHouse
-4. Worker publishes to `live-events` Redis channel
-5. Dashboard's `/api/live-stream` SSE endpoint receives the event
-6. Browser's `EventSource` gets the update instantly
-7. React components update via the `useLiveEventStream` hook
+### 3. Check Logs
+
+```bash
+pm2 logs websocket
+pm2 logs worker
+```
+
+Look for:
+
+- `[WS] New sdk connection` when a visitor arrives
+- `[WS] Pageview received via WebSocket`
+- `[Worker] Event processed`
+
+## Dashboard Configuration
+
+Your dashboard on Vercel needs no WebSocket configuration - it connects to `wss://bklit.ws` automatically.
+
+**Environment Variables for Vercel:**
+
+```bash
+REDIS_URL=redis://:<password>@<host>:6379
+CLICKHOUSE_HOST=<clickhouse-host>
+CLICKHOUSE_USER=default
+CLICKHOUSE_PASSWORD=<password>
+CLICKHOUSE_DATABASE=analytics
+DATABASE_URL=<postgres-connection-string>
+```
+
+## Monitoring
+
+### Active Connections
+
+```bash
+pm2 logs websocket --lines 20
+```
+
+Look for connection count in logs.
+
+### Redis Queue Depth
+
+```bash
+redis-cli -h <host> -a <password> LLEN analytics:queue
+```
+
+Should be 0 or very low (worker processes fast).
+
+### Live Sessions
+
+```bash
+redis-cli -h <host> -a <password> ZCARD live:sessions:<project-id>
+```
+
+Shows current active WebSocket connections.
 
 ## Troubleshooting
 
-**Not seeing real-time updates:**
-- Check Redis is running: `systemctl status redis-server`
-- Verify `REDIS_URL` environment variable is set correctly
-- Check browser console for SSE connection errors
+**WebSocket won't connect:**
 
-**Redis connection errors:**
-- Check Redis password is correct
-- Verify Redis is accessible from your dashboard server
-- If using Vercel, ensure Redis is accessible from the internet (or use a managed Redis like Upstash)
+- Check firewall allows port 8080
+- Verify DNS is gray cloud (not orange)
+- Check SSL certificate if using wss://
+- Test with ws:// first, then add SSL
 
-**Falling back to polling:**
-- This is normal if Redis is unavailable
-- Analytics still work, just not real-time
-- The dashboard polls every 10 seconds as fallback
+**Sessions not ending:**
+
+- Verify WebSocket server `onclose` handler is working
+- Check PM2 logs for disconnect events
+- Ensure no proxy is buffering connections
+
+**High latency:**
+
+- Use CDN/edge locations closer to users
+- Check Redis latency
+- Monitor WebSocket server CPU/memory
+
+## Scaling
+
+### Horizontal Scaling
+
+WebSockets can scale horizontally with Redis Pub/Sub:
+
+1. Run multiple WebSocket servers (different IPs/ports)
+2. Use load balancer with sticky sessions
+3. Broadcast events via Redis Pub/Sub to all servers
+4. Each server broadcasts to its connected clients
+
+### Recommended Stack
+
+For production at scale:
+
+- **WebSocket Servers:** 2-3 instances behind load balancer
+- **Redis:** Upstash (managed, auto-scaling)
+- **ClickHouse:** ClickHouse Cloud or Hetzner dedicated server
+- **Dashboard:** Vercel (edge deployment)
+- **Worker:** 1-2 instances (can scale based on queue depth)
 
 ## Local Development
 
-For local development, Redis runs in Docker via `docker-compose.yml`:
-
 ```bash
-pnpm dev:services  # Starts Redis, ClickHouse, ingestion, worker
-pnpm dev           # Starts dashboard
+pnpm dev:services  # Docker (Redis, ClickHouse) + WebSocket + Worker
+pnpm dev           # Dashboard (Next.js)
 ```
 
-Real-time works automatically in local development!
+WebSocket runs on `ws://localhost:8080` automatically in development.
 
-That's it! Real-time analytics is now built into your dashboard with no extra servers needed.
+That's it! Your analytics are now real-time with sub-second updates. 🚀
