@@ -392,27 +392,18 @@ export class AnalyticsService {
   async getEndedSessions(sessionIds: string[]): Promise<string[]> {
     if (sessionIds.length === 0) return [];
 
-    const placeholders = sessionIds.map((_, i) => `{id${i}:String}`).join(",");
+    // Build query with proper ClickHouse tuple syntax
+    const sessionList = sessionIds.map(id => `'${id.replace(/'/g, "\\'")}'`).join(",");
     const query = `
       SELECT session_id 
       FROM tracked_session 
-      WHERE session_id IN (${placeholders})
+      WHERE session_id IN (${sessionList})
       AND ended_at IS NOT NULL
-      FORMAT JSON
     `;
 
-    const params: Record<string, string> = {};
-    sessionIds.forEach((id, i) => {
-      params[`id${i}`] = id;
-    });
-
-    const result = await this.client.query({
-      query,
-      query_params: params,
-    });
-
-    const rows = await result.json<{ data: { session_id: string }[] }>();
-    return rows.data.map((row) => row.session_id);
+    const result = await this.client.query({ query, format: "JSONEachRow" });
+    const rows = await result.json<{ session_id: string }>();
+    return rows.map((row) => row.session_id);
   }
 
   async getPageViews(query: PageViewQuery) {
