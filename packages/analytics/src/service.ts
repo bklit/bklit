@@ -392,20 +392,26 @@ export class AnalyticsService {
   async getEndedSessions(sessionIds: string[]): Promise<string[]> {
     if (sessionIds.length === 0) return [];
 
-    const placeholders = sessionIds.map(() => "?").join(",");
+    const placeholders = sessionIds.map((_, i) => `{id${i}:String}`).join(",");
     const query = `
       SELECT session_id 
       FROM tracked_session 
       WHERE session_id IN (${placeholders})
       AND ended_at IS NOT NULL
+      FORMAT JSON
     `;
+
+    const params: Record<string, string> = {};
+    sessionIds.forEach((id, i) => {
+      params[`id${i}`] = id;
+    });
 
     const result = await this.client.query({
       query,
-      query_params: sessionIds,
+      query_params: params,
     });
 
-    const rows = await result.json<{ session_id: string }>();
+    const rows = await result.json<{ data: { session_id: string }[] }>();
     return rows.data.map((row) => row.session_id);
   }
 
