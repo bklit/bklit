@@ -5,6 +5,7 @@ import { createServer as createHttpsServer } from "node:https";
 import { AnalyticsService } from "@bklit/analytics";
 import type { QueuedEvent } from "@bklit/redis";
 import {
+  getRedisClient,
   publishDebugLog,
   publishLiveEvent,
   pushToQueue,
