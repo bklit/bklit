@@ -386,6 +386,29 @@ export class AnalyticsService {
     });
   }
 
+  /**
+   * Get session IDs that have ended (for Redis cleanup)
+   */
+  async getEndedSessions(sessionIds: string[]): Promise<string[]> {
+    if (sessionIds.length === 0) return [];
+
+    const placeholders = sessionIds.map(() => "?").join(",");
+    const query = `
+      SELECT session_id 
+      FROM tracked_session 
+      WHERE session_id IN (${placeholders})
+      AND ended_at IS NOT NULL
+    `;
+
+    const result = await this.client.query({
+      query,
+      query_params: sessionIds,
+    });
+
+    const rows = await result.json<{ session_id: string }>();
+    return rows.data.map((row) => row.session_id);
+  }
+
   async getPageViews(query: PageViewQuery) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };

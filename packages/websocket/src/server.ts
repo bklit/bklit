@@ -584,3 +584,35 @@ setInterval(() => {
     conn.ws.ping();
   });
 }, 30_000); // Check every 30 seconds
+
+// Redis cleanup: Remove ended sessions from live tracking
+// This prevents zombie sessions from old architecture or failed cleanups
+setInterval(async () => {
+  const redis = await getRedisClient();
+  if (!redis) return;
+
+  try {
+    // Get all live session keys
+    const keys = await redis.keys("live:sessions:*");
+    
+    for (const key of keys) {
+      const projectId = key.replace("live:sessions:", "");
+      
+      // Get all session IDs from Redis sorted set
+      const sessions = await redis.zrange(key, 0, -1);
+      
+      if (sessions.length === 0) continue;
+      
+      // Query ClickHouse for ended sessions
+      const endedSessions = await analyticsService.getEndedSessions(sessions);
+      
+      // Remove ended sessions from Redis
+      if (endedSessions.length > 0) {
+        await redis.zrem(key, ...endedSessions);
+        console.log(`[Cleanup] Removed ${endedSessions.length} ended sessions from ${projectId}`);
+      }
+    }
+  } catch (error) {
+    console.error("[Cleanup] Redis sync error:", error instanceof Error ? error.message : error);
+  }
+}, 60_000); // Check every 60 seconds
