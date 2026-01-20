@@ -2336,6 +2336,28 @@ export class AnalyticsService {
       END
     `;
 
+    // First, get top N sources by total views
+    const topSourcesResult = await this.client.query({
+      query: `
+        SELECT ${sourceExpression} as source
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY source
+        ORDER BY count() DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    const topSourcesRows = (await topSourcesResult.json()) as Array<{ source: string }>;
+    const topSourceNames = topSourcesRows.map((r) => r.source);
+
+    if (topSourceNames.length === 0) {
+      return [];
+    }
+
+    // Then get daily data for only those top sources
     const result = await this.client.query({
       query: `
         SELECT 
@@ -2348,11 +2370,11 @@ export class AnalyticsService {
           any(utm_campaign) as sample_utm_campaign
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
+          AND ${sourceExpression} IN (${topSourceNames.map((s) => `'${s.replace(/'/g, "\\'")}'`).join(",")})
         GROUP BY source, date
-        ORDER BY sum(view_count) OVER (PARTITION BY source) DESC, date ASC
-        LIMIT {limit:UInt32} BY source
+        ORDER BY date ASC
       `,
-      query_params: { ...params, limit },
+      query_params: params,
       format: "JSONEachRow",
     });
 
@@ -2396,7 +2418,7 @@ export class AnalyticsService {
       sourceGroups[row.source].totalViews += row.view_count;
     }
 
-    return Object.values(sourceGroups).sort((a, b) => b.totalViews - a.totalViews);
+    return Object.values(sourceGroups).sort((a, b) => b.totalViews - a.totalViews).slice(0, limit);
   }
 
   async getTopPagesByUrl(query: StatsQuery & { limit?: number; offset?: number }) {
@@ -2496,6 +2518,28 @@ export class AnalyticsService {
 
     const limit = query.limit || 5;
 
+    // First, get top N pages by total views
+    const topPagesResult = await this.client.query({
+      query: `
+        SELECT url
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY url
+        ORDER BY count() DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    const topPagesRows = (await topPagesResult.json()) as Array<{ url: string }>;
+    const topPageUrls = topPagesRows.map((r) => r.url);
+
+    if (topPageUrls.length === 0) {
+      return [];
+    }
+
+    // Then get daily data for only those top pages
     const result = await this.client.query({
       query: `
         SELECT 
@@ -2505,11 +2549,11 @@ export class AnalyticsService {
           argMax(title, timestamp) as latest_title
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
+          AND url IN (${topPageUrls.map((url) => `'${url.replace(/'/g, "\\'")}'`).join(",")})
         GROUP BY url, date
-        ORDER BY sum(view_count) OVER (PARTITION BY url) DESC, date ASC
-        LIMIT {limit:UInt32} BY url
+        ORDER BY date ASC
       `,
-      query_params: { ...params, limit },
+      query_params: params,
       format: "JSONEachRow",
     });
 
@@ -2548,7 +2592,7 @@ export class AnalyticsService {
       }
     }
 
-    return Object.values(urlGroups).sort((a, b) => b.totalViews - a.totalViews);
+    return Object.values(urlGroups).sort((a, b) => b.totalViews - a.totalViews).slice(0, limit);
   }
 
   async getTopEntryPages(query: StatsQuery & { limit?: number; offset?: number }) {
@@ -2654,6 +2698,37 @@ export class AnalyticsService {
 
     const limit = query.limit || 5;
 
+    // First, get top N entry pages by total sessions
+    const topEntryPagesResult = await this.client.query({
+      query: `
+        SELECT entry_page
+        FROM (
+          SELECT 
+            entry_page,
+            session_id,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE ${conditions.join(" AND ")}
+        )
+        WHERE rn = 1
+        GROUP BY entry_page
+        ORDER BY count(DISTINCT session_id) DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    const topEntryPagesRows = (await topEntryPagesResult.json()) as Array<{
+      entry_page: string;
+    }>;
+    const topEntryPageUrls = topEntryPagesRows.map((r) => r.entry_page);
+
+    if (topEntryPageUrls.length === 0) {
+      return [];
+    }
+
+    // Then get daily data for only those top entry pages
     const result = await this.client.query({
       query: `
         SELECT 
@@ -2668,13 +2743,13 @@ export class AnalyticsService {
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
           FROM tracked_session
           WHERE ${conditions.join(" AND ")}
+            AND entry_page IN (${topEntryPageUrls.map((url) => `'${url.replace(/'/g, "\\'")}'`).join(",")})
         )
         WHERE rn = 1
         GROUP BY entry_page, date
-        ORDER BY sum(session_count) OVER (PARTITION BY entry_page) DESC, date ASC
-        LIMIT {limit:UInt32} BY entry_page
+        ORDER BY date ASC
       `,
-      query_params: { ...params, limit },
+      query_params: params,
       format: "JSONEachRow",
     });
 
@@ -2706,9 +2781,9 @@ export class AnalyticsService {
       entryPageGroups[row.entry_page].totalSessions += row.session_count;
     }
 
-    return Object.values(entryPageGroups).sort(
-      (a, b) => b.totalSessions - a.totalSessions
-    );
+    return Object.values(entryPageGroups)
+      .sort((a, b) => b.totalSessions - a.totalSessions)
+      .slice(0, limit);
   }
 
   async getSessionsCount(query: StatsQuery): Promise<number> {
