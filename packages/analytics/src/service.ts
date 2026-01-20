@@ -607,7 +607,12 @@ export class AnalyticsService {
           country,
           country_code,
           uniq(id) as visits,
-          uniq(ip) as unique_visitors
+          uniq(ip) as unique_visitors,
+          uniqIf(id, mobile = true) as mobile_visits,
+          uniqIf(id, mobile = false) as desktop_visits,
+          any(lat) as sample_lat,
+          any(lon) as sample_lon,
+          any(city) as sample_city
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
         GROUP BY country, country_code
@@ -623,6 +628,11 @@ export class AnalyticsService {
       country_code: string;
       visits: number;
       unique_visitors: number;
+      mobile_visits: number;
+      desktop_visits: number;
+      sample_lat: number | null;
+      sample_lon: number | null;
+      sample_city: string | null;
     }>;
   }
 
