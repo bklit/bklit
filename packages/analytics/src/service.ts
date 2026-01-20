@@ -393,7 +393,9 @@ export class AnalyticsService {
     if (sessionIds.length === 0) return [];
 
     // Build query with proper ClickHouse tuple syntax
-    const sessionList = sessionIds.map(id => `'${id.replace(/'/g, "\\'")}'`).join(",");
+    const sessionList = sessionIds
+      .map((id) => `'${id.replace(/'/g, "\\'")}'`)
+      .join(",");
     const query = `
       SELECT session_id 
       FROM tracked_session 
@@ -2122,5 +2124,730 @@ export class AnalyticsService {
       pageViewEvents: pageviewsBySession[session.session_id] || [],
       trackedEvents: eventsBySession[session.session_id] || [],
     }));
+  }
+
+  async getAcquisitionSources(
+    query: StatsQuery & { limit?: number; offset?: number }
+  ) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 20;
+    const offset = query.offset || 0;
+
+    // Build source string in SQL (matching getAcquisitionSource logic)
+    const sourceExpression = `
+      CASE
+        WHEN utm_source IS NOT NULL AND utm_source != '' THEN
+          concat(
+            utm_source,
+            if(utm_medium IS NOT NULL AND utm_medium != '', concat(' (', utm_medium, ')'), ''),
+            if(utm_campaign IS NOT NULL AND utm_campaign != '', concat(' - ', utm_campaign), '')
+          )
+        WHEN referrer IS NOT NULL AND referrer != '' THEN
+          domain(referrer)
+        ELSE 'Direct'
+      END
+    `;
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          ${sourceExpression} as source,
+          count() as view_count,
+          uniq(ip) as unique_users,
+          max(timestamp) as last_viewed,
+          min(timestamp) as first_viewed,
+          any(referrer) as sample_referrer,
+          any(utm_source) as sample_utm_source,
+          any(utm_medium) as sample_utm_medium,
+          any(utm_campaign) as sample_utm_campaign
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY source
+        ORDER BY view_count DESC
+        LIMIT {limit:UInt32}
+        OFFSET {offset:UInt32}
+      `,
+      query_params: { ...params, limit, offset },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      source: string;
+      view_count: number;
+      unique_users: number;
+      last_viewed: string;
+      first_viewed: string;
+      sample_referrer: string | null;
+      sample_utm_source: string | null;
+      sample_utm_medium: string | null;
+      sample_utm_campaign: string | null;
+    }>;
+
+    return rows.map((row) => ({
+      source: row.source,
+      viewCount: row.view_count,
+      uniqueUserCount: row.unique_users,
+      lastViewed: parseClickHouseDate(row.last_viewed),
+      firstViewed: parseClickHouseDate(row.first_viewed),
+      sampleReferrer: row.sample_referrer,
+      sampleUtmSource: row.sample_utm_source,
+      sampleUtmMedium: row.sample_utm_medium,
+      sampleUtmCampaign: row.sample_utm_campaign,
+    }));
+  }
+
+  async getAcquisitionSourcesCount(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    // Same source expression as above
+    const sourceExpression = `
+      CASE
+        WHEN utm_source IS NOT NULL AND utm_source != '' THEN
+          concat(
+            utm_source,
+            if(utm_medium IS NOT NULL AND utm_medium != '', concat(' (', utm_medium, ')'), ''),
+            if(utm_campaign IS NOT NULL AND utm_campaign != '', concat(' - ', utm_campaign), '')
+          )
+        WHEN referrer IS NOT NULL AND referrer != '' THEN
+          domain(referrer)
+        ELSE 'Direct'
+      END
+    `;
+
+    const result = await this.client.query({
+      query: `
+        SELECT count(DISTINCT ${sourceExpression}) as total_sources
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ total_sources: number }>;
+    return rows[0]?.total_sources || 0;
+  }
+
+  async getTrafficTypeStats(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          countIf(referrer IS NULL OR referrer = '') as direct_traffic,
+          countIf(
+            utm_source IS NOT NULL AND utm_source != ''
+            AND utm_medium IN ('cpc', 'paid')
+          ) as paid_traffic,
+          countIf(
+            utm_source IS NOT NULL AND utm_source != ''
+            AND (utm_medium NOT IN ('cpc', 'paid') OR utm_medium IS NULL OR utm_medium = '')
+          ) as utm_traffic,
+          countIf(
+            referrer IS NOT NULL AND referrer != '' 
+            AND (utm_source IS NULL OR utm_source = '')
+            AND (
+              referrer LIKE '%google.com%' 
+              OR referrer LIKE '%bing.com%' 
+              OR referrer LIKE '%yahoo.com%'
+            )
+          ) as organic_traffic,
+          countIf(
+            referrer IS NOT NULL AND referrer != ''
+            AND (utm_source IS NULL OR utm_source = '')
+            AND (
+              referrer LIKE '%facebook.com%' 
+              OR referrer LIKE '%twitter.com%' 
+              OR referrer LIKE '%linkedin.com%' 
+              OR referrer LIKE '%instagram.com%'
+            )
+          ) as social_traffic
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      direct_traffic: number;
+      paid_traffic: number;
+      utm_traffic: number;
+      organic_traffic: number;
+      social_traffic: number;
+    }>;
+
+    return (
+      rows[0] || {
+        direct_traffic: 0,
+        paid_traffic: 0,
+        utm_traffic: 0,
+        organic_traffic: 0,
+        social_traffic: 0,
+      }
+    );
+  }
+
+  async getAcquisitionTimeSeries(query: StatsQuery & { limit?: number }) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 5;
+
+    // Build source string in SQL
+    const sourceExpression = `
+      CASE
+        WHEN utm_source IS NOT NULL AND utm_source != '' THEN
+          concat(
+            utm_source,
+            if(utm_medium IS NOT NULL AND utm_medium != '', concat(' (', utm_medium, ')'), ''),
+            if(utm_campaign IS NOT NULL AND utm_campaign != '', concat(' - ', utm_campaign), '')
+          )
+        WHEN referrer IS NOT NULL AND referrer != '' THEN
+          domain(referrer)
+        ELSE 'Direct'
+      END
+    `;
+
+    // First, get top N sources by total views
+    const topSourcesResult = await this.client.query({
+      query: `
+        SELECT ${sourceExpression} as source
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY source
+        ORDER BY count() DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    const topSourcesRows = (await topSourcesResult.json()) as Array<{
+      source: string;
+    }>;
+    const topSourceNames = topSourcesRows.map((r) => r.source);
+
+    if (topSourceNames.length === 0) {
+      return [];
+    }
+
+    // Then get daily data for only those top sources (using parameterized array)
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          ${sourceExpression} as source,
+          toDate(timestamp) as date,
+          count() as view_count,
+          any(referrer) as sample_referrer,
+          any(utm_source) as sample_utm_source,
+          any(utm_medium) as sample_utm_medium,
+          any(utm_campaign) as sample_utm_campaign
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+          AND ${sourceExpression} IN ({sources:Array(String)})
+        GROUP BY source, date
+        ORDER BY date ASC
+      `,
+      query_params: { ...params, sources: topSourceNames },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      source: string;
+      date: string;
+      view_count: number;
+      sample_referrer: string | null;
+      sample_utm_source: string | null;
+      sample_utm_medium: string | null;
+      sample_utm_campaign: string | null;
+    }>;
+
+    // Group by source
+    const sourceGroups: Record<
+      string,
+      {
+        source: string;
+        dailyViews: Record<string, number>;
+        totalViews: number;
+        sampleReferrer: string | null;
+        sampleUtmSource: string | null;
+        sampleUtmMedium: string | null;
+        sampleUtmCampaign: string | null;
+      }
+    > = {};
+
+    for (const row of rows) {
+      if (!sourceGroups[row.source]) {
+        sourceGroups[row.source] = {
+          source: row.source,
+          dailyViews: {},
+          totalViews: 0,
+          sampleReferrer: row.sample_referrer,
+          sampleUtmSource: row.sample_utm_source,
+          sampleUtmMedium: row.sample_utm_medium,
+          sampleUtmCampaign: row.sample_utm_campaign,
+        };
+      }
+      sourceGroups[row.source].dailyViews[row.date] = row.view_count;
+      sourceGroups[row.source].totalViews += row.view_count;
+    }
+
+    return Object.values(sourceGroups)
+      .sort((a, b) => b.totalViews - a.totalViews)
+      .slice(0, limit);
+  }
+
+  async getTopPagesByUrl(
+    query: StatsQuery & { limit?: number; offset?: number }
+  ) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 20;
+    const offset = query.offset || 0;
+
+    // Extract path from URL (normalize by removing query params and hash)
+    // This groups https://example.com/page?foo=bar and https://example.com/page together
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          path(url) as normalized_path,
+          any(url) as sample_url,
+          argMax(title, timestamp) as latest_title,
+          count() as view_count,
+          uniq(ip) as unique_users,
+          max(timestamp) as last_viewed,
+          min(timestamp) as first_viewed
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY normalized_path
+        ORDER BY view_count DESC
+        LIMIT {limit:UInt32}
+        OFFSET {offset:UInt32}
+      `,
+      query_params: { ...params, limit, offset },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      normalized_path: string;
+      sample_url: string;
+      latest_title: string | null;
+      view_count: number;
+      unique_users: number;
+      last_viewed: string;
+      first_viewed: string;
+    }>;
+
+    return rows.map((row) => ({
+      url: row.sample_url, // Use a sample URL (latest one)
+      title: row.latest_title,
+      viewCount: row.view_count,
+      uniqueUserCount: row.unique_users,
+      lastViewed: parseClickHouseDate(row.last_viewed),
+      firstViewed: parseClickHouseDate(row.first_viewed),
+    }));
+  }
+
+  async getTopPagesCount(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT count(DISTINCT path(url)) as total_pages
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ total_pages: number }>;
+    return rows[0]?.total_pages || 0;
+  }
+
+  async getTopPagesTimeSeries(query: StatsQuery & { limit?: number }) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 5;
+
+    // First, get top N pages by normalized path (excluding query params)
+    const topPagesResult = await this.client.query({
+      query: `
+        SELECT path(url) as normalized_path
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY normalized_path
+        ORDER BY count() DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    const topPagesRows = (await topPagesResult.json()) as Array<{
+      normalized_path: string;
+    }>;
+    const topPagePaths = topPagesRows.map((r) => r.normalized_path);
+
+    if (topPagePaths.length === 0) {
+      return [];
+    }
+
+    // Then get daily data for only those top pages (using parameterized array)
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          path(url) as normalized_path,
+          any(url) as sample_url,
+          toDate(timestamp) as date,
+          count() as view_count,
+          argMax(title, timestamp) as latest_title
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+          AND path(url) IN ({paths:Array(String)})
+        GROUP BY normalized_path, date
+        ORDER BY date ASC
+      `,
+      query_params: { ...params, paths: topPagePaths },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      normalized_path: string;
+      sample_url: string;
+      date: string;
+      view_count: number;
+      latest_title: string | null;
+    }>;
+
+    // Group by normalized path
+    const urlGroups: Record<
+      string,
+      {
+        url: string;
+        title: string | null;
+        dailyViews: Record<string, number>;
+        totalViews: number;
+      }
+    > = {};
+
+    for (const row of rows) {
+      if (!urlGroups[row.normalized_path]) {
+        urlGroups[row.normalized_path] = {
+          url: row.sample_url,
+          title: row.latest_title,
+          dailyViews: {},
+          totalViews: 0,
+        };
+      }
+      urlGroups[row.normalized_path].dailyViews[row.date] = row.view_count;
+      urlGroups[row.normalized_path].totalViews += row.view_count;
+      // Keep most recent title
+      if (row.latest_title) {
+        urlGroups[row.normalized_path].title = row.latest_title;
+      }
+    }
+
+    return Object.values(urlGroups)
+      .sort((a, b) => b.totalViews - a.totalViews)
+      .slice(0, limit);
+  }
+
+  async getTopEntryPages(
+    query: StatsQuery & { limit?: number; offset?: number }
+  ) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("started_at >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("started_at <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 20;
+    const offset = query.offset || 0;
+
+    // Use window function to get latest session state, then group by entry_page
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          entry_page,
+          count(DISTINCT session_id) as session_count,
+          max(updated_at) as last_session
+        FROM (
+          SELECT 
+            entry_page,
+            session_id,
+            updated_at,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE ${conditions.join(" AND ")}
+        )
+        WHERE rn = 1
+        GROUP BY entry_page
+        ORDER BY session_count DESC
+        LIMIT {limit:UInt32}
+        OFFSET {offset:UInt32}
+      `,
+      query_params: { ...params, limit, offset },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      entry_page: string;
+      session_count: number;
+      last_session: string;
+    }>;
+
+    return rows.map((row) => ({
+      entryPage: row.entry_page,
+      sessionCount: row.session_count,
+      lastSession: parseClickHouseDate(row.last_session),
+    }));
+  }
+
+  async getTopEntryPagesCount(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("started_at >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("started_at <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT count(DISTINCT entry_page) as total_entry_pages
+        FROM (
+          SELECT 
+            entry_page,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE ${conditions.join(" AND ")}
+        )
+        WHERE rn = 1
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ total_entry_pages: number }>;
+    return rows[0]?.total_entry_pages || 0;
+  }
+
+  async getTopEntryPagesTimeSeries(query: StatsQuery & { limit?: number }) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("started_at >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("started_at <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 5;
+
+    // First, get top N entry pages by total sessions
+    const topEntryPagesResult = await this.client.query({
+      query: `
+        SELECT entry_page
+        FROM (
+          SELECT 
+            entry_page,
+            session_id,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE ${conditions.join(" AND ")}
+        )
+        WHERE rn = 1
+        GROUP BY entry_page
+        ORDER BY count(DISTINCT session_id) DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    const topEntryPagesRows = (await topEntryPagesResult.json()) as Array<{
+      entry_page: string;
+    }>;
+    const topEntryPageUrls = topEntryPagesRows.map((r) => r.entry_page);
+
+    if (topEntryPageUrls.length === 0) {
+      return [];
+    }
+
+    // Then get daily data for only those top entry pages (using parameterized array)
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          entry_page,
+          toDate(started_at) as date,
+          count(DISTINCT session_id) as session_count
+        FROM (
+          SELECT 
+            entry_page,
+            session_id,
+            started_at,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE ${conditions.join(" AND ")}
+            AND entry_page IN ({entryPages:Array(String)})
+        )
+        WHERE rn = 1
+        GROUP BY entry_page, date
+        ORDER BY date ASC
+      `,
+      query_params: { ...params, entryPages: topEntryPageUrls },
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      entry_page: string;
+      date: string;
+      session_count: number;
+    }>;
+
+    // Group by entry page
+    const entryPageGroups: Record<
+      string,
+      {
+        entryPage: string;
+        dailySessions: Record<string, number>;
+        totalSessions: number;
+      }
+    > = {};
+
+    for (const row of rows) {
+      if (!entryPageGroups[row.entry_page]) {
+        entryPageGroups[row.entry_page] = {
+          entryPage: row.entry_page,
+          dailySessions: {},
+          totalSessions: 0,
+        };
+      }
+      entryPageGroups[row.entry_page].dailySessions[row.date] =
+        row.session_count;
+      entryPageGroups[row.entry_page].totalSessions += row.session_count;
+    }
+
+    return Object.values(entryPageGroups)
+      .sort((a, b) => b.totalSessions - a.totalSessions)
+      .slice(0, limit);
+  }
+
+  async getSessionsCount(query: StatsQuery): Promise<number> {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("updated_at >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("updated_at <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT count(DISTINCT session_id) as total_sessions
+        FROM (
+          SELECT 
+            session_id,
+            row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
+          FROM tracked_session
+          WHERE ${conditions.join(" AND ")}
+        )
+        WHERE rn = 1
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{ total_sessions: number }>;
+    return rows[0]?.total_sessions || 0;
   }
 }

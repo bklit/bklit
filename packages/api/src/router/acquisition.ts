@@ -1,6 +1,5 @@
-import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
-import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
+import { endOfDay, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const acquisitionRouter = createTRPCRouter({
@@ -46,102 +45,56 @@ export const acquisitionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const pageviews = await ctx.analytics.getPageViews({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      // Optimized: Get aggregated acquisition sources from ClickHouse
+      // This replaces fetching 100k pageviews and processing in JavaScript
+      const [acquisitionSources, totalSources] = await Promise.all([
+        ctx.analytics.getAcquisitionSources({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: input.limit,
+          offset: (input.page - 1) * input.limit,
+        }),
+        ctx.analytics.getAcquisitionSourcesCount({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+        }),
+      ]);
+
+      // Add sourceType classification (needs JS for complex URL parsing)
+      const acquisitionsWithTypes = acquisitionSources.map((acquisition) => {
+        const sourceType = getSourceType({
+          referrer: acquisition.sampleReferrer,
+          utmSource: acquisition.sampleUtmSource,
+          utmMedium: acquisition.sampleUtmMedium,
+          utmCampaign: acquisition.sampleUtmCampaign,
+        });
+
+        const avgViewsPerUser =
+          acquisition.uniqueUserCount > 0
+            ? acquisition.viewCount / acquisition.uniqueUserCount
+            : 0;
+
+        return {
+          source: acquisition.source,
+          sourceType,
+          viewCount: acquisition.viewCount,
+          uniqueUserCount: acquisition.uniqueUserCount,
+          avgViewsPerUser: Number.parseFloat(avgViewsPerUser.toFixed(1)),
+          lastViewed: acquisition.lastViewed,
+          firstViewed: acquisition.firstViewed,
+        };
       });
 
-      const acquisitionGroups = pageviews.reduce(
-        (acc, pageview) => {
-          const source = getAcquisitionSource({
-            referrer: pageview.referrer,
-            utmSource: pageview.utm_source,
-            utmMedium: pageview.utm_medium,
-            utmCampaign: pageview.utm_campaign,
-          });
-          const timestamp = parseClickHouseDate(pageview.timestamp);
-
-          if (!acc[source]) {
-            acc[source] = {
-              source,
-              sourceType: getSourceType({
-                referrer: pageview.referrer,
-                utmSource: pageview.utm_source,
-              }),
-              viewCount: 0,
-              uniqueUsers: new Set<string>(),
-              lastViewed: timestamp,
-              firstViewed: timestamp,
-            };
-          }
-          acc[source].viewCount += 1;
-          if (pageview.ip) {
-            acc[source].uniqueUsers.add(pageview.ip);
-          }
-          if (timestamp > acc[source].lastViewed) {
-            acc[source].lastViewed = timestamp;
-          }
-          if (timestamp < acc[source].firstViewed) {
-            acc[source].firstViewed = timestamp;
-          }
-          return acc;
-        },
-        {} as Record<
-          string,
-          {
-            source: string;
-            sourceType: string;
-            viewCount: number;
-            uniqueUsers: Set<string>;
-            lastViewed: Date;
-            firstViewed: Date;
-          }
-        >
-      );
-
-      // Convert to array and sort by view count
-      const acquisitionGroupsArray = Object.values(acquisitionGroups).sort(
-        (a, b) => b.viewCount - a.viewCount
-      );
-
-      // Apply pagination
-      const paginatedAcquisitions = acquisitionGroupsArray.slice(
-        (input.page - 1) * input.limit,
-        input.page * input.limit
-      );
-
-      // Transform data to include user metrics
-      const acquisitionsWithUserMetrics = paginatedAcquisitions.map(
-        (acquisition) => {
-          const uniqueUserCount = acquisition.uniqueUsers.size;
-          const avgViewsPerUser =
-            uniqueUserCount > 0
-              ? (acquisition.viewCount / uniqueUserCount).toFixed(1)
-              : "0.0";
-
-          return {
-            source: acquisition.source,
-            sourceType: acquisition.sourceType,
-            viewCount: acquisition.viewCount,
-            uniqueUserCount,
-            avgViewsPerUser: Number.parseFloat(avgViewsPerUser),
-            lastViewed: acquisition.lastViewed,
-            firstViewed: acquisition.firstViewed,
-          };
-        }
-      );
-
       return {
-        acquisitions: acquisitionsWithUserMetrics,
-        totalCount: acquisitionGroupsArray.length,
+        acquisitions: acquisitionsWithTypes,
+        totalCount: totalSources,
         pagination: {
           page: input.page,
           limit: input.limit,
-          totalPages: Math.ceil(acquisitionGroupsArray.length / input.limit),
-          hasNextPage:
-            input.page < Math.ceil(acquisitionGroupsArray.length / input.limit),
+          totalPages: Math.ceil(totalSources / input.limit),
+          hasNextPage: input.page < Math.ceil(totalSources / input.limit),
           hasPreviousPage: input.page > 1,
         },
       };
@@ -187,49 +140,30 @@ export const acquisitionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const stats = await ctx.analytics.getStats({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-      });
-
-      const pageviews = await ctx.analytics.getPageViews({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-      });
-
-      const totalViews = stats.total_views;
-      const directTraffic = pageviews.filter((p) => !p.referrer).length;
-      const organicTraffic = pageviews.filter(
-        (p) =>
-          p.referrer &&
-          (p.referrer.includes("google.com") ||
-            p.referrer.includes("bing.com") ||
-            p.referrer.includes("yahoo.com"))
-      ).length;
-      const socialTraffic = pageviews.filter(
-        (p) =>
-          p.referrer &&
-          (p.referrer.includes("facebook.com") ||
-            p.referrer.includes("twitter.com") ||
-            p.referrer.includes("linkedin.com") ||
-            p.referrer.includes("instagram.com"))
-      ).length;
-      const paidTraffic = pageviews.filter((p) => p.utm_source).length;
-      const mobileViews = stats.mobile_visits;
-      const desktopViews = stats.desktop_visits;
+      // Optimized: Get all stats in parallel from ClickHouse
+      const [stats, trafficTypeStats] = await Promise.all([
+        ctx.analytics.getStats({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+        }),
+        ctx.analytics.getTrafficTypeStats({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+        }),
+      ]);
 
       return {
-        totalViews,
-        directTraffic,
-        organicTraffic,
-        socialTraffic,
-        paidTraffic,
-        mobileViews,
-        desktopViews,
-        uniqueSources: 0, // Will be calculated from the acquisitions data
+        totalViews: stats.total_views,
+        directTraffic: trafficTypeStats.direct_traffic,
+        organicTraffic: trafficTypeStats.organic_traffic,
+        socialTraffic: trafficTypeStats.social_traffic,
+        paidTraffic: trafficTypeStats.paid_traffic,
+        utmTraffic: trafficTypeStats.utm_traffic, // Non-paid UTM campaigns
+        mobileViews: stats.mobile_visits,
+        desktopViews: stats.desktop_visits,
+        uniqueSources: 0, // Placeholder - can be calculated if needed
       };
     }),
 
@@ -274,71 +208,26 @@ export const acquisitionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const pageviews = await ctx.analytics.getPageViews({
+      // Optimized: Get top sources with daily data from ClickHouse
+      const topSourcesData = await ctx.analytics.getAcquisitionTimeSeries({
         projectId: input.projectId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: input.limit,
       });
 
-      const acquisitionGroups = pageviews.reduce(
-        (acc, pageview) => {
-          const source = getAcquisitionSource({
-            referrer: pageview.referrer,
-            utmSource: pageview.utm_source,
-            utmMedium: pageview.utm_medium,
-            utmCampaign: pageview.utm_campaign,
-          });
-          const dateKey =
-            parseClickHouseDate(pageview.timestamp)
-              .toISOString()
-              .split("T")[0] ?? "";
-
-          if (!acc[source]) {
-            acc[source] = {};
-          }
-          if (!acc[source][dateKey]) {
-            acc[source][dateKey] = 0;
-          }
-          acc[source][dateKey] += 1;
-
-          return acc;
-        },
-        {} as Record<string, Record<string, number>>
-      );
-
-      const topSources = Object.entries(acquisitionGroups)
-        .map(([source, dailyViews]) => {
-          const samplePageview = pageviews.find(
-            (p) =>
-              getAcquisitionSource({
-                referrer: p.referrer,
-                utmSource: p.utm_source,
-                utmMedium: p.utm_medium,
-                utmCampaign: p.utm_campaign,
-              }) === source
-          );
-          const _sourceType = getSourceType({
-            referrer: samplePageview?.referrer || null,
-            utmSource: samplePageview?.utm_source || null,
-          });
-          return {
-            source,
-            sourceType: getSourceType({
-              referrer: source,
-              utmSource: null,
-              utmMedium: null,
-              utmCampaign: null,
-            }),
-            totalViews: Object.values(dailyViews).reduce(
-              (sum, count) => sum + count,
-              0
-            ),
-            dailyViews,
-          };
-        })
-        .sort((a, b) => b.totalViews - a.totalViews)
-        .slice(0, input.limit);
+      // Add sourceType classification
+      const topSources = topSourcesData.map((sourceData) => ({
+        source: sourceData.source,
+        sourceType: getSourceType({
+          referrer: sourceData.sampleReferrer,
+          utmSource: sourceData.sampleUtmSource,
+          utmMedium: sourceData.sampleUtmMedium,
+          utmCampaign: sourceData.sampleUtmCampaign,
+        }),
+        totalViews: sourceData.totalViews,
+        dailyViews: sourceData.dailyViews,
+      }));
 
       // Generate date range for the last 30 days if no dates provided
       const endDate = input.endDate || new Date();

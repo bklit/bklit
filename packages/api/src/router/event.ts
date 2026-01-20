@@ -1,4 +1,3 @@
-import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
@@ -144,7 +143,7 @@ export const eventRouter = {
             eventDefinitionId: event.id,
             startDate: normalizedStartDate,
             endDate: normalizedEndDate,
-            limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+            limit: 10_000, // Reasonable limit instead of 100k
           });
 
           const eventTypeCounts: Record<string, number> = {};

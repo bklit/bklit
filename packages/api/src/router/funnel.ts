@@ -1,4 +1,3 @@
-import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
@@ -566,7 +565,7 @@ export const funnelRouter = {
           projectId: input.projectId,
           startDate: normalizedStartDate,
           endDate: effectiveEndDate,
-          limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+          limit: 50_000, // Higher limit for funnel analysis but not unlimited
         });
 
         const matchingSessions = allSessions.filter((s) =>

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
-import { createServer as createHttpServer } from "node:http";
 import type { IncomingMessage } from "node:http";
+import { createServer as createHttpServer } from "node:http";
 import { createServer as createHttpsServer } from "node:https";
 import { AnalyticsService } from "@bklit/analytics";
 import type { QueuedEvent } from "@bklit/redis";
@@ -19,8 +19,10 @@ import { validateApiToken } from "./validate";
 config();
 
 const PORT = Number(process.env.WEBSOCKET_PORT) || 8080;
-const SSL_CERT_PATH = process.env.SSL_CERT_PATH || "/etc/letsencrypt/live/bklit.ws/fullchain.pem";
-const SSL_KEY_PATH = process.env.SSL_KEY_PATH || "/etc/letsencrypt/live/bklit.ws/privkey.pem";
+const SSL_CERT_PATH =
+  process.env.SSL_CERT_PATH || "/etc/letsencrypt/live/bklit.ws/fullchain.pem";
+const SSL_KEY_PATH =
+  process.env.SSL_KEY_PATH || "/etc/letsencrypt/live/bklit.ws/privkey.pem";
 
 // Parse allowed origins from environment variable or use defaults
 const defaultOrigins = [
@@ -155,14 +157,14 @@ function anonymizeIP(ip: string): string {
   try {
     // Expand shorthand IPv6 notation
     let expanded = ip;
-    
+
     // Handle :: shorthand
     if (expanded.includes("::")) {
       const parts = expanded.split("::");
       const leftParts = parts[0] ? parts[0].split(":") : [];
       const rightParts = parts[1] ? parts[1].split(":") : [];
       const missingParts = 8 - leftParts.length - rightParts.length;
-      
+
       const middleParts = Array(missingParts).fill("0000");
       expanded = [...leftParts, ...middleParts, ...rightParts].join(":");
     }
@@ -219,7 +221,9 @@ function broadcastToProject(projectId: string, event: Record<string, unknown>) {
       broadcastCount++;
     }
   }
-  console.log(`[WS] 📤 Broadcast ${event.type} to ${broadcastCount} dashboard(s) for project ${projectId}`);
+  console.log(
+    `[WS] 📤 Broadcast ${event.type} to ${broadcastCount} dashboard(s) for project ${projectId}`
+  );
 }
 
 // Create WebSocket server with SSL if certificates exist
@@ -230,15 +234,15 @@ try {
   // Check if SSL certificates exist
   const cert = readFileSync(SSL_CERT_PATH);
   const key = readFileSync(SSL_KEY_PATH);
-  
+
   // Create HTTPS server
   server = createHttpsServer({ cert, key });
   protocol = "wss";
-  console.log(`🔒 SSL certificates found - using secure WebSocket (wss://)`);
+  console.log("🔒 SSL certificates found - using secure WebSocket (wss://)");
 } catch (error) {
   // Fall back to HTTP
   server = createHttpServer();
-  console.log(`⚠️ No SSL certificates - using insecure WebSocket (ws://)`);
+  console.log("⚠️ No SSL certificates - using insecure WebSocket (ws://)");
 }
 
 // Attach WebSocket to server
@@ -247,7 +251,7 @@ const wss = new WebSocketServer({ server });
 // Start listening
 server.listen(PORT, () => {
   console.log(`🚀 WebSocket server ready on ${protocol}://bklit.ws:${PORT}`);
-  console.log(`📊 Active connections will be tracked and displayed here`);
+  console.log("📊 Active connections will be tracked and displayed here");
 });
 
 wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
@@ -267,7 +271,7 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
     ws.close(1008, "Unauthorized origin");
     return;
   }
-  
+
   // SDK connections (from customer websites) are validated by API token, not origin
   // This allows users to track any website they own
 
@@ -341,19 +345,30 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
             conn.isAuthenticated = true;
             console.log(`[WS] ✅ Authenticated ${connId}`);
           } else {
-            console.warn(`[WS] ⚠️ Invalid API key for ${connId}, allowing anyway (dev mode)`);
+            console.warn(
+              `[WS] ⚠️ Invalid API key for ${connId}, allowing anyway (dev mode)`
+            );
             conn.isAuthenticated = true;
           }
         } catch (error) {
-          console.error(`[WS] ❌ Token validation error:`, error instanceof Error ? error.message : error);
-          console.log(`[WS] ⚠️ Allowing connection due to validation error`);
+          console.error(
+            "[WS] ❌ Token validation error:",
+            error instanceof Error ? error.message : error
+          );
+          console.log("[WS] ⚠️ Allowing connection due to validation error");
           conn.isAuthenticated = true;
         }
       }
 
       // Dashboard connections don't need auth, SDK connections get auto-authenticated above
-      if (conn.type === "sdk" && !conn.isAuthenticated && message.type !== "auth") {
-        console.warn(`[WS] Unauthenticated SDK message from ${connId}, type: ${message.type}`);
+      if (
+        conn.type === "sdk" &&
+        !conn.isAuthenticated &&
+        message.type !== "auth"
+      ) {
+        console.warn(
+          `[WS] Unauthenticated SDK message from ${connId}, type: ${message.type}`
+        );
         return;
       }
 
@@ -419,13 +434,15 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
         });
 
         // Broadcast pageview to dashboards immediately
-        console.log(`[WS] 📡 Broadcasting pageview to dashboards for project ${projectId}`);
+        console.log(
+          `[WS] 📡 Broadcasting pageview to dashboards for project ${projectId}`
+        );
         broadcastToProject(projectId, {
           type: "pageview",
           data: enrichedPayload,
           timestamp: new Date().toISOString(),
         });
-        console.log(`[WS] ✅ Pageview broadcast complete`);
+        console.log("[WS] ✅ Pageview broadcast complete");
 
         // Send acknowledgment
         ws.send(
@@ -595,25 +612,30 @@ setInterval(async () => {
   try {
     // Get all live session keys
     const keys = await redis.keys("live:sessions:*");
-    
+
     for (const key of keys) {
       const projectId = key.replace("live:sessions:", "");
-      
+
       // Get all session IDs from Redis sorted set
       const sessions = await redis.zrange(key, 0, -1);
-      
+
       if (sessions.length === 0) continue;
-      
+
       // Query ClickHouse for ended sessions
       const endedSessions = await analyticsService.getEndedSessions(sessions);
-      
+
       // Remove ended sessions from Redis
       if (endedSessions.length > 0) {
         await redis.zrem(key, ...endedSessions);
-        console.log(`[Cleanup] Removed ${endedSessions.length} ended sessions from ${projectId}`);
+        console.log(
+          `[Cleanup] Removed ${endedSessions.length} ended sessions from ${projectId}`
+        );
       }
     }
   } catch (error) {
-    console.error("[Cleanup] Redis sync error:", error instanceof Error ? error.message : error);
+    console.error(
+      "[Cleanup] Redis sync error:",
+      error instanceof Error ? error.message : error
+    );
   }
 }, 60_000); // Check every 60 seconds

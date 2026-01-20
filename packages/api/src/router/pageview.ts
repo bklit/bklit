@@ -1,4 +1,3 @@
-import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { z } from "zod";
 import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -53,109 +52,49 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      const pageviews = await ctx.analytics.getPageViews({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-      });
+      // Optimized: Get aggregated page data from ClickHouse
+      const [topPages, totalPages] = await Promise.all([
+        ctx.analytics.getTopPagesByUrl({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: input.limit,
+          offset: (input.page - 1) * input.limit,
+        }),
+        ctx.analytics.getTopPagesCount({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+        }),
+      ]);
 
-      const pageGroups = pageviews.reduce(
-        (acc, pageview) => {
-          const normalizedUrl = extractPath(pageview.url);
-          const originalUrl = pageview.url;
-          const timestamp = parseClickHouseDate(pageview.timestamp);
-
-          if (acc[normalizedUrl]) {
-            // Update title if this pageview is more recent and has a title
-            if (
-              pageview.title &&
-              timestamp > acc[normalizedUrl].latestTitleTimestamp
-            ) {
-              acc[normalizedUrl].title = pageview.title;
-              acc[normalizedUrl].latestTitleTimestamp = timestamp;
-            }
-          } else {
-            acc[normalizedUrl] = {
-              url: originalUrl,
-              // Use actual title if available, fallback to inferred
-              title: pageview.title || extractPageTitle(originalUrl),
-              latestTitleTimestamp: timestamp,
-              path: normalizedUrl,
-              viewCount: 0,
-              uniqueUsers: new Set<string>(),
-              lastViewed: timestamp,
-              firstViewed: timestamp,
-            };
-          }
-
-          acc[normalizedUrl].viewCount += 1;
-          if (pageview.ip) {
-            acc[normalizedUrl].uniqueUsers.add(pageview.ip);
-          }
-          if (timestamp > acc[normalizedUrl].lastViewed) {
-            acc[normalizedUrl].lastViewed = timestamp;
-          }
-          if (timestamp < acc[normalizedUrl].firstViewed) {
-            acc[normalizedUrl].firstViewed = timestamp;
-          }
-          return acc;
-        },
-        {} as Record<
-          string,
-          {
-            url: string;
-            title: string;
-            latestTitleTimestamp: Date;
-            path: string;
-            viewCount: number;
-            uniqueUsers: Set<string>;
-            lastViewed: Date;
-            firstViewed: Date;
-          }
-        >
-      );
-
-      // Convert to array and sort by view count
-      const pageGroupsArray = Object.values(pageGroups).sort(
-        (a, b) => b.viewCount - a.viewCount
-      );
-
-      // Apply pagination
-      const paginatedPages = pageGroupsArray.slice(
-        (input.page - 1) * input.limit,
-        input.page * input.limit
-      );
-
-      // Transform data to include user metrics
-      const pagesWithUserMetrics = paginatedPages.map((page) => {
-        const uniqueUserCount = page.uniqueUsers.size;
+      // Add path extraction and title fallback
+      const pagesWithMetadata = topPages.map((page) => {
+        const path = extractPath(page.url);
+        const title = page.title || extractPageTitle(page.url);
         const avgViewsPerUser =
-          uniqueUserCount > 0
-            ? (page.viewCount / uniqueUserCount).toFixed(1)
-            : "0.0";
+          page.uniqueUserCount > 0 ? page.viewCount / page.uniqueUserCount : 0;
 
         return {
           url: page.url,
-          title: page.title,
-          path: page.path,
+          title,
+          path,
           viewCount: page.viewCount,
-          uniqueUserCount,
-          avgViewsPerUser: Number.parseFloat(avgViewsPerUser),
+          uniqueUserCount: page.uniqueUserCount,
+          avgViewsPerUser: Number.parseFloat(avgViewsPerUser.toFixed(1)),
           lastViewed: page.lastViewed,
           firstViewed: page.firstViewed,
         };
       });
 
       return {
-        pages: pagesWithUserMetrics,
-        totalCount: pageGroupsArray.length,
+        pages: pagesWithMetadata,
+        totalCount: totalPages,
         pagination: {
           page: input.page,
           limit: input.limit,
-          totalPages: Math.ceil(pageGroupsArray.length / input.limit),
-          hasNextPage:
-            input.page < Math.ceil(pageGroupsArray.length / input.limit),
+          totalPages: Math.ceil(totalPages / input.limit),
+          hasNextPage: input.page < Math.ceil(totalPages / input.limit),
           hasPreviousPage: input.page > 1,
         },
       };
@@ -333,18 +272,20 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.analytics.getSessions({
+      // Optimized: Get entry pages aggregated from ClickHouse
+      // Note: Entry points need session data, so we still fetch sessions but paginated
+      const allSessions = await ctx.analytics.getSessions({
         projectId: input.projectId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit instead of 100k
       });
 
       const pageviews = await ctx.analytics.getPageViews({
         projectId: input.projectId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit instead of 100k
       });
 
       const pageviewsBySession = pageviews.reduce(
@@ -397,7 +338,7 @@ export const pageviewRouter = createTRPCRouter({
         {} as Record<string, { title: string; timestamp: Date }>
       );
 
-      const entryPageGroups = sessions.reduce(
+      const entryPageGroups = allSessions.reduce(
         (acc, session) => {
           const entryPage = extractPath(session.entry_page);
           const originalUrl = session.entry_page;
@@ -563,51 +504,25 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      const pageviews = await ctx.analytics.getPageViews({
+      // Optimized: Get top pages with daily data from ClickHouse
+      const topPagesData = await ctx.analytics.getTopPagesTimeSeries({
         projectId: input.projectId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: input.limit,
       });
 
-      const pageGroups = pageviews.reduce(
-        (acc, pageview) => {
-          const normalizedUrl = extractPath(pageview.url);
-          const dateKey =
-            parseClickHouseDate(pageview.timestamp)
-              .toISOString()
-              .split("T")[0] ?? "";
-
-          if (!acc[normalizedUrl]) {
-            acc[normalizedUrl] = {};
-          }
-          if (!acc[normalizedUrl][dateKey]) {
-            acc[normalizedUrl][dateKey] = 0;
-          }
-          acc[normalizedUrl][dateKey] += 1;
-
-          return acc;
-        },
-        {} as Record<string, Record<string, number>>
-      );
-
-      // Get top pages by total views
-      const topPages = Object.entries(pageGroups)
-        .map(([path, dailyViews]) => {
-          // Extract title from path directly
-          const title = extractPageTitle(path);
-          return {
-            path,
-            title,
-            totalViews: Object.values(dailyViews).reduce(
-              (sum, count) => sum + count,
-              0
-            ),
-            dailyViews,
-          };
-        })
-        .sort((a, b) => b.totalViews - a.totalViews)
-        .slice(0, input.limit);
+      // Add path extraction and title fallback
+      const topPages = topPagesData.map((pageData) => {
+        const path = extractPath(pageData.url);
+        const title = pageData.title || extractPageTitle(pageData.url);
+        return {
+          path,
+          title,
+          totalViews: pageData.totalViews,
+          dailyViews: pageData.dailyViews,
+        };
+      });
 
       // Generate date range for the last 30 days if no dates provided
       const endDate = input.endDate || new Date();
@@ -705,50 +620,27 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.analytics.getSessions({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-      });
-
-      const entryPageGroups = sessions.reduce(
-        (acc, session) => {
-          const normalizedUrl = extractPath(session.entry_page);
-          const dateKey =
-            parseClickHouseDate(session.started_at)
-              .toISOString()
-              .split("T")[0] ?? "";
-
-          if (!acc[normalizedUrl]) {
-            acc[normalizedUrl] = {};
-          }
-          if (!acc[normalizedUrl][dateKey]) {
-            acc[normalizedUrl][dateKey] = 0;
-          }
-          acc[normalizedUrl][dateKey] += 1;
-
-          return acc;
-        },
-        {} as Record<string, Record<string, number>>
+      // Optimized: Get top entry pages with daily data from ClickHouse
+      const topEntryPointsData = await ctx.analytics.getTopEntryPagesTimeSeries(
+        {
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: input.limit,
+        }
       );
 
-      // Get top entry points by total sessions
-      const topEntryPoints = Object.entries(entryPageGroups)
-        .map(([path, dailySessions]) => {
-          const title = extractPageTitle(path);
-          return {
-            path,
-            title,
-            totalSessions: Object.values(dailySessions).reduce(
-              (sum, count) => sum + count,
-              0
-            ),
-            dailySessions,
-          };
-        })
-        .sort((a, b) => b.totalSessions - a.totalSessions)
-        .slice(0, input.limit);
+      // Add path extraction and title inference
+      const topEntryPoints = topEntryPointsData.map((entryData) => {
+        const path = extractPath(entryData.entryPage);
+        const title = extractPageTitle(entryData.entryPage);
+        return {
+          path,
+          title,
+          totalSessions: entryData.totalSessions,
+          dailySessions: entryData.dailySessions,
+        };
+      });
 
       // Generate date range for the last 30 days if no dates provided
       const endDate = input.endDate || new Date();

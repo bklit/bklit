@@ -1,4 +1,3 @@
-import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { getLiveUserCount } from "@bklit/redis";
 import { z } from "zod";
 import { endOfDay, parseClickHouseDate, startOfDay } from "../lib/date-utils";
@@ -132,19 +131,26 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const sessions = await ctx.analytics.getSessions({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-      });
-
-      const pageviews = await ctx.analytics.getPageViews({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-      });
+      // Optimized: Get accurate count + sample data in parallel
+      const [totalSessions, sessions, pageviews] = await Promise.all([
+        ctx.analytics.getSessionsCount({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+        }),
+        ctx.analytics.getSessions({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: 10_000, // Sample for mobile/desktop stats calculation
+        }),
+        ctx.analytics.getPageViews({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: 10_000, // Sample for mobile detection
+        }),
+      ]);
 
       const pageviewsBySession = pageviews.reduce(
         (acc, pv) => {
@@ -158,8 +164,6 @@ export const sessionRouter = createTRPCRouter({
         },
         {} as Record<string, Array<{ mobile: boolean | null }>>
       );
-
-      const totalSessions = sessions.length;
       let mobileSessions = 0;
       let desktopSessions = 0;
 
@@ -266,19 +270,21 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      const allSessions = await ctx.analytics.getSessions({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT, // Get all sessions for accurate totalCount
-      });
-
-      const totalCount = allSessions.length;
-
-      const sessions = allSessions.slice(
-        (input.page - 1) * input.limit,
-        input.page * input.limit
-      );
+      // Optimized: Get count and paginated sessions in parallel
+      const [totalCount, sessions] = await Promise.all([
+        ctx.analytics.getSessionsCount({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+        }),
+        ctx.analytics.getSessions({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: input.limit,
+          offset: (input.page - 1) * input.limit,
+        }),
+      ]);
 
       // Get pageviews for the specific sessions we found
       // This ensures we get all pageviews for these sessions regardless of when they occurred
@@ -383,23 +389,9 @@ export const sessionRouter = createTRPCRouter({
       };
 
       // Get session from ClickHouse by session_id (client-generated identifier)
-      const sessions = await ctx.analytics.getSessions({
-        projectId: input.projectId,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-      });
-
-      // Note: input.sessionId is the client-generated session_id, not the database id
-      const sessionData = sessions.find(
-        (s) => s.session_id === input.sessionId
-      );
-
-      if (!sessionData) {
-        throw new Error("Session not found");
-      }
-
-      // Get full session with pageviews and events
+      // Optimized: Get session directly by ID instead of fetching all sessions
       const session = await ctx.analytics.getSessionById(
-        sessionData.session_id,
+        input.sessionId,
         input.projectId
       );
 
@@ -747,7 +739,7 @@ export const sessionRouter = createTRPCRouter({
         projectId: input.projectId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for journey analysis
       });
 
       const pageviewsBySession = pageviews.reduce(
