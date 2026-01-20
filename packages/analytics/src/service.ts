@@ -2437,10 +2437,13 @@ export class AnalyticsService {
     const limit = query.limit || 20;
     const offset = query.offset || 0;
 
+    // Extract path from URL (normalize by removing query params and hash)
+    // This groups https://example.com/page?foo=bar and https://example.com/page together
     const result = await this.client.query({
       query: `
         SELECT 
-          url,
+          path(url) as normalized_path,
+          any(url) as sample_url,
           argMax(title, timestamp) as latest_title,
           count() as view_count,
           uniq(ip) as unique_users,
@@ -2448,7 +2451,7 @@ export class AnalyticsService {
           min(timestamp) as first_viewed
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
-        GROUP BY url
+        GROUP BY normalized_path
         ORDER BY view_count DESC
         LIMIT {limit:UInt32}
         OFFSET {offset:UInt32}
@@ -2458,7 +2461,8 @@ export class AnalyticsService {
     });
 
     const rows = (await result.json()) as Array<{
-      url: string;
+      normalized_path: string;
+      sample_url: string;
       latest_title: string | null;
       view_count: number;
       unique_users: number;
@@ -2467,7 +2471,7 @@ export class AnalyticsService {
     }>;
 
     return rows.map((row) => ({
-      url: row.url,
+      url: row.sample_url, // Use a sample URL (latest one)
       title: row.latest_title,
       viewCount: row.view_count,
       uniqueUserCount: row.unique_users,
@@ -2491,7 +2495,7 @@ export class AnalyticsService {
 
     const result = await this.client.query({
       query: `
-        SELECT count(DISTINCT url) as total_pages
+        SELECT count(DISTINCT path(url)) as total_pages
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
       `,
@@ -2518,13 +2522,13 @@ export class AnalyticsService {
 
     const limit = query.limit || 5;
 
-    // First, get top N pages by total views
+    // First, get top N pages by normalized path (excluding query params)
     const topPagesResult = await this.client.query({
       query: `
-        SELECT url
+        SELECT path(url) as normalized_path
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
-        GROUP BY url
+        GROUP BY normalized_path
         ORDER BY count() DESC
         LIMIT {limit:UInt32}
       `,
@@ -2532,10 +2536,12 @@ export class AnalyticsService {
       format: "JSONEachRow",
     });
 
-    const topPagesRows = (await topPagesResult.json()) as Array<{ url: string }>;
-    const topPageUrls = topPagesRows.map((r) => r.url);
+    const topPagesRows = (await topPagesResult.json()) as Array<{
+      normalized_path: string;
+    }>;
+    const topPagePaths = topPagesRows.map((r) => r.normalized_path);
 
-    if (topPageUrls.length === 0) {
+    if (topPagePaths.length === 0) {
       return [];
     }
 
@@ -2543,14 +2549,15 @@ export class AnalyticsService {
     const result = await this.client.query({
       query: `
         SELECT 
-          url,
+          path(url) as normalized_path,
+          any(url) as sample_url,
           toDate(timestamp) as date,
           count() as view_count,
           argMax(title, timestamp) as latest_title
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
-          AND url IN (${topPageUrls.map((url) => `'${url.replace(/'/g, "\\'")}'`).join(",")})
-        GROUP BY url, date
+          AND path(url) IN (${topPagePaths.map((p) => `'${p.replace(/'/g, "\\'")}'`).join(",")})
+        GROUP BY normalized_path, date
         ORDER BY date ASC
       `,
       query_params: params,
@@ -2558,13 +2565,14 @@ export class AnalyticsService {
     });
 
     const rows = (await result.json()) as Array<{
-      url: string;
+      normalized_path: string;
+      sample_url: string;
       date: string;
       view_count: number;
       latest_title: string | null;
     }>;
 
-    // Group by URL
+    // Group by normalized path
     const urlGroups: Record<
       string,
       {
@@ -2576,19 +2584,19 @@ export class AnalyticsService {
     > = {};
 
     for (const row of rows) {
-      if (!urlGroups[row.url]) {
-        urlGroups[row.url] = {
-          url: row.url,
+      if (!urlGroups[row.normalized_path]) {
+        urlGroups[row.normalized_path] = {
+          url: row.sample_url,
           title: row.latest_title,
           dailyViews: {},
           totalViews: 0,
         };
       }
-      urlGroups[row.url].dailyViews[row.date] = row.view_count;
-      urlGroups[row.url].totalViews += row.view_count;
+      urlGroups[row.normalized_path].dailyViews[row.date] = row.view_count;
+      urlGroups[row.normalized_path].totalViews += row.view_count;
       // Keep most recent title
       if (row.latest_title) {
-        urlGroups[row.url].title = row.latest_title;
+        urlGroups[row.normalized_path].title = row.latest_title;
       }
     }
 
