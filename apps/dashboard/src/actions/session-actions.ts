@@ -1,4 +1,3 @@
-import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
 import { parseClickHouseDate } from "@/lib/date-utils";
@@ -39,14 +38,14 @@ export async function getSessionAnalytics(projectId: string, days = 30) {
       projectId,
       startDate,
       endDate,
-      limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      limit: 10_000, // Reasonable limit for session actions
     });
 
     const pageviews = await analytics.getPageViews({
       projectId,
       startDate,
       endDate,
-      limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      limit: 10_000, // Reasonable limit for session actions
     });
 
     const pageviewsBySession = pageviews.reduce(
@@ -133,7 +132,7 @@ export async function getRecentSessions(projectId: string, limit = 10) {
     const sessionIds = sessions.map((s) => s.session_id);
     const pageviews = await analytics.getPageViews({
       projectId,
-      limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+      limit: 10_000, // Reasonable limit for session actions
     });
 
     const pageviewsBySession = pageviews.reduce(
@@ -217,7 +216,7 @@ export async function getSessionById(sessionId: string) {
     for (const project of allProjects) {
       const sessions = await analytics.getSessions({
         projectId: project.id,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for session actions
       });
 
       const sessionData = sessions.find((s) => s.id === sessionId);

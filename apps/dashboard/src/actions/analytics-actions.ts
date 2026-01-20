@@ -1,6 +1,5 @@
 "use server";
 
-import { ANALYTICS_UNLIMITED_QUERY_LIMIT } from "@bklit/analytics/constants";
 import { AnalyticsService } from "@bklit/analytics/service";
 import { prisma } from "@bklit/db/client";
 import { unstable_cache as cache } from "next/cache";
@@ -11,13 +10,8 @@ import { endOfDay, parseClickHouseDate, startOfDay } from "@/lib/date-utils";
 import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import type { BrowserStats, TopPageData } from "@/types/analytics";
 import type {
-  CityResult,
-  CountryCodeResult,
   CountryStats,
   CountryWithCities,
-  CountryWithVisits,
-  TopCountryData,
-  TopCountryResult,
 } from "@/types/geo";
 
 // Regex patterns for performance optimization
@@ -258,64 +252,55 @@ export async function getVisitsByCountry(
         limit: 1000,
       });
 
+      // Fetch pageviews for city data (reasonable limit, not 100k)
       const pageviews = await analytics.getPageViews({
         projectId,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable sample for city breakdown
       });
 
-      const countriesWithVisits = topCountries.map((c) => {
-        const samplePageview = pageviews.find((p) => p.country === c.country);
-        return {
-          country: c.country,
-          countryCode: c.country_code,
-          lat: samplePageview?.lat || null,
-          lon: samplePageview?.lon || null,
-          _count: { country: c.visits },
-        };
-      });
+      // Build city breakdown from sample
+      const countriesWithCities = topCountries.map(
+        (countryData): CountryWithCities => {
+          const countryPageviews = pageviews.filter(
+            (p) => p.country === countryData.country && p.city
+          );
+          const cityCounts = countryPageviews.reduce(
+            (acc, p) => {
+              if (p.city) {
+                acc[p.city] = (acc[p.city] || 0) + 1;
+              }
+              return acc;
+            },
+            {} as Record<string, number>
+          );
+          const cities = Object.entries(cityCounts)
+            .map(([city, count]) => ({
+              city,
+              _count: { city: count },
+            }))
+            .sort((a, b) => b._count.city - a._count.city);
 
-      // Get city breakdown for each country
-      const countriesWithCities = await Promise.all(
-        countriesWithVisits.map(
-          (country: CountryWithVisits): CountryWithCities => {
-            const countryPageviews = pageviews.filter(
-              (p) => p.country === country.country && p.city
-            );
-            const cityCounts = countryPageviews.reduce(
-              (acc, p) => {
-                if (p.city) {
-                  acc[p.city] = (acc[p.city] || 0) + 1;
-                }
-                return acc;
-              },
-              {} as Record<string, number>
-            );
-            const cities = Object.entries(cityCounts)
-              .map(([city, count]) => ({
-                city,
-                _count: { city: count },
-              }))
-              .sort((a, b) => b._count.city - a._count.city);
-
-            return {
-              country: country.country || "",
-              countryCode: country.countryCode || "",
-              totalVisits: country._count.country,
-              coordinates:
-                country.lat && country.lon
-                  ? ([country.lon, country.lat] as [number, number])
-                  : null,
-              cities: cities.map((city: CityResult) => ({
-                name: city.city || "",
-                visits: city._count.city,
-              })),
-            };
-          }
-        )
+          return {
+            country: countryData.country || "",
+            countryCode: countryData.country_code || "",
+            totalVisits: countryData.visits,
+            coordinates:
+              countryData.sample_lat && countryData.sample_lon
+                ? ([countryData.sample_lon, countryData.sample_lat] as [
+                    number,
+                    number,
+                  ])
+                : null,
+            cities: cities.map((city) => ({
+              name: city.city || "",
+              visits: city._count.city as number,
+            })),
+          };
+        }
       );
 
       return countriesWithCities.filter(
-        (country: CountryWithCities) => country.coordinates !== null
+        (country) => country.coordinates !== null
       );
     },
     [`${projectId}-visits-by-country`],
@@ -361,60 +346,31 @@ export async function getCountryVisitStats(
         limit: 1000,
       });
 
-      const countriesWithVisits = topCountries.map((c) => ({
-        country: c.country,
-        countryCode: c.country_code,
-        _count: { country: c.visits },
-      }));
+      // Get detailed stats for each country using data already in topCountries
+      const countriesWithStats = topCountries
+        .map((countryData): CountryStats | null => {
+          const countryCode = countryData.country_code || "";
+          const coordinates = findCountryCoordinates(countryCode);
 
-      // Get detailed stats for each country
-      const countriesWithStats = await Promise.all(
-        countriesWithVisits.map(
-          async (country: TopCountryResult): Promise<CountryStats> => {
-            const countryCode = country.countryCode || "";
-            const coordinates = findCountryCoordinates(countryCode);
-
-            // Skip countries without coordinates
-            if (!coordinates) {
-              return null;
-            }
-
-            // Get mobile vs desktop breakdown
-            const countryPageviews = await analytics.getPageViews({
-              projectId,
-              limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
-            });
-            const mobileVisits = countryPageviews.filter(
-              (p) => p.country === country.country && p.mobile === true
-            ).length;
-
-            const desktopVisits = countryPageviews.filter(
-              (p) => p.country === country.country && p.mobile === false
-            ).length;
-
-            const uniqueVisits = new Set(
-              countryPageviews
-                .filter((p) => p.country === country.country && p.ip)
-                .map((p) => p.ip)
-            ).size;
-
-            return {
-              country: country.country || "",
-              countryCode,
-              totalVisits: Number(country._count.country) || 0,
-              mobileVisits: Number(mobileVisits) || 0,
-              desktopVisits: Number(desktopVisits) || 0,
-              uniqueVisits: uniqueVisits || 0,
-              coordinates: coordinates
-                ? ([coordinates.longitude, coordinates.latitude] as [
-                    number,
-                    number,
-                  ])
-                : null,
-            };
+          // Skip countries without coordinates
+          if (!coordinates) {
+            return null;
           }
-        )
-      );
+
+          return {
+            country: countryData.country || "",
+            countryCode,
+            totalVisits: Number(countryData.visits) || 0,
+            mobileVisits: Number(countryData.mobile_visits) || 0,
+            desktopVisits: Number(countryData.desktop_visits) || 0,
+            uniqueVisits: Number(countryData.unique_visitors) || 0,
+            coordinates: [coordinates.longitude, coordinates.latitude] as [
+              number,
+              number,
+            ],
+          };
+        })
+        .filter((c): c is CountryStats => c !== null);
 
       // Filter out countries without coordinates and sort by visits
       const result = countriesWithStats
@@ -466,12 +422,12 @@ export async function getCountryVisitorStats(
       const analytics = new AnalyticsService();
       const sessions = await analytics.getSessions({
         projectId,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const pageviews = await analytics.getPageViews({
         projectId,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const sessionsByCountry = sessions.reduce(
@@ -642,12 +598,12 @@ export async function getUniqueVisitorsByCountry(
       const analytics = new AnalyticsService();
       const sessions = await analytics.getSessions({
         projectId,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const pageviews = await analytics.getPageViews({
         projectId,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const sessionsByCountry = sessions.reduce(
@@ -782,7 +738,7 @@ export async function getMobileDesktopStats(
         projectId,
         startDate: defaultStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const uniqueMobileVisits = new Set(
@@ -866,7 +822,7 @@ export async function getTopPages(params: z.input<typeof getTopPagesSchema>) {
         projectId,
         startDate: defaultStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const pathCounts: Record<string, number> = {};
@@ -952,7 +908,7 @@ export async function getBrowserStats(
         projectId,
         startDate: defaultStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       // Parse user agents to extract browser information
@@ -1074,14 +1030,14 @@ export async function getSessionAnalytics(
         projectId,
         startDate: defaultStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const pageviews = await analytics.getPageViews({
         projectId,
         startDate: defaultStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const pageviewsBySession = pageviews.reduce(
@@ -1205,7 +1161,7 @@ export async function getTopReferrers(
         projectId,
         startDate: defaultStartDate,
         endDate: normalizedEndDate,
-        limit: ANALYTICS_UNLIMITED_QUERY_LIMIT,
+        limit: 10_000, // Reasonable limit for card stats
       });
 
       const referrerCounts: Record<string, number> = {};
