@@ -131,21 +131,26 @@ export const sessionRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Optimized: Get reasonable limit instead of 100k
-      // For stats, we don't need ALL data, just representative sample
-      const sessions = await ctx.analytics.getSessions({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: 10_000, // Reasonable limit for stats calculation
-      });
-
-      const pageviews = await ctx.analytics.getPageViews({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: 10_000, // Reasonable limit for stats calculation
-      });
+      // Optimized: Get accurate count + sample data in parallel
+      const [totalSessions, sessions, pageviews] = await Promise.all([
+        ctx.analytics.getSessionsCount({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+        }),
+        ctx.analytics.getSessions({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: 10_000, // Sample for mobile/desktop stats calculation
+        }),
+        ctx.analytics.getPageViews({
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: 10_000, // Sample for mobile detection
+        }),
+      ]);
 
       const pageviewsBySession = pageviews.reduce(
         (acc, pv) => {
@@ -159,8 +164,6 @@ export const sessionRouter = createTRPCRouter({
         },
         {} as Record<string, Array<{ mobile: boolean | null }>>
       );
-
-      const totalSessions = sessions.length;
       let mobileSessions = 0;
       let desktopSessions = 0;
 
