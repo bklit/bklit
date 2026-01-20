@@ -477,14 +477,14 @@ export function useLiveSessions({
   const activeSessions = useMemo(() => {
     const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
     const active = new Map<string, LiveSession>();
-    
+
     for (const [id, session] of sessions.entries()) {
       // Keep sessions that started within last 30 minutes
       if (session.startedAt.getTime() >= thirtyMinutesAgo) {
         active.set(id, session);
       }
     }
-    
+
     return active;
   }, [sessions]);
 

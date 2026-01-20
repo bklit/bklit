@@ -73,9 +73,7 @@ export const pageviewRouter = createTRPCRouter({
         const path = extractPath(page.url);
         const title = page.title || extractPageTitle(page.url);
         const avgViewsPerUser =
-          page.uniqueUserCount > 0
-            ? page.viewCount / page.uniqueUserCount
-            : 0;
+          page.uniqueUserCount > 0 ? page.viewCount / page.uniqueUserCount : 0;
 
         return {
           url: page.url,
@@ -274,7 +272,7 @@ export const pageviewRouter = createTRPCRouter({
             }
           : undefined;
 
-      // Optimized: Get entry pages aggregated from ClickHouse  
+      // Optimized: Get entry pages aggregated from ClickHouse
       // Note: Entry points need session data, so we still fetch sessions but paginated
       const allSessions = await ctx.analytics.getSessions({
         projectId: input.projectId,
@@ -623,12 +621,14 @@ export const pageviewRouter = createTRPCRouter({
           : undefined;
 
       // Optimized: Get top entry pages with daily data from ClickHouse
-      const topEntryPointsData = await ctx.analytics.getTopEntryPagesTimeSeries({
-        projectId: input.projectId,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        limit: input.limit,
-      });
+      const topEntryPointsData = await ctx.analytics.getTopEntryPagesTimeSeries(
+        {
+          projectId: input.projectId,
+          startDate: normalizedStartDate,
+          endDate: normalizedEndDate,
+          limit: input.limit,
+        }
+      );
 
       // Add path extraction and title inference
       const topEntryPoints = topEntryPointsData.map((entryData) => {

@@ -53,7 +53,7 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
       try {
         const data = JSON.parse(event.data);
 
-        console.log(`[WebSocket] 📨 Received message:`, data.type, data);
+        console.log("[WebSocket] 📨 Received message:", data.type, data);
 
         // Handle different message types
         if (data.type === "connected") {
@@ -64,7 +64,9 @@ function getOrCreateConnection(projectId: string): ProjectConnection {
         }
 
         // Forward the event to all listeners
-        console.log(`[WebSocket] 📢 Forwarding to ${conn.listeners.size} listener(s)`);
+        console.log(
+          `[WebSocket] 📢 Forwarding to ${conn.listeners.size} listener(s)`
+        );
         conn.listeners.forEach((listener) => listener(data));
       } catch (error) {
         console.error("[WebSocket] Failed to parse message:", error);

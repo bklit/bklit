@@ -393,7 +393,9 @@ export class AnalyticsService {
     if (sessionIds.length === 0) return [];
 
     // Build query with proper ClickHouse tuple syntax
-    const sessionList = sessionIds.map(id => `'${id.replace(/'/g, "\\'")}'`).join(",");
+    const sessionList = sessionIds
+      .map((id) => `'${id.replace(/'/g, "\\'")}'`)
+      .join(",");
     const query = `
       SELECT session_id 
       FROM tracked_session 
@@ -2124,7 +2126,9 @@ export class AnalyticsService {
     }));
   }
 
-  async getAcquisitionSources(query: StatsQuery & { limit?: number; offset?: number }) {
+  async getAcquisitionSources(
+    query: StatsQuery & { limit?: number; offset?: number }
+  ) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };
 
@@ -2350,7 +2354,9 @@ export class AnalyticsService {
       format: "JSONEachRow",
     });
 
-    const topSourcesRows = (await topSourcesResult.json()) as Array<{ source: string }>;
+    const topSourcesRows = (await topSourcesResult.json()) as Array<{
+      source: string;
+    }>;
     const topSourceNames = topSourcesRows.map((r) => r.source);
 
     if (topSourceNames.length === 0) {
@@ -2418,10 +2424,14 @@ export class AnalyticsService {
       sourceGroups[row.source].totalViews += row.view_count;
     }
 
-    return Object.values(sourceGroups).sort((a, b) => b.totalViews - a.totalViews).slice(0, limit);
+    return Object.values(sourceGroups)
+      .sort((a, b) => b.totalViews - a.totalViews)
+      .slice(0, limit);
   }
 
-  async getTopPagesByUrl(query: StatsQuery & { limit?: number; offset?: number }) {
+  async getTopPagesByUrl(
+    query: StatsQuery & { limit?: number; offset?: number }
+  ) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };
 
@@ -2600,10 +2610,14 @@ export class AnalyticsService {
       }
     }
 
-    return Object.values(urlGroups).sort((a, b) => b.totalViews - a.totalViews).slice(0, limit);
+    return Object.values(urlGroups)
+      .sort((a, b) => b.totalViews - a.totalViews)
+      .slice(0, limit);
   }
 
-  async getTopEntryPages(query: StatsQuery & { limit?: number; offset?: number }) {
+  async getTopEntryPages(
+    query: StatsQuery & { limit?: number; offset?: number }
+  ) {
     const conditions: string[] = ["project_id = {projectId:String}"];
     const params: Record<string, unknown> = { projectId: query.projectId };
 
@@ -2785,7 +2799,8 @@ export class AnalyticsService {
           totalSessions: 0,
         };
       }
-      entryPageGroups[row.entry_page].dailySessions[row.date] = row.session_count;
+      entryPageGroups[row.entry_page].dailySessions[row.date] =
+        row.session_count;
       entryPageGroups[row.entry_page].totalSessions += row.session_count;
     }
 
