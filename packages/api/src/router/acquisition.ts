@@ -160,6 +160,7 @@ export const acquisitionRouter = createTRPCRouter({
         organicTraffic: trafficTypeStats.organic_traffic,
         socialTraffic: trafficTypeStats.social_traffic,
         paidTraffic: trafficTypeStats.paid_traffic,
+        utmTraffic: trafficTypeStats.utm_traffic, // Non-paid UTM campaigns
         mobileViews: stats.mobile_visits,
         desktopViews: stats.desktop_visits,
         uniqueSources: 0, // Placeholder - can be calculated if needed

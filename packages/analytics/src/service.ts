@@ -2266,7 +2266,14 @@ export class AnalyticsService {
       query: `
         SELECT 
           countIf(referrer IS NULL OR referrer = '') as direct_traffic,
-          countIf(utm_source IS NOT NULL AND utm_source != '') as paid_traffic,
+          countIf(
+            utm_source IS NOT NULL AND utm_source != ''
+            AND utm_medium IN ('cpc', 'paid')
+          ) as paid_traffic,
+          countIf(
+            utm_source IS NOT NULL AND utm_source != ''
+            AND (utm_medium NOT IN ('cpc', 'paid') OR utm_medium IS NULL OR utm_medium = '')
+          ) as utm_traffic,
           countIf(
             referrer IS NOT NULL AND referrer != '' 
             AND (utm_source IS NULL OR utm_source = '')
@@ -2296,6 +2303,7 @@ export class AnalyticsService {
     const rows = (await result.json()) as Array<{
       direct_traffic: number;
       paid_traffic: number;
+      utm_traffic: number;
       organic_traffic: number;
       social_traffic: number;
     }>;
@@ -2304,6 +2312,7 @@ export class AnalyticsService {
       rows[0] || {
         direct_traffic: 0,
         paid_traffic: 0,
+        utm_traffic: 0,
         organic_traffic: 0,
         social_traffic: 0,
       }
