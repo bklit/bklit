@@ -164,13 +164,14 @@ export function useLiveSessions({
     };
   }, [logEvent]);
 
-  // Initial load from tRPC (only once)
+  // Initial load from tRPC - sync when user returns to window
   const { data: initialLocations, isLoading } = useQuery({
     ...trpc.session.liveUserLocations.queryOptions(
       { projectId, organizationId },
       {
-        staleTime: 30_000,
-        refetchOnWindowFocus: false,
+        staleTime: 0, // Always consider stale for fresh data
+        refetchOnWindowFocus: true, // Sync when user returns to tab
+        refetchOnMount: false, // Only on mount, not every render
       }
     ),
   });
@@ -471,6 +472,22 @@ export function useLiveSessions({
     onSessionEnd: handleSessionEnd,
   });
 
+  // Filter out stale sessions (> 30 minutes old) - safety net for edge cases
+  // This handles: dashboard left open for hours, brief WebSocket disconnection, etc.
+  const activeSessions = useMemo(() => {
+    const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
+    const active = new Map<string, LiveSession>();
+    
+    for (const [id, session] of sessions.entries()) {
+      // Keep sessions that started within last 30 minutes
+      if (session.startedAt.getTime() >= thirtyMinutesAgo) {
+        active.set(id, session);
+      }
+    }
+    
+    return active;
+  }, [sessions]);
+
   // Separate sessions by coordinate type
   // Only group countries with 2+ sessions - single sessions show as individual markers
   // Expanded countries show all sessions as individual markers (after clicking a group)
@@ -478,7 +495,7 @@ export function useLiveSessions({
     const individual: LiveSession[] = [];
     const byCountry = new Map<string, LiveSession[]>();
 
-    for (const session of sessions.values()) {
+    for (const session of activeSessions.values()) {
       if (session.hasExactCoordinates) {
         individual.push(session);
       } else if (session.countryCode) {
@@ -515,16 +532,16 @@ export function useLiveSessions({
     return {
       individualSessions: individual,
       countryGroups: groups,
-      totalCount: sessions.size,
+      totalCount: activeSessions.size,
     };
-  }, [sessions, expandedCountries]);
+  }, [activeSessions, expandedCountries]);
 
-  // Get a specific session by ID
+  // Get a specific session by ID (only returns active sessions)
   const getSession = useCallback(
     (sessionId: string): LiveSession | undefined => {
-      return sessions.get(sessionId);
+      return activeSessions.get(sessionId);
     },
-    [sessions]
+    [activeSessions]
   );
 
   return {

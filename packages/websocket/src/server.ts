@@ -589,7 +589,7 @@ setInterval(() => {
 // Redis cleanup: Remove ended sessions from live tracking
 // This prevents zombie sessions from old architecture or failed cleanups
 setInterval(async () => {
-  const redis = await getRedisClient();
+  const redis = getRedisClient();
   if (!redis) return;
 
   try {
