@@ -2372,7 +2372,7 @@ export class AnalyticsService {
       return [];
     }
 
-    // Then get daily data for only those top sources
+    // Then get daily data for only those top sources (using parameterized array)
     const result = await this.client.query({
       query: `
         SELECT 
@@ -2385,11 +2385,11 @@ export class AnalyticsService {
           any(utm_campaign) as sample_utm_campaign
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
-          AND ${sourceExpression} IN (${topSourceNames.map((s) => `'${s.replace(/'/g, "\\'")}'`).join(",")})
+          AND ${sourceExpression} IN ({sources:Array(String)})
         GROUP BY source, date
         ORDER BY date ASC
       `,
-      query_params: params,
+      query_params: { ...params, sources: topSourceNames },
       format: "JSONEachRow",
     });
 
@@ -2564,7 +2564,7 @@ export class AnalyticsService {
       return [];
     }
 
-    // Then get daily data for only those top pages
+    // Then get daily data for only those top pages (using parameterized array)
     const result = await this.client.query({
       query: `
         SELECT 
@@ -2575,11 +2575,11 @@ export class AnalyticsService {
           argMax(title, timestamp) as latest_title
         FROM page_view_event
         WHERE ${conditions.join(" AND ")}
-          AND path(url) IN (${topPagePaths.map((p) => `'${p.replace(/'/g, "\\'")}'`).join(",")})
+          AND path(url) IN ({paths:Array(String)})
         GROUP BY normalized_path, date
         ORDER BY date ASC
       `,
-      query_params: params,
+      query_params: { ...params, paths: topPagePaths },
       format: "JSONEachRow",
     });
 
@@ -2759,7 +2759,7 @@ export class AnalyticsService {
       return [];
     }
 
-    // Then get daily data for only those top entry pages
+    // Then get daily data for only those top entry pages (using parameterized array)
     const result = await this.client.query({
       query: `
         SELECT 
@@ -2774,13 +2774,13 @@ export class AnalyticsService {
             row_number() OVER (PARTITION BY session_id ORDER BY updated_at DESC) as rn
           FROM tracked_session
           WHERE ${conditions.join(" AND ")}
-            AND entry_page IN (${topEntryPageUrls.map((url) => `'${url.replace(/'/g, "\\'")}'`).join(",")})
+            AND entry_page IN ({entryPages:Array(String)})
         )
         WHERE rn = 1
         GROUP BY entry_page, date
         ORDER BY date ASC
       `,
-      query_params: params,
+      query_params: { ...params, entryPages: topEntryPageUrls },
       format: "JSONEachRow",
     });
 
