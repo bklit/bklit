@@ -23,6 +23,7 @@ const SSL_CERT_PATH =
   process.env.SSL_CERT_PATH || "/etc/letsencrypt/live/bklit.ws/fullchain.pem";
 const SSL_KEY_PATH =
   process.env.SSL_KEY_PATH || "/etc/letsencrypt/live/bklit.ws/privkey.pem";
+const IPAPI_KEY = process.env.IPAPI_KEY; // Optional - uses free tier if not set
 
 // Parse allowed origins from environment variable or use defaults
 const defaultOrigins = [
@@ -101,9 +102,20 @@ async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
   try {
     const fields =
       "status,query,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,mobile";
-    const url = ip
-      ? `http://ip-api.com/json/${ip}?fields=${fields}`
-      : `http://ip-api.com/json/?fields=${fields}`;
+    
+    // Use pro endpoint if API key is available, otherwise use free tier
+    let url: string;
+    if (IPAPI_KEY) {
+      // Pro endpoint: HTTPS, higher rate limits, commercial use
+      url = ip
+        ? `https://pro.ip-api.com/json/${ip}?key=${IPAPI_KEY}&fields=${fields}`
+        : `https://pro.ip-api.com/json/?key=${IPAPI_KEY}&fields=${fields}`;
+    } else {
+      // Free endpoint: HTTP, 45 req/min limit
+      url = ip
+        ? `http://ip-api.com/json/${ip}?fields=${fields}`
+        : `http://ip-api.com/json/?fields=${fields}`;
+    }
 
     const response = await fetch(url, {
       method: "GET",
@@ -252,6 +264,11 @@ const wss = new WebSocketServer({ server });
 server.listen(PORT, () => {
   console.log(`🚀 WebSocket server ready on ${protocol}://bklit.ws:${PORT}`);
   console.log("📊 Active connections will be tracked and displayed here");
+  console.log(
+    IPAPI_KEY
+      ? "🌍 Using ip-api Pro (HTTPS, higher limits)"
+      : "🌍 Using ip-api Free (HTTP, 45 req/min limit)"
+  );
 });
 
 wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
