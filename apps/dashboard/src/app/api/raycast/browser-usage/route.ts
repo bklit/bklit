@@ -1,6 +1,5 @@
 import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
-import { getBrowserStats } from "@/actions/analytics-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import {
   calculateLast24Hours,
@@ -58,31 +57,25 @@ export async function POST(request: NextRequest) {
     // Calculate last 24 hours
     const { startDate, endDate } = calculateLast24Hours();
 
-    // Fetch browser stats and total pageviews
+    // Fetch browser stats and total pageviews using optimized ClickHouse aggregation
     const analytics = new AnalyticsService();
     const [browserStats, totalPageviews] = await Promise.all([
-      getBrowserStats({
+      analytics.getTopBrowsers({
         projectId: body.projectId,
-        userId: "raycast-api",
         startDate,
         endDate,
+        limit: 5,
       }),
       analytics.countPageViews(body.projectId, startDate, endDate),
     ]);
 
-    // Calculate total for percentages (from actual browser stats, not limited)
-    const total = browserStats.reduce((sum, stat) => sum + stat.count, 0);
-
-    // Get top 5 browsers
-    const top5Browsers = browserStats.slice(0, 5);
-
     // Format response
     const response: RaycastBrowserUsageResponse = {
       success: true,
-      data: top5Browsers.map((stat) => ({
+      data: browserStats.map((stat) => ({
         browser: stat.browser,
         views: stat.count,
-        percentage: calculatePercentage(stat.count, total),
+        percentage: calculatePercentage(stat.count, totalPageviews),
       })),
       totalPageviews,
       period: formatPeriod(startDate, endDate),

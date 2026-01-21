@@ -2860,4 +2860,115 @@ export class AnalyticsService {
     const rows = (await result.json()) as Array<{ total_sessions: number }>;
     return rows[0]?.total_sessions || 0;
   }
+
+  /**
+   * Get top browsers using ClickHouse aggregation (optimized)
+   * Parses user_agent in SQL using CASE WHEN instead of fetching rows to JS
+   */
+  async getTopBrowsers(query: StatsQuery & { limit?: number }) {
+    const conditions: string[] = [
+      "project_id = {projectId:String}",
+      "user_agent IS NOT NULL",
+      "user_agent != ''",
+    ];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 10;
+
+    // Parse browser from user_agent in ClickHouse using CASE WHEN
+    // Order matters - check more specific browsers first
+    const browserExpression = `
+      CASE
+        WHEN positionCaseInsensitive(user_agent, 'Edg/') > 0 OR positionCaseInsensitive(user_agent, 'EdgIOS/') > 0 THEN 'Edge'
+        WHEN positionCaseInsensitive(user_agent, 'OPR/') > 0 OR positionCaseInsensitive(user_agent, 'Opera/') > 0 THEN 'Opera'
+        WHEN positionCaseInsensitive(user_agent, 'SamsungBrowser/') > 0 THEN 'Samsung Internet'
+        WHEN positionCaseInsensitive(user_agent, 'Brave/') > 0 THEN 'Brave'
+        WHEN positionCaseInsensitive(user_agent, 'Chrome/') > 0 AND positionCaseInsensitive(user_agent, 'Edg/') = 0 THEN 'Chrome'
+        WHEN positionCaseInsensitive(user_agent, 'Firefox/') > 0 OR positionCaseInsensitive(user_agent, 'FxIOS/') > 0 THEN 'Firefox'
+        WHEN positionCaseInsensitive(user_agent, 'Safari/') > 0 
+          AND positionCaseInsensitive(user_agent, 'Chrome/') = 0 
+          AND positionCaseInsensitive(user_agent, 'CriOS/') = 0 THEN 'Safari'
+        WHEN positionCaseInsensitive(user_agent, 'MSIE') > 0 OR positionCaseInsensitive(user_agent, 'Trident/') > 0 THEN 'Internet Explorer'
+        ELSE 'Other'
+      END
+    `;
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          ${browserExpression} as browser,
+          count() as count
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY browser
+        ORDER BY count DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    return (await result.json()) as Array<{
+      browser: string;
+      count: number;
+    }>;
+  }
+
+  /**
+   * Get top referrers using ClickHouse aggregation (optimized)
+   * Uses domain() function in ClickHouse instead of parsing URLs in JS
+   */
+  async getTopReferrers(query: StatsQuery & { limit?: number }) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const limit = query.limit || 10;
+
+    // Use ClickHouse's domain() function to extract hostname
+    // Handle empty/null referrers as 'Direct / None'
+    const referrerExpression = `
+      CASE
+        WHEN referrer IS NULL OR referrer = '' THEN 'Direct / None'
+        ELSE replaceRegexpOne(domain(referrer), '^www\\.', '')
+      END
+    `;
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          ${referrerExpression} as referrer,
+          count() as count
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+        GROUP BY referrer
+        ORDER BY count DESC
+        LIMIT {limit:UInt32}
+      `,
+      query_params: { ...params, limit },
+      format: "JSONEachRow",
+    });
+
+    return (await result.json()) as Array<{
+      referrer: string;
+      count: number;
+    }>;
+  }
 }

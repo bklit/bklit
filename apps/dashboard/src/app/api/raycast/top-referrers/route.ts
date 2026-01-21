@@ -1,6 +1,5 @@
 import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
-import { getTopReferrers } from "@/actions/analytics-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import {
   calculateLast24Hours,
@@ -58,21 +57,17 @@ export async function POST(request: NextRequest) {
     // Calculate last 24 hours
     const { startDate, endDate } = calculateLast24Hours();
 
-    // Fetch top referrers and total pageviews
+    // Fetch top referrers and total pageviews using optimized ClickHouse aggregation
     const analytics = new AnalyticsService();
     const [topReferrers, totalPageviews] = await Promise.all([
-      getTopReferrers({
+      analytics.getTopReferrers({
         projectId: body.projectId,
-        userId: "raycast-api",
-        limit: 5,
         startDate,
         endDate,
+        limit: 5,
       }),
       analytics.countPageViews(body.projectId, startDate, endDate),
     ]);
-
-    // Calculate total for percentages
-    const total = topReferrers.reduce((sum, ref) => sum + ref.count, 0);
 
     // Format response
     const response: RaycastTopReferrersResponse = {
@@ -80,7 +75,7 @@ export async function POST(request: NextRequest) {
       data: topReferrers.map((ref) => ({
         referrer: ref.referrer,
         views: ref.count,
-        percentage: calculatePercentage(ref.count, total),
+        percentage: calculatePercentage(ref.count, totalPageviews),
       })),
       totalPageviews,
       period: formatPeriod(startDate, endDate),
