@@ -1,3 +1,4 @@
+import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
 import { getBrowserStats } from "@/actions/analytics-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
@@ -57,15 +58,19 @@ export async function POST(request: NextRequest) {
     // Calculate last 24 hours
     const { startDate, endDate } = calculateLast24Hours();
 
-    // Fetch browser stats
-    const browserStats = await getBrowserStats({
-      projectId: body.projectId,
-      userId: "raycast-api", // API doesn't need real userId for server actions
-      startDate,
-      endDate,
-    });
+    // Fetch browser stats and total pageviews
+    const analytics = new AnalyticsService();
+    const [browserStats, totalPageviews] = await Promise.all([
+      getBrowserStats({
+        projectId: body.projectId,
+        userId: "raycast-api",
+        startDate,
+        endDate,
+      }),
+      analytics.countPageViews(body.projectId, startDate, endDate),
+    ]);
 
-    // Calculate total for percentages
+    // Calculate total for percentages (from actual browser stats, not limited)
     const total = browserStats.reduce((sum, stat) => sum + stat.count, 0);
 
     // Get top 5 browsers
@@ -79,6 +84,7 @@ export async function POST(request: NextRequest) {
         views: stat.count,
         percentage: calculatePercentage(stat.count, total),
       })),
+      totalPageviews,
       period: formatPeriod(startDate, endDate),
     };
 

@@ -12,6 +12,7 @@ export interface RaycastTopCountryData {
 export interface RaycastTopCountriesResponse {
   success: boolean;
   data?: RaycastTopCountryData[];
+  totalPageviews?: number;
   error?: string;
   period?: {
     startDate: string;
@@ -50,6 +51,7 @@ export interface RaycastReferrerData {
 export interface RaycastTopReferrersResponse {
   success: boolean;
   data?: RaycastReferrerData[];
+  totalPageviews?: number;
   error?: string;
   period?: {
     startDate: string;
@@ -66,6 +68,7 @@ export interface RaycastPageData {
 export interface RaycastTopPagesResponse {
   success: boolean;
   data?: RaycastPageData[];
+  totalPageviews?: number;
   error?: string;
   period?: {
     startDate: string;
@@ -83,6 +86,7 @@ export interface RaycastBrowserData {
 export interface RaycastBrowserUsageResponse {
   success: boolean;
   data?: RaycastBrowserData[];
+  totalPageviews?: number;
   error?: string;
   period?: {
     startDate: string;

@@ -54,14 +54,17 @@ export async function POST(request: NextRequest) {
     const startDate = new Date();
     startDate.setHours(startDate.getHours() - 24);
 
-    // Fetch top countries from analytics
+    // Fetch top countries and total count from analytics
     const analytics = new AnalyticsService();
-    const topCountries = await analytics.getTopCountries({
-      projectId: body.projectId,
-      startDate,
-      endDate,
-      limit: 5,
-    });
+    const [topCountries, totalPageviews] = await Promise.all([
+      analytics.getTopCountries({
+        projectId: body.projectId,
+        startDate,
+        endDate,
+        limit: 5,
+      }),
+      analytics.countPageViews(body.projectId, startDate, endDate),
+    ]);
 
     // Format response
     const response: RaycastTopCountriesResponse = {
@@ -72,6 +75,7 @@ export async function POST(request: NextRequest) {
         views: country.visits || 0,
         uniqueVisitors: country.unique_visitors || 0,
       })),
+      totalPageviews,
       period: {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),

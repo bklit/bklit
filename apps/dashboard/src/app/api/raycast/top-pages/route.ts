@@ -1,5 +1,5 @@
+import { AnalyticsService } from "@bklit/analytics/service";
 import { type NextRequest, NextResponse } from "next/server";
-import { getTopPages } from "@/actions/analytics-actions";
 import { extractTokenFromHeader, validateApiToken } from "@/lib/api-token-auth";
 import { calculateLast24Hours, formatPeriod } from "@/lib/raycast-helpers";
 import type {
@@ -53,22 +53,26 @@ export async function POST(request: NextRequest) {
     // Calculate last 24 hours
     const { startDate, endDate } = calculateLast24Hours();
 
-    // Fetch top pages
-    const topPages = await getTopPages({
-      projectId: body.projectId,
-      userId: "raycast-api", // API doesn't need real userId for server actions
-      limit: 5,
-      startDate,
-      endDate,
-    });
+    // Fetch top pages and total count using optimized ClickHouse aggregation
+    const analytics = new AnalyticsService();
+    const [topPages, totalPageviews] = await Promise.all([
+      analytics.getTopPagesByUrl({
+        projectId: body.projectId,
+        startDate,
+        endDate,
+        limit: 5,
+      }),
+      analytics.countPageViews(body.projectId, startDate, endDate),
+    ]);
 
     // Format response
     const response: RaycastTopPagesResponse = {
       success: true,
       data: topPages.map((page) => ({
-        path: page.path,
-        views: page.count,
+        path: new URL(page.url).pathname,
+        views: page.viewCount,
       })),
+      totalPageviews,
       period: formatPeriod(startDate, endDate),
     };
 
