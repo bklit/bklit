@@ -38,10 +38,11 @@ export async function validateApiToken(
     });
 
     // Fallback for legacy tokens without tokenLookup: use slower scrypt verification
+    // Only query tokens that haven't been migrated yet (tokenLookup is null)
     if (!matchedToken) {
       const tokenPrefix = token.substring(0, 8);
       const tokens = await prisma.apiToken.findMany({
-        where: { tokenPrefix },
+        where: { tokenPrefix, tokenLookup: null },
         include: { projects: true },
       });
 
