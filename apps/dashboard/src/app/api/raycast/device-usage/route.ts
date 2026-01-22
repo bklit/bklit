@@ -57,16 +57,16 @@ export async function POST(request: NextRequest) {
     // Calculate last 24 hours
     const { startDate, endDate } = calculateLast24Hours();
 
-    // Fetch device usage from analytics
+    // Fetch device usage from analytics (lightweight query)
     const analytics = new AnalyticsService();
-    const stats = await analytics.getStats({
+    const deviceStats = await analytics.getDeviceBreakdown({
       projectId: body.projectId,
       startDate,
       endDate,
     });
 
-    const mobileViews = stats.mobile_visits || 0;
-    const desktopViews = stats.desktop_visits || 0;
+    const mobileViews = deviceStats.mobile_views || 0;
+    const desktopViews = deviceStats.desktop_views || 0;
     const total = mobileViews + desktopViews;
 
     // Format response

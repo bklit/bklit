@@ -583,6 +583,48 @@ export class AnalyticsService {
     );
   }
 
+  /**
+   * Lightweight device breakdown query - only counts mobile vs desktop
+   * Optimized for Raycast API where we don't need other stats
+   */
+  async getDeviceBreakdown(query: StatsQuery) {
+    const conditions: string[] = ["project_id = {projectId:String}"];
+    const params: Record<string, unknown> = { projectId: query.projectId };
+
+    if (query.startDate) {
+      conditions.push("timestamp >= {startDate:DateTime}");
+      params.startDate = formatDateForClickHouse(query.startDate);
+    }
+    if (query.endDate) {
+      conditions.push("timestamp <= {endDate:DateTime}");
+      params.endDate = formatDateForClickHouse(query.endDate);
+    }
+
+    const result = await this.client.query({
+      query: `
+        SELECT 
+          countIf(mobile = true) as mobile_views,
+          countIf(mobile = false) as desktop_views
+        FROM page_view_event
+        WHERE ${conditions.join(" AND ")}
+      `,
+      query_params: params,
+      format: "JSONEachRow",
+    });
+
+    const rows = (await result.json()) as Array<{
+      mobile_views: number;
+      desktop_views: number;
+    }>;
+
+    return (
+      rows[0] || {
+        mobile_views: 0,
+        desktop_views: 0,
+      }
+    );
+  }
+
   async getTopCountries(query: StatsQuery & { limit?: number }) {
     const conditions: string[] = [
       "project_id = {projectId:String}",
