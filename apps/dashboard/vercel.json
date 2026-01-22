@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/raycast/health",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/2 * * * *"
     }
   ]
 }
