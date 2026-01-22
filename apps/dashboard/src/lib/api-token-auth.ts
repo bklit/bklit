@@ -1,5 +1,5 @@
 import { prisma } from "@bklit/db/client";
-import { verifyToken } from "@bklit/utils/tokens";
+import { createTokenLookup, verifyToken } from "@bklit/utils/tokens";
 
 interface TokenValidationResult {
   valid: boolean;
@@ -9,17 +9,9 @@ interface TokenValidationResult {
   allowedDomains?: string[];
 }
 
-// In-memory cache for validated tokens (5 minute TTL)
-// Key: "token:projectId", Value: { result, expiresAt }
-const tokenCache = new Map<
-  string,
-  { result: TokenValidationResult; expiresAt: number }
->();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
 /**
  * Validates an API token and checks if it's assigned to the given project
- * Uses in-memory caching to avoid expensive scrypt verification on every request
+ * Uses SHA256 fast-lookup hash for O(1) database queries (no expensive scrypt!)
  * @param token - The raw token string (e.g., "bk_live_abc123...")
  * @param projectId - The project ID to check token assignment for
  * @returns Validation result with success status and optional error message
@@ -36,61 +28,54 @@ export async function validateApiToken(
       };
     }
 
-    // Check cache first (avoids expensive scrypt on every request)
-    const cacheKey = `${token}:${projectId}`;
-    const cached = tokenCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) {
-      return cached.result;
-    }
+    // Create SHA256 lookup hash - this is O(1) and fast
+    const tokenLookup = createTokenLookup(token);
 
-    // Find token by trying to match against stored hashes
-    const tokenPrefix = token.substring(0, 8);
-    const tokens = await prisma.apiToken.findMany({
-      where: {
-        tokenPrefix,
-      },
-      include: {
-        projects: true,
-      },
+    // Try fast path: direct lookup by tokenLookup (new tokens)
+    let matchedToken = await prisma.apiToken.findUnique({
+      where: { tokenLookup },
+      include: { projects: true },
     });
 
-    if (tokens.length === 0) {
-      const result = {
-        valid: false,
-        error: "Invalid token: No token found with this prefix",
-      };
-      // Cache negative results for shorter time (1 minute)
-      tokenCache.set(cacheKey, { result, expiresAt: Date.now() + 60_000 });
-      return result;
-    }
+    // Fallback for legacy tokens without tokenLookup: use slower scrypt verification
+    if (!matchedToken) {
+      const tokenPrefix = token.substring(0, 8);
+      const tokens = await prisma.apiToken.findMany({
+        where: { tokenPrefix },
+        include: { projects: true },
+      });
 
-    // Try to find matching token by verifying hash
-    let matchedToken = null;
-    for (const apiToken of tokens) {
-      const isValid = await verifyToken(token, apiToken.tokenHash);
-      if (isValid) {
-        matchedToken = apiToken;
-        break;
+      for (const apiToken of tokens) {
+        const isValid = await verifyToken(token, apiToken.tokenHash);
+        if (isValid) {
+          matchedToken = apiToken;
+          // Migrate this token to fast lookup (one-time)
+          prisma.apiToken
+            .update({
+              where: { id: apiToken.id },
+              data: { tokenLookup },
+            })
+            .catch((err) =>
+              console.error("Failed to migrate token to fast lookup:", err)
+            );
+          break;
+        }
       }
     }
 
     if (!matchedToken) {
-      const result = {
+      return {
         valid: false,
-        error: "Invalid token: Token hash does not match",
+        error: "Invalid token",
       };
-      tokenCache.set(cacheKey, { result, expiresAt: Date.now() + 60_000 });
-      return result;
     }
 
     // Check if token has expired
     if (matchedToken.expiresAt && matchedToken.expiresAt < new Date()) {
-      const result = {
+      return {
         valid: false,
         error: "Token has expired",
       };
-      tokenCache.set(cacheKey, { result, expiresAt: Date.now() + 60_000 });
-      return result;
     }
 
     // Check if token is assigned to the project
@@ -99,12 +84,10 @@ export async function validateApiToken(
     );
 
     if (!isAssignedToProject) {
-      const result = {
+      return {
         valid: false,
-        error: `Token is not authorized for project ${projectId}. Token is assigned to: ${matchedToken.projects.map((p) => p.projectId).join(", ") || "no projects"}`,
+        error: `Token is not authorized for project ${projectId}`,
       };
-      tokenCache.set(cacheKey, { result, expiresAt: Date.now() + 60_000 });
-      return result;
     }
 
     // Update lastUsedAt asynchronously (don't block the response)
@@ -115,17 +98,12 @@ export async function validateApiToken(
       })
       .catch((err) => console.error("Failed to update lastUsedAt:", err));
 
-    const result: TokenValidationResult = {
+    return {
       valid: true,
       tokenId: matchedToken.id,
       organizationId: matchedToken.organizationId,
       allowedDomains: matchedToken.allowedDomains,
     };
-
-    // Cache successful validation
-    tokenCache.set(cacheKey, { result, expiresAt: Date.now() + CACHE_TTL_MS });
-
-    return result;
   } catch (error) {
     console.error("Error validating API token:", error);
     return {

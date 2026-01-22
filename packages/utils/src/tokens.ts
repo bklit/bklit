@@ -1,7 +1,18 @@
-import { randomBytes, scrypt } from "node:crypto";
+import { createHash, randomBytes, scrypt } from "node:crypto";
 import { promisify } from "node:util";
 
 const scryptAsync = promisify(scrypt);
+
+/**
+ * Create a fast SHA256 lookup hash for a token
+ * This is used for O(1) database lookups instead of expensive scrypt verification
+ * Note: SHA256 is not suitable for password storage, but works here because:
+ * 1. Tokens are high-entropy random strings (not user-chosen passwords)
+ * 2. We need fast lookups on every API request
+ */
+export function createTokenLookup(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 /**
  * Generate a new API token with the format: bk_live_<32 random hex chars>

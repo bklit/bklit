@@ -9,10 +9,7 @@ import { endOfDay, parseClickHouseDate, startOfDay } from "@/lib/date-utils";
 
 import { findCountryCoordinates } from "@/lib/maps/country-coordinates";
 import type { BrowserStats, TopPageData } from "@/types/analytics";
-import type {
-  CountryStats,
-  CountryWithCities,
-} from "@/types/geo";
+import type { CountryStats, CountryWithCities } from "@/types/geo";
 
 // Regex patterns for performance optimization
 const MOBILE_DEVICE_REGEX = /Mobile|Android|iPhone|iPad/;
