@@ -102,7 +102,7 @@ async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
   try {
     const fields =
       "status,query,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,mobile";
-    
+
     // Use pro endpoint if API key is available, otherwise use free tier
     let url: string;
     if (IPAPI_KEY) {

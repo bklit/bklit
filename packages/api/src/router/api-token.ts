@@ -1,4 +1,8 @@
-import { generateToken, hashToken } from "@bklit/utils/tokens";
+import {
+  createTokenLookup,
+  generateToken,
+  hashToken,
+} from "@bklit/utils/tokens";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
@@ -120,6 +124,7 @@ export const apiTokenRouter = {
       // Generate token
       const { token, prefix } = generateToken();
       const tokenHash = await hashToken(token);
+      const tokenLookup = createTokenLookup(token); // Fast SHA256 for O(1) lookups
 
       // Create token with project assignments
       const createdToken = await ctx.prisma.apiToken.create({
@@ -127,6 +132,7 @@ export const apiTokenRouter = {
           name: input.name,
           description: input.description,
           tokenHash,
+          tokenLookup,
           tokenPrefix: prefix,
           organizationId: input.organizationId,
           allowedDomains: input.allowedDomains || [],

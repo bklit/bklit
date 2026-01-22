@@ -1,5 +1,5 @@
 import { prisma } from "@bklit/db/client";
-import { verifyToken } from "@bklit/utils/tokens";
+import { createTokenLookup, verifyToken } from "@bklit/utils/tokens";
 
 interface TokenValidationResult {
   valid: boolean;
@@ -11,6 +11,7 @@ interface TokenValidationResult {
 
 /**
  * Validates an API token and checks if it's assigned to the given project
+ * Uses SHA256 fast-lookup hash for O(1) database queries (no expensive scrypt!)
  * @param token - The raw token string (e.g., "bk_live_abc123...")
  * @param projectId - The project ID to check token assignment for
  * @returns Validation result with success status and optional error message
@@ -27,41 +28,46 @@ export async function validateApiToken(
       };
     }
 
-    // Find token by trying to match against stored hashes
-    // Since we can't query by the plain token, we need to fetch all tokens
-    // and verify each one (this is acceptable for now, but could be optimized
-    // by storing a prefix lookup or using a different approach)
-    const tokenPrefix = token.substring(0, 8);
-    const tokens = await prisma.apiToken.findMany({
-      where: {
-        tokenPrefix, // Use prefix to narrow search
-      },
-      include: {
-        projects: true,
-      },
+    // Create SHA256 lookup hash - this is O(1) and fast
+    const tokenLookup = createTokenLookup(token);
+
+    // Try fast path: direct lookup by tokenLookup (new tokens)
+    let matchedToken = await prisma.apiToken.findUnique({
+      where: { tokenLookup },
+      include: { projects: true },
     });
 
-    if (tokens.length === 0) {
-      return {
-        valid: false,
-        error: "Invalid token: No token found with this prefix",
-      };
-    }
+    // Fallback for legacy tokens without tokenLookup: use slower scrypt verification
+    // Only query tokens that haven't been migrated yet (tokenLookup is null)
+    if (!matchedToken) {
+      const tokenPrefix = token.substring(0, 8);
+      const tokens = await prisma.apiToken.findMany({
+        where: { tokenPrefix, tokenLookup: null },
+        include: { projects: true },
+      });
 
-    // Try to find matching token by verifying hash
-    let matchedToken = null;
-    for (const apiToken of tokens) {
-      const isValid = await verifyToken(token, apiToken.tokenHash);
-      if (isValid) {
-        matchedToken = apiToken;
-        break;
+      for (const apiToken of tokens) {
+        const isValid = await verifyToken(token, apiToken.tokenHash);
+        if (isValid) {
+          matchedToken = apiToken;
+          // Migrate this token to fast lookup (one-time)
+          prisma.apiToken
+            .update({
+              where: { id: apiToken.id },
+              data: { tokenLookup },
+            })
+            .catch((err) =>
+              console.error("Failed to migrate token to fast lookup:", err)
+            );
+          break;
+        }
       }
     }
 
     if (!matchedToken) {
       return {
         valid: false,
-        error: "Invalid token: Token hash does not match",
+        error: "Invalid token",
       };
     }
 
@@ -81,15 +87,17 @@ export async function validateApiToken(
     if (!isAssignedToProject) {
       return {
         valid: false,
-        error: `Token is not authorized for project ${projectId}. Token is assigned to: ${matchedToken.projects.map((p) => p.projectId).join(", ") || "no projects"}`,
+        error: `Token is not authorized for project ${projectId}`,
       };
     }
 
-    // Update lastUsedAt
-    await prisma.apiToken.update({
-      where: { id: matchedToken.id },
-      data: { lastUsedAt: new Date() },
-    });
+    // Update lastUsedAt asynchronously (don't block the response)
+    prisma.apiToken
+      .update({
+        where: { id: matchedToken.id },
+        data: { lastUsedAt: new Date() },
+      })
+      .catch((err) => console.error("Failed to update lastUsedAt:", err));
 
     return {
       valid: true,
