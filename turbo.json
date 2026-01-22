@@ -102,6 +102,10 @@
       "dependsOn": ["^topo"],
       "outputs": []
     },
+    "typecheck": {
+      "dependsOn": ["^topo"],
+      "outputs": []
+    },
     "db:generate": {
       "cache": false,
       "outputs": ["generated/**"]
