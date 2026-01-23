@@ -25,15 +25,12 @@ import { CircleChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import { LogoDropdown } from "./logo-dropdown";
 
 export const PageHeader = () => {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter();
   const handleMenuOpen = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -255,42 +252,37 @@ export const PageHeader = () => {
                       </div>
                       <footer className="border-border border-t bg-bklit-800/50">
                         <Item
+                          asChild
                           className="cursor-pointer"
-                          onClick={() =>
-                            toast.info("Extension in review.", {
-                              description: "Check out the GitHub repository...",
-                              action: {
-                                label: "GitHub",
-                                onClick: () =>
-                                  router.push(
-                                    "https://github.com/bklit/bklit-raycast"
-                                  ),
-                              },
-                            })
-                          }
                           variant="ghost"
                         >
-                          <ItemMedia>
-                            <Image
-                              alt="Raycast"
-                              height={50}
-                              src="/raycast-extension-icon.png"
-                              // src="/RaycastiOS-AppIcon.webp"
-                              width={50}
-                            />
-                          </ItemMedia>
-                          <ItemContent>
-                            <ItemTitle>Raycast Extension</ItemTitle>
-                            <ItemDescription>
-                              Get a daily digest on macOS & Windows desktop
-                            </ItemDescription>
-                          </ItemContent>
-                          <ItemActions>
-                            <CircleChevronRight
-                              className="text-muted-foreground"
-                              strokeWidth={1}
-                            />
-                          </ItemActions>
+                          <a
+                            href="https://www.raycast.com/uixmat/bklit-analytics"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          >
+                            <ItemMedia>
+                              <Image
+                                alt="Raycast"
+                                height={50}
+                                src="/raycast-extension-icon.png"
+                                // src="/RaycastiOS-AppIcon.webp"
+                                width={50}
+                              />
+                            </ItemMedia>
+                            <ItemContent>
+                              <ItemTitle>Raycast Extension</ItemTitle>
+                              <ItemDescription>
+                                Get a daily digest on macOS & Windows desktop
+                              </ItemDescription>
+                            </ItemContent>
+                            <ItemActions>
+                              <CircleChevronRight
+                                className="text-muted-foreground"
+                                strokeWidth={1}
+                              />
+                            </ItemActions>
+                          </a>
                         </Item>
                       </footer>
                     </NavigationMenuContent>
