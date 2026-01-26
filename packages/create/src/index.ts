@@ -143,13 +143,48 @@ program
 
       // Step 6: Install dependencies
       spinner.start("Installing dependencies (this may take a minute)...");
-      await execa("pnpm", ["install"], { stdio: "ignore" });
-      spinner.succeed("Dependencies installed");
+      try {
+        await execa("pnpm", ["install"], {
+          stdio: "pipe",
+          shell: process.platform === "win32",
+        });
+        spinner.succeed("Dependencies installed");
+      } catch (error: any) {
+        spinner.fail("Failed to install dependencies");
+        console.log(chalk.red("\nError output:"));
+        if (error.stderr) {
+          console.log(error.stderr);
+        }
+        if (error.stdout) {
+          console.log(error.stdout);
+        }
+        console.log(
+          chalk.yellow(
+            "\nTip: Make sure pnpm is installed globally: npm install -g pnpm"
+          )
+        );
+        throw error;
+      }
 
       // Step 7: Generate Prisma client
       spinner.start("Generating Prisma client...");
-      await execa("pnpm", ["db:generate"], { stdio: "ignore" });
-      spinner.succeed("Prisma client generated");
+      try {
+        await execa("pnpm", ["db:generate"], {
+          stdio: "pipe",
+          shell: process.platform === "win32",
+        });
+        spinner.succeed("Prisma client generated");
+      } catch (error: any) {
+        spinner.fail("Failed to generate Prisma client");
+        console.log(chalk.red("\nError output:"));
+        if (error.stderr) {
+          console.log(error.stderr);
+        }
+        if (error.stdout) {
+          console.log(error.stdout);
+        }
+        throw error;
+      }
 
       // Step 8: Set up database schema
       if (answers.useDocker) {
@@ -157,6 +192,7 @@ program
         try {
           await execa("pnpm", ["db:push"], {
             stdio: "pipe",
+            shell: process.platform === "win32",
             env: { ...process.env, FORCE_COLOR: "0" },
           });
           spinner.succeed("Database schema ready");
@@ -176,6 +212,7 @@ program
         try {
           await execa("pnpm", ["-F", "@bklit/analytics", "migrate"], {
             stdio: "pipe",
+            shell: process.platform === "win32",
             env: { ...process.env, FORCE_COLOR: "0" },
           });
           spinner.succeed("ClickHouse tables ready");
@@ -248,7 +285,10 @@ program
         console.log(
           chalk.cyan("💡 IMPORTANT: Watch this terminal for login codes!\n")
         );
-        await execa("pnpm", ["dev"], { stdio: "inherit" });
+        await execa("pnpm", ["dev"], {
+          stdio: "inherit",
+          shell: process.platform === "win32",
+        });
       } else {
         console.log(chalk.white("  1. Start development server:"));
         console.log(chalk.cyan("     pnpm dev\n"));

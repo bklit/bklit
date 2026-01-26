@@ -1,0 +1,74 @@
+name: Test CLI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/create/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/create/**"
+
+jobs:
+  test-cli:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [22]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build create package
+        run: pnpm --filter=@bklit/create build
+
+      - name: Test CLI can be imported (Unix)
+        if: runner.os != 'Windows'
+        run: node -e "import('./packages/create/dist/index.js')"
+
+      - name: Test CLI can be imported (Windows)
+        if: runner.os == 'Windows'
+        run: node -e "import('./packages/create/dist/index.js')"
+        shell: bash
+
+  test-cli-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [22]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Test npx create command shows help
+        run: npx @bklit/create --help
+        timeout-minutes: 2
