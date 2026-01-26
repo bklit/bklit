@@ -121,7 +121,7 @@ services:
     image: clickhouse/clickhouse-server:24-alpine
     container_name: bklit-clickhouse
     environment:
-      CLICKHOUSE_DB: default
+      CLICKHOUSE_DB: analytics
       CLICKHOUSE_USER: default
       CLICKHOUSE_PASSWORD: "local_dev_password"
     ports:
