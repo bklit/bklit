@@ -12,6 +12,7 @@
     "build": "pnpm generate",
     "dev": "pnpm generate",
     "generate": "pnpm with-env prisma generate --no-engine --schema=./prisma/schema.prisma",
+    "db:generate": "pnpm generate",
     "migrate": "pnpm with-env-dev prisma migrate dev --schema=./prisma/schema.prisma",
     "studio": "pnpm with-env-dev prisma studio --schema=./prisma/schema.prisma",
     "db:seed": "pnpm with-env tsx src/seed.ts",
