@@ -4,14 +4,32 @@ import chalk from "chalk";
 import { Command } from "commander";
 import { execa } from "execa";
 import ora from "ora";
-import {
-  isDockerAvailable,
-  isDockerComposeAvailable,
-  setupDockerServices,
-} from "./docker.js";
+import { checkDockerStatus, setupDockerServices } from "./docker.js";
 import { generateEnvFile } from "./env.js";
 import { generateDatabasePassword, generateSecrets } from "./generators.js";
-import { askSetupQuestions } from "./prompts.js";
+import { type PackageManager, askSetupQuestions } from "./prompts.js";
+
+const isWindows = process.platform === "win32";
+
+// Helper to run workspace-specific commands
+function getWorkspaceCommand(
+  pm: PackageManager,
+  workspace: string,
+  script: string
+): { cmd: string; args: string[] } {
+  switch (pm) {
+    case "pnpm":
+      return { cmd: "pnpm", args: ["-F", workspace, script] };
+    case "npm":
+      return { cmd: "npm", args: ["run", script, "-w", workspace] };
+    case "yarn":
+      return { cmd: "yarn", args: ["workspace", workspace, script] };
+    case "bun":
+      return { cmd: "bun", args: ["run", "--filter", workspace, script] };
+    default:
+      return { cmd: pm, args: [workspace, script] };
+  }
+}
 
 const program = new Command();
 
@@ -19,15 +37,23 @@ program
   .name("create")
   .description("Set up Bklit Analytics in under 2 minutes")
   .version("1.0.1")
-  .action(async () => {
+  .argument("[project-name]", "Name of the project directory")
+  .action(async (projectNameArg?: string) => {
     try {
       console.clear();
-      console.log(chalk.cyan.bold("\n┌─────────────────────────────────┐"));
-      console.log(chalk.cyan.bold("│  🎯 Bklit Setup Wizard          │"));
-      console.log(chalk.cyan.bold("└─────────────────────────────────┘\n"));
+      console.log(chalk.cyan(`
+  _______   ___   ___   __        ________  _________  
+/_______/\\ /___/\\/__/\\ /_/\\      /_______/\\/________/\\ 
+\\::: _  \\ \\\\::.\\  \\\\ \\ \\\\:\\ \\     \\__.::._\\/\\__.::.__\\/ 
+ \\::(_)  \\/_\\:: \\/_) \\ \\\\:\\ \\       \\::\\ \\    \\::\\ \\   
+  \\::  _  \\ \\\\:. __  ( ( \\:\\ \\____  _\\::\\ \\__  \\::\\ \\  
+   \\::(_)  \\ \\\\: \\ )  \\ \\ \\:\\/___/\\/__\\::\\__/\\  \\::\\ \\ 
+    \\_______\\/ \\__\\/\\__\\/  \\_____\\/\\________\\/   \\__\\/ 
+`));
+      console.log(chalk.gray("        Setup Wizard\n"));
 
       // Step 1: Ask user preferences (including project name)
-      const answers = await askSetupQuestions();
+      const answers = await askSetupQuestions(projectNameArg);
 
       // Step 2: Clone the repository
       const cloneSpinner = ora("Cloning Bklit repository...").start();
@@ -83,12 +109,26 @@ program
         spinner.warn(`Node.js 22.14+ recommended (current: ${nodeVersion})`);
       }
 
-      const dockerAvailable = await isDockerAvailable();
-      const dockerComposeAvailable = await isDockerComposeAvailable();
+      if (answers.useDocker) {
+        spinner.text = "Checking Docker status...";
+        const dockerStatus = await checkDockerStatus();
 
-      if (answers.useDocker && !(dockerAvailable && dockerComposeAvailable)) {
-        spinner.warn("Docker not available - using manual database setup");
-        answers.useDocker = false;
+        if (!dockerStatus.installed) {
+          spinner.warn("Docker not installed - using manual database setup");
+          console.log(
+            chalk.gray("   Install Docker: https://docs.docker.com/get-docker/\n")
+          );
+          answers.useDocker = false;
+        } else if (!dockerStatus.running) {
+          spinner.warn("Docker is installed but not running");
+          console.log(chalk.yellow("\n   Please start Docker Desktop and try again."));
+          console.log(chalk.gray("   On macOS/Windows: Open Docker Desktop app"));
+          console.log(chalk.gray("   On Linux: sudo systemctl start docker\n"));
+          answers.useDocker = false;
+        } else if (!dockerStatus.composeAvailable) {
+          spinner.warn("Docker Compose not available - using manual database setup");
+          answers.useDocker = false;
+        }
       }
 
       spinner.succeed("Prerequisites checked");
@@ -142,11 +182,12 @@ program
       spinner.succeed(".env file created");
 
       // Step 6: Install dependencies
-      spinner.start("Installing dependencies (this may take a minute)...");
+      const pm = answers.packageManager;
+      spinner.start(`Installing dependencies with ${pm} (this may take a minute)...`);
       try {
-        await execa("pnpm", ["install"], {
+        await execa(pm, ["install"], {
           stdio: "pipe",
-          shell: process.platform === "win32",
+          shell: isWindows,
         });
         spinner.succeed("Dependencies installed");
       } catch (error: any) {
@@ -160,7 +201,7 @@ program
         }
         console.log(
           chalk.yellow(
-            "\nTip: Make sure pnpm is installed globally: npm install -g pnpm"
+            `\nTip: Make sure ${pm} is installed globally`
           )
         );
         throw error;
@@ -171,7 +212,7 @@ program
       try {
         await execa("npx", ["prisma", "generate"], {
           stdio: "pipe",
-          shell: process.platform === "win32",
+          shell: isWindows,
         });
         spinner.succeed("Prisma client generated");
       } catch (error: any) {
@@ -192,7 +233,7 @@ program
         try {
           await execa("npx", ["prisma", "db", "push"], {
             stdio: "pipe",
-            shell: process.platform === "win32",
+            shell: isWindows,
             env: { ...process.env, FORCE_COLOR: "0" },
           });
           spinner.succeed("Database schema ready");
@@ -210,9 +251,10 @@ program
 
         spinner.start("Setting up ClickHouse tables...");
         try {
-          await execa("pnpm", ["-F", "@bklit/analytics", "migrate"], {
+          const migrateCmd = getWorkspaceCommand(pm, "@bklit/analytics", "migrate");
+          await execa(migrateCmd.cmd, migrateCmd.args, {
             stdio: "pipe",
-            shell: process.platform === "win32",
+            shell: isWindows,
             env: { ...process.env, FORCE_COLOR: "0" },
           });
           spinner.succeed("ClickHouse tables ready");
@@ -285,13 +327,15 @@ program
         console.log(
           chalk.cyan("💡 IMPORTANT: Watch this terminal for login codes!\n")
         );
-        await execa("pnpm", ["dev"], {
+        const devCmd = pm === "npm" ? ["run", "dev"] : ["dev"];
+        await execa(pm, devCmd, {
           stdio: "inherit",
-          shell: process.platform === "win32",
+          shell: isWindows,
         });
       } else {
+        const devCommand = pm === "npm" ? `${pm} run dev` : `${pm} dev`;
         console.log(chalk.white("  1. Start development server:"));
-        console.log(chalk.cyan("     pnpm dev\n"));
+        console.log(chalk.cyan(`     ${devCommand}\n`));
         console.log(chalk.white("  2. Open your browser:"));
         console.log(chalk.cyan("     http://localhost:3000\n"));
         console.log(chalk.white("  3. Create your first account!"));

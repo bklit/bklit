@@ -4,9 +4,19 @@ import ora from "ora";
 
 const isWindows = process.platform === "win32";
 
-export async function isDockerAvailable(): Promise<boolean> {
+export async function isDockerInstalled(): Promise<boolean> {
   try {
     await execa("docker", ["--version"], { shell: isWindows });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function isDockerRunning(): Promise<boolean> {
+  try {
+    // docker info will fail if daemon isn't running
+    await execa("docker", ["info"], { shell: isWindows, stdio: "pipe" });
     return true;
   } catch {
     return false;
@@ -20,6 +30,27 @@ export async function isDockerComposeAvailable(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export interface DockerStatus {
+  installed: boolean;
+  running: boolean;
+  composeAvailable: boolean;
+}
+
+export async function checkDockerStatus(): Promise<DockerStatus> {
+  const installed = await isDockerInstalled();
+  if (!installed) {
+    return { installed: false, running: false, composeAvailable: false };
+  }
+
+  const running = await isDockerRunning();
+  if (!running) {
+    return { installed: true, running: false, composeAvailable: false };
+  }
+
+  const composeAvailable = await isDockerComposeAvailable();
+  return { installed: true, running: true, composeAvailable };
 }
 
 export async function setupDockerServices(dbPassword: string): Promise<{
