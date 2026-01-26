@@ -2,9 +2,11 @@ import fs from "node:fs/promises";
 import { execa } from "execa";
 import ora from "ora";
 
+const isWindows = process.platform === "win32";
+
 export async function isDockerAvailable(): Promise<boolean> {
   try {
-    await execa("docker", ["--version"]);
+    await execa("docker", ["--version"], { shell: isWindows });
     return true;
   } catch {
     return false;
@@ -13,7 +15,7 @@ export async function isDockerAvailable(): Promise<boolean> {
 
 export async function isDockerComposeAvailable(): Promise<boolean> {
   try {
-    await execa("docker", ["compose", "version"]);
+    await execa("docker", ["compose", "version"], { shell: isWindows });
     return true;
   } catch {
     return false;
@@ -33,7 +35,10 @@ export async function setupDockerServices(dbPassword: string): Promise<{
 
     // Stop and remove any existing containers and volumes
     try {
-      await execa("docker", ["compose", "down", "-v"], { stdio: "ignore" });
+      await execa("docker", ["compose", "down", "-v"], {
+        stdio: "ignore",
+        shell: isWindows,
+      });
     } catch {
       // Ignore errors if no existing containers
     }
@@ -43,7 +48,7 @@ export async function setupDockerServices(dbPassword: string): Promise<{
       await execa(
         "docker",
         ["rm", "-f", "bklit-postgres", "bklit-clickhouse"],
-        { stdio: "ignore" }
+        { stdio: "ignore", shell: isWindows }
       );
     } catch {
       // Ignore if containers don't exist
@@ -51,7 +56,7 @@ export async function setupDockerServices(dbPassword: string): Promise<{
 
     // Start fresh services
     try {
-      await execa("docker", ["compose", "up", "-d"]);
+      await execa("docker", ["compose", "up", "-d"], { shell: isWindows });
     } catch (error: any) {
       // Show actual Docker error
       spinner.fail("Failed to start Docker services");
@@ -142,13 +147,11 @@ async function waitForPostgres(
 ): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      await execa("docker", [
-        "exec",
-        "bklit-postgres",
-        "pg_isready",
-        "-U",
-        "bklit",
-      ]);
+      await execa(
+        "docker",
+        ["exec", "bklit-postgres", "pg_isready", "-U", "bklit"],
+        { shell: isWindows }
+      );
       return;
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -177,6 +180,7 @@ async function testPostgresConnection(dbPassword: string): Promise<void> {
       ],
       {
         env: { PGPASSWORD: dbPassword },
+        shell: isWindows,
       }
     );
   } catch (_error) {
