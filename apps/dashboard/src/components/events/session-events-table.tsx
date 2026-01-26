@@ -199,7 +199,7 @@ export function SessionEventsTable({
                     ) : (
                       <Button asChild size="sm" variant="outline">
                         <Link
-                          href={`/${organizationId}/${projectId}/sessions/${sessionData.id}`}
+                          href={`/${organizationId}/${projectId}/sessions/${sessionData.sessionId}`}
                         >
                           View Session
                           <ArrowRight size={16} />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SessionDetails } from "@/components/sessions/session-details";
-import { prefetch, trpc } from "@/trpc/server";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 export const metadata: Metadata = {
   title: "Session Details",
@@ -31,10 +31,12 @@ export default async function SessionDetailsPage({ params }: PageProps) {
   }
 
   return (
-    <SessionDetails
-      organizationId={organizationId}
-      projectId={projectId}
-      sessionId={id}
-    />
+    <HydrateClient>
+      <SessionDetails
+        organizationId={organizationId}
+        projectId={projectId}
+        sessionId={id}
+      />
+    </HydrateClient>
   );
 }
