@@ -169,7 +169,7 @@ program
       // Step 7: Generate Prisma client
       spinner.start("Generating Prisma client...");
       try {
-        await execa("pnpm", ["db:generate"], {
+        await execa("npx", ["prisma", "generate"], {
           stdio: "pipe",
           shell: process.platform === "win32",
         });
@@ -190,7 +190,7 @@ program
       if (answers.useDocker) {
         spinner.start("Setting up database schema...");
         try {
-          await execa("pnpm", ["db:push"], {
+          await execa("npx", ["prisma", "db", "push"], {
             stdio: "pipe",
             shell: process.platform === "win32",
             env: { ...process.env, FORCE_COLOR: "0" },
