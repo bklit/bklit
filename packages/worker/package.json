@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development dotenv -e ../../.env -- tsx watch src/index.ts",
-    "start": "dotenv -e ../../.env -- node --loader tsx src/index.ts"
+    "start": "dotenv -e ../../.env -- node --loader tsx src/index.ts",
+    "drain-queue": "dotenv -e ../../.env -- tsx src/drain-queue.ts"
   },
   "dependencies": {
     "@bklit/redis": "workspace:*",

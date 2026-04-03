@@ -11,6 +11,7 @@ on:
       - "packages/create/**"
 
 jobs:
+  # Basic build test on all platforms
   build-cli:
     strategy:
       fail-fast: false
@@ -45,3 +46,35 @@ jobs:
 
       - name: Test CLI --version
         run: node packages/create/dist/index.js --version
+
+  # Windows E2E test - simulates what the CLI does
+  windows-e2e:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      # Test the exact steps the CLI runs
+      - name: Install dependencies (simulates CLI step)
+        run: pnpm install
+
+      - name: Generate Prisma client (simulates CLI step)
+        run: npx prisma generate
+
+      - name: Verify setup worked
+        shell: pwsh
+        run: |
+          if (!(Test-Path "node_modules")) { throw "missing node_modules" }
+          if (!(Test-Path "node_modules/.prisma/client")) { throw "prisma client not generated" }
+          Write-Host "✓ Windows E2E test passed"

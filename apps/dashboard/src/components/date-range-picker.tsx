@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@bklit/ui/components/popover";
+import { differenceInCalendarDays, subDays } from "date-fns";
 import { CalendarIcon, ChevronDown, GitCompare } from "lucide-react";
 import { parseAsBoolean, parseAsIsoDateTime, useQueryStates } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
@@ -74,6 +75,51 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
         });
       }
     }
+  }, [dateParams.startDate, dateParams.endDate, setDateParams]);
+
+  // "Last 30 days" is stored as concrete ISO timestamps in the URL. After calendar
+  // time passes, that range stays frozen (e.g. still Jan 27–Feb 26) so charts show
+  // no recent data. If the range matches the old rolling preset and ended a few
+  // days ago, roll forward to a fresh "Last 30 days".
+  useEffect(() => {
+    if (dateParams.startDate === null || dateParams.endDate === null) {
+      return;
+    }
+
+    const start = dateParams.startDate;
+    const end = dateParams.endDate;
+    const todayStart = startOfDay(new Date());
+
+    if (end >= todayStart) {
+      return;
+    }
+
+    const daysSinceRangeEnded = differenceInCalendarDays(
+      todayStart,
+      startOfDay(end)
+    );
+    if (daysSinceRangeEnded < 3) {
+      return;
+    }
+
+    const expectedStart = startOfDay(subDays(end, 30));
+    const startDayDelta = Math.abs(
+      differenceInCalendarDays(startOfDay(start), expectedStart)
+    );
+    if (startDayDelta > 1) {
+      return;
+    }
+
+    const defaultPreset = DATE_PRESETS[0];
+    if (!defaultPreset) {
+      return;
+    }
+
+    const { startDate: nextStart, endDate: nextEnd } = defaultPreset.getValue();
+    setDateParams({
+      startDate: nextStart,
+      endDate: nextEnd,
+    });
   }, [dateParams.startDate, dateParams.endDate, setDateParams]);
 
   // Calculate display text
@@ -185,7 +231,7 @@ export function DateRangePicker({ onRangeChange }: DateRangePickerProps) {
             <span className="hidden text-sm sm:inline">{displayText}</span>
             <span className="text-sm sm:hidden">
               {displayText.length > 15
-                ? `${displayText.substring(0, 15)}...`
+                ? `${displayText.slice(0, 15)}...`
                 : displayText}
             </span>
             <ChevronDown className="ml-1 size-4" />
