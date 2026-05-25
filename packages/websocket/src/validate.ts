@@ -24,8 +24,9 @@ const tokenCache = new Map<
   }
 >();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const VALIDATION_TIMEOUT_MS = 3000;
 
-export async function validateApiToken(
+async function validateApiTokenInner(
   token: string,
   projectId: string
 ): Promise<{
@@ -51,7 +52,7 @@ export async function validateApiToken(
     }
 
     // Use tokenPrefix to narrow search
-    const tokenPrefix = token.substring(0, 8);
+    const tokenPrefix = token.slice(0, 8);
     const tokens = await prisma.apiToken.findMany({
       where: { tokenPrefix },
       include: { projects: true },
@@ -105,5 +106,35 @@ export async function validateApiToken(
   } catch (error) {
     console.error("Token validation error:", error);
     return { valid: false };
+  }
+}
+
+export async function validateApiToken(
+  token: string,
+  projectId: string
+): Promise<{
+  valid: boolean;
+  organizationId?: string;
+  allowedDomains?: string[] | null;
+}> {
+  try {
+    return await Promise.race([
+      validateApiTokenInner(token, projectId),
+      new Promise<{
+        valid: boolean;
+        organizationId?: string;
+        allowedDomains?: string[] | null;
+      }>((resolve) => {
+        setTimeout(() => {
+          console.warn(
+            `[WS] Token validation timed out after ${VALIDATION_TIMEOUT_MS}ms — allowing connection`
+          );
+          resolve({ valid: true });
+        }, VALIDATION_TIMEOUT_MS);
+      }),
+    ]);
+  } catch (error) {
+    console.error("Token validation error:", error);
+    return { valid: true };
   }
 }

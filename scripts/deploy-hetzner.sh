@@ -117,33 +117,22 @@ echo "   ✅ Firewall configured"
 echo ""
 echo "9️⃣ Starting services with PM2..."
 
-# Stop existing services if running
 pm2 delete bklit-websocket 2>/dev/null || true
 pm2 delete bklit-worker 2>/dev/null || true
 
-# Start WebSocket server
-pm2 start packages/websocket/src/server.ts \
-  --name bklit-websocket \
-  --interpreter tsx \
-  --cwd $PROJECT_DIR \
-  --env-file $PROJECT_DIR/.env \
-  --log $PROJECT_DIR/logs/websocket.log \
-  --error $PROJECT_DIR/logs/websocket-error.log
+pm2 start ecosystem.config.cjs --cwd "$PROJECT_DIR"
 
-# Start Worker
-pm2 start packages/worker/src/index.ts \
-  --name bklit-worker \
-  --interpreter tsx \
-  --cwd $PROJECT_DIR \
-  --env-file $PROJECT_DIR/.env \
-  --log $PROJECT_DIR/logs/worker.log \
-  --error $PROJECT_DIR/logs/worker-error.log
-
-# Save PM2 config
 pm2 save
+pm2 startup systemd -u root --hp /root 2>/dev/null || pm2 startup systemd
 
-# Enable PM2 startup on boot
-pm2 startup systemd
+echo ""
+echo "🔟 Installing health watchdog cron..."
+install -m 755 "$PROJECT_DIR/scripts/pm2-healthcheck.sh" /opt/pm2-healthcheck/pm2-healthcheck.sh 2>/dev/null || {
+  mkdir -p /opt/pm2-healthcheck
+  install -m 755 "$PROJECT_DIR/scripts/pm2-healthcheck.sh" /opt/pm2-healthcheck/pm2-healthcheck.sh
+}
+(crontab -l 2>/dev/null | grep -v pm2-healthcheck; echo "*/2 * * * * /opt/pm2-healthcheck/pm2-healthcheck.sh >> /var/log/pm2-healthcheck.log 2>&1") | crontab -
+echo "   ✅ Health watchdog runs every 2 minutes"
 
 echo "   ✅ Services started"
 

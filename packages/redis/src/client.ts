@@ -1,11 +1,15 @@
 import Redis from "ioredis";
 
 let redisClient: Redis | null = null;
-let isAvailable = false;
+let healthCheckInterval: ReturnType<typeof setInterval> | null = null;
 
 export interface RedisConfig {
   url?: string;
   maxRetries?: number;
+}
+
+function syncAvailabilityFromStatus(): boolean {
+  return redisClient?.status === "ready";
 }
 
 export function createRedisClient(config?: RedisConfig): Redis | null {
@@ -19,37 +23,53 @@ export function createRedisClient(config?: RedisConfig): Redis | null {
     try {
       redisClient = new Redis(url, {
         maxRetriesPerRequest: config?.maxRetries ?? 3,
-        enableOfflineQueue: false, // Critical for serverless - don't queue commands if disconnected
-        connectTimeout: 10_000, // TLS to Upstash can be slow from some regions
-        keepAlive: 30_000, // Keep connection alive for 30 seconds
-        // Never return null: returning null stops reconnects forever and stranding long-lived
-        // workers (PM2) with isAvailable=false while the WebSocket still LPUSHes — queue grows,
-        // ClickHouse goes stale (see analytics:queue backlog).
+        enableOfflineQueue: false,
+        connectTimeout: 10_000,
+        keepAlive: 30_000,
         retryStrategy: (times) => Math.min(times * 500, 30_000),
-        lazyConnect: false, // Connect immediately, not on first command
-        enableReadyCheck: true, // Wait for ready state before marking as connected
+        lazyConnect: false,
+        enableReadyCheck: true,
+        ...(url.startsWith("rediss://") ? { tls: {} } : {}),
       });
 
       redisClient.on("connect", () => {
-        console.log("✅ Redis connected - real-time enabled");
-        isAvailable = true;
+        console.log("✅ Redis connected");
       });
 
       redisClient.on("ready", () => {
-        isAvailable = true;
+        console.log("✅ Redis ready");
+      });
+
+      redisClient.on("reconnecting", () => {
+        console.warn("⚠️ Redis reconnecting...");
       });
 
       redisClient.on("error", (err) => {
         console.error("❌ Redis error:", err.message);
-        isAvailable = false;
       });
 
       redisClient.on("close", () => {
-        console.warn("⚠️ Redis closed - falling back to polling");
-        isAvailable = false;
+        console.warn("⚠️ Redis connection closed — reconnecting");
       });
 
-      // Connection happens automatically with lazyConnect: false
+      if (!healthCheckInterval && process.env.NODE_ENV !== "test") {
+        healthCheckInterval = setInterval(async () => {
+          const client = redisClient;
+          if (!client || client.status !== "ready") {
+            return;
+          }
+
+          try {
+            await client.ping();
+          } catch (error) {
+            console.error(
+              "❌ Redis health ping failed:",
+              error instanceof Error ? error.message : error
+            );
+          }
+        }, 60_000);
+        healthCheckInterval.unref?.();
+      }
     } catch (error) {
       console.error("Failed to initialize Redis:", error);
       return null;
@@ -60,7 +80,6 @@ export function createRedisClient(config?: RedisConfig): Redis | null {
 }
 
 export function getRedisClient(): Redis | null {
-  // Force recreation if URL is now available but client is null
   if (!redisClient && process.env.REDIS_URL) {
     return createRedisClient();
   }
@@ -72,12 +91,16 @@ export function getRedisClient(): Redis | null {
 }
 
 export function isRedisAvailable(): boolean {
-  return isAvailable;
+  return syncAvailabilityFromStatus();
 }
 
 export async function checkRedisHealth(): Promise<boolean> {
   const client = getRedisClient();
   if (!client) {
+    return false;
+  }
+
+  if (client.status !== "ready") {
     return false;
   }
 
@@ -89,11 +112,6 @@ export async function checkRedisHealth(): Promise<boolean> {
   }
 }
 
-/**
- * Wait until ioredis is ready to accept commands. Use before queue reads on startup:
- * `isRedisAvailable()` stays false until the `connect` handler runs, so getQueueDepth()
- * can incorrectly return 0 if called too early.
- */
 export function waitForRedisReady(timeoutMs = 30_000): Promise<void> {
   const client = getRedisClient();
   if (!client) {
@@ -139,9 +157,13 @@ export function waitForRedisReady(timeoutMs = 30_000): Promise<void> {
 }
 
 export async function closeRedis(): Promise<void> {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = null;
+  }
+
   if (redisClient) {
     await redisClient.quit();
     redisClient = null;
-    isAvailable = false;
   }
 }

@@ -1,9 +1,7 @@
 /**
  * One-shot: drain analytics:queue into ClickHouse using the same logic as the worker.
  *
- * Safer than hand-writing SQL. Events are already removed from Redis by popFromQueue
- * when processed — if the script crashes mid-batch, those pops are not rolled back,
- * so prefer running when traffic is low or stop the PM2 worker first.
+ * Uses claim/ack — events remain in Redis until ClickHouse insert succeeds.
  *
  * Usage (from repo root):
  *   pnpm --filter=@bklit/worker drain-queue
@@ -13,7 +11,14 @@
  *   DRAIN_MAX_BATCHES=     (omit = run until queue empty)
  */
 import { AnalyticsService } from "@bklit/analytics";
-import { getQueueDepth, popFromQueue, waitForRedisReady } from "@bklit/redis";
+import {
+  ackClaimed,
+  claimFromQueue,
+  getTotalQueueDepth,
+  recoverProcessingQueue,
+  requeueClaimed,
+  waitForRedisReady,
+} from "@bklit/redis";
 import { config } from "dotenv";
 import {
   createProcessorState,
@@ -49,6 +54,7 @@ async function main() {
   logRedisTarget();
   console.log("[drain-queue] Waiting for Redis (TLS can take a moment)…");
   await waitForRedisReady();
+  await recoverProcessingQueue();
   console.log("[drain-queue] Starting", {
     BATCH_SIZE,
     MAX_BATCHES: Number.isFinite(MAX_BATCHES) ? MAX_BATCHES : "unlimited",
@@ -60,40 +66,55 @@ async function main() {
   let totalOk = 0;
   let totalErr = 0;
 
-  const initialDepth = await getQueueDepth();
+  const initialDepth = await getTotalQueueDepth();
   console.log(`[drain-queue] Queue depth before drain: ${initialDepth}`);
 
   while (batchIndex < MAX_BATCHES) {
-    const depthBefore = await getQueueDepth();
+    const depthBefore = await getTotalQueueDepth();
     if (depthBefore === 0) {
       console.log("[drain-queue] Queue empty. Done.");
       break;
     }
 
-    const events = await popFromQueue(BATCH_SIZE);
-    if (events.length === 0) {
-      console.log("[drain-queue] No events popped (race or empty). Done.");
+    const claimed = await claimFromQueue(BATCH_SIZE);
+    if (claimed.length === 0) {
+      console.log("[drain-queue] No events claimed (race or empty). Done.");
       break;
     }
 
     console.log(
-      `[drain-queue] Inserting ${events.length} events (ClickHouse is remote — first batch may take a few minutes)…`
+      `[drain-queue] Inserting ${claimed.length} events (ClickHouse is remote — first batch may take a few minutes)…`
     );
 
-    const { processed, errors } = await processQueuedEvents(
-      events,
-      analytics,
-      state,
-      { skipVerification: true, quiet: true }
-    );
+    let batchOk = 0;
+    let batchErr = 0;
 
-    totalOk += processed;
-    totalErr += errors;
+    for (const item of claimed) {
+      const { processed, errors } = await processQueuedEvents(
+        [item.event],
+        analytics,
+        state,
+        { skipVerification: true, quiet: true }
+      );
+
+      if (processed === 1) {
+        await ackClaimed(item.raw);
+        batchOk++;
+      } else if (errors === 1) {
+        await requeueClaimed(item.raw);
+        batchErr++;
+      } else {
+        await ackClaimed(item.raw);
+      }
+    }
+
+    totalOk += batchOk;
+    totalErr += batchErr;
     batchIndex++;
 
-    const depthAfter = await getQueueDepth();
+    const depthAfter = await getTotalQueueDepth();
     console.log(
-      `[drain-queue] batch ${batchIndex}: popped ${events.length}, ok ${processed}, err ${errors}, queue ~${depthAfter}`
+      `[drain-queue] batch ${batchIndex}: claimed ${claimed.length}, ok ${batchOk}, requeued ${batchErr}, queue ~${depthAfter}`
     );
   }
 
@@ -101,7 +122,7 @@ async function main() {
     batches: batchIndex,
     totalOk,
     totalErr,
-    remaining: await getQueueDepth(),
+    remaining: await getTotalQueueDepth(),
   });
 }
 

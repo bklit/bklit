@@ -14,6 +14,11 @@ import {
 } from "@bklit/redis";
 import { config } from "dotenv";
 import { WebSocket, WebSocketServer } from "ws";
+import {
+  getHealthSnapshot,
+  startRuntimeGuards,
+  touchActivity,
+} from "./runtime-guards";
 import { validateApiToken } from "./validate";
 
 config();
@@ -71,6 +76,32 @@ const connections = new Map<string, ConnectionInfo>();
 
 // Track which sessions we've seen (to detect new sessions)
 const seenSessions = new Set<string>();
+
+startRuntimeGuards({
+  serviceName: "bklit-websocket",
+  onHeartbeat: () => {
+    console.log(
+      `[heartbeat] websocket alive — ${connections.size} connection(s)`
+    );
+  },
+});
+
+function handleHttpRequest(
+  req: IncomingMessage,
+  res: import("node:http").ServerResponse
+) {
+  if (req.method === "GET" && req.url?.split("?")[0] === "/health") {
+    const health = getHealthSnapshot("bklit-websocket");
+    res.writeHead(health.ok ? 200 : 503, {
+      "Content-Type": "application/json",
+    });
+    res.end(JSON.stringify(health));
+    return;
+  }
+
+  res.writeHead(404);
+  res.end("Not Found");
+}
 
 // Get geolocation from ip-api.com
 async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
@@ -148,7 +179,7 @@ async function getLocationFromIP(ip: string): Promise<GeoLocation | null> {
     }
 
     return null;
-  } catch (error) {
+  } catch (_error) {
     clearTimeout(timeoutId);
     // Treat AbortError or any fetch error as null result
     return null;
@@ -248,12 +279,12 @@ try {
   const key = readFileSync(SSL_KEY_PATH);
 
   // Create HTTPS server
-  server = createHttpsServer({ cert, key });
+  server = createHttpsServer({ cert, key }, handleHttpRequest);
   protocol = "wss";
   console.log("🔒 SSL certificates found - using secure WebSocket (wss://)");
 } catch (error) {
   // Fall back to HTTP
-  server = createHttpServer();
+  server = createHttpServer(handleHttpRequest);
   console.log("⚠️ No SSL certificates - using insecure WebSocket (ws://)");
 }
 
@@ -312,6 +343,7 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
   console.log(
     `[WS] New ${type} connection: ${connId} from ${origin || "unknown"}`
   );
+  touchActivity();
 
   // Store connection
   const conn: ConnectionInfo = {
@@ -389,10 +421,11 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
         return;
       }
 
-      const eventId = `evt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const eventId = `evt_${Date.now()}_${Math.random().toString(36).slice(7)}`;
 
       // Handle different message types
       if (message.type === "pageview") {
+        touchActivity();
         // Get IP and geolocation
         const clientIP = getClientIP(req);
         const isLocalIP =
@@ -438,7 +471,12 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
           projectId,
         };
 
-        await pushToQueue(queuedEvent);
+        await pushToQueue(queuedEvent).catch((error) => {
+          console.error(
+            "[WS] Failed to queue pageview (real-time broadcast continues):",
+            error instanceof Error ? error.message : error
+          );
+        });
 
         await publishDebugLog({
           timestamp: new Date().toISOString(),
@@ -466,6 +504,7 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
           JSON.stringify({ type: "ack", eventId, messageType: "pageview" })
         );
       } else if (message.type === "event") {
+        touchActivity();
         // Queue custom event
         const queuedEvent: QueuedEvent = {
           id: eventId,
@@ -478,7 +517,12 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
           projectId,
         };
 
-        await pushToQueue(queuedEvent);
+        await pushToQueue(queuedEvent).catch((error) => {
+          console.error(
+            "[WS] Failed to queue custom event (real-time broadcast continues):",
+            error instanceof Error ? error.message : error
+          );
+        });
 
         await publishDebugLog({
           timestamp: new Date().toISOString(),
@@ -624,7 +668,9 @@ setInterval(() => {
 // This prevents zombie sessions from old architecture or failed cleanups
 setInterval(async () => {
   const redis = getRedisClient();
-  if (!redis) return;
+  if (!redis) {
+    return;
+  }
 
   try {
     // Get all live session keys
@@ -636,7 +682,9 @@ setInterval(async () => {
       // Get all session IDs from Redis sorted set
       const sessions = await redis.zrange(key, 0, -1);
 
-      if (sessions.length === 0) continue;
+      if (sessions.length === 0) {
+        continue;
+      }
 
       // Query ClickHouse for ended sessions
       const endedSessions = await analyticsService.getEndedSessions(sessions);

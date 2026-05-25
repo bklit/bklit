@@ -1,9 +1,13 @@
+import { createServer } from "node:http";
 import { AnalyticsService } from "@bklit/analytics";
 import {
-  getQueueDepth,
+  ackClaimed,
+  claimFromQueue,
+  getTotalQueueDepth,
   isRedisAvailable,
-  popFromQueue,
   publishDebugLog,
+  recoverProcessingQueue,
+  requeueClaimed,
   waitForRedisReady,
 } from "@bklit/redis";
 import { config } from "dotenv";
@@ -11,8 +15,16 @@ import {
   createProcessorState,
   processQueuedEvents,
 } from "./process-queued-events";
+import {
+  getWorkerHealthSnapshot,
+  recordWorkerBatch,
+  recordWorkerIdle,
+  startRuntimeGuards,
+} from "./runtime-guards";
 
 config();
+
+const WORKER_HEALTH_PORT = Number(process.env.WORKER_HEALTH_PORT) || 8081;
 
 console.log("[Worker] Environment check:", {
   NODE_ENV: process.env.NODE_ENV,
@@ -26,8 +38,57 @@ const BATCH_SIZE = 100;
 const processorState = createProcessorState();
 
 let isProcessing = false;
-let totalProcessed = 0;
-let totalErrors = 0;
+
+startRuntimeGuards({
+  serviceName: "bklit-worker",
+  onHeartbeat: async () => {
+    try {
+      const queueDepth = await getTotalQueueDepth();
+      recordWorkerIdle(queueDepth);
+    } catch {
+      recordWorkerIdle(0);
+    }
+
+    const health = getWorkerHealthSnapshot("bklit-worker");
+    console.log(
+      `[heartbeat] worker alive — processed ${health.totalProcessed} total, queue ${health.lastQueueDepth}`
+    );
+  },
+});
+
+const healthServer = createServer((req, res) => {
+  if (req.method === "GET" && req.url?.split("?")[0] === "/health") {
+    const health = getWorkerHealthSnapshot("bklit-worker");
+    res.writeHead(health.ok ? 200 : 503, {
+      "Content-Type": "application/json",
+    });
+    res.end(JSON.stringify(health));
+    return;
+  }
+
+  res.writeHead(404);
+  res.end("Not Found");
+});
+
+healthServer.listen(WORKER_HEALTH_PORT, () => {
+  console.log(
+    `[Worker] Health endpoint listening on http://127.0.0.1:${WORKER_HEALTH_PORT}/health`
+  );
+});
+
+async function startWorker() {
+  try {
+    await waitForRedisReady();
+    await recoverProcessingQueue();
+  } catch (error) {
+    console.warn(
+      "[Worker] Redis not ready on startup — will retry in process loop:",
+      error instanceof Error ? error.message : error
+    );
+  }
+}
+
+void startWorker();
 
 async function processBatch() {
   if (isProcessing) {
@@ -49,7 +110,8 @@ async function processBatch() {
       }
     }
 
-    const queueDepth = await getQueueDepth();
+    const queueDepth = await getTotalQueueDepth();
+    recordWorkerIdle(queueDepth);
 
     if (queueDepth === 0) {
       isProcessing = false;
@@ -64,28 +126,43 @@ async function processBatch() {
       data: { queueDepth, batchSize: BATCH_SIZE },
     });
 
-    const events = await popFromQueue(BATCH_SIZE);
+    const claimed = await claimFromQueue(BATCH_SIZE);
 
-    if (events.length === 0) {
+    if (claimed.length === 0) {
       isProcessing = false;
       return;
     }
 
     const startTime = Date.now();
     const analytics = new AnalyticsService();
+    let batchProcessed = 0;
+    let batchErrors = 0;
 
-    const { processed, errors } = await processQueuedEvents(
-      events,
-      analytics,
-      processorState,
-      { skipVerification: false }
-    );
+    for (const item of claimed) {
+      const { processed, errors } = await processQueuedEvents(
+        [item.event],
+        analytics,
+        processorState,
+        { skipVerification: false }
+      );
 
-    totalProcessed += processed;
-    totalErrors += errors;
+      if (processed === 1) {
+        await ackClaimed(item.raw);
+        batchProcessed++;
+      } else if (errors === 1) {
+        await requeueClaimed(item.raw);
+        batchErrors++;
+      } else {
+        // Non-retriable skip (e.g. missing event definition)
+        await ackClaimed(item.raw);
+      }
+    }
+
+    const remainingInQueue = await getTotalQueueDepth();
+    recordWorkerBatch(batchProcessed, batchErrors, remainingInQueue);
 
     const duration = Date.now() - startTime;
-    const avgDuration = duration / events.length;
+    const avgDuration = duration / claimed.length;
 
     await publishDebugLog({
       timestamp: new Date().toISOString(),
@@ -93,17 +170,19 @@ async function processBatch() {
       level: "info",
       message: "Batch processing completed",
       data: {
-        processed: events.length,
+        claimed: claimed.length,
+        processed: batchProcessed,
+        requeued: batchErrors,
         duration,
         avgDuration,
-        totalProcessed,
-        totalErrors,
-        remainingInQueue: await getQueueDepth(),
+        totalProcessed: getWorkerHealthSnapshot("bklit-worker").totalProcessed,
+        totalErrors: getWorkerHealthSnapshot("bklit-worker").totalErrors,
+        remainingInQueue,
       },
     });
 
     console.log(
-      `✅ Processed ${events.length} events in ${duration}ms (avg: ${avgDuration.toFixed(2)}ms/event)`
+      `✅ Processed ${batchProcessed} events in ${duration}ms (${batchErrors} requeued, avg: ${avgDuration.toFixed(2)}ms/event)`
     );
   } catch (error) {
     await publishDebugLog({
