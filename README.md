@@ -1,3 +1,6 @@
+> [!CAUTION]
+> **Bklit Analytics has been discontinued.** The hosted service, npm packages (`@bklit/sdk`, `@bklit/create`), and self-hosted infrastructure are no longer maintained. For Bklit's UI & charts library, see [bklit-ui](https://github.com/bklit/bklit-ui) at [bklit.com](https://bklit.com).
+
 ![hero](https://repository-images.githubusercontent.com/985341745/118def38-e6ce-446b-8ca1-d809c583f57d)
 
 <p align="center">
